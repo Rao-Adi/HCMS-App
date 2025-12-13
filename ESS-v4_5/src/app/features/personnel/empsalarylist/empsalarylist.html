@@ -1,0 +1,1822 @@
+<!--<div class="container-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12">
+        <div class="card-custom">
+          <div class="clearfix">
+            <div class="custom-tab-container">
+ 
+<button class="tab-button" tabindex="0"
+          [ngClass]="{'active-tab': selectedTab === 'templatesandfilters'}"
+          (click)="selectedTab = 'templatesandfilters'">
+    {{'labels.templatesandfilters' | safetranslate}}
+  </button>
+
+
+  <button class="tab-button" tabindex="0"
+          [ngClass]="{'active-tab': selectedTab === 'paymentandsalary'}"
+          (click)="selectedTab = 'paymentandsalary'">
+    {{'labels.paymentandsalary' | safetranslate}}
+  </button>
+  <button class="tab-button" tabindex="0"
+          [ngClass]="{'active-tab': selectedTab === 'datesandentitlements'}"
+          (click)="selectedTab = 'datesandentitlements'">
+    {{'labels.datesandentitlements' | safetranslate}}
+  </button>
+
+  <button class="tab-button" tabindex="0"
+          [ngClass]="{'active-tab': selectedTab === 'reportlayout'}"
+          (click)="selectedTab = 'reportlayout'">
+    {{'labels.reportlayout' | safetranslate}}
+  </button>
+
+  <button class="tab-button" tabindex="0"
+          [ngClass]="{'active-tab': selectedTab === 'earnings'}"
+          (click)="selectedTab = 'earnings'">
+    {{'labels.earnings' | safetranslate}}
+  </button>
+  <hr>
+</div>
+
+
+<div class="row row-space" *ngif="selectedTab === 'templatesandfilters'">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+    <div class="status-box-leftcolmd6-standard">
+      <div class="row">
+        <h3 class="pnlheader">
+          {{ 'labels.templates' | safetranslate }}
+        </h3>
+        <br />
+        <div class="col-lg-4 col-md-4 col-sm-6">
+          <label class="label-heading">{{'labels.showsavedtemplatescreatedby' | safetranslate}}</label>
+          <div class="row col-lg-12 col-md-12 col-sm-6 col-xs-12">-->
+            <!--<select class="form-control" [(ngmodel)]="templatemaster.createdbyid" (ngmodelchange)="onemployeesalarychange()">
+              <option [ngvalue]="null" disabled hidden>-- select --</option>
+              <option *ngfor="let template of loadtemplates" [ngvalue]="template.createdbyid">
+                {{ template.userempnameid }}
+              </option>
+            </select>-->
+          <!--</div>
+        </div>-->
+        <!--<ag-grid-angular style="width: 100%; height: 300px;"
+                         class="ag-theme-alpine"
+                         [rowData]="TemplateGrid"
+                         [columnDefs]="TemplateGridColumnDefs"
+                         [defaultColDef]="defaultColDef"
+                         [overlayNoRowsTemplate]="noRowsOverlay"
+                         [context]="{ componentParent: this }"
+                         (gridReady)="($event)">
+        </ag-grid-angular>-->
+        <!--<div class="pnlbody">
+
+          <v5-grid [formid]="''"
+                   [gridid]="''"
+                   [gridtype]="'readonly'"
+                   [pagination]="false"
+                   [searchable]="'false'"
+                   [datarenderfrom]="'clientside'"
+                   [recordsperpage]="'5'"
+                   [defaultsortexpression]="'code'"
+                   [defaultsortdirection]="'asc'"
+                   [griddatasource]="employeesalarygrid"
+                   [enableinsertion]="false"
+                   [enableediting]="false"
+                   [enabledeletion]="false"
+                   gridtype="singleselection">
+
+            <ng-container forgridheading>
+
+              <th headingdef dotextcode="templatecode">
+                <label>  {{'labels.templatecode' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="templatedescription">
+                <label>  {{'labels.templatedescription' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="createdby">
+                <label>  {{'labels.createdby' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="createdon">
+                <label>  {{'labels.createdon' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="createdonsharetemplatewithothers">
+                <label>  {{'labels.createdonsharetemplatewithothers' | safetranslate}} </label>
+              </th>
+            </ng-container>
+            <ng-container *rowdata="let row; let i=index">
+              <td rowdef>{{ row.templatecode }}</td>
+              <td rowdef>{{row.templatedescription}}</td>
+              <td rowdef>{{row.createdby}}</td>
+              <td rowdef>{{row.createdon}}</td>
+              <td rowdef>{{row.sharetemplatewithothers}}</td>
+
+            </ng-container>
+          </v5-grid>
+        </div>-->
+      <!--</div>
+</div>
+
+
+<br />
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="status-box-leftcolmd6-standard">
+      <div class="row">
+        <h3 class="pnlheader">
+          {{ 'labels.employeefilter' | safetranslate }}
+        </h3>
+        <br />
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+          <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+              <div>
+                <label class="label-heading">{{'labels.division' | safetranslate}}</label>
+              </div>
+              <div class="row col-lg-12 col-md-12 col-sm-6">
+                <nz-select style="width: 250px;"
+                           nzmode="multiple"
+                           [nzoptions]="divisionList"
+                           [nzcustomtemplate]="optiontemplate"
+                           [(ngModel)]="selectedDivision">-->
+                           <!--(ngModelChange)="ddldivision_change($event)"-->
+
+                  <!--<nz-option *ngFor="let option of divisionList"
+                             [nzValue]="option.sdlid"
+                             [nzlabel]="option.Name">
+                  </nz-option>
+                </nz-select>
+
+                <ng-template #optiontemplate let-option>
+                  {{ option.nzlabel }}
+                </ng-template>
+              </div>
+            </div>-->
+
+            <!--<div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+              <div>
+                <label class="label-heading">{{'labels.department' | safetranslate}}</label>
+              </div>
+              <div class="row col-lg-12 col-md-12 col-sm-6">
+                <multiselect [data]="department"
+                             [(ngmodel)]="selecteddepartment"
+                             [settings]="departmentsettings"
+                             (ngmodelchange)="ddldepartment_change($event)">
+                </multiselect>
+              </div>
+            </div>-->
+
+
+            <!--<div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+              <div>
+                <label class="label-heading">{{'labels.sub-department' | safetranslate}}</label>
+              </div>
+              <div class="row col-lg-12 col-md-12 col-sm-6">
+                <multiselect [data]="subdepartment"
+                             [(ngmodel)]="selectedsubdepartment"
+                             [settings]="subdepartmentsettings">
+                </multiselect>
+              </div>
+            </div>-->
+          <!--</div>-->
+
+          <!--<div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+    <div>
+      <label class="label-heading">{{'labels.location' | safetranslate}}</label>
+    </div>
+  <div class="row col-lg-12 col-md-12 col-sm-6">
+    <select class="form-control" [(ngModel)]="employeesalaryfiltermaster.employeelocid" (ngModelChange)="salarylocchange()">
+      <option *ngFor="let loc of location" [ngValue]="loc.id">
+        {{ loc.text }}
+      </option>
+    </select>
+  </div>
+  </div>
+  <div class="row">
+  <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+    <div>
+      <label class="label-heading">{{'labels.region' | safetranslate}}</label>
+    </div>
+    <div class="row col-lg-12 col-md-12 col-sm-6">
+      <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeeregid" (ngmodelchange)="salaryregchange()">
+        <option *ngfor="let loc of region" [ngValue]="loc.id">
+          {{ loc.text }}
+        </option>
+      </select>
+
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.team' | safetranslate}}</label>
+      </div>
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeeteaid" (ngModelChange)="salaryteachange()">
+          <option *ngfor="let tea of team" [ngValue]="tea.id">
+            {{ tea.text }}
+          </option>
+        </select>
+
+      </div>
+    </div>
+
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.payrollgroup' | safetranslate}}</label>
+      </div>
+
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+
+        <select class="form-control" [(ngModel)]="employeesalaryfiltermaster.employeepayid" (ngModelChange)="salarypayrollchange()">
+          <option *ngfor="let pay of payroll" [ngValue]="pay.id">
+            {{ pay.text }}
+          </option>
+        </select>
+
+      </div>
+    </div>
+
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.designation' | safetranslate}}</label>
+      </div>
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeedesid" (ngModelChange)="salarydesignationchange()">
+          <option *ngfor="let des of designation" [ngValue]="des.id">
+            {{ des.text }}
+          </option>
+        </select>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.grade' | safetranslate}}</label>
+      </div>
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeegradid" (ngModelChange)="salarygradechange()">
+          <option *ngfor="let gra of grade" [ngValue]="gra.id">
+            {{ gra.text }}
+          </option>
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.employeecategory' | safetranslate}}</label>
+      </div>
+
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeecatid" (ngModelChange)="salarycatchange()">
+          <option *ngfor="let cat of employeecategoary" [ngValue]="cat.id">
+            {{ cat.text }}
+          </option>
+        </select>
+
+
+      </div>
+    </div>
+
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.employeetype' | safetranslate}}</label>
+      </div>
+
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeetypid" (ngModelChange)="salarytypchange()">
+          <option *ngfor="let typ of employeetype" [ngValue]="typ.id">
+            {{ typ.text }}
+          </option>
+        </select>
+
+
+      </div>
+    </div>
+
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div class="pnlheading">
+        <label class="label-heading">{{'labels.employeestatus' | safetranslate}}</label>
+      </div>
+
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeestaid" (ngModelChange)="salarystatchange()">
+          <option *ngfor="let sta of employeestatus" [ngValue]="sta.id">
+            {{ sta.text }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+      <div>
+        <label class="label-heading">{{'labels.directreportto' | safetranslate}}</label>
+      </div>
+
+      <div class="row col-lg-12 col-md-12 col-sm-6">
+
+        <select class="form-control" [(ngmodel)]="employeesalaryfiltermaster.employeedirid" (ngModelChange)="salarydirchange()">
+          <option *ngfor="let dir of directreporting" [ngValue]="dir.id">
+            {{ dir.text }}
+          </option>
+        </select>
+
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12" style="margin-top: 12px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+   employee code input
+  <input type="text" class="form-control input-sm" placeholder="employee code" style="max-width: 200px;" />
+   employee name input
+  <input type="text" class="form-control input-sm" placeholder="employee name" style="max-width: 300px;" />
+   lookup icon
+  <img src="./assets/images/schlookupbig.png"
+                         style="height: 20px; cursor: pointer; margin-top: 6px;" />
+                  </div>
+                </div>-->
+        <!--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br />-->
+    <!--<div class="row">
+      <div class="col-md-12">
+        <div class="status-box-leftcolmd6-standard">
+          <div class="row">
+            <h3 class="pnlheader">
+              {{ 'labels.jobinformation' | safetranslate }}
+            </h3>
+            <br />
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.basestation(country)' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.employeestcountid"
+                            (ngmodelchange)="basicstationcountrychange()">
+                      <option *ngfor="let sta of basestationcountry" [ngvalue]="sta.id">
+                        {{ sta.text }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.currentstation(country)' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.employeestcurrid"
+                            (ngmodelchange)="currentstationcountrychange()">
+                      <option *ngfor="let cursta of currentstation" [ngvalue]="cursta.id">
+                        {{ cursta.text }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.profileshift' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.profileshiftid"
+                            (ngmodelchange)="profileshiftchange()">
+                      <option *ngfor="let pshift of profileshift" [ngvalue]="pshift.id">
+                        {{ pshift.text }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.directreportingto(employee)' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6" style="display: flex; align-items: center;">
+                    <input name="reportingemployee"
+                           [ngclass]="{'form-control input-sm':true}" [(ngmodel)]="employeesalary.reportingemployee" style="flex: 1; margin-right: 5px;">
+                    <img src="./assets/images/schlookupbig.png"
+                         style="height: 20px; cursor: pointer; margin-left: 5px; margin-top: 2px;" />
+                  </div>
+                </div>
+              </div>
+
+
+
+              <div class="row">
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.indirectreportingto(employee)' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6" style="display: flex; align-items: center;">
+                    <input name="reportingemployee1"
+                           [ngclass]="{'form-control input-sm':true}"
+                           [(ngmodel)]="employeesalary.reportingemployee1" style="flex: 1; margin-right: 5px;">
+                    <img src="./assets/images/schlookupbig.png"
+                         style="height: 20px; cursor: pointer; margin-left: 5px; margin-top: 2px;" />
+                  </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.basestationcity' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.basestationid"
+                            (ngmodelchange)="basestationchange()">
+
+                      <option *ngfor="let bsta of basestationcity" [ngvalue]="bsta.id">
+                        {{ bsta.text }}
+                      </option>
+                    </select>
+
+                  </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+
+                    <label class="label-heading"> {{ 'labels.currentstation(city)' | safetranslate }}</label>
+
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.currentstationid"
+                            (ngmodelchange)="currentstationchange()">
+
+                      <option *ngfor="let currsta of currentstationcity" [ngvalue]="currsta.id">
+                        {{ currsta.text }}
+                      </option>
+                    </select>
+
+                  </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.dutygroup' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.dutygroupid"
+                            (ngmodelchange)="dutygroupchange()">
+
+                      <option *ngfor="let dutgrp of dutygroup" [ngvalue]="dutgrp.id">
+                        {{ dutgrp.text }}
+                      </option>
+                    </select>
+
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="row">
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.autopresent' | safetranslate }}</label>
+
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeejobinformationmaster.autopresentid"
+                            (ngmodelchange)="autopresentchange()">
+                      <option *ngfor="let autpre of autopresent" [ngvalue]="autpre.id">
+                        {{ autpre.text }}
+                      </option>
+                    </select>
+
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>-->
+    <!--<br />-->
+    <!--<div class="row">
+      <div class="col-md-12">
+        <div class="status-box-leftcolmd6-standard">
+          <div class="row">
+            <h3 class="pnlheader">
+              {{ 'labels.resignation/separation' | safetranslate }}
+            </h3>
+            <br />
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.exittype' | safetranslate }}</label>
+                  </div>
+
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeeresignationmaster.exittypeid"
+                            (ngmodelchange)="exittypechange()">
+
+                      <option *ngfor="let exittyp of resignationexittype" [ngvalue]="exittyp.id">
+                        {{ exittyp.text }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div>
+                    <label class="label-heading"> {{ 'labels.exitreason' | safetranslate }}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngmodel)]="employeeresignationmaster.exitreasonid"
+                            (ngmodelchange)="exitreasonchange()">
+                      <option *ngfor="let exitrea of resignationexitreason" [ngvalue]="exitrea.id">
+                        {{ exitrea.text }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>-->
+
+  <!--</div>
+</div>-->
+
+<!--<div class="row-space" *ngif="selectedtab === 'paymentandsalary'">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row">
+          <h3 class="pnlheader">
+            {{ 'labels.advancesalaryfilters' | safetranslate }}
+          </h3>
+          <br />
+          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="row">
+
+              <div class="col-lg-6 col-md-6 col-sm-6 mb-10">
+                <div>
+                  <label class="label-heading">
+                    {{ 'labels.showemployeeswhose‘salaryandbenefitsetup’isnotcreated' | safetranslate }}
+                  </label>
+                </div>
+                <div class="row col-lg-6 col-md-6 col-sm-6 mb-10">
+                  <select class="form-control" [(ngmodel)]="advancesalaryfiltersmaster.advancesalaryid"
+                          (ngmodelchange)="advancesalarychange()">
+                    <option *ngfor="let advsal of advancesalary" [ngvalue]="advsal.id">
+                      {{ advsal.text }}
+                    </option>
+
+                  </select>
+                </div>
+              </div>
+              <div class="col-lg-6 col-md-6 col-sm-6 mb-10">
+                <div>
+                  <label class="label-heading">
+                    {{'labels.statusofemployeeapprovalforpayroll' | safetranslate}}
+                  </label>
+                </div>
+                <div class="row col-lg-6 col-md-6 col-sm-6 mb-10">
+                  <select class="form-control" [(ngmodel)]="advancesalaryfiltersmaster.employeeapppayid"
+                          (ngmodelchange)="employeeapppaychange()">
+                    <option *ngfor="let empapppay of employeeapppay" [ngvalue]="empapppay.id">
+                      {{ empapppay.text }}
+                    </option>
+                  </select>
+                </div>
+
+              </div>
+              <br />
+              <br />
+              <br />
+              <div class="col-lg-12 col-md-6 col-sm-6 mb-10">
+                <input type="checkbox" style="margin-top:3px;" />
+                <small class="text-muted" style="margin-bottom:3px;">&nbsp;&nbsp;only show those employees whose ‘salary’ is stopped.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <br />
+  <div class="row">
+    <div class="col-md-12">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row">
+          <h3 class="pnlheader">
+            {{ 'labels.salaryfilters' | safetranslate }}
+          </h3>
+          <br />
+ salary filters row 
+<div class="row col-lg-12 col-md-12 col-sm-12 col-xs-12 align-items-center">
+
+  <div class="col-lg-3 col-md-3 col-sm-3 mb-2">
+    <select class="form-control"
+            [(ngmodel)]="salaryfiltermaster.salaryfilterid"
+            (ngmodelchange)="salaryfilterchange()">
+      <option *ngfor="let dep of salaryfilter" [ngvalue]="dep.id">
+        {{ dep.text }}
+      </option>
+    </select>
+  </div>
+
+  <div class="col-lg-3 col-md-3 col-sm-3 mb-2">
+    <select class="form-control"
+            [(ngmodel)]="salaryfiltermaster.salaryvalfilterid"
+            (ngmodelchange)="salaryvalfilterchange()">
+      <option *ngfor="let dep of salaryvalfilter" [ngvalue]="dep.id">
+        {{ dep.text }}
+      </option>
+    </select>
+  </div>
+
+  <div class="col-lg-3 col-md-3 col-sm-3 mb-2">
+    <input class="form-control input-sm"
+           [(ngmodel)]="salaryfiltermaster.amount"
+           type="number">
+  </div>
+
+  <div class="col-lg-2 col-md-2 col-sm-2 mb-2">
+    <select class="form-control"
+            [(ngmodel)]="salaryfiltermaster.salaryvalcurrid"
+            (ngmodelchange)="salaryvalcurrchange()">
+      <option *ngfor="let dep of salaryvalcurr" [ngvalue]="dep.id">
+        {{ dep.text }}
+      </option>
+    </select>
+  </div>
+ plus/minus icon in last column 
+<div class="col-lg-1 col-md-1 col-sm-1 d-flex justify-content-center align-items-center mb-2">
+    <img [src]="addrupees ? './assets/images/minus.png' : './assets/images/plus.png'"
+         style="height: 20px; cursor: pointer;"
+         (click)="addsalaryfiltertogrid()" />
+  </div>
+</div>
+ grid section 
+<div class="pnlbody">
+grid preview here
+<v5-grid [formid]="''"
+           [gridid]="''"
+           [gridtype]="'readonly'"
+           [datarenderfrom]="'clientside'"
+           [recordsperpage]="'5'"
+           [defaultsortexpression]="'code'"
+           [defaultsortdirection]="'asc'"
+           [searchable]="true"
+           [griddatasource]="employeesalaryfiltergrid"
+           [enableinsertion]="false"
+           [enableediting]="false"
+           [enabledeletion]="false"
+           gridtype="singleselection">
+
+    <ng-container forgridheading>
+      <th headingdef dotextcode="salarycriteria">
+        <label>{{'labels.salarycriteria' | safetranslate}}</label>
+      </th>
+      <th headingdef dotextcode="operand">
+        operand
+      </th>
+      <th headingdef dotextcode="amount">
+        amount
+      </th>
+      <th headingdef dotextcode="currency">
+        currency
+      </th>
+    </ng-container>
+
+    <ng-container *rowdata="let row; let i=index">
+      <td rowdef>{{ row.salarycriteria }}</td>
+      <td rowdef>{{ row.operand }}</td>
+      <td rowdef>{{ row.amount }}</td>
+      <td rowdef>{{ row.currency }}</td>
+    </ng-container>
+  </v5-grid>
+</div>
+</div>
+      </div>
+    </div>
+  </div>
+
+  <br />
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row ">
+          <h3 class="pnlheader">
+            {{ 'labels.paymentmode' | safetranslate }}
+
+          </h3>
+        </div>
+
+
+
+        <br />
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+          <div class="status-box-leftcolmd6-standard">
+            <div class="row">
+              <h3 class="pnlheader">
+                <label class="label-heading">  {{ 'labels.cash' | safetranslate }}</label>
+              </h3>
+              <br />
+              <div class="col-lg-6 col-md-6 col-sm-6">
+                <input type="checkbox"
+                       [(ngmodel)]="cashchecked"
+                       (change)="cashpanelopen = cashchecked" />
+                <label class="ctrllbl">&nbsp;&nbsp;cash</label>
+              </div>
+            </div>
+          </div>
+          <br />
+          <div class="status-box-leftcolmd6-standard">
+            <div class="row">
+              <h3 class="pnlheader">
+                <label class="label-heading">{{ 'labels.cheque' | safetranslate }}</label>
+              </h3>
+              <br />
+              <div class="col-lg-6 col-md-6 col-sm-6">
+                <input type="checkbox"
+                       [(ngmodel)]="chequechecked"
+                       (change)="chequepanelopen = chequechecked" />
+                <label class="ctrllbl">&nbsp;&nbsp;cheque</label>
+                <div class="row">
+                  <br />
+                  <div class="col-lg-6 col-md-6 col-sm-6" *ngif="chequepanelopen">
+                    <label class="label-heading">{{ 'labels.payee' | safetranslate }}</label>
+                    <input maxlength="50"
+                           [ngclass]="{'form-control input-sm':true}"
+                           [(ngmodel)]="paymentmodechequepayeemaster.payee"
+                           placeholder="payee" type="number">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+          <div class="status-box-leftcolmd6-standard">
+            <div class="row">
+              <h3 class="pnlheader">
+                <label class="label-heading">
+                  {{ 'labels.banktransfer' | safetranslate }}
+                </label>
+              </h3>
+              <br />
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <input type="checkbox"
+                       [(ngmodel)]="banktransferchecked"
+                       (change)="banktransferpanelopen = banktransferchecked" />
+                <label class="ctrllbl">&nbsp;&nbsp;bank transfer</label>
+              </div>
+
+              <div *ngif="banktransferpanelopen">
+
+                <div class="row">
+                  <div class="col-lg-6 col-md-6 col-sm-6">
+                    <br />
+                    <div class="status-box-leftcolmd6-standard" style="margin-left: 15px; margin-top: -10px;">
+                      <div>
+                        <label class="label-heading">{{'labels.employeebankdetails' | safetranslate}}</label>
+                      </div>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-4">
+                          <label class="label-heading">   {{'labels.payee' | safetranslate}}</label>
+                          <select class="form-control" [(ngmodel)]="banktransfermaster.bankdetailid"
+                                  (ngmodelchange)="bankdetailchange()">
+                            <option *ngfor="let bankdet of bankdetail" [ngvalue]="bankdet.id">
+                              {{ bankdet.text }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                          <label class="label-heading">   {{'labels.bankbranch' | safetranslate}}</label>
+                          <select class="form-control" [(ngmodel)]="banktransfermaster.bankbranchid"
+                                  (ngmodelchange)="bankbranchchange()">
+                            <option *ngfor="let bankbranch of bankbranch" [ngvalue]="bankbranch.id">
+                              {{ bankbranch.text }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                          <label class="label-heading">{{'labels.accounttitle' | safetranslate}}</label>
+                          <input maxlength="50"
+                                 [ngclass]="{'form-control input-sm':true}"
+                                 [(ngmodel)]="banktransfermaster.accounttitle"
+                                 type="number">
+                        </div>
+
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                          <label class="label-heading">   {{'labels.accountnumber' | safetranslate}}</label>
+                          <input maxlength="50"
+                                 [ngclass]="{'form-control input-sm':true}"
+                                 [(ngmodel)]="banktransfermaster.accountnumber"
+                                 type="number">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  <div class="col-lg-6 col-md-6 col-sm-6">
+                    <br />
+                    <div class="status-box-leftcolmd6-standard" style="margin-right: 20px; margin-top: -10px;">
+                      <div>
+                        <label class="label-heading">{{'labels.companybankdetails' | safetranslate}}</label>
+                      </div>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                          <label class="label-heading">{{'labels.companybankdetails' | safetranslate}}</label>
+                          <select class="form-control" [(ngmodel)]="companybankdetailsmaster.companybankdetailid"
+                                  (ngmodelchange)="companybankdetailchange()">
+                            <option *ngfor="let compbankdet of companybankdetail" [ngvalue]="compbankdet.id">
+                              {{ compbankdet.text }}
+                            </option>
+                          </select>
+
+                        </div>
+
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                          <label class="label-heading">{{'labels.bankbranch' | safetranslate}}</label>
+                          <select class="form-control" [(ngmodel)]="companybankdetailsmaster.bankbranchid"
+                                  (ngmodelchange)="bankbranchchange()">
+                            <option *ngfor="let bankbranch of companybankbranch" [ngvalue]="bankbranch.id">
+                              {{ bankbranch.text }}
+                            </option>
+                          </select>
+
+                        </div>
+                      </div>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                          <label>account number</label>
+                          <input maxlength="50"
+                                 [ngclass]="{'form-control input-sm':true}"
+                                 [(ngmodel)]="companybankdetailsmaster.companybankamount"
+                                 type="number">
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="row-space" *ngif="selectedtab === 'datesandentitlements'">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+    <div class="row">
+
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row">
+          <h3 class="pnlheader">
+            {{ 'labels.entitlements' | safetranslate }}
+          </h3>
+          <br />
+
+          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="status-box-leftcolmd6-standard">
+
+              <div class="row">
+                <div class="col-md-9"></div>
+                <div class="col-md-3">
+                  <input style="margin-left:-90px;" type="checkbox"
+                         id="mastertoggleentitlements"
+                         [(ngmodel)]="mastertoggleentitlements"
+                         (change)="toggleallentitlements(mastertoggleentitlements)" class="check-label" />
+                  <label for="mastertoggleentitlements">&nbsp;&nbsp; {{ 'labels.checkall' | safetranslate }}</label>
+                </div>
+
+                <div class="col-lg-4 col-md-4 col-sm-4 mb-10" *ngfor="let item of entitlementslist">
+                  <input type="checkbox"
+                         [(ngmodel)]="item.checked"
+                         (change)="updatemastertoggle()"
+                         [id]="item.id" />
+                  <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-6 col-md-6 col-sm-6 mb-10" *ngfor="let item of entitlementslist1">
+                  <input type="checkbox"
+                         [(ngmodel)]="item.checked"
+                         (change)="updatemastertoggle()"
+                         [id]="item.id" />
+                  <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+                </div>
+
+              </div>
+              <div class="row">
+                <div class="col-lg-6 col-md-6 col-sm-6 mb-10" *ngfor="let item of entitlementslist2">
+                  <input type="checkbox"
+                         [(ngmodel)]="item.checked"
+                         (change)="updatemastertoggle()"
+                         [id]="item.id" />
+                  <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <br />
+
+
+
+  </div>
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+    <div class="status-box-leftcolmd6-standard">
+      <div class="row">
+        <h3 class="pnlheader">
+          {{'labels.datefilters' | safetranslate}}
+        </h3>
+        <br />
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6 mb-10">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading"> {{'labels.datesofjoiningfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading"> {{'labels.datesofconfirmationfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+
+
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">   {{'labels.datesofconfirmationduefallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">   {{'labels.datesoflastpromotions(w.e.f)fallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject" (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject" (pickerchange)="subjectdatepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">  {{'labels.datesoflastincrementfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading"> {{'labels.datesofnextincrementfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject" (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+          <br />
+
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading"> {{'labels.datesofcontractexpiryfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject" (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">  {{'labels.datesofcontractexpiryfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">   {{'labels.datesofbirthfallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">    {{'labels.datesofretirementduefallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading">   {{'labels.resignationsubmittedbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="subjectdatepickerchanged($event, 'datefromsubject')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading"> {{'labels.lastworkingdatefallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="datepickerchanged($event, 'confirmationdatefrom')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+              <div class="status-box-leftcolmd6-standard">
+                <div>
+                  <label class="label-heading"> {{'labels.datesofresignationacceptancefallingbetween' | safetranslate}}</label>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-6">
+                    <label class="label-heading"> {{'labels.datefrom' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datefromsubject"
+                                 (pickerchange)="datepickerchanged($event, 'joiningdatefrom')">
+                    </date-picker>
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="label-heading">{{'labels.dateto' | safetranslate}}</label>
+                    <date-picker [defaultvalue]="datetosubject"
+                                 (pickerchange)="datepickerchanged($event, 'datetosubject')">
+                    </date-picker>
+                  </div>
+
+                </div>
+
+
+              </div>
+            </div>
+          </div>
+          <br />
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<br />
+
+
+</div>
+<div class="row-space" *ngif="selectedtab === 'reportlayout'">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row">
+          <h3 class="pnlheader">
+            {{ 'labels.groupby' | safetranslate }}
+          </h3>
+          <br />
+          <div class="row col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+            <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+              <div>
+                <label class="label-heading"> {{ 'labels.groupby1' | safetranslate }}</label>
+              </div>
+              <select class="form-control" [(ngmodel)]="groupbymaster.grpby1id" (ngmodelchange)="grpby1change()">
+                <option *ngfor="let grpby1 of grpby1" [ngvalue]="grpby1.id">
+                  {{ grpby1.text }}
+                </option>
+              </select>
+
+
+            </div>
+            <div class="col-lg-1 col-md-1 col-sm-1 mb-10">
+
+            </div>
+
+            <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+              <div>
+                <label class="label-heading"> {{ 'labels.groupby2' | safetranslate }}</label>
+              </div>
+              <select class="form-control" [(ngmodel)]="groupbymaster.grpby1id" (ngmodelchange)="grpby2change()">
+                <option *ngfor="let grpby2 of grpby2" [ngvalue]="grpby2.id">
+                  {{ grpby2.text }}
+                </option>
+              </select>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br />
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row">
+          <h3 class="pnlheader">
+            {{ 'labels.sorting' | safetranslate }}
+          </h3>
+          <br />
+          <div class="row col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+              <div>
+                <label class="label-heading"> {{ 'labels.sortby' | safetranslate }}</label>
+
+              </div>
+              <select class="form-control" [(ngmodel)]="sortbymaster.sortbyid" (ngmodelchange)="sortby1change()">
+                <option *ngfor="let sortby1 of sortby1" [ngvalue]="sortby1.id">
+                  {{ sortby1.text }}
+                </option>
+              </select>
+
+            </div>
+            <div class="col-lg-1 col-md-1 col-sm-1 mb-10">
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+              <div class="pnlheading">
+                <label></label>
+              </div>
+              <select class="form-control" [(ngmodel)]="sortbymaster.sortbyid2" (ngmodelchange)="sortby2change()">
+                <option *ngfor="let sortbyid of sortby2" [ngvalue]="sortbyid.id">
+                  {{ sortbyid.text }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <br />
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="row">
+          <h3 class="pnlheader">
+            {{ 'labels.columnstobeshownonreport' | safetranslate }}
+          </h3>
+ master check all 
+<div class="row">
+  <div>
+    <div class="col-lg-9"></div>
+    <div class="col-md-3">
+      <input style="margin-left:-20px;" type="checkbox"
+             id="mastertogglecolumns"
+             [(ngmodel)]="mastertogglecolumns"
+             (change)="checkallcolumns(mastertogglecolumns)" />
+      <label for="mastertogglecolumns" class="check-label" style="margin-left:10px;margin-bottom:0;"> {{ 'labels.checkall' | safetranslate }}</label>
+    </div>
+  </div>
+</div>
+<br />
+ employee information 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.employeeinformation' | safetranslate }}</label>
+    </h3>
+    <div *ngif="employeeinformationlist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertoggleemployee"
+               [(ngmodel)]="mastertoggleemployee"
+               (change)="toggleallemployeeinfo(mastertoggleemployee)" />
+        <label for="mastertoggleemployee" class="check-label" style="margin-left:10px;margin-bottom:0;">{{ 'labels.checkall' | safetranslate }}</label>
+      </div>
+    </div>
+    <br />
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of employeeinformationlist">
+      <input type="checkbox"
+             [(ngmodel)]="item.checked"
+             [id]="item.id"
+             name="employeeinformationlist" />
+      <label [for]="item.id" style="margin-left:10px">{{ item.name }}</label>
+    </div>
+  </div>
+</div>
+<br />
+ job information 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.jobinformation' | safetranslate }}</label>
+
+    </h3>
+
+    <div *ngif="jobinformationlist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertogglejobinfo"
+               [(ngmodel)]="mastertogglejobinfo"
+               (change)="togglealljobinfo(mastertogglejobinfo)" />
+        <label class="check-label" for="mastertogglejobinfo" style="margin-left:10px; margin-bottom:0;">{{ 'labels.checkall' | safetranslate }}</label>
+      </div>
+      <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of jobinformationlist">
+        <input type="checkbox"
+               [(ngmodel)]="item.checked"
+               [id]="item.id"
+               name="jobinformationlist" />
+        <label [for]="item.id" style="margin-left:10px">{{ item.name }}</label>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+<br />
+ dates 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.dates' | safetranslate }}</label>
+    </h3>
+    <div *ngif="dateslist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertoggledates"
+               [(ngmodel)]="mastertoggledates"
+               (change)="togglealldates(mastertoggledates)" />
+        <label for="mastertoggledates" class="check-label" style="margin-left: 10px; margin-bottom:0;">{{ 'labels.checkall' | safetranslate }}</label>
+
+      </div>
+    </div>
+<br />
+<div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of dateslist">
+  <input type="checkbox"
+         [(ngmodel)]="item.checked"
+         [id]="item.id"
+         name="dateslist" />
+  <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+
+</div>
+</div>
+</div>
+<br />
+ entitlements 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.entitlements' | safetranslate }}</label>
+    </h3>
+    <div *ngif="entitlementlist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertoggleentitlement"
+               [(ngmodel)]="mastertoggleentitlement"
+               (change)="toggleallentitlement(mastertoggleentitlement)" />
+        <label for="mastertoggleentitlement" class="check-label" style="margin-left:10px;margin-bottom:0;">check all</label>
+
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of entitlementlist">
+      <input type="checkbox"
+             [(ngmodel)]="item.checked"
+             [id]="item.id"
+             name="entitlementlist" />
+      <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+    </div>
+
+  </div>
+</div>
+<br />
+ salary information 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="ctrllbl">{{ 'labels.salaryinformation' | safetranslate }}</label>
+    </h3>
+    <br />
+    <div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+      <div class="row">
+        <h3 class="pnlheader">
+          <label class="label-heading">{{ 'labels.salaryinformation' | safetranslate }}</label>
+        </h3>
+
+        <div *ngif="salaryinfolist?.length">
+          <div class="col-md-9"></div>
+          <div class="col-md-3">
+            <input type="checkbox"
+                   id="mastertogglesalaryinfo"
+                   [(ngmodel)]="mastertogglesalaryinfo"
+                   (change)="toggleallsalaryinfo(mastertogglesalaryinfo)" />
+            <label class="check-label" for="mastertogglesalaryinfo" style="margin-left:10px;margin-bottom:0;">check all</label>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of salaryinfolist">
+          <input type="checkbox"
+                 [(ngmodel)]="item.checked"
+                 [id]="item.id"
+                 name="salaryinfolist" />
+          <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+        </div>
+      </div>
+    </div>
+    <br />
+ salary review information 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.salaryreviewinformation' | safetranslate }}</label>
+
+    </h3>
+    <div *ngif="salaryreviewinfolist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertogglesalaryreviewinfo"
+               [(ngmodel)]="mastertogglesalaryreviewinfo"
+               (change)="toggleallsalaryreviewinfo(mastertogglesalaryreviewinfo)" />
+        <label class="check-label" for="mastertogglesalaryreviewinfo" style="margin-left:10px;margin-bottom:0;">check all</label>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of salaryreviewinfolist">
+      <input type="checkbox"
+             [(ngmodel)]="item.checked"
+             [id]="item.id"
+             name="salaryreviewinfolist" />
+      <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+    </div>
+
+  </div>
+</div>
+</div>
+</div>
+<br />
+ payment mode 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.paymentmode' | safetranslate }}</label>
+    </h3>
+
+    <div *ngif="paymentmodelist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertogglepaymentmode"
+               [(ngmodel)]="mastertogglepaymentmode"
+               (change)="toggleallpaymentmode(mastertogglepaymentmode)" />
+        <label class="check-label" for="mastertogglepaymentmode" style="margin-left:10px;margin-bottom:0;">check all</label>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of paymentmodelist">
+      <input type="checkbox"
+             [(ngmodel)]="item.checked"
+             [id]="item.id"
+             name="paymentmodelist" />
+      <label [for]="item.id" style="margin-left:10px">{{ item.name }}</label>
+    </div>
+  </div>
+</div>
+<br />
+ resignation / separation 
+<div class="status-box-leftcolmd6-standard" style="margin-left:10px; margin-right:10px;">
+  <div class="row">
+    <h3 class="pnlheader">
+      <label class="label-heading">{{ 'labels.resignation/separation' | safetranslate }}</label>
+    </h3>
+    <div *ngif="resignationlist?.length">
+      <div class="col-md-9"></div>
+      <div class="col-md-3">
+        <input type="checkbox"
+               id="mastertoggleresignation"
+               [(ngmodel)]="mastertoggleresignation"
+               (change)="toggleallresignation(mastertoggleresignation)" />
+        <label class="check-label" for="mastertoggleresignation" style="margin-left:10px;margin-bottom:0;">check all</label>
+
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngfor="let item of resignationlist">
+      <input type="checkbox"
+             [(ngmodel)]="item.checked"
+             [id]="item.id"
+             name="resignationlist" />
+      <label [for]="item.id" style="margin-left:10px;">{{ item.name }}</label>
+    </div>
+  </div>
+</div>
+<br />
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+ earnings / deductions 
+<div class="row-space" *ngif="selectedtab === 'earnings'">
+  <div class="status-box-leftcolmd6-standard">
+    <div class="row">
+      <h3 class="pnlheader">
+        {{ 'labels.earnings/deductions' | safetranslate }}
+
+      </h3>
+    </div>
+    <br />
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="col-lg-6 col-md-6 col-sm-6">
+      <div class="status-box-leftcolmd6-standard">
+        <div class="pnlbody">
+grid preview here
+<v5-grid [formid]="''"
+               [gridid]="''"
+               [gridtype]="'readonly'"
+               [datarenderfrom]="'clientside'"
+               [recordsperpage]="'5'"
+               [defaultsortexpression]="'code'"
+               [defaultsortdirection]="'asc'"
+               [searchable]="true"
+               [griddatasource]="earninggridmodel"
+               [enableinsertion]="false"
+               [enableediting]="false"
+               [enabledeletion]="false"
+               gridtype="singleselection">
+
+        <ng-container forgridheading>
+
+          <th headingdef dotextcode="templatecode">
+            <label>  {{'labels.basicsalary' | safetranslate}} </label>
+          </th>
+          <th headingdef dotextcode="templatedescription">
+            <label>  {{'labels.houserent' | safetranslate}} </label>
+          </th>
+          <th headingdef dotextcode="createdby">
+            <label>  {{'labels.cola' | safetranslate}} </label>
+          </th>
+          <th headingdef dotextcode="createdon">
+            <label>  {{'labels.cola1994' | safetranslate}} </label>
+          </th>
+          <th headingdef dotextcode="createdonsharetemplatewithothers">
+            <label>  {{'labels.medicalallowance' | safetranslate}} </label>
+          </th>
+        </ng-container>
+        <ng-container *rowdata="let row; let i=index">
+          <td rowdef>{{ row.basicsalary }}</td>
+          <td rowdef>{{row.houserent}}</td>
+          <td rowdef>{{row.cola}}</td>
+          <td rowdef>{{row.cola1994}}</td>
+          <td rowdef>{{row.medicalallowance}}</td>
+
+        </ng-container>
+      </v5-grid>
+    </div>
+  </div>
+
+</div>
+<div class="col-lg-6 col-md-6 col-sm-6">
+  <div class="status-box-leftcolmd6-standard">
+
+    <div class="pnlbody">
+grid preview here
+<v5-grid [formid]="''"
+                   [gridid]="''"
+                   [gridtype]="'readonly'"
+                   [datarenderfrom]="'clientside'"
+                   [recordsperpage]="'5'"
+                   [defaultsortexpression]="'code'"
+                   [defaultsortdirection]="'asc'"
+                   [searchable]="true"
+                   [griddatasource]="deductiongridmodel"
+                   [enableinsertion]="false"
+                   [enableediting]="false"
+                   [enabledeletion]="false"
+                   gridtype="singleselection">
+
+            <ng-container forgridheading>
+
+              <th headingdef dotextcode="templatecode">
+                <label>  {{'labels.basicsalary' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="templatedescription">
+                <label>  {{'labels.houserent' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="createdby">
+                <label>  {{'labels.cola' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="createdon">
+                <label>  {{'labels.cola1994' | safetranslate}} </label>
+              </th>
+              <th headingdef dotextcode="createdonsharetemplatewithothers">
+                <label>  {{'labels.medicalallowance' | safetranslate}} </label>
+              </th>
+            </ng-container>
+            <ng-container *rowdata="let row; let i=index">
+              <td rowdef>{{row.basicsalary }}</td>
+              <td rowdef>{{row.houserent}}</td>
+              <td rowdef>{{row.cola}}</td>
+              <td rowdef>{{row.cola1994}}</td>
+              <td rowdef>{{row.medicalallowance}}</td>
+
+            </ng-container>
+          </v5-grid>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+</div>
+</div>
+        </div>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <!--</div>
+
+
+
+
+
+
+      <br />
+
+
+
+    </div>-->
+    <!--<div class="row">
+      <div class="col-lg-12 no-gutter no-guttercheck text-center">
+        <button class="btn-button btn-spacing" type="button">
+          <img src="./assets/images/generatereport.png" />
+          generate report
+        </button>
+        &nbsp;&nbsp;&nbsp;
+        <button class="btn-button btn-spacing" type="button">
+          <img class="ng-tns-c5-3" src="./assets/images/refreshbtn.png" style="width: 18px;" />refresh
+        </button>
+        &nbsp;&nbsp;&nbsp;
+        <button class="btn-button btn-spacing" type="button">
+          <img class="ng-tns-c5-3" src="./assets/images/template.png" style="width: 18px;" />create selected parameters as template
+        </button>
+        <br />
+        <br />
+      </div>
+
+    </div>-->
+
+
+  <!--</div>
+</div>
+</div>
+</div>-->

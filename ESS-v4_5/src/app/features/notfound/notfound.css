@@ -1,0 +1,85 @@
+:host {
+  display: block;
+}
+
+.nf {
+  max-width: 760px;
+  margin: 10vh auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.nf__code {
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0 0 .25rem;
+}
+
+.nf__title {
+  font-size: 1.25rem;
+  margin: 0 0 1rem;
+}
+
+.nf__desc {
+  color: #6b7280; /* gray-500 */
+  margin: 0 0 1.25rem;
+}
+
+.nf__code-inline {
+  background: #f3f4f6; /* gray-100 */
+  padding: .1rem .4rem;
+  border-radius: .25rem;
+}
+
+.nf__actions {
+  display: flex;
+  gap: .75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  padding: .6rem 1rem;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: .5rem;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+  .btn:hover {
+    filter: brightness(0.97);
+  }
+
+.btn--outline {
+  background: transparent;
+}
+
+.nf__hint {
+  font-size: .9rem;
+  color: #6b7280;
+}
+
+/* Dark mode polish */
+@media (prefers-color-scheme: dark) {
+  .nf {
+    color: #e5e7eb;
+  }
+
+  .nf__desc, .nf__hint {
+    color: #9ca3af;
+  }
+
+  .btn {
+    background: transparent;
+    color: #e5e7eb;
+    border-color: #374151;
+  }
+
+  .nf__code-inline {
+    background: #111827;
+    color: #e5e7eb;
+  }
+}

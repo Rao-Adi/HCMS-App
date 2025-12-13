@@ -1,0 +1,107 @@
+<nav class="modern-menu" [class.expanded]="isExpanded">
+  <div class="menu-scroll-container">
+    <ul class="list-unstyled mb-0">
+      <li *ngFor="let root of RootItems"
+          class="menu-item root-item Menu_{{root.Value.split(' ')[0]}}"
+          [class.has-children]="root.child?.length"
+          [class.open]="openSubmenus[key(root.Value)]">
+
+        <a class="menu-link d-flex align-items-center rounded-2"
+           [routerLink]="(!root.child?.length && root.NavigateUrl) ? [root.NavigateUrl.toLowerCase()] : null"
+           [href]="(root.child?.length) ? '#' : null"
+           (click)="handleRootClick($event, root)"
+           (mouseenter)="showRootHint($event, root.Text)"
+           (mouseleave)="hideRootHint()"
+           [attr.title]="isExpanded ? root.Text : null"
+           [attr.aria-expanded]="root.child?.length ? openSubmenus[key(root.Value)] : null">
+          <span class="menu-icon" aria-hidden="true"></span>
+          <span class="menu-text flex-grow-1 text-truncate fw-medium">{{root.Text}}</span>
+          <span *ngIf="root.count" class="menu-count">{{root.count}}</span>
+          <span *ngIf="root.child?.length" class="submenu-indicator" aria-hidden="true">›</span>
+        </a>
+
+        <ul class="submenu level-1 list-unstyled ms-1"
+            *ngIf="isExpanded && root.child?.length && openSubmenus[key(root.Value)]">
+          <li *ngFor="let child of root.child"
+              class="menu-item {{child.Class || ''}}"
+              [class.has-children]="child.subChild?.length"
+              [class.open]="openSubmenus[getSubmenuKey(root.Value, child.Value)]">
+
+            <div *ngIf="child.ClsSep" class="separator"></div>
+
+            <a *ngIf="!child.ClsSep"
+               class="menu-link d-flex align-items-center rounded-2"
+               [routerLink]="(!child.subChild?.length && child.NavigateUrl) ? [child.NavigateUrl.toLowerCase()] : null"
+               [href]="(child.subChild?.length) ? '#' : null"
+               (click)="handleL1Click($event, root, child)"
+               [attr.title]="child.Text"
+               [attr.aria-expanded]="child.subChild?.length ? openSubmenus[getSubmenuKey(root.Value, child.Value)] : null">
+              <span class="menu-text flex-grow-1 text-truncate">{{child.Text}}</span>
+              <span *ngIf="child.count" class="menu-count sub-count">{{child.count}}</span>
+              <span *ngIf="child.subChild?.length" class="submenu-indicator" aria-hidden="true">›</span>
+            </a>
+
+            <ul class="submenu level-2 list-unstyled" *ngIf="isExpanded && child.subChild?.length && openSubmenus[getSubmenuKey(root.Value, child.Value)]">
+              <li *ngFor="let sub of child.subChild" class="menu-item {{sub.Class || ''}}">
+                <div *ngIf="sub.ClsSep || sub.CLSSEP" class="separator"></div>
+
+                <a *ngIf="!sub.ClsSep && !sub.CLSSEP"
+                   class="menu-link d-flex align-items-center rounded-2"
+                   [routerLink]="sub.NavigateUrl ? [sub.NavigateUrl.toLowerCase()] : null"
+                   (click)="selectIfLeaf(sub)"
+                   [attr.title]="sub.Text">
+                  <span class="menu-text flex-grow-1 text-truncate">{{sub.Text}}</span>
+                  <span *ngIf="sub.count" class="menu-count sub-count">{{sub.count}}</span>
+                </a>
+              </li>
+            </ul>
+
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <ng-template #flyoutTpl let-level="level" let-root="root" let-child="child">
+    <div class="flyout shadow border rounded-3">
+      <ng-container *ngIf="level === 1">
+        <div class="flyout-header">{{ root.Text }}</div>
+        <ul class="submenu level-1 in-flyout list-unstyled">
+          <li *ngFor="let c of root.child" class="menu-item" [class.has-children]="c.subChild?.length">
+            <div *ngIf="c.ClsSep" class="separator"></div>
+
+            <a *ngIf="!c.ClsSep"
+               class="menu-link d-flex align-items-center rounded-2"
+               [routerLink]="(!c.subChild?.length && c.NavigateUrl) ? [c.NavigateUrl.toLowerCase()] : null"
+               [href]="(c.subChild?.length) ? '#' : null"
+               (click)="handleFlyoutL1Click($event, root, c)"
+               (mouseenter)="handleFlyoutL1Enter($event, root, c)"
+               [attr.title]="c.Text">
+              <span class="menu-text flex-grow-1 text-truncate">{{c.Text}}</span>
+              <span *ngIf="c.count" class="menu-count sub-count">{{c.count}}</span>
+              <span *ngIf="c.subChild?.length" class="submenu-indicator" aria-hidden="true">›</span>
+            </a>
+          </li>
+        </ul>
+      </ng-container>
+
+      <ng-container *ngIf="level === 2">
+        <div class="flyout-header">{{ child.Text }}</div>
+        <ul class="submenu level-2 in-flyout list-unstyled">
+          <li *ngFor="let s of child.subChild" class="menu-item">
+            <div *ngIf="s.ClsSep || s.CLSSEP" class="separator"></div>
+
+            <a *ngIf="!s.ClsSep && !s.CLSSEP"
+               class="menu-link d-flex align-items-center rounded-2"
+               [routerLink]="s.NavigateUrl ? [s.NavigateUrl.toLowerCase()] : null"
+               (click)="selectIfLeaf(s)"
+               [attr.title]="s.Text">
+              <span class="menu-text flex-grow-1 text-truncate">{{s.Text}}</span>
+              <span *ngIf="s.count" class="menu-count sub-count">{{s.count}}</span>
+            </a>
+          </li>
+        </ul>
+      </ng-container>
+    </div>
+  </ng-template>
+</nav>

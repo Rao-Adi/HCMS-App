@@ -1,0 +1,517 @@
+:host {
+  display: block;
+  height: 100%;
+  /* overflow: hidden;  <-- remove this */
+  overflow: visible; /* add this */
+}
+/* optional but harmless safety net */
+.modern-menu {
+  overflow: visible;
+}
+.modern-menu {
+  --icon-size: 20px;
+  width: 260px;
+  background: #fff;
+  font: 14px Inter,'Segoe UI',system-ui,-apple-system,sans-serif;
+  transition: width .25s ease;
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+  .modern-menu:not(.expanded) {
+    width: 72px;
+  }
+
+/* Scrollable menu container */
+.menu-scroll-container {
+  flex: 1 1 auto;
+  /* was: overflow-y: auto; overflow-x: hidden; */
+  overflow-y: auto;
+  overflow-x: hidden; /* <-- important */
+  padding: 0;
+}
+
+  /* Fancy custom scrollbar - slim and subtle */
+  .menu-scroll-container::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .menu-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+  }
+
+  .menu-scroll-container::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+    transition: background 0.2s ease, opacity 0.2s ease;
+  }
+
+    .menu-scroll-container::-webkit-scrollbar-thumb:hover {
+      background: #cbd5e1;
+    }
+
+    .menu-scroll-container::-webkit-scrollbar-thumb:active {
+      background: #94a3b8;
+    }
+
+/* Firefox scrollbar */
+.menu-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 .5rem 0;
+}
+
+.menu-item {
+  position: relative;
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .625rem 1rem;
+  color: #334155;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, transform .1s ease;
+  border-radius: .5rem;
+  margin: .125rem .5rem;
+  position: relative;
+}
+
+  .menu-link:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    transform: translateX(2px);
+  }
+
+  .menu-link:active {
+    transform: translateX(0);
+  }
+
+.menu-item.activepage > .menu-link {
+  background: #27347c;
+  color: #fff;
+  transform: translateX(0);
+}
+
+  .menu-item.activepage > .menu-link:hover {
+    background: #1e2966;
+  }
+
+.menu-icon {
+  display: none;
+}
+
+.root-item .menu-icon {
+  display: inline-block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex: 0 0 var(--icon-size);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  opacity: .7;
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.menu-link:hover .menu-icon {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.menu-item.activepage > .menu-link .menu-icon {
+  opacity: 1;
+}
+
+/* Icon map for root items */
+.root-item.Menu_HRISRecruitmentRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/recruitment.png');
+}
+
+.root-item.Menu_PsychometricTesting .menu-icon {
+  background-image: url('/assets/images/menu-icon/assessment.png');
+}
+
+.root-item.Menu_PersonalInformation .menu-icon {
+  background-image: url('/assets/images/menu-icon/onboarding.png');
+}
+
+.root-item.Menu_AssetsManagement .menu-icon {
+  background-image: url('/assets/images/menu-icon/assets.png');
+}
+
+.root-item.Menu_HRISAttendanceRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/attendance.png');
+}
+
+.root-item.Menu_HRISLeaveRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/leave.png');
+}
+
+.root-item.Menu_TimeSheet .menu-icon {
+  background-image: url('/assets/images/menu-icon/timesheet.png');
+}
+
+.root-item.Menu_ExpenseManager .menu-icon {
+  background-image: url('/assets/images/menu-icon/expense.png');
+}
+
+.root-item.Menu_HRISTrainingRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/training.png');
+}
+
+.root-item.Menu_Learning .menu-icon {
+  background-image: url('/assets/images/menu-icon/learning.png');
+}
+
+.root-item.Menu_PerformanceRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/performance.png');
+}
+
+.root-item.Menu_SuccessionPlanning .menu-icon {
+  background-image: url('/assets/images/menu-icon/succession.png');
+}
+
+.root-item.Menu_HRIS360AppriasalRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/360-survey.png');
+}
+
+.root-item.Menu_HRISSurveyRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/survey.png');
+}
+
+.root-item.Menu_TaskManagement .menu-icon {
+  background-image: url('/assets/images/menu-icon/task.png');
+}
+
+.root-item.Menu_Collaboration .menu-icon {
+  background-image: url('/assets/images/menu-icon/callaboration.png');
+}
+
+.root-item.Menu_KnowledgeSharing .menu-icon {
+  background-image: url('/assets/images/menu-icon/knowledge.png');
+}
+
+.root-item.Menu_HRISSeperationRoot .menu-icon {
+  background-image: url('/assets/images/menu-icon/seperation.png');
+}
+
+.root-item.Menu_Metrics .menu-icon {
+  background-image: url('/assets/images/menu-icon/metrics.png');
+}
+
+.root-item.Menu_HRIStool .menu-icon {
+  background-image: url('/assets/images/menu-icon/tools.png');
+}
+
+.root-item.Menu_Payroll .menu-icon {
+  background-image: url('/assets/images/menu-icon/payroll.png');
+}
+
+.root-item.Menu_OrgPoliciesAndDoc .menu-icon {
+  background-image: url('/assets/images/menu-icon/document.png');
+}
+
+.root-item.Menu_Favourites .menu-icon {
+  background-image: url('/assets/images/menu-icon/favourites.png');
+}
+
+.menu-text {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  transition: opacity .2s ease;
+}
+
+.menu-count {
+  background-color: #dc3545;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  line-height: 18px;
+  text-align: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: all .2s ease;
+}
+
+.menu-item.activepage > .menu-link .menu-count {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+}
+
+.submenu-indicator {
+  margin-left: auto;
+  font-size: 16px;
+  line-height: 1;
+  opacity: .5;
+  transition: transform .2s ease, opacity .2s ease;
+  transform-origin: center;
+}
+
+.menu-item.open > .menu-link .submenu-indicator {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+.separator {
+  height: 1px;
+  background: #eef0f3;
+  margin: .375rem .875rem;
+}
+
+/* Accordion (expanded) */
+.submenu {
+  display: none;
+  padding-left: .75rem;
+  margin-right: .5rem;
+}
+
+  .submenu .menu-link {
+    padding: .5rem .75rem .5rem 2rem;
+    font-size: 13px;
+    gap: .625rem;
+    font-weight: 400;
+    position: relative;
+  }
+
+    .submenu .menu-link::before {
+      content: '';
+      position: absolute;
+      left: 1.25rem;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #e5e7eb;
+      transition: background .2s ease;
+    }
+
+    .submenu .menu-link:hover::before {
+      background: #cbd5e1;
+    }
+
+  .submenu.level-2 .menu-link {
+    padding-left: 3rem;
+    background: transparent;
+  }
+
+    .submenu.level-2 .menu-link::before {
+      left: 2.25rem;
+    }
+
+  .submenu .menu-link:hover {
+    background: #f1f5f9;
+    transform: translateX(2px);
+  }
+
+.menu-item.has-children.open > .submenu {
+  display: block;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Collapsed (icons-only rail) - Claude.ai style */
+.modern-menu:not(.expanded) .menu-link {
+  gap: 0;
+  justify-content: center;
+  padding-left: .75rem;
+  padding-right: .75rem;
+  margin: .125rem .25rem;
+  overflow: visible;
+}
+
+/* Claude.ai-style floating label */
+.modern-menu:not(.expanded) .menu-text {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(0);
+  background: #27347c;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-left: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(39, 52, 124, 0.3);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
+}
+
+  /* Arrow pointer for tooltip */
+  .modern-menu:not(.expanded) .menu-text::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: #27347c;
+  }
+
+.modern-menu:not(.expanded) .root-item .menu-count {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  margin-left: 0;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  font-size: 10px;
+  border: 1px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.modern-menu:not(.expanded) .menu-item.activepage > .menu-link .menu-count,
+.modern-menu:not(.expanded) .menu-link:hover .menu-count {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* Show tooltip on hover - Claude.ai style */
+.modern-menu:not(.expanded) .root-item .menu-link:hover .menu-text {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(-50%) translateX(8px);
+  pointer-events: auto;
+  transition-delay: 0.3s;
+}
+
+/* Flyout panels - improved */
+.flyout {
+  background: #fff;
+  border: 1px solid #e6e9ee;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(16,24,40,.12);
+  min-width: 220px;
+  max-width: 280px;
+  pointer-events: auto;
+  padding: 6px;
+  font-family: Inter,'Segoe UI',system-ui,-apple-system,sans-serif;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  animation: flyoutFadeIn 0.2s ease;
+}
+
+@keyframes flyoutFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.flyout::-webkit-scrollbar {
+  width: 4px;
+}
+
+.flyout::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.flyout::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+  .flyout::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+
+.flyout {
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.flyout-header {
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef0f3;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.submenu.in-flyout {
+  padding: 0;
+  display: block;
+}
+
+  .submenu.in-flyout .menu-link {
+    padding: 10px 14px !important;
+    gap: 10px;
+    border-bottom: 0;
+    white-space: nowrap;
+    margin: 2px 0;
+    font-size: 13px;
+  }
+
+    .submenu.in-flyout .menu-link::before {
+      display: none;
+    }
+
+    .submenu.in-flyout .menu-link:hover {
+      background: #f1f5f9;
+      border-radius: 6px;
+    }
+
+/* Focus state */
+.menu-link:focus-visible {
+  outline: 2px solid #90b0ff;
+  outline-offset: -2px;
+  background-color: #f1f5f9;
+}
+
+/* Smooth transitions for expand/collapse */
+.modern-menu {
+  transition: width .3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-text,
+.submenu-indicator,
+.menu-count {
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+/* Optional: don’t try to show the in-flow label when collapsed */
+.modern-menu:not(.expanded) .menu-text {
+  opacity: 0;
+  visibility: hidden;
+}
+

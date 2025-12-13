@@ -1,0 +1,81 @@
+<div style="padding: 20px; max-width: 600px; margin: 50px auto; border: 1px solid #ccc; border-radius: 5px; font-family: sans-serif;">
+
+  <h2 style="text-align: center;">Developer Login (Simple)</h2>
+
+  <p *ngIf="connectionStatus === 'offline'" style="color: red; border: 1px solid red; padding: 5px; text-align: center;">
+    🔴 {{ connectionStatusMessage }}
+  </p>
+
+  <form novalidate autocomplete="on">
+
+    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+
+      <div style="flex: 1;">
+        <label for="ddllanguage">Language:</label>
+        <select name="language" id="ddllanguage" [(ngModel)]="selectedCulture" aria-label="Select language" style="width: 100%; padding: 8px;">
+
+          <option value="en-GB" selected>English</option>
+          <option value="ar-SA">العربية (Arabic)</option>
+          <option value="fr-FR">Français (French)</option>
+        </select>
+      </div>
+
+      <div style="flex: 1;">
+        <label for="company">Company:</label>
+        <select id="company"
+                [(ngModel)]="selectedCompany"
+                name="company"
+                required
+                aria-required="true"
+                style="width: 100%; padding: 8px;">
+          <option [ngValue]="undefined" disabled selected>Select company…</option>
+          <option *ngFor="let c of ddlCompany" [ngValue]="c">{{ c.Name }}</option>
+        </select>
+      </div>
+
+    </div> <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+
+      <div style="flex: 1;">
+        <label for="txtUserid">User ID:</label>
+        <input id="txtUserid"
+               type="text"
+               [(ngModel)]="_UserId"
+               name="userId"
+               required
+               autocomplete="username"
+               placeholder="e.g. jdoe"
+               style="width: 100%; padding: 8px;" />
+      </div>
+
+      <div style="flex: 1;">
+        <label for="txtPassword">Password:</label>
+        <input id="txtPassword"
+               type="password"
+               [(ngModel)]="_Password"
+               name="password"
+               required
+               autocomplete="current-password"
+               placeholder="Enter your password"
+               style="width: 1S00%; padding: 8px;" />
+      </div>
+
+    </div> <div>
+      <p *ngIf="errorMsg" style="color: #b91c1c; margin-top: 8px; font-size: 13px;">{{ errorMsg }}</p>
+    </div>
+
+    <div style="margin-top: 15px;">
+      <button type="button"
+              (click)="GetERPLogin()"
+              [disabled]="!selectedCompany || !_UserId || !_Password"
+              style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Login
+      </button>
+    </div>
+
+  </form>
+
+  <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #666;">
+    <p>Simplified Dev View - No Custom Styling</p>
+  </div>
+
+</div>

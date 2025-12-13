@@ -1,0 +1,130 @@
+
+<div class="layout-wrapper" [class.sidebar-open]="isSidebarOpen">
+  <aside class="sidebar bg-white border-end d-flex flex-column" role="navigation" aria-label="Main Menu"
+       (mouseenter)="isSidebarHovering = true"
+       (mouseleave)="isSidebarHovering = false"
+       (focusin)="isSidebarHovering = true"
+       (focusout)="isSidebarHovering = false">
+    <!-- UPDATED: Sidebar header with toggle button on the left -->
+    <div class="sidebar-header">
+      <button *ngIf="!isSidebarOpen && isSidebarHovering" class="sidebar-toggle-button sidebar-toggle-left d-inline-flex align-items-center justify-content-center"
+              (click)="toggleSidebar()"
+              [attr.aria-label]="isSidebarOpen ? 'Collapse Menu' : 'Expand Menu'"
+              [title]="isSidebarOpen ? 'Collapse Menu' : 'Expand Menu'">
+        <i class="bi" [ngClass]="isSidebarOpen ? 'bi bi-arrow-left-circle' : 'bi-list'"></i>
+      </button>
+
+      <div *ngIf="isSidebarOpen || !isSidebarHovering" class="brand-logo-wrapper">
+        <a routerLink="/dashboard" class="brand-logo" title="Go to Dashboard">
+          <img class="brand-logo-full" src="/assets/images/HCMSLogo.png" alt="HCMS Logo" />
+          <img class="brand-logo-icon" src="/assets/images/HCMSLogo.png" alt="HCMS" />
+        </a>
+      </div>
+
+      <button *ngIf="isSidebarOpen"
+              class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center"
+              (click)="toggleSidebar()"
+              aria-label="Collapse Menu"
+              title="Collapse Menu">
+        <i class="bi bi-arrow-left-circle"></i>
+      </button>
+
+    </div>
+
+    <div class="menu-container flex-grow-1">
+      <app-menu (formSelected)="getForms($event)" [isExpanded]="isSidebarOpen"></app-menu>
+    </div>
+  </aside>
+
+  <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+
+  <div class="main-content d-flex flex-column min-vw-0">
+
+    <div *ngIf="showStatusMessage" class="connection-status" [ngClass]="connectionStatus">
+      {{ connectionStatusMessage }}
+    </div>
+
+    <header class="page-header bg-white border-bottom position-sticky top-0 w-100" role="region" aria-label="Page Header">
+      <div class="header-content container-fluid py-0 d-flex align-items-center justify-content-between gap-3">
+
+        <div class="header-left d-flex align-items-center gap-2 min-w-0">
+          <!-- Toggle button removed from here -->
+
+          <div class="page-title-section d-flex align-items-center justify-content-between gap-2">
+            <div class="title-wrap">
+              <h2 class="page-title fs-6 fw-semibold mb-0 text-truncate" [title]="showdesc ? formdescription : ''">
+                {{ formName }}
+              </h2>
+              <small *ngIf="showdesc" class="title-sub text-truncate">{{ formdescription }}</small>
+            </div>
+
+            <div class="header-actions d-inline-flex align-items-center gap-1 ms-2">
+              <button *ngIf="showfavourite"
+                      class="icon-button favourite-button"
+                      [title]="toolTipText"
+                      (click)="addDeleteFavourite()">
+                <img [src]="favPath" alt="Favourite Status" />
+              </button>
+
+              <div class="dropdown more-actions-dropdown" *ngIf="showfavouriteicon">
+                <button class="icon-button" aria-label="More Actions" data-bs-toggle="dropdown">
+                  <i class="bi bi-three-dots" aria-hidden="true"></i>
+                </button>
+
+                <div class="dropdown-content shadow rounded-3 border">
+                  <a class="more-action" (click)="addDeleteFavourite()">
+                    <span class="action-label text-truncate">{{ FavMenuText }}</span>
+                    <img [src]="favPath2" class="action-icon" alt="" />
+                  </a>
+                  <a class="more-action" href="#">
+                    <span class="action-label text-truncate">Training Video</span>
+                    <i class="bi bi-arrow-right-short action-icon" aria-hidden="true"></i>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="header-right d-flex align-items-center gap-3">
+          <div class="dropdown">
+            <div class="profile-section d-flex align-items-center gap-2 px-1 py-1 rounded-2" [title]="EmpName + ' - ' + CompanyName">
+              <img class="profile-pic" [src]="EmployeePic" alt="Profile Picture" />
+              <div class="profile-info d-flex flex-column lh-sm">
+                <span class="profile-name fw-semibold small">{{ EmpName }}</span>
+                <span class="profile-company text-muted small">{{ CompanyName }}</span>
+              </div>
+            </div>
+
+            <div class="dropdown-content profile-dropdown dropdown-knowledge shadow border rounded-3">
+              <div class="profile-dropdown-header">
+                <span class="profile-dropdown-name">{{ EmpName }}</span>
+                <span class="profile-dropdown-company">{{ CompanyName }}</span>
+              </div>
+
+              <a class="more-action" (click)="openReportDialog()">
+                <span class="action-label text-truncate">Report a Problem</span>
+                <i class="bi bi-exclamation-triangle-fill action-icon text-warning" aria-hidden="true"></i>
+              </a>
+
+              <a class="more-action" *ngIf="haveDashboardRights" (click)="openDashboard()">
+                <span class="action-label text-truncate">Dashboard</span>
+                <i class="bi bi-speedometer2 action-icon" aria-hidden="true"></i>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <div class="page-content container-fluid" role="main">
+      <app-spinner *ngIf="isLoading()"></app-spinner>
+      <router-outlet (activate)='onActivate()'></router-outlet>
+    </div>
+
+  </div>
+</div>

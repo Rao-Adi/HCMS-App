@@ -1,0 +1,1426 @@
+<div class="container-fluid">
+  <div class="container">
+    <div class="row">
+      <!-- Left Card -->
+      <div class="col-lg-3 col-md-3 col-sm-3">
+        <div class="leftcard-custom">
+          <div class="clearfix">
+            <img [src]="image" class="profile-img pull-left">
+          </div>
+          <h3>{{EmployeeInfo.Name}}</h3>
+          <label>{{EmployeeInfo.Designation}}</label>
+          <hr>
+          <div class="section-title">Employee Selection</div>
+          <!--<br />-->
+          <div class="form-group">
+            <label class="ctrllbl">Direct Reporters Level<span class="text-danger">*</span></label>
+            <select class="form-control" [(ngModel)]="ModelLevel" (change)="ChangeLevel()">
+              <option *ngFor="let rel of ReporterLevels" [ngValue]="rel.Level">{{ rel.Level === 0 ? rel.Level : 'Up to ' + rel.Level }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="ctrllbl">Employee<span class="text-danger">*</span></label>
+            <select class="form-control" [(ngModel)]="SubOrdinateEmpId" (change)="ChangeSubOrdinates()">
+              <option [ngValue]="rel.EMPID" *ngFor="let rel of SubordinatesList">{{rel.NAME}}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="col-lg-9 col-md-9 col-sm-9">
+        <div class="card-custom">
+          <div class="clearfix">
+            <div class="pull-left">
+              <h3 class="mt-0">Employee Job Information</h3>
+              <small class="text-muted">View and manage employee details and job information</small>
+            </div>
+          </div>
+          
+          <div class="profile-container">
+            <img [src]="image" class="profile-img" alt="Profile">
+            <div class="profile-details">
+              <h3>{{EmployeeInfo.Name}} </h3>
+              <label class="designation-label">
+                {{EmployeeInfo.Designation}}
+              </label>
+            </div>
+          </div>
+
+          <div class="custom-tab-container">
+            <button class="tab-button" tabindex="0"
+                    [ngClass]="{'active-tab': selectedTab === 'EmployeeInformation'}"
+                    (click)="selectedTab = 'EmployeeInformation'">
+              {{'labels.EmployeeInformation' | safeTranslate}}
+            </button>
+            <button class="tab-button" tabindex="0"
+                    [ngClass]="{'active-tab': selectedTab === 'LeaveAttendance'}"
+                    (click)="selectedTab = 'LeaveAttendance'">
+              Leave & Attendance
+            </button>
+            <button class="tab-button" tabindex="0"
+                    [ngClass]="{'active-tab': selectedTab === 'DocumentsAlerts'}"
+                    (click)="selectedTab = 'DocumentsAlerts'">
+              Documents & Alerts
+            </button>
+            <button class="tab-button" tabindex="0"
+                    [ngClass]="{'active-tab': selectedTab === 'PerformanceTraining'}"
+                    (click)="selectedTab = 'PerformanceTraining'">
+              Performance & Training
+            </button>
+            <button class="tab-button" tabindex="0"
+                    [ngClass]="{'active-tab': selectedTab === 'AssetsJobInfo'}"
+                    (click)="selectedTab = 'AssetsJobInfo'">
+              Assets & Job Info
+            </button>
+          </div>
+
+          <hr>
+
+          <div class="row row-space" *ngIf="selectedTab === 'EmployeeInformation'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Division' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value" [title]="EmployeeInfo.DivisionName">{{EmployeeInfo.DivisionName}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.PayrollGroup' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.PayrollGroup}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Department' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.MainDepartment}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Designation' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.Designation}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.SubDepartment' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.Department}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Grade' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.JobGroup}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Location' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.Location}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.EmployeeCategory' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.EmployeeCategory}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DefaultShift' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.Shift}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.EmployeeType' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.EmployeeType}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.OfficialEmail' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.Email}}</label>
+                </div>
+                <!--<div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+          <label>{{'labels.EmployeeStatus' | safeTranslate}}</label>
+          <br />
+          <label><b>Employee Status</b></label>
+        </div>-->
+              </div>
+              <hr />
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateofJoining' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.DateJoin}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateofConfirmation' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.DateConfirm}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateOfContractExpiry' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.ContractExpiryDate}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateOfConfirmDue' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.DateConfirmDue}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateOfInternshipExpiry' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.InternExpiryDate}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateOfConfirmationDueExtendedTill' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.ProbhationExtDate}}</label>
+                </div>
+              </div>
+              <hr />
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DirectReportingToEmployee' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.ReportingPerson}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.InDirectReportingToEmployee' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeeInfo.DottedPerson}}</label>
+                </div>
+              </div>
+              <hr />
+              <div *ngIf="ForeignEmployees">
+                <div class="row">
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.IqamaNumber' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.IqamaNo}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.IqamaProfession' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.IqamaProfession}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.DateofIqamaExpiryHijri' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.IqamaExpiryHijri}}</label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.IqamaExpiryDate(Gregorian)' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.IqamaExpiryGregorian}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.CurrentSponsorNameandOtherDetails' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.CurrSpnsName}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorshipTransferable' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsTransferable}}</label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorshipType' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsType}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorCountry' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsCountry}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorCity' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsCity}}</label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorsContactDetails' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsContactDetails}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorsNatureofBusiness' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsNatureOfBusiness}}</label>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorshipExpiryDate(Hijri)' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsExpiryHijri}}</label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                    <label class="label-heading">{{'labels.SponsorshipExpiryDate(Gregorian)' | safeTranslate}}</label>
+                    <br />
+                    <label class="label-value">{{EmployeeInfo.SpnsExpiryGregorian}}</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'LeaveAttendance'">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.Leaves' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 250px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="EmployeeLeaves"
+                                   [columnDefs]="EmployeeLeavesColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.HolidaysCurrentCalendarYear' | safeTranslate}}
+                </h3>
+
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="EmployeeHolidays"
+                                   [columnDefs]="EmployeeHolidaysColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'DocumentsAlerts'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.DocumentsIssued' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{'labels.Subjects' | safeTranslate}}</label>
+                  </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-6">
+                    <select class="form-control" [(ngModel)]="selectedSubject" (ngModelChange)="onsubjectChange()">
+                      <option *ngFor="let rec of Subjects" [ngValue]="rec.subject"> {{ rec.subjectName }} </option>
+                    </select>
+                  </div>
+                </div>
+                <br />
+                <div class="row col-lg-12 col-md-12 col-sm-12">
+                  <label>{{'labels.DateFrom' | safeTranslate}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{'labels.DateTo' | safeTranslate}}</label>
+                  <nz-range-picker [nzPlaceHolder]="['Start Date', 'End Date']"
+                                   [(ngModel)]="dateRange"
+                                   (ngModelChange)="applyDateRangeFilter()"
+                                   style="width: 300px;" >
+                  </nz-range-picker>
+                </div>
+                  <div class="row col-lg-12 col-md-12 col-sm-12">
+                    <div class="col-lg-4 col-md-4 col-sm-4"> </div>
+                    <div class="col-lg-4 col-md-4 col-sm-4">
+                      <button class="btn-button" style="margin-top: 20px;" (click)="filterSubjects()">
+                        <img src="./assets/images/btnFilter.png" /> {{'labels.Filter' | safeTranslate}}
+                      </button>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-4"> </div>
+                  </div>
+                  <br />
+                  <div class="PnlBody">
+                    <ag-grid-angular style="width: 100%; height: 300px;"
+                                     class="ag-theme-alpine"
+                                     [rowData]="DocumentsGrid"
+                                     [columnDefs]="DocumentsGridColumnDefs"
+                                     [defaultColDef]="defaultColDef"
+                                     [overlayNoRowsTemplate]="noRowsOverlay"
+                                     [context]="{ componentParent: this }"
+                                     (gridReady)="onGridReady($event)">
+                    </ag-grid-angular>
+                  </div>
+
+                </div>
+              </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.MiscellaneousAlerts' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="MiscAlerts"
+                                   [columnDefs]="MiscAlertsColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+              </div>
+            </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'PerformanceTraining'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.Awards' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="AwardsGrid"
+                                   [columnDefs]="AwardsGridColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.DisciplinaryActions' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="DisciplinaryActions"
+                                   [columnDefs]="DisciplinaryActionsColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.CompletedTrainings' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="CompletedTrainings"
+                                   [columnDefs]="CompletedTrainingsColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.TrainingNominationsConfirmations' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="TrainingNominationsConfirmations"
+                                   [columnDefs]="TrainingNominationsConfirmationsColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+              </div>
+            </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'AssetsJobInfo'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.AssetsDetailCurrentAndPrevious' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="AssetsDetail"
+                                   [columnDefs]="AssetsDetailColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.JobDescription' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="JobDescription"
+                                   [columnDefs]="AssetsDetailJobDescriptionColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{'labels.ActiveLoans' | safeTranslate}}
+                </h3>
+                <br />
+                <div class="PnlBody">
+                  <ag-grid-angular style="width: 100%; height: 300px;"
+                                   class="ag-theme-alpine"
+                                   [rowData]="ActiveLoans"
+                                   [columnDefs]="ActiveLoansColumnDefs"
+                                   [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                  </ag-grid-angular>
+                </div>
+                <!--<div class="PnlBody">
+  <V5-Grid [GridId]="''"
+           [FormId]="''"
+           [GridType]="'ReadOnly'"
+           [Pagination]="false"
+           [Searchable]="'false'"
+           [AllowSelection]="false"
+           [DataRenderFrom]="'ClientSide'"
+           [RecordsPerPage]="'5'"
+           [DefaultSortExpression]="'Code'"
+           [DefaultSortDirection]="'ASC'"
+           [GridDataSource]="ActiveLoans"
+           [EnableInsertion]="false"
+           [EnableEditing]="false"
+           [EnableDeletion]="false">
+
+    <ng-container ForGridHeading>
+      <th HeadingDef DOTextCode="LoanType"> <label>{{'labels.LoanType' | safeTranslate}}</label> </th>
+      <th HeadingDef DOTextCode="ApplicationDate"> <label>{{'labels.ApplicationDate' | safeTranslate}}</label> </th>
+      <th HeadingDef DOTextCode="AmountApprovedWOInterest"> <label>{{'labels.AmountApprovedWOInterest' | safeTranslate}}</label> </th>
+      <th HeadingDef DOTextCode="InterestAmount"> <label>{{'labels.InterestAmount' | safeTranslate}}</label> </th>
+      <th HeadingDef DOTextCode="BalanceAmount"> <label>{{'labels.BalanceAmount' | safeTranslate}}</label> </th>
+      <th HeadingDef DOTextCode="AcknowledgedByEmployee"> <label>{{'labels.AcknowledgedByEmployee' | safeTranslate}}</label> </th>
+    </ng-container>
+
+    <ng-container *RowData="let row; let i=index">
+      <td RowDef>{{row.LoanType}}</td>
+      <td RowDef>{{row.AppDate}}</td>
+      <td RowDef>{{row.LoanAmtWithoutInt}}</td>
+      <td RowDef>{{row.Interest}}</td>
+      <td RowDef>{{row.BalanceAmount}}</td>
+      <td RowDef class="text-center">-->
+                <!-- If row.Received is true, show the toggle switch -->
+                <!--<ng-container *ngIf="!row.ReceivedFromPortal; else tickIcons">-->
+                <!--<label class="switch" [attr.for]="'LoanAcknowledgedByEmployee' + i">
+    <input [disabled]="row.ReceivedFromPortal" type="checkbox" [id]="'LoanAcknowledgedByEmployee' + i"
+           [(ngModel)]="row.ReceivedFromPortal" (ngModelChange)="LoanAcknowledgedByEmployee(row, i)">
+    <div class="slider round" [ngClass]="{'disableToggle': row.ReceivedFromPortal}"></div>
+  </label>-->
+                <!--</ng-container>-->
+                <!-- Else show Bootstrap checkmark icon -->
+                <!--<ng-template #tickIcons>
+    <i class="glyphicon glyphicon-ok" style="color: #3F5AA8;"></i>
+  </ng-template>-->
+                <!--</td>
+      </ng-container>
+    </V5-Grid>
+  </div>-->
+              </div>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="show" class="container-fluid">
+  <div class="container">
+
+    <div class="status-box-standard">
+      <div class="row">
+        <h3 class="PnlHeader">
+          {{'labels.EmployeeSelection' | safeTranslate}}
+        </h3>
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+          <div class="PnlHeading">
+            <label>{{'labels.DirectReportersLevel' | safeTranslate}}</label>
+          </div>
+          <div class="row col-lg-12 col-md-12 col-sm-6">
+            <span class="custom-dropdown" style="width: 200px;">
+              <select class="DropdownClassic" [(ngModel)]="ModelLevel" (change)="ChangeLevel()">
+                <option *ngFor="let rel of ReporterLevels" [ngValue]="rel.Level">{{rel.Level}}</option>
+              </select>
+            </span>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+          <div class="PnlHeading">
+            <label>*{{'labels.EmployeeName' | safeTranslate}}</label>
+          </div>
+          <div class="row col-lg-12 col-md-12 col-sm-6">
+            <span class="custom-dropdown" style="width: 200px;">
+              <select [(ngModel)]="SubOrdinateEmpId" (change)="ChangeSubOrdinates()">
+                <option [ngValue]="rel.EMPID" *ngFor="let rel of SubordinatesList">{{rel.NAME}}</option>
+              </select>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-box-standard">
+
+      <h3 class="PnlHeader" style="margin-left: -1px;">
+        {{'labels.EmployeeInformation' | safeTranslate}}
+      </h3>
+
+      <div class="row">
+
+        <div class="col-lg-9 col-md-9 col-sm-12 col-12">
+          <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.Employee' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.Name}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.Division' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.DivisionName}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.PayrollGroup' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.PayrollGroup}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.Department' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.MainDepartment}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.Designation' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.Designation}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.SubDepartment' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.Department}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.Grade' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.JobGroup}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.Location' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.Location}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.EmployeeCategory' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.EmployeeCategory}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.DefaultShift' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.Shift}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.EmployeeType' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.EmployeeType}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.OfficialEmail' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.Email}}</b></label>
+            </div>
+            <!--<div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+              <label>{{'labels.EmployeeStatus' | safeTranslate}}</label>
+              <br />
+              <label><b>Employee Status</b></label>
+            </div>-->
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-3 col-sm-12 col-12">
+          <div style="margin-top:35px">
+            <img id="imagePath" style="cursor:pointer; width: 120px; height: 130px; margin-top: -31px;" [src]="imgUrl" *ngIf="imgUrl">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="status-in-box">
+        <div class="row">
+          <div class="col-lg-9 col-md-9 col-sm-12 col-12">
+            <div class="row">
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DateofJoining' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.DateJoin}}</b></label>
+              </div>
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DateofConfirmation' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.DateConfirm}}</b></label>
+              </div>
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DateOfContractExpiry' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.ContractExpiryDate}}</b></label>
+              </div>
+            </div>
+            <br />
+            <div class="row">
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DateOfConfirmDue' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.DateConfirmDue}}</b></label>
+              </div>
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DateOfInternshipExpiry' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.InternExpiryDate}}</b></label>
+              </div>
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DateOfConfirmationDueExtendedTill' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.ProbhationExtDate}}</b></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-in-box">
+        <div class="row">
+          <div class="col-lg-9 col-md-9 col-sm-12 col-12">
+            <div class="row">
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.DirectReportingToEmployee' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.ReportingPerson}}</b></label>
+              </div>
+              <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                <label>{{'labels.InDirectReportingToEmployee' | safeTranslate}}</label>
+                <br />
+                <label><b>{{EmployeeInfo.DottedPerson}}</b></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="status-box-standard">
+      <div class="row">
+
+        <h3 class="PnlHeader">
+          {{'labels.ForForeignEmployees' | safeTranslate}}
+        </h3>
+
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.IqamaNumber' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.IqamaNo}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.IqamaProfession' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.IqamaProfession}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.DateofIqamaExpiryHijri' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.IqamaExpiryHijri}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.IqamaExpiryDate(Gregorian)' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.IqamaExpiryGregorian}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.CurrentSponsorNameandOtherDetails' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.CurrSpnsName}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorshipTransferable' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsTransferable}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorshipType' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsType}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorCountry' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsCountry}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorCity' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsCity}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorsContactDetails' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsContactDetails}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorsNatureofBusiness' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsNatureOfBusiness}}</b></label>
+            </div>
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorshipExpiryDate(Hijri)' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsExpiryHijri}}</b></label>
+            </div>
+          </div>
+          <br />
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <label>{{'labels.SponsorshipExpiryDate(Gregorian)' | safeTranslate}}</label>
+              <br />
+              <label><b>{{EmployeeInfo.SpnsExpiryGregorian}}</b></label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.Leaves' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="EmployeeLeaves"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th DOTextCode="Description" HeadingDef> <label>{{'labels.Description' | safeTranslate}}</label></th>
+                <th DOTextCode="MaxAllowed" HeadingDef> <label>{{'labels.MaxAllowed' | safeTranslate}}</label></th>
+                <th DOTextCode="LeavesApproved" HeadingDef> <label>{{'labels.LeavesApproved' | safeTranslate}}</label></th>
+                <th DOTextCode="PreviousYearBalance" HeadingDef> <label>{{'labels.PreviousYearBalance' | safeTranslate}}</label></th>
+                <th DOTextCode="CurrentYearBalance" HeadingDef> <label>{{'labels.CurrentYearBalance' | safeTranslate}}</label></th>
+                <th DOTextCode="LeaveRequestsPending" HeadingDef> <label>{{'labels.LeaveRequestsPending' | safeTranslate}}</label></th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.Description}}</td>
+                <td RowDef>{{row.MaxAllowed}}</td>
+                <td RowDef>{{row.Availed}}</td>
+                <td RowDef>{{row.PrevBalance}}</td>
+                <td RowDef>{{row.CurrBalance}}</td>
+                <td RowDef>{{row.PendingLeaves}}</td>
+              </ng-container>
+
+            </V5-Grid>
+          </div>-->
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.HolidaysCurrentCalendarYear' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="EmployeeHolidays"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th DOTextCode="Description" HeadingDef> <label>{{'labels.Description' | safeTranslate}}</label>  </th>
+                <th DOTextCode="DateFrom" HeadingDef> <label>{{'labels.DateFrom' | safeTranslate}}</label>  </th>
+                <th DOTextCode="DateTo" HeadingDef> <label>{{'labels.DateTo' | safeTranslate}}</label>  </th>
+                <th DOTextCode="HolidayType" HeadingDef> <label>{{'labels.HolidayType' | safeTranslate}}</label>  </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.Description}}</td>
+                <td RowDef>{{row.dateFr}}</td>
+                <td RowDef>{{row.DateTo}}</td>
+                <td RowDef>{{row.HolidayType}}</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.DocumentsIssued' | safeTranslate}}
+          </h3>
+
+          <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+            <div class="PnlHeading">
+              <label>{{'labels.Subjects' | safeTranslate}}</label>
+            </div>
+            <div class="row col-lg-12 col-md-12 col-sm-6">
+              <span class="custom-dropdown" style="width: 200px;">
+                <select [(ngModel)]="selectedSubject" (ngModelChange)="onsubjectChange()">
+                  <option *ngFor="let rec of Subjects" [ngValue]="rec.subject"> {{ rec.subjectName }} </option>
+                </select>
+              </span>
+            </div>
+          </div>
+
+          <br />
+
+          <div class="row col-lg-12 col-md-12 col-sm-12">
+            <div class="col-lg-4 col-md-4 col-sm-4">
+              <label>{{'labels.DateFrom' | safeTranslate}}</label>
+              <!--<date-picker [defaultValue]="DateFromSubject" (pickerChange)="subjectdatePickerChanged($event, 'DateFromSubject')"></date-picker>-->
+            </div>
+            <div class="col-lg-2 col-md-2 col-sm-2"> </div>
+            <div class="col-lg-4 col-md-4 col-sm-4">
+              <label>{{'labels.DateTo' | safeTranslate}}</label>
+              <!--<date-picker [defaultValue]="DateToSubject" (pickerChange)="subjectdatePickerChanged($event, 'DateToSubject')"></date-picker>-->
+            </div>
+            <div class="col-lg-2 col-md-2 col-sm-2"> </div>
+          </div>
+
+          <div class="row col-lg-12 col-md-12 col-sm-12">
+            <div class="col-lg-4 col-md-4 col-sm-4"> </div>
+            <div class="col-lg-4 col-md-4 col-sm-4">
+              <button class="btn-button" style="margin-top: 20px;" (click)="filterSubjects()">
+                <img src="./assets/images/btnFilter.png" /> {{'labels.Filter' | safeTranslate}}
+              </button>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-4"> </div>
+          </div>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="DocumentsGrid"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="Subject"> <label>{{'labels.Subject' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="DateOfIssuance"> <label>{{'labels.DateOfIssuance' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Remarks"> <label>{{'labels.Remarks' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="AcknowledgedByEmployee"> <label>{{'labels.AcknowledgedByEmployee' | safeTranslate}}</label> </th>
+                <th HeadingDef></th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.subject}}</td>
+                <td RowDef>{{row.IssueDate}}</td>
+                <td RowDef>{{row.Remarks}}</td>
+                <td RowDef class="text-center">-->
+          <!-- If row.Received is true, show the toggle switch -->
+          <!--<ng-container *ngIf="!row.Received; else tickIcon">-->
+          <!--<label class="switch" [attr.for]="'AcknowledgedByEmployee' + i">
+            <input [disabled]="row.Received" type="checkbox" [id]="'AcknowledgedByEmployee' + i"
+                   [(ngModel)]="row.Received" (ngModelChange)="AcknowledgedByEmployee(row, i)">
+            <div class="slider round" [ngClass]="{'disableToggle': row.Received}"></div>
+          </label>-->
+          <!--</ng-container>-->
+          <!-- Else show Bootstrap checkmark icon -->
+          <!--<ng-template #tickIcon>
+            <i class="glyphicon glyphicon-ok" style="color: #3F5AA8;"></i>
+          </ng-template>-->
+          <!--</td>
+                <td><a>View</a></td>
+              </ng-container>
+
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.MiscAlerts' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="MiscAlerts"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="AlertType"> <label>{{'labels.AlertType' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="ExpirtDate"> <label>{{'labels.ExpiryDate' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Remarks"> <label>{{'labels.Remarks' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.Name}}</td>
+                <td RowDef>{{row.Date}}</td>
+                <td RowDef>{{row.Remarks}}</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.Awards' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="AwardsGrid"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="Award"> <label>{{'labels.Award' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="AwardDate"> <label>{{'labels.AwardDate' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Comments"> <label>{{'labels.Comments' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.Name}}</td>
+                <td RowDef>{{row.AwardDate}}</td>
+                <td RowDef>{{row.Comments}}</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.DisciplinaryActions' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="DisciplinaryActions"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="Date"> <label>{{'labels.Date' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="MisbehaveAction"> <label>{{'labels.MisbehaveAction' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="DisciplinaryAction"> <label>{{'labels.DisciplinaryAction' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Remarks"> <label>{{'labels.Remarks' | safeTranslate}}</label> </th>-->
+          <!--<th HeadingDef> Close </th>-->
+          <!--</ng-container>
+
+          <ng-container *RowData="let row; let i=index">
+            <td RowDef>{{row.DspDate}}</td>
+            <td RowDef>{{row.Dsp}}</td>
+            <td RowDef>{{row.DspAct}}</td>
+            <td RowDef>{{row.Remarks}}</td>-->
+          <!--<td RowDef>{{row.Status}}</td>-->
+          <!--</ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.CompletedTrainings' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="CompletedTrainings"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="Institute"> <label>{{'labels.Institute' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Course"> <label>{{'labels.Course' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="DateFrom"> <label>{{'labels.DateFrom' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="DateTo"> <label>{{'labels.DateTo' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Need"> <label>{{'labels.Need' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.Institute}}</td>
+                <td RowDef>{{row.Course}}</td>
+                <td RowDef>{{row.DateFrom}}</td>
+                <td RowDef>{{row.DateTo}}</td>
+                <td RowDef>{{row.Need}}</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.AssetsDetailCurrentAndPrevious' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="AssetsDetail"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="AssetNo"> <label>{{'labels.AssetNo' | safeTranslate}}.</label> </th>
+                <th HeadingDef DOTextCode="AssetDescription"> <label>{{'labels.AssetDescription' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Category"> <label>{{'labels.Category' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="BrandModel"> <label>{{'labels.BrandModel' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="MakeCompany"> <label>{{'labels.MakeCompany' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="DateOfAssignment"> <label>{{'labels.DateOfAssignment' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="DateOfUnAssignment"> <label>{{'labels.DateOfUnAssignment' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.AssetNo}}</td>
+                <td RowDef>{{row.AssetDesc}}</td>
+                <td RowDef>{{row.Category}}</td>
+                <td RowDef>{{row.Model}}</td>
+                <td RowDef>{{row.Make}}</td>
+                <td RowDef>{{row.HandingOverDate}}</td>
+                <td RowDef>{{row.TakingOverDate}}</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.TrainingNominationsConfirmations' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="TrainingNominationsConfirmations"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="InstituteName"> <label>{{'labels.InstituteName' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="CourseName"> <label>{{'labels.CourseName' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="StartDate"> <label>{{'labels.StartDate' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="EndDate"> <label>{{'labels.EndDate' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Nomination"> <label>{{'labels.Nomination' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Confirmation"> <label>{{'labels.Confirmation' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.InstituteName}}</td>
+                <td RowDef>{{row.CourseName}}</td>
+                <td RowDef>{{row.StartDate}}</td>
+                <td RowDef>{{row.EndDate}}</td>
+                <td RowDef>{{row.Nomination}}</td>
+                <td RowDef>{{row.Confirmation}}</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.JobDescription' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="JobDescription"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="JobCode"> <label>{{'labels.JobCode' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="JobTitle"> <label>{{'labels.JobTitle' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Role"> <label>{{'labels.Role' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="Detail"> <label>{{'labels.Detail' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.JobCode}}</td>
+                <td RowDef>{{row.JobTitle}}</td>
+                <td RowDef>{{row.Role}}</td>
+                <td><a>View</a></td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6">
+
+        <div class="status-box-leftColmd6-standard">
+
+          <h3 class="PnlHeader">
+            {{'labels.ActiveLoans' | safeTranslate}}
+          </h3>
+
+          <!--<div class="PnlBody">
+            <V5-Grid [GridId]="''"
+                     [FormId]="''"
+                     [GridType]="'ReadOnly'"
+                     [Pagination]="false"
+                     [Searchable]="'false'"
+                     [AllowSelection]="false"
+                     [DataRenderFrom]="'ClientSide'"
+                     [RecordsPerPage]="'5'"
+                     [DefaultSortExpression]="'Code'"
+                     [DefaultSortDirection]="'ASC'"
+                     [GridDataSource]="ActiveLoans"
+                     [EnableInsertion]="false"
+                     [EnableEditing]="false"
+                     [EnableDeletion]="false">
+
+              <ng-container ForGridHeading>
+                <th HeadingDef DOTextCode="LoanType"> <label>{{'labels.LoanType' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="ApplicationDate"> <label>{{'labels.ApplicationDate' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="AmountApprovedWOInterest"> <label>{{'labels.AmountApprovedWOInterest' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="InterestAmount"> <label>{{'labels.InterestAmount' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="BalanceAmount"> <label>{{'labels.BalanceAmount' | safeTranslate}}</label> </th>
+                <th HeadingDef DOTextCode="AcknowledgedByEmployee"> <label>{{'labels.AcknowledgedByEmployee' | safeTranslate}}</label> </th>
+              </ng-container>
+
+              <ng-container *RowData="let row; let i=index">
+                <td RowDef>{{row.LoanType}}</td>
+                <td RowDef>{{row.AppDate}}</td>
+                <td RowDef>{{row.LoanAmtWithoutInt}}</td>
+                <td RowDef>{{row.Interest}}</td>
+                <td RowDef>{{row.BalanceAmount}}</td>
+                <td RowDef class="text-center">-->
+          <!-- If row.Received is true, show the toggle switch -->
+          <!--<ng-container *ngIf="!row.ReceivedFromPortal; else tickIcons">-->
+          <!--<label class="switch" [attr.for]="'LoanAcknowledgedByEmployee' + i">
+            <input [disabled]="row.ReceivedFromPortal" type="checkbox" [id]="'LoanAcknowledgedByEmployee' + i"
+                   [(ngModel)]="row.ReceivedFromPortal" (ngModelChange)="LoanAcknowledgedByEmployee(row, i)">
+            <div class="slider round" [ngClass]="{'disableToggle': row.ReceivedFromPortal}"></div>
+          </label>-->
+          <!--</ng-container>-->
+          <!-- Else show Bootstrap checkmark icon -->
+          <!--<ng-template #tickIcons>
+            <i class="glyphicon glyphicon-ok" style="color: #3F5AA8;"></i>
+          </ng-template>-->
+          <!--</td>
+              </ng-container>
+            </V5-Grid>
+          </div>-->
+
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

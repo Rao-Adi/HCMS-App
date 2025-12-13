@@ -1,0 +1,49 @@
+.width {
+  display: inline-block;
+  max-width: 200%;
+  margin-bottom: 5px;
+  font-weight: 700;
+  width:170%;
+}
+.alignment {
+  padding-bottom: 24px;
+}
+
+.th {
+  color: #2b499f !important;
+  font-weight: 600;
+}
+.border {
+  border: none;
+  text-align: center;
+}
+.choseImg:hover {
+  cursor: pointer;
+  box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 7px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border: 5px solid #f1f1f1;
+  border-radius: 20em;
+  margin-left: 32px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #E8E5F3;
+  border: 5px solid #BEB8D8;
+  border-radius: 20em
+}
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #BEB8D8;
+  }

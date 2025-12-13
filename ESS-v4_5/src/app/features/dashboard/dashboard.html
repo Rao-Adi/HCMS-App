@@ -1,0 +1,41 @@
+<div class="dashboard-container">
+
+  <h2>{{ welcomeMessage }}</h2>
+  <p class="subtitle">Here's your summary for today.</p>
+
+  <div class="dashboard-grid">
+
+    <div class="card card-leaves">
+      <h3>Your Leave Balances</h3>
+      <div class="balances-list">
+        <div *ngFor="let balance of leaveBalances" class="balance-item">
+          <div class="balance-days" [style.color]="balance.color">{{ balance.days }}</div>
+          <div class="balance-type">{{ balance.type }}</div>
+          <div class="balance-label">Days</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-actions">
+      <h3>Your Action Items</h3>
+      <ul class="action-list">
+        <li *ngFor="let item of actionItems" (click)="onActionClick(item)">
+          <span class="action-type-badge">{{ item.type }}</span>
+          <span class="action-text">{{ item.text }}</span>
+          <span class="action-arrow">&rarr;</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card card-links">
+      <h3>Quick Links</h3>
+      <div class="links-grid">
+        <div *ngFor="let link of quickLinks" class="link-item" (click)="onLinkClick(link.name)">
+          <div class="link-icon">{{ link.icon }}</div>
+          <div class="link-name">{{ link.name }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

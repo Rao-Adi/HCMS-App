@@ -1,0 +1,178 @@
+/* dashboard.component.css */
+
+/* --- Basic Setup --- */
+:host {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --primary-color: #005f9e; /* A professional blue */
+  --card-bg: #ffffff;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --card-hover-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  --card-radius: 8px;
+}
+
+.dashboard-container {
+  padding: 24px;
+  background-color: #ffffff; /* Light gray background for contrast */
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #222;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 24px;
+}
+
+/* --- Grid Layout --- */
+.dashboard-grid {
+  display: grid;
+  /* Creates a responsive grid that wraps columns automatically */
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+/* --- General Card Styling --- */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+  .card:hover {
+    box-shadow: var(--card-hover-shadow);
+    transform: translateY(-2px);
+  }
+
+  .card h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+
+/* --- Widget 1: Leave Balances --- */
+.balances-list {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.balance-item {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.balance-days {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.balance-type {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+  margin-top: 4px;
+}
+
+.balance-label {
+  font-size: 0.8rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- Widget 2: Action Items --- */
+.action-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+  .action-list li {
+    display: flex;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+    .action-list li:last-child {
+      border-bottom: none;
+    }
+
+    .action-list li:hover {
+      background-color: #f9f9f9;
+    }
+
+.action-type-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-right: 12px;
+  background-color: #eee;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.action-text {
+  flex: 1;
+  color: #444;
+}
+
+.action-arrow {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.action-list li:hover .action-arrow {
+  opacity: 1;
+}
+
+/* --- Widget 3: Quick Links --- */
+.links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.link-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+  .link-item:hover {
+    background-color: #fff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+.link-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.link-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}

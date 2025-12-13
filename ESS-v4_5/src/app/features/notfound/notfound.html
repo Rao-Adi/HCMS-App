@@ -1,0 +1,19 @@
+<section class="nf">
+  <h1 class="nf__code" aria-label="404 not found">404</h1>
+  <p class="nf__title">Page not found</p>
+
+  <p class="nf__desc" *ngIf="attemptedUrl as url">
+    We couldn’t find <code class="nf__code-inline">{{ url }}</code>.
+  </p>
+
+  <div class="nf__actions" role="group" aria-label="Navigation options">
+    <a routerLink="/dashboard" class="btn" aria-label="Go to dashboard">Go to Dashboard</a>
+    <button type="button" class="btn btn--outline" (click)="goBack()">
+      Go back
+    </button>
+  </div>
+
+  <p class="nf__hint">
+    If you typed the address, check the spelling. Otherwise, use the button above to continue.
+  </p>
+</section>

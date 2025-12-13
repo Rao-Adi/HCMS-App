@@ -1,0 +1,43 @@
+body {
+  padding: 12%;
+}
+
+#mainDiv {
+  width: 905px;
+  height: 219px;
+  background-color: #FFF;
+  border: medium none;
+  box-shadow: 0px 1px 2px 1px #5D5D5D;
+  /*margin-top: 15%;*/
+}
+
+#imgCompanylogo {
+  margin: 20px 0px 0px 20px;
+}
+
+#lblSessionExp {
+  color: #ed1f24;
+  font-size: 20px;
+  font-family: Verdana;
+}
+
+#lblRedirect {
+  color: #1f3c57;
+  font-size: 14px;
+  font-weight: normal;
+  font-family: Verdana;
+}
+
+#lblTimer {
+  color: #1f3c57;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: Verdana;
+}
+
+.in-middle {
+  width: 100%;
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+}

@@ -1,0 +1,323 @@
+<div class="container-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-3 col-md-3 col-sm-3">
+        <div class="leftcard-custom">
+          <div class="clearfix">
+            <img [src]="image" class="profile-img pull-left">
+          </div>
+          <h3>{{EmployeePerInformation.Name}}</h3>
+          <label>{{EmployeePerInformation.Designation}}</label>
+          <hr>
+          <div class="section-title">{{'labels.EmployeeSelection' | safeTranslate}}</div>
+          <div class="form-group">
+            <label class="ctrllbl">Direct Reporters Level*<span class="text-danger">*</span></label>
+            <select class="form-control" [(ngModel)]="ModelLevel" (change)="ChangeLevel()">
+              <option *ngFor="let rel of ReporterLevels" [ngValue]="rel.Level">{{rel.Level}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="ctrllbl">{{'labels.Employee' | safeTranslate}}<span class="text-danger">*</span></label>
+            <select class="form-control" [(ngModel)]="SubOrdinateEmpId" (change)="ChangeSubOrdinates()">
+              <option [ngValue]="rel.EMPID" *ngFor="let rel of SubordinatesList">{{rel.NAME}}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-9 col-md-9 col-sm-9">
+        <div class="card-custom">
+          <div class="clearfix">
+            <div class="pull-left">
+              <h3 class="mt-0">{{'labels.EmployeePersonalInformation' | safeTranslate}}</h3>
+              <small class="text-muted">View and manage employee details and job information</small>
+            </div>
+          </div>
+          <div class="profile-container">
+            <img [src]="image" class="profile-img" alt="Profile">
+            <div class="profile-details">
+              <h3>{{EmployeePerInformation.Name}} </h3>
+              <label class="designation-label">
+                {{EmployeePerInformation.Designation}}
+              </label>
+            </div>
+          </div>
+          
+          <div class="custom-tab-container">
+            <button class="tab-button" tabindex="0" [ngClass]="{'active-tab': selectedTab === 'EmployeeInformation'}" (click)="selectedTab = 'EmployeeInformation'">
+              {{'labels.EmployeeInformation' | safeTranslate}}
+            </button>
+            <button class="tab-button" tabindex="0" [ngClass]="{'active-tab': selectedTab === 'Certification'}" (click)="selectedTab = 'Certification'">
+              {{'labels.Certification' | safeTranslate}}
+            </button>
+            <button class="tab-button" tabindex="0" [ngClass]="{'active-tab': selectedTab === 'AcademicQualification'}" (click)="selectedTab = 'AcademicQualification'">
+              {{'labels.AcademicQualification' | safeTranslate}}
+            </button>
+            <button class="tab-button" tabindex="0" [ngClass]="{'active-tab': selectedTab === 'Dependent'}" (click)="selectedTab = 'Dependent'">
+              {{'labels.Dependent' | safeTranslate}}
+            </button>
+          </div>
+          <hr>
+
+          <div class="row row-space" *ngIf="selectedTab === 'EmployeeInformation'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.EmployeeName' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Name}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.FatherName' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.FName}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.PhoneNoRes' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Phone}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.DateofBirth' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.DateofBirth}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.PhoneNoCell' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Mobile}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.IDCardNo' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.NICNew}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.PostalAddress' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Address}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.IDCardRemarks' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.IdCardRemarks}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.PersonalEmail' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Email}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.ExpiryDateofIDCard' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.CNICExpiryDate}}</label>
+                </div>
+              </div>
+              <hr />
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Nationality' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Nationality}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.BloodGroup' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Blood}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Gender' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Gender}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Religion' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Religion}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.ExpiryDateofPassport' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.PassportExpiryDate}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.MartialStatus' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Marital}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.Sect' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.SectId}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.NativeLanguage' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.MTId}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.NTN' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.NTN}}</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.FamilyCardNo' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.FamilyCardNo}}</label>
+                </div>
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                  <label class="label-heading">{{'labels.IdentificationMark' | safeTranslate}}</label>
+                  <br />
+                  <label class="label-value">{{EmployeePerInformation.Identification}}</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="status-box-leftColmd6-standard">
+                    <h3 class="PnlHeader">{{'labels.EmergencyContact' | safeTranslate}}</h3>
+                    <br />
+                    <div class="row">
+                      <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                        <label class="label-heading">{{'labels.Name' | safeTranslate}}</label>
+                        <br />
+                        <label class="label-value">{{EmployeeEmergencyContact.ContactPerson}}</label>
+                      </div>
+                      <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                        <label class="label-heading">{{'labels.PhoneNoRes' | safeTranslate}}</label>
+                        <br />
+                        <label class="label-value">{{EmployeeEmergencyContact.Phone}}</label>
+                      </div>
+                      <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                        <label class="label-heading">{{'labels.Address' | safeTranslate}}</label>
+                        <br />
+                        <label class="label-value">{{EmployeeEmergencyContact.Address}}</label>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                        <label class="label-heading">{{'labels.Relation' | safeTranslate}}</label>
+                        <br />
+                        <label class="label-value">{{EmployeeEmergencyContact.Relation}}</label>
+                      </div>
+                      <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-3">
+                        <label class="label-heading">{{'labels.PhoneNoCell' | safeTranslate}}</label>
+                        <br />
+                        <label class="label-value">{{EmployeeEmergencyContact.Mobile}}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'Certification'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="status-box-leftColmd6-standard">
+                    <h3 class="PnlHeader">{{'labels.Certification' | safeTranslate}}</h3>
+                    <br />
+                    <div class="PnlBody table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th class="th">{{'labels.Certification' | safeTranslate}}</th>
+                            <th class="th">{{'labels.DateOfCertification' | safeTranslate}}</th>
+                            <th class="th">{{'labels.ExpiryDate' | safeTranslate}}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let row of certification">
+                            <td>{{row.Name}}</td>
+                            <td>{{row.DateAchieved}}</td>
+                            <td>{{row.ExpiryDate}}</td>
+                          </tr>
+                          <tr *ngIf="!certification || certification.length === 0">
+                            <td colspan="3" class="text-center">{{'labels.NoCertificationsFound' | safeTranslate}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'AcademicQualification'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="status-box-leftColmd6-.standard">
+                    <h3 class="PnlHeader">{{'labels.AcademicQualification' | safeTranslate}}</h3>
+                    <br />
+                    <div class="PnlBody table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th class="th">{{'labels.Degree' | safeTranslate}}</th>
+                            <th class="th">{{'labels.Institute' | safeTranslate}}</th>
+                            <th class="th">{{'labels.PassingYear' | safeTranslate}}</th>
+                            <th class="th">{{'labels.City' | safeTranslate}}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let row of AcademicQualification">
+                            <td>{{row.Qulification}}</td>
+                            <td>{{row.institute}}</td>
+                            <td>{{row.PassingYear}}</td>
+                            <td>{{row.City}}</td>
+                          </tr>
+                          <tr *ngIf="!AcademicQualification || AcademicQualification.length === 0">
+                            <td colspan="4" class="text-center">{{'labels.NoQualificationsFound' | safeTranslate}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row row-space" *ngIf="selectedTab === 'Dependent'">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="status-box-leftColmd6-standard">
+                    <h3 class="PnlHeader">{{'labels.Dependent' | safeTranslate}}</h3>
+                    <br />
+                    <div class="PnlBody">
+                      <!-- aggrid below -->
+                      <ag-grid-angular style="width: 100%; height: 300px;"
+                                       class="ag-theme-alpine"
+                                       [rowData]="dependents"
+                                       [columnDefs]="dependentColumnDefs"
+                                       [defaultColDef]="defaultColDef" [overlayNoRowsTemplate]="noRowsOverlay">
+                      </ag-grid-angular>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,35 @@
+.txtOnError {
+  height: 2.0000rem !important;
+  padding: 0.3125rem 10px !important;
+  font-size: 0.7500rem !important;
+  line-height: 1.5 !important;
+  border-radius: 0.0625rem !important;
+  border: thin solid #C1272D !important;
+  box-shadow: none !important;
+  display: block;
+  width: 200px !important;
+}
+.txtOnErrorcurrency {
+  height: 2.0000rem !important;
+  padding: 0.3125rem 10px !important;
+  font-size: 0.7500rem !important;
+  line-height: 1.5 !important;
+  border-radius: 0.0625rem !important;
+  border: thin solid #C1272D !important;
+  box-shadow: none !important;
+  /*display: block;*/
+  display: inline-block !important;
+  width: 80px !important;
+}
+.txtOnamount {
+  height: 2.0000rem !important;
+  padding: 0.3125rem 10px !important;
+  font-size: 0.7500rem !important;
+  line-height: 1.5 !important;
+  border-radius: 0.0625rem !important;
+  border: thin solid #C1272D !important;
+  box-shadow: none !important;
+  /*display: block;*/
+  display: inline-block !important;
+  width: 120px !important;
+}

@@ -1,0 +1,36 @@
+<div class="container in-middle" *ngIf="isDeniedType">
+  <div class="row">
+    <div class="col-md-12 text-center">
+      <img src="./assets/images/WaningError.png" />
+    </div>
+    <div class="col-md-12 text-center">
+      <span id="lblSessionExp" style="color:#3F5AA8;" *ngIf="AccessDenied && !UnSuccessfulMapping">You don't have enough permission to view this form</span>
+      <span id="lblSessionExp" style="color:#3F5AA8;" *ngIf="!AccessDenied && UnSuccessfulMapping">User mapping not correct, assign proper Employee Code and PGIDs</span>
+    </div>
+  </div>
+</div>
+<div class="container" *ngIf="!isDeniedType">
+  <div class="row" style="margin-top: 80px;">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="text-align: center;">
+      <div class="PnlDefault">
+        <div class="PnlBody">
+          <div class="row">
+            <div class="col-lg-12 col-sm-12 col-xs-12 " style="align-content:center;">
+              <img src="./assets/images/erroricon.png" style="border-width:0px;" /><br />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12 col-sm-12 col-xs-12">
+              <h2 style="text-align:center; color:#FA7EB2;"><b>AN ERROR HAS OCCURRED. PLEASE CONTACT SOFTRONIC SYSTEMS</b></h2>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12 col-sm-12 col-xs-12">
+              <span id="lblSessionExp" style="color:#3F5AA8;text-align:center;">You will be redirected to the Login Screen in <b>{{timeOut}} Seconds.</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
