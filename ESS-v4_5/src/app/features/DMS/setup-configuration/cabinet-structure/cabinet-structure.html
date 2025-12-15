@@ -1,1 +1,146 @@
-<p>cabinet-structure works!</p>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Cabinet Structure</h3>
+            <small class="text-muted">Cabinet Structure</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div _ngcontent-ng-c4214321369="" class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Level1' }"
+                (click)="selectedTab = 'Level1'"
+              >
+                Level 1
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Level2' }"
+                (click)="selectedTab = 'Level2'"
+              >
+                Level 2
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Level3' }"
+                (click)="selectedTab = 'Level3'"
+              >
+                Level 3
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Level4' }"
+                (click)="selectedTab = 'Level4'"
+              >
+                Level 4
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'DocumentType' }"
+                (click)="selectedTab = 'DocumentType'"
+              >
+                Document Type
+              </button>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Level1'">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [columnDefs]="divisionColumnDefs"
+                  [rowData]="rowData"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Level2'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [rowData]="rowData"
+                  [columnDefs]="departmentColumnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+            <div class="row row-space" *ngIf="selectedTab === 'Level3'">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [columnDefs]="subDepartmentColumnDefs"
+                  [rowData]="rowData"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Level4'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [rowData]="rowData"
+                  [columnDefs]="businessdomainColumnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'DocumentType'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [rowData]="rowData"
+                  [columnDefs]="documentTypeColumnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,137 @@
-<p>document-template works!</p>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Document Template</h3>
+            <small class="text-muted">Document Template</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="row">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="row">
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label class="ctrllbl">Document Type</label>
+                  <div class="row">
+                    <nz-select
+                      nzMode="multiple"
+                      nzPlaceHolder="Select users"
+                      nzAllowClear
+                      nzShowSearch
+                      nzServerSearch
+                      [(ngModel)]="selectedUser"
+                      (nzOnSearch)="onSearch($event)"
+                    >
+                      @if (!loading) { @for (o of optionList; track o) {
+                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
+                      } } @else {
+                      <nz-option nzDisabled nzCustomContent>
+                        <nz-icon nzType="loading" class="loading-icon" />
+                        Loading Data...
+                      </nz-option>
+                      }
+                    </nz-select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="row">
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label class="ctrllbl">Division</label>
+                  <div class="row">
+                    <nz-select
+                      nzMode="multiple"
+                      nzPlaceHolder="Select users"
+                      nzAllowClear
+                      nzShowSearch
+                      nzServerSearch
+                      [(ngModel)]="selectedUser"
+                      (nzOnSearch)="onSearch($event)"
+                    >
+                      @if (!loading) { @for (o of optionList; track o) {
+                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
+                      } } @else {
+                      <nz-option nzDisabled nzCustomContent>
+                        <nz-icon nzType="loading" class="loading-icon" />
+                        Loading Data...
+                      </nz-option>
+                      }
+                    </nz-select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label class="ctrllbl">Department</label>
+                  <div class="row">
+                    <nz-select
+                      nzMode="multiple"
+                      nzPlaceHolder="Select users"
+                      nzAllowClear
+                      nzShowSearch
+                      nzServerSearch
+                      [(ngModel)]="selectedUser"
+                      (nzOnSearch)="onSearch($event)"
+                    >
+                      @if (!loading) { @for (o of optionList; track o) {
+                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
+                      } } @else {
+                      <nz-option nzDisabled nzCustomContent>
+                        <nz-icon nzType="loading" class="loading-icon" />
+                        Loading Data...
+                      </nz-option>
+                      }
+                    </nz-select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label class="ctrllbl">Sub-Department</label>
+                  <div class="row">
+                    <nz-select
+                      nzMode="multiple"
+                      nzPlaceHolder="Select users"
+                      nzAllowClear
+                      nzShowSearch
+                      nzServerSearch
+                      [(ngModel)]="selectedUser"
+                      (nzOnSearch)="onSearch($event)"
+                    >
+                      @if (!loading) { @for (o of optionList; track o) {
+                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
+                      } } @else {
+                      <nz-option nzDisabled nzCustomContent>
+                        <nz-icon nzType="loading" class="loading-icon" />
+                        Loading Data...
+                      </nz-option>
+                      }
+                    </nz-select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row row-space">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="status-box">
+                <h3 class="PnlHeader"> Template </h3>
+              <textarea rows="4" nz-input></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

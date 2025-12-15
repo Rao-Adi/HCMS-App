@@ -1,0 +1,15 @@
+<ag-grid-angular
+  class="ag-theme-alpine"
+  style="width: 100%; height: 600px"
+  [rowData]="rowData"
+  [columnDefs]="columnDefs"
+  [defaultColDef]="defaultColDef"
+  [pagination]="true"
+  [paginationPageSize]="pageSize"
+  [rowModelType]="'clientSide'"
+  (gridReady)="onGridReady($event)"
+  (cellValueChanged)="onCellValueChanged($event)"
+  (filterChanged)="onFilterChanged()"
+  (sortChanged)="onSortChanged()"
+>
+</ag-grid-angular>

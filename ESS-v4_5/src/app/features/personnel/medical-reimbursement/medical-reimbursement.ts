@@ -10,7 +10,15 @@ import { ColDef } from 'ag-grid-community';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { MedicalReimbursementService } from '../medical-reimbursement-service';
-import { Input, Output, NgZone, EventEmitter, Inject, ViewChildren, QueryList } from '@angular/core';
+import {
+  Input,
+  Output,
+  NgZone,
+  EventEmitter,
+  Inject,
+  ViewChildren,
+  QueryList,
+} from '@angular/core';
 import { ViewChild, ViewContainerRef } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DatePipe } from '@angular/common';
@@ -26,18 +34,15 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzUploadChangeParam } from 'ng-zorro-antd/upload';
-import { Subscription } from 'rxjs'; 
+import { Subscription } from 'rxjs';
 import { NzUploadFile, NzUploadXHRArgs } from 'ng-zorro-antd/upload';
 import { NZ_ICONS } from 'ng-zorro-antd/icon';
 import { Subject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { switchMap, distinctUntilChanged, map, catchError, tap } from 'rxjs/operators';
-import { NzIconService } from 'ng-zorro-antd/icon'; 
-import { DownloadOutline } from '@ant-design/icons-angular/icons'; 
-const icons = [
-  DownloadOutline,
-  { ...DownloadOutline, name: 'download-o' }
-];
+import { NzIconService } from 'ng-zorro-antd/icon';
+import { DownloadOutline } from '@ant-design/icons-angular/icons';
+const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 @Component({
   selector: 'app-medical-reimbursement',
   standalone: true,
@@ -51,16 +56,16 @@ const icons = [
     NzSelectModule,
     NzButtonModule,
     NzIconModule,
-    NzCheckboxModule
+    NzCheckboxModule,
   ],
   providers: [
     MedicalReimbursementService,
     DatePipe,
     DecimalPipe,
-    { provide: NZ_ICONS, useValue: icons }
+    { provide: NZ_ICONS, useValue: icons },
   ],
   templateUrl: './medical-reimbursement.html',
-  styleUrl: './medical-reimbursement.css'
+  styleUrl: './medical-reimbursement.css',
 })
 export class MedicalReimbursement implements OnInit {
   private translate = inject(TranslateService);
@@ -68,8 +73,8 @@ export class MedicalReimbursement implements OnInit {
   private _UtilitiesService = inject(UtilitiesService);
   private medicalService = inject(MedicalReimbursementService);
   public gridOptions: GridOptions | undefined;
-   @ViewChild('fileUploader') fileUploader: any;
-  constructor (
+  @ViewChild('fileUploader') fileUploader: any;
+  constructor(
     private router: Router,
     private _dataService: DataService,
     private dialog: MatDialog,
@@ -83,13 +88,13 @@ export class MedicalReimbursement implements OnInit {
     private http: HttpClient,
     private iconService: NzIconService
   ) {
-    this.iconService.addIcon(DownloadOutline); 
+    this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
   }
-  formId: string = "EmployeeMedicalReimbursement";
+  formId: string = 'EmployeeMedicalReimbursement';
   selectedTab: string = 'MedicalEntitlementDetails';
-  image: any = './assets/images/pro.png'
-  TopRightValidationMsg: string = "";
+  image: any = './assets/images/pro.png';
+  TopRightValidationMsg: string = '';
   public defaultColDef: ColDef = {};
   public noRowsOverlay: string = '';
   public recordsPerPage: number = 5;
@@ -108,7 +113,7 @@ export class MedicalReimbursement implements OnInit {
   MedicalTypeSetup: MedicalTypeSetup = new MedicalTypeSetup();
   currencies: Array<Currency> = new Array<Currency>();
   Hospitals: Array<HospitalSetup> = new Array<HospitalSetup>();
-  public medicalExpenseDateObj: Date | null = null; 
+  public medicalExpenseDateObj: Date | null = null;
   public admissionDateObj: Date | null = null;
   public dischargeDateObj: Date | null = null;
   isMedicalExpenseDateInvalid: boolean = false;
@@ -127,8 +132,8 @@ export class MedicalReimbursement implements OnInit {
   selectedDpdId: number = 0;
   claimStatus: string = 'P';
   recordId = 0;
-  public nzFileList: NzUploadFile[] = []; 
-  public selectedFile: File | null = null; 
+  public nzFileList: NzUploadFile[] = [];
+  public selectedFile: File | null = null;
   public fileSizeError: string | null = null;
   attachmentUrl: SafeUrl | null = null;
   validationMessage = { text: '', type: 'error' };
@@ -154,12 +159,15 @@ export class MedicalReimbursement implements OnInit {
     this.LoginCompanyId = this._UtilitiesService.GetCompanyId() || '';
     this.culture = this._UtilitiesService.GetAppCurrentUICulture() || '';
     this.loadEmployeeImage();
-    this.medicalService.entitlements$.subscribe(data => this.MedicalInfoRows = data);
-    this.medicalService.transactions$.subscribe(data => this.GridMedicalTypeSetup = data);
-    this.medicalService.netAmount$.subscribe(data => { this.Amount = data ? data.amount : null; this.AmountText = data ? data.text : null; });
-    this.medicalService.currencyCode$.subscribe(code => {
-    this.CurrencyCode = code;
-    this.setupMedicalInfoGrid();
+    this.medicalService.entitlements$.subscribe((data) => (this.MedicalInfoRows = data));
+    this.medicalService.transactions$.subscribe((data) => (this.GridMedicalTypeSetup = data));
+    this.medicalService.netAmount$.subscribe((data) => {
+      this.Amount = data ? data.amount : null;
+      this.AmountText = data ? data.text : null;
+    });
+    this.medicalService.currencyCode$.subscribe((code) => {
+      this.CurrencyCode = code;
+      this.setupMedicalInfoGrid();
     });
     this.LoadFiscalYearData(this.LoginCompanyId);
     this.LoadDependentData(this.LoginEmpId);
@@ -184,12 +192,13 @@ export class MedicalReimbursement implements OnInit {
       error: (error: any) => {
         console.error('Failed to load image from API:', error);
         this.image = './assets/images/pro.png';
-      }
+      },
     });
   }
   LoadFiscalYearData(CompanyId: string): void {
     const url = `MedicalReimbursement/GetFiscalYear/${CompanyId}`;
-    this._userService.get<any[]>(url)
+    this._userService
+      .get<any[]>(url)
       .pipe()
       .subscribe({
         next: (data: any[]) => {
@@ -202,15 +211,14 @@ export class MedicalReimbursement implements OnInit {
         },
         error: (error: any) => {
           console.error('Error fetching fiscal year:', error);
-        }
+        },
       });
   }
-  dependents: { id: number, text: string }[] = [
-    { id: 0, text: "Self" }
-  ];
+  dependents: { id: number; text: string }[] = [{ id: 0, text: 'Self' }];
   LoadDependentData(EmpId: string): void {
     const url = `MedicalReimbursement/GetDependentsDetail/${EmpId}`;
-    this._userService.get<any>(url)
+    this._userService
+      .get<any>(url)
       .pipe()
       .subscribe({
         next: (data) => {
@@ -229,7 +237,7 @@ export class MedicalReimbursement implements OnInit {
         },
         error: (error: any) => {
           console.error('Error loading dependents:', error);
-        }
+        },
       });
   }
   loadEmployeeMedicalEnt(setAsDefault: boolean): Promise<void> {
@@ -260,7 +268,7 @@ export class MedicalReimbursement implements OnInit {
       },
       error: (error: any) => {
         console.error('Error loading currency:', error);
-      }
+      },
     });
   }
 
@@ -270,16 +278,16 @@ export class MedicalReimbursement implements OnInit {
       next: (data) => {
         this.Hospitals = data?.Hospital || [];
         if (this.Hospitals.length > 0) {
-          const defaultHospital = this.Hospitals.find(c => c.NAME.trim() === 'N/A');
+          const defaultHospital = this.Hospitals.find((c) => c.NAME.trim() === 'N/A');
           if (defaultHospital) {
             this.MedicalClaimTransaction.hospitalId = defaultHospital.HOSID;
           }
         }
       },
-      error:(error: any) => {
+      error: (error: any) => {
         console.error('Error loading hospitals:', error);
-    }
-      });
+      },
+    });
   }
   setupDependentsGrid() {
     this.defaultColDef = {
@@ -291,15 +299,15 @@ export class MedicalReimbursement implements OnInit {
     };
     this.rowSelection = 'single';
     this.gridOptions = {
-      rowSelection: 'single' 
+      rowSelection: 'single',
     };
     this.DependentsColumnDefs = [
       {
         headerName: this.translate.instant('labels.DependentsName'),
-        field: 'NAME'
-      }
+        field: 'NAME',
+      },
     ];
-    this.noRowsOverlay = this.translate.instant('labels.NoRowsFound'); 
+    this.noRowsOverlay = this.translate.instant('labels.NoRowsFound');
   }
   setupMedicalInfoGrid() {
     this.defaultColDef = {
@@ -313,43 +321,49 @@ export class MedicalReimbursement implements OnInit {
       {
         headerName: this.translate.instant('labels.MedicalEntitlementCategory'),
         field: 'Medical Type',
-        minWidth: 150
+        minWidth: 150,
       },
       {
         headerName: this.translate.instant('labels.AmmountScope'),
         field: 'AmountScope',
-        minWidth: 120
+        minWidth: 120,
       },
       {
-        headerName: `${this.translate.instant('labels.MonthlyAccumulatedLimit')} (${this.CurrencyCode})`,
+        headerName: `${this.translate.instant('labels.MonthlyAccumulatedLimit')} (${
+          this.CurrencyCode
+        })`,
         field: 'MonthlyAccumulated',
-        cellRenderer: (params: any) => params.value ? params.value.toLocaleString() : '',
-        minWidth: 150
+        cellRenderer: (params: any) => (params.value ? params.value.toLocaleString() : ''),
+        minWidth: 150,
       },
       {
-        headerName: `${this.translate.instant('labels.AvailableMonthlyLimit')} (${this.CurrencyCode})`,
+        headerName: `${this.translate.instant('labels.AvailableMonthlyLimit')} (${
+          this.CurrencyCode
+        })`,
         field: 'AvailableMonthlyLimit',
-        cellRenderer: (params: any) => params.value ? params.value.toLocaleString() : '',
-        minWidth: 150
+        cellRenderer: (params: any) => (params.value ? params.value.toLocaleString() : ''),
+        minWidth: 150,
       },
       {
         headerName: this.translate.instant('labels.PendingforApproval'),
         field: 'Pendingforapproval',
-        cellRenderer: (params: any) => params.value ? params.value.toLocaleString() : '',
-        minWidth: 140
+        cellRenderer: (params: any) => (params.value ? params.value.toLocaleString() : ''),
+        minWidth: 140,
       },
       {
         headerName: `${this.translate.instant('labels.AnnualLimit')} (${this.CurrencyCode})`,
         field: 'Balance Limit',
-        cellRenderer: (params: any) => params.value ? params.value.toLocaleString() : '',
-        minWidth: 140
+        cellRenderer: (params: any) => (params.value ? params.value.toLocaleString() : ''),
+        minWidth: 140,
       },
       {
-        headerName: `${this.translate.instant('labels.AvailableAnnualLimit')} (${ this.CurrencyCode })`,
+        headerName: `${this.translate.instant('labels.AvailableAnnualLimit')} (${
+          this.CurrencyCode
+        })`,
         field: 'Remaining Balance',
-        cellRenderer: (params: any) => params.value ? params.value.toLocaleString() : '',
-        minWidth: 140
-      }
+        cellRenderer: (params: any) => (params.value ? params.value.toLocaleString() : ''),
+        minWidth: 140,
+      },
     ];
     this.noRowsOverlay = this.translate.instant('labels.NoRowsFound');
   }
@@ -366,33 +380,33 @@ export class MedicalReimbursement implements OnInit {
       {
         headerName: this.translate.instant('labels.Dependents'),
         field: 'DpdName',
-        minWidth: 150
+        minWidth: 150,
       },
       {
         headerName: this.translate.instant('labels.RelationwithDependent'),
         field: 'DpdRel',
-        minWidth: 120
+        minWidth: 120,
       },
       {
         headerName: this.translate.instant('labels.MedicalEntitlementCategory'),
         field: 'MedicalName',
-        minWidth: 150
+        minWidth: 150,
       },
       {
         headerName: this.translate.instant('labels.DateofClaim'),
         field: 'MDATE',
-        minWidth: 150
+        minWidth: 150,
       },
       {
         headerName: this.translate.instant('labels.ClaimAmount'),
         field: 'TOTALCLAIM',
-        cellRenderer: (params: any) => params.value ? params.value.toLocaleString() : '',
-        minWidth: 140
-      }, 
+        cellRenderer: (params: any) => (params.value ? params.value.toLocaleString() : ''),
+        minWidth: 140,
+      },
       {
         headerName: this.translate.instant('labels.LessDisallowedAmount'),
         field: 'LessDisallowed',
-        minWidth: 140
+        minWidth: 140,
       },
       {
         headerName: this.translate.instant('labels.NetClaimAmount'),
@@ -402,7 +416,7 @@ export class MedicalReimbursement implements OnInit {
           const netAmount = params.value.toLocaleString();
           return `${netAmount} ${this.CurrencyCode}`;
         },
-        minWidth: 140
+        minWidth: 140,
       },
       {
         headerName: this.translate.instant('labels.View'),
@@ -415,14 +429,14 @@ export class MedicalReimbursement implements OnInit {
         },
         onCellClicked: (params: any) => {
           if (params.event?.target?.tagName === 'A') {
-            params.event.preventDefault(); 
-            this.downloadGridAttachment(params.data); 
+            params.event.preventDefault();
+            this.downloadGridAttachment(params.data);
           }
         },
         maxWidth: 80,
         sortable: false,
-        filter: false
-      }
+        filter: false,
+      },
     ];
     this.noRowsOverlay = this.translate.instant('labels.NoRowsFound');
   }
@@ -447,10 +461,10 @@ export class MedicalReimbursement implements OnInit {
       return;
     }
     const selectedDependentData = event.node.data;
-    if (!selectedDependentData?.EMPDPDID && selectedDependentData.EMPDPDID !== 0 ) { 
+    if (!selectedDependentData?.EMPDPDID && selectedDependentData.EMPDPDID !== 0) {
       return;
     }
-    const dpdId = Number(selectedDependentData.EMPDPDID); 
+    const dpdId = Number(selectedDependentData.EMPDPDID);
     const fyId = this.FiscalYear?.ID;
     const empId = this.LoginEmpId;
     const companyId = this.LoginCompanyId;
@@ -460,28 +474,30 @@ export class MedicalReimbursement implements OnInit {
       console.warn('Missing required IDs for refresh:', { fyId, empId, companyId, dpdId });
       return;
     }
-    this.selectedDpdId = dpdId; 
+    this.selectedDpdId = dpdId;
     if (!this.FiscalYear?.ID || !this.LoginEmpId || !this.LoginCompanyId) {
       console.warn('Missing required IDs for refresh.');
       return;
     }
 
-    this.medicalService.refreshPageData(
-      this.LoginEmpId,
-      this.LoginCompanyId,
-      this.FiscalYear.ID,
-      dpdId,
-      this.claimStatus,
-      this.culture
-    ).subscribe({ 
-      next: () => {
-        console.log('Dependent data refreshed successfully for DPD:', dpdId);
-      },
-      error: (err) => {
-        console.error('Refresh failed after row click:', err);
-      }
-    });
-  }    
+    this.medicalService
+      .refreshPageData(
+        this.LoginEmpId,
+        this.LoginCompanyId,
+        this.FiscalYear.ID,
+        dpdId,
+        this.claimStatus,
+        this.culture
+      )
+      .subscribe({
+        next: () => {
+          console.log('Dependent data refreshed successfully for DPD:', dpdId);
+        },
+        error: (err) => {
+          console.error('Refresh failed after row click:', err);
+        },
+      });
+  }
   onGridRowSelected(event: any): void {
     if (!event.node.isSelected()) {
       return;
@@ -499,7 +515,7 @@ export class MedicalReimbursement implements OnInit {
       next: (recordData: any) => {
         if (recordData && recordData.MEDID > 0) {
           this.populateForm(recordData);
-          console.log("populate:", recordData);
+          console.log('populate:', recordData);
           this.showHrFields = true;
         } else {
           this.isSaveDisabled = false;
@@ -508,7 +524,7 @@ export class MedicalReimbursement implements OnInit {
       error: (err: any) => {
         console.error('Error fetching record for edit:', err);
         this.isSaveDisabled = false;
-      }
+      },
     });
   }
   validateForm(): boolean {
@@ -537,25 +553,27 @@ export class MedicalReimbursement implements OnInit {
       mandatoryError = true;
     }
 
-    const naCategory = this.empMedicalTypes.find(t => t.NAME?.trim().toUpperCase() === 'N/A');
-    const naCategoryId = naCategory?.ID ?? 0; 
+    const naCategory = this.empMedicalTypes.find((t) => t.NAME?.trim().toUpperCase() === 'N/A');
+    const naCategoryId = naCategory?.ID ?? 0;
     const invalidCategoryId = 0;
 
-    if (!claim.medicalCategoryId ||
+    if (
+      !claim.medicalCategoryId ||
       claim.medicalCategoryId === invalidCategoryId ||
-      claim.medicalCategoryId === naCategoryId) {
+      claim.medicalCategoryId === naCategoryId
+    ) {
       this.isMedicalCategoryInvalid = true;
       mandatoryError = true;
     }
     const amount = parseAmount(claim.totalClaim);
-    if (Number.isNaN(amount)  || amount <= 0) {
+    if (Number.isNaN(amount) || amount <= 0) {
       this.isTotalClaimInvalid = true;
       mandatoryError = true;
     }
     if (mandatoryError) {
       this.TopRightValidationMsg = 'Please enter mandatory fields.';
       this.scrollToError();
-      this.cdRef.detectChanges(); 
+      this.cdRef.detectChanges();
       return false;
     }
 
@@ -570,7 +588,8 @@ export class MedicalReimbursement implements OnInit {
 
     if (fy && (expenseDate < fy.start || expenseDate > fy.end)) {
       this.isMedicalExpenseDateInvalid = true;
-      this.TopRightValidationMsg = 'Record cannot be saved as the Claim Date either does not fall in the selected fiscal year or the selected fiscal year is closed.';
+      this.TopRightValidationMsg =
+        'Record cannot be saved as the Claim Date either does not fall in the selected fiscal year or the selected fiscal year is closed.';
       return false;
     }
 
@@ -601,11 +620,11 @@ export class MedicalReimbursement implements OnInit {
       return false;
     }
 
-    if (dischargeDate && dischargeDate > new Date()) { 
+    if (dischargeDate && dischargeDate > new Date()) {
       this.TopRightValidationMsg = 'Date of Discharge cannot be greater than the current date.';
       return false;
     }
-   
+
     let lessDisallowedAmount = 0;
     const disallowedParsed = parseAmount(claim.lessDisallowedAmount);
 
@@ -620,7 +639,7 @@ export class MedicalReimbursement implements OnInit {
 
     this.TopRightValidationMsg = '';
     return true;
-  }  
+  }
   onfiscalYearchange() {
     this.triggerRefresh();
   }
@@ -642,7 +661,6 @@ export class MedicalReimbursement implements OnInit {
       if (this.TopRightValidationMsg === 'Please enter mandatory fields.') {
         this.TopRightValidationMsg = '';
       }
-
     } else {
       this.MedicalClaimTransaction.medicalExpenseDate = '';
       this.isMedicalExpenseDateInvalid = this.hasAttemptedSave;
@@ -652,18 +670,16 @@ export class MedicalReimbursement implements OnInit {
     this.touched.admissionDate = true;
 
     if (newDate instanceof Date && !isNaN(newDate.getTime())) {
-
       const saveFormat = 'yyyy-MM-dd';
       const getValue = this.datePipe.transform(newDate, saveFormat);
       this.MedicalClaimTransaction.admissionDate = getValue || '';
       this.calculateAdmissionDuration(getValue, null);
-
     } else {
       this.MedicalClaimTransaction.admissionDate = '';
       this.calculateAdmissionDuration('', null);
     }
   }
-  
+
   onDischargeDateChange(newDate: Date | null): void {
     this.touched.dischargeDate = true;
     if (newDate instanceof Date && !isNaN(newDate.getTime())) {
@@ -671,13 +687,15 @@ export class MedicalReimbursement implements OnInit {
       const getValue = this.datePipe.transform(newDate, saveFormat);
       this.MedicalClaimTransaction.dischargeDate = getValue || '';
       this.calculateAdmissionDuration(null, getValue);
-
     } else {
       this.MedicalClaimTransaction.dischargeDate = '';
       this.calculateAdmissionDuration(null, '');
     }
   }
-  calculateAdmissionDuration(admissionDateStr?: string | null, dischargeDateStr?: string | null): void {
+  calculateAdmissionDuration(
+    admissionDateStr?: string | null,
+    dischargeDateStr?: string | null
+  ): void {
     const startDateStr = admissionDateStr ?? this.MedicalClaimTransaction.admissionDate;
     const endDateStr = dischargeDateStr ?? this.MedicalClaimTransaction.dischargeDate;
 
@@ -688,7 +706,7 @@ export class MedicalReimbursement implements OnInit {
     try {
       const startTime = Date.parse(startDateStr);
       const endTime = Date.parse(endDateStr);
-      
+
       if (Number.isNaN(startTime) || Number.isNaN(endTime)) {
         this.MedicalClaimTransaction.admissionDuration = '';
         return;
@@ -699,11 +717,12 @@ export class MedicalReimbursement implements OnInit {
         return;
       }
       const millisecondsPerDay = 1000 * 60 * 60 * 24;
-      const timeDifference = endTime - startTime; 
+      const timeDifference = endTime - startTime;
       const dayDifference = Math.round(timeDifference / millisecondsPerDay) + 1;
 
-      this.MedicalClaimTransaction.admissionDuration = (dayDifference < 1 ? 1 : dayDifference).toString();
-
+      this.MedicalClaimTransaction.admissionDuration = (
+        dayDifference < 1 ? 1 : dayDifference
+      ).toString();
     } catch (e) {
       console.error('Error calculating duration:', e);
       this.MedicalClaimTransaction.admissionDuration = '';
@@ -732,9 +751,7 @@ export class MedicalReimbursement implements OnInit {
     const raw = this.MedicalClaimTransaction?.totalClaim;
     const valueAsString = raw != null ? String(raw).trim() : '';
 
-    const numericValue = valueAsString !== ''
-      ? Number(valueAsString.replace(/,/g, ''))
-      : NaN;
+    const numericValue = valueAsString !== '' ? Number(valueAsString.replace(/,/g, '')) : NaN;
     const isValid = valueAsString !== '' && !Number.isNaN(numericValue);
 
     if (isValid) {
@@ -775,33 +792,28 @@ export class MedicalReimbursement implements OnInit {
     this.nzFileList = [...event.fileList];
     this.zone.run(() => {
       if (event.file.status === 'done') {
-        const uploadedFile: File | undefined = event.fileList.length > 0
-          ? event.fileList[0].originFileObj as File
-          : undefined;
+        const uploadedFile: File | undefined =
+          event.fileList.length > 0 ? (event.fileList[0].originFileObj as File) : undefined;
 
         if (!uploadedFile) {
           this.removeFile(event.file);
           return;
         }
 
-        const MAX_SIZE = 2 * 1024 * 1024; 
+        const MAX_SIZE = 2 * 1024 * 1024;
         this.fileSizeError = null;
 
         if (uploadedFile.size > MAX_SIZE) {
           this.fileSizeError = 'Error: File attachment must be less than 2MB.';
-          this.removeFile(event.file); 
+          this.removeFile(event.file);
           return;
         }
 
         this.MedicalClaimTransaction.hasAttachment = false;
         this.selectedFile = uploadedFile;
         this.attachmentUrl = null;
-      }
-
-      else if (event.file.status === 'removed') {
-      }
-
-      else if (event.file.status === 'error') {
+      } else if (event.file.status === 'removed') {
+      } else if (event.file.status === 'error') {
         this.fileSizeError = 'File upload failed.';
         this.removeFile(event.file);
       }
@@ -809,7 +821,7 @@ export class MedicalReimbursement implements OnInit {
   }
   removeFile = (file: NzUploadFile): boolean => {
     this.selectedFile = null;
-    this.nzFileList = []; 
+    this.nzFileList = [];
     this.fileSizeError = null;
 
     this.MedicalClaimTransaction.hasAttachment = false;
@@ -820,7 +832,7 @@ export class MedicalReimbursement implements OnInit {
     }
 
     return true;
-  }
+  };
   resetFileState(): void {
     this.selectedFile = null;
     this.nzFileList = [];
@@ -843,8 +855,7 @@ export class MedicalReimbursement implements OnInit {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    }
-    else {
+    } else {
       this.downloadAttachment();
     }
   };
@@ -863,14 +874,14 @@ export class MedicalReimbursement implements OnInit {
       admissionDate: false,
       dischargeDate: false,
       category: false,
-      totalClaim: false
+      totalClaim: false,
     };
     this.MedicalClaimTransaction = {
       recordId: setup?.MEDID,
       dateOfEntry: setup?.DateOfEntry,
       invoiceNumber: setup?.VOUCHERNO,
-      dependentId: Number(setup?.DPDID ?? 0), 
-      medicalExpenseDate: '', 
+      dependentId: Number(setup?.DPDID ?? 0),
+      medicalExpenseDate: '',
       totalClaim: setup?.TOTALCLAIM,
       currencyId: setup?.CURRENCYID,
       comments: setup?.COMMENTS,
@@ -900,7 +911,7 @@ export class MedicalReimbursement implements OnInit {
       branchName: setup?.BranchName,
       bankId: setup?.bnkid,
       branchId: setup?.bnkbrnid,
-      medicalCategoryId: 0 
+      medicalCategoryId: 0,
     };
 
     const invalidCategoryId = 0;
@@ -936,31 +947,31 @@ export class MedicalReimbursement implements OnInit {
           return null;
         }
       };
-     
+
       const expenseDateObj = safeParseDate(setup?.MDATE);
-      this.medicalExpenseDateObj = expenseDateObj; 
+      this.medicalExpenseDateObj = expenseDateObj;
 
       this.MedicalClaimTransaction.medicalExpenseDate = expenseDateObj
         ? this.datePipe.transform(expenseDateObj, 'yyyy-MM-dd') || ''
         : '';
 
       const admissionDateObj = safeParseDate(setup?.AdmissionDate);
-      this.admissionDateObj = admissionDateObj; 
+      this.admissionDateObj = admissionDateObj;
       this.MedicalClaimTransaction.admissionDate = admissionDateObj
         ? this.datePipe.transform(admissionDateObj, 'yyyy-MM-dd') || ''
         : '';
 
       const dischargeDateObj = safeParseDate(setup?.DischargeDate);
-      this.dischargeDateObj = dischargeDateObj; 
+      this.dischargeDateObj = dischargeDateObj;
       this.MedicalClaimTransaction.dischargeDate = dischargeDateObj
         ? this.datePipe.transform(dischargeDateObj, 'yyyy-MM-dd') || ''
         : '';
 
-      if (expenseDateObj) { 
-        const expense = expenseDateObj; 
+      if (expenseDateObj) {
+        const expense = expenseDateObj;
         const fy = this.getSelectedFiscalRange();
 
-        if (expense && fy && (expense >= fy.start && expense <= fy.end)) {
+        if (expense && fy && expense >= fy.start && expense <= fy.end) {
           this.expenseDateWasEverValid = true;
         }
       }
@@ -996,17 +1007,16 @@ export class MedicalReimbursement implements OnInit {
 
     const MedicalExpenseDate = this.medicalExpenseDateObj
       ? this.datePipe.transform(this.medicalExpenseDateObj, saveFormat)
-      : (this.MedicalClaimTransaction.medicalExpenseDate || null); // Fallback for loaded value
+      : this.MedicalClaimTransaction.medicalExpenseDate || null; // Fallback for loaded value
 
     const admissionDate = this.admissionDateObj
       ? this.datePipe.transform(this.admissionDateObj, saveFormat)
-      : (this.MedicalClaimTransaction.admissionDate || null);
+      : this.MedicalClaimTransaction.admissionDate || null;
 
     const dischargeDate = this.dischargeDateObj
       ? this.datePipe.transform(this.dischargeDateObj, saveFormat)
-      : (this.MedicalClaimTransaction.dischargeDate || null);
+      : this.MedicalClaimTransaction.dischargeDate || null;
 
-   
     const payload: any = {
       MEDID: id,
       EMPID: Number(this._UtilitiesService.GetEmpid()) || null,
@@ -1030,7 +1040,7 @@ export class MedicalReimbursement implements OnInit {
       AMOUNT: claim.totalClaim - claim.lessDisallowedAmount,
       CURRENCYID: claim.currencyId || null,
       CONVERSIONRATE: this.conversionRate || null,
-      PAID: claim.paid === 'Yes' ? true : (claim.paid === 'No' ? false : null),
+      PAID: claim.paid === 'Yes' ? true : claim.paid === 'No' ? false : null,
       ChequeNumber: claim.chequeNumber || null,
       ChequeDate: claim.chequeDate || null,
       bnkid: claim.bankId || null,
@@ -1039,7 +1049,7 @@ export class MedicalReimbursement implements OnInit {
       DisallowedReason: claim.disallowedReason || null,
       FiscalYearID: this.FiscalYear.ID,
       DocumentBody: null,
-      Extention: null
+      Extention: null,
     };
 
     try {
@@ -1047,8 +1057,7 @@ export class MedicalReimbursement implements OnInit {
         payload.DocumentBody = await toBase64(this.selectedFile);
         const dotIndex = this.selectedFile.name.lastIndexOf('.');
         payload.Extention = dotIndex >= 0 ? this.selectedFile.name.substring(dotIndex) : null;
-      }
-      else if (claim.fileExtension && claim.hasAttachment) {
+      } else if (claim.fileExtension && claim.hasAttachment) {
         payload.Extention = claim.fileExtension;
       }
     } catch (e) {
@@ -1056,55 +1065,55 @@ export class MedicalReimbursement implements OnInit {
       this.scrollToError();
       return;
     }
-    this._userService
-      .post('MedicalReimbursement/InsertEmpMedical', payload)
-      .subscribe({
-        next: (res: any) => {
-          const isValid = (res?.isValid ?? res?.IsValid) === true;
-          const message = res?.message ?? res?.Message;
-          const displayMsg = message ? message : (isValid ? 'Saved successfully' : 'Failed to save');
+    this._userService.post('MedicalReimbursement/InsertEmpMedical', payload).subscribe({
+      next: (res: any) => {
+        const isValid = (res?.isValid ?? res?.IsValid) === true;
+        const message = res?.message ?? res?.Message;
+        const displayMsg = message ? message : isValid ? 'Saved successfully' : 'Failed to save';
 
-          if (isValid) {
-            this.TopRightValidationMsg = '';
-            this.selectedFile = null;
-            if (this.MedicalClaimTransaction) {
-              this.MedicalClaimTransaction.hasAttachment = false;
-              this.MedicalClaimTransaction.fileExtension = '';
-            }
-
-            // Clear File Input safely
-            if (this.fileUploader?.nativeElement) {
-              (this.fileUploader.nativeElement as HTMLInputElement).value = '';
-            }
-
-            this.resetMedicalForm();
-            this.triggerRefresh();
-          } else {
-            const apiMsgLower = displayMsg.toLowerCase();
-
-            if (apiMsgLower.includes('exchange rate')) {
-              this.TopRightValidationMsg = 'Exchange rate for the selected currency is not defined.';
-              this.isCurrencyInvalid = true;
-            }
-            else if (apiMsgLower.includes('limit exceeds')) {
-              this.TopRightValidationMsg = 'Medical Reimbursement Claim Amount should be lesser than the Limit Amount.';
-              this.isTotalClaimInvalid = true;
-            }
-            else if (apiMsgLower.includes('over age') || apiMsgLower.includes('expired')) {
-              this.TopRightValidationMsg = displayMsg;
-            }
-            else {
-              this.TopRightValidationMsg = displayMsg;
-            }
-            this.scrollToError();
+        if (isValid) {
+          this.TopRightValidationMsg = '';
+          this.selectedFile = null;
+          if (this.MedicalClaimTransaction) {
+            this.MedicalClaimTransaction.hasAttachment = false;
+            this.MedicalClaimTransaction.fileExtension = '';
           }
-        },
-        error: (err: any) => {
-          const errorMsg = err.error?.message || err.error?.Message || err.message || 'An unknown error occurred while saving.';          
+
+          // Clear File Input safely
+          if (this.fileUploader?.nativeElement) {
+            (this.fileUploader.nativeElement as HTMLInputElement).value = '';
+          }
+
+          this.resetMedicalForm();
+          this.triggerRefresh();
+        } else {
+          const apiMsgLower = displayMsg.toLowerCase();
+
+          if (apiMsgLower.includes('exchange rate')) {
+            this.TopRightValidationMsg = 'Exchange rate for the selected currency is not defined.';
+            this.isCurrencyInvalid = true;
+          } else if (apiMsgLower.includes('limit exceeds')) {
+            this.TopRightValidationMsg =
+              'Medical Reimbursement Claim Amount should be lesser than the Limit Amount.';
+            this.isTotalClaimInvalid = true;
+          } else if (apiMsgLower.includes('over age') || apiMsgLower.includes('expired')) {
+            this.TopRightValidationMsg = displayMsg;
+          } else {
+            this.TopRightValidationMsg = displayMsg;
+          }
+          this.scrollToError();
         }
-      });
+      },
+      error: (err: any) => {
+        const errorMsg =
+          err.error?.message ||
+          err.error?.Message ||
+          err.message ||
+          'An unknown error occurred while saving.';
+      },
+    });
   }
-  
+
   scrollToError(): void {
     setTimeout(() => {
       const errorElement = document.getElementById('validationMessage');
@@ -1114,21 +1123,19 @@ export class MedicalReimbursement implements OnInit {
     }, 100);
   }
   triggerRefresh(): void {
-    this.medicalService.refreshPageData(
-      this.LoginEmpId,
-      this.LoginCompanyId,
-      this.FiscalYear.ID,
-      this.selectedDpdId,
-      this.claimStatus,
-      this.culture
-    ).subscribe({
-      next: () => {
-        
-      },
-      error: (err) => {
-       
-      }
-    });
+    this.medicalService
+      .refreshPageData(
+        this.LoginEmpId,
+        this.LoginCompanyId,
+        this.FiscalYear.ID,
+        this.selectedDpdId,
+        this.claimStatus,
+        this.culture
+      )
+      .subscribe({
+        next: () => {},
+        error: (err) => {},
+      });
   }
   private getSelectedFiscalRange(): { start: Date; end: Date } | null {
     const fy = this.fiscalYearBy?.find((f: any) => f.ID === this.FiscalYear?.ID);
@@ -1155,7 +1162,7 @@ export class MedicalReimbursement implements OnInit {
       const y = Number(parts[0]);
       const m = Number(parts[1]);
       const d = Number(parts[2]);
-      const dt = new Date(y, (m - 1), d);
+      const dt = new Date(y, m - 1, d);
       return isNaN(dt.getTime()) ? null : dt;
     }
 
@@ -1169,10 +1176,21 @@ export class MedicalReimbursement implements OnInit {
         return m >= 1 && m <= 12 ? m - 1 : null;
       }
       const map: Record<string, number> = {
-        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+        jan: 0,
+        feb: 1,
+        mar: 2,
+        apr: 3,
+        may: 4,
+        jun: 5,
+        jul: 6,
+        aug: 7,
+        sep: 8,
+        oct: 9,
+        nov: 10,
+        dec: 11,
       };
       const key = token.toLowerCase().slice(0, 3);
-      return (key in map) ? map[key] : null;
+      return key in map ? map[key] : null;
     };
 
     const monthIdx = monthFrom(mm);
@@ -1210,7 +1228,7 @@ export class MedicalReimbursement implements OnInit {
     return '.' + realExt;
   }
   downloadGridAttachment(row: MedicalTypeSetup): void {
-    debugger
+    debugger;
     if (!row || row.MEDID == null || row.MEDID <= 0) {
       console.log('Cannot download file: Invalid record ID.');
       alert('Cannot download file: Invalid record ID.'); // V7 style alert
@@ -1233,16 +1251,16 @@ export class MedicalReimbursement implements OnInit {
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(downloadUrl);
-
         } else {
           console.log('Failed to download file: Empty response from server.');
         }
       },
       error: (err: any) => {
         console.error('Download error:', err);
-        const message = err.response || err.statusText || err.message || 'Could not download the file.';
+        const message =
+          err.response || err.statusText || err.message || 'Could not download the file.';
         console.log(`Download Failed: ${message}`);
-      }
+      },
     });
   }
 
@@ -1267,20 +1285,18 @@ export class MedicalReimbursement implements OnInit {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(downloadUrl);
           } else {
-            console.error("Received invalid blob from XHR observable for form attachment");
+            console.error('Received invalid blob from XHR observable for form attachment');
           }
         },
         error: (err) => {
           const message = err.response || err.statusText || 'Could not download the file.';
           alert(`Download Failed: ${message} (Status: ${err.status})`);
-        }
+        },
       });
-
     } else {
       alert('Cannot download file: Invalid record ID or transaction data.');
     }
   }
-
 
   reloadPage(): void {
     window.location.reload();
@@ -1289,10 +1305,10 @@ export class MedicalReimbursement implements OnInit {
     this.MedicalClaimTransaction = new MedicalClaimTransaction();
     //this.ResetDatePickers();
     this.medicalExpenseDateObj = null;
-    this.admissionDateObj = null;  
+    this.admissionDateObj = null;
     this.dischargeDateObj = null;
     this.loadEmployeeMedicalEnt(true);
-    const defaultHospital = this.Hospitals.find(h => h.NAME.trim().toUpperCase() === 'N/A');
+    const defaultHospital = this.Hospitals.find((h) => h.NAME.trim().toUpperCase() === 'N/A');
     this.MedicalClaimTransaction.hospitalId = defaultHospital ? defaultHospital.HOSID : 0;
     this.isSaveDisabled = false;
     this.showHrFields = false;
@@ -1311,9 +1327,14 @@ export class MedicalReimbursement implements OnInit {
     this.isMedicalCategoryInvalid = false;
     this.isTotalClaimInvalid = false;
     this.TopRightValidationMsg = '';
-    this.touched = { expenseDate: false, admissionDate: false, dischargeDate: false, category: false, totalClaim: false };
+    this.touched = {
+      expenseDate: false,
+      admissionDate: false,
+      dischargeDate: false,
+      category: false,
+      totalClaim: false,
+    };
   }
-
 }
 export class medicalReimbursement {
   EmployeeName: string = '';
@@ -1371,7 +1392,7 @@ export class MedicalClaimTransaction {
   hasAttachment: boolean = false;
   fileExtension: string = '';
   SubMedTypeId: number = 0;
-  // HR Department Fields 
+  // HR Department Fields
   claimAmountHR: string = '';
   currencyname: string = '';
   lessDisallowedAmount: number = 0;
@@ -1384,9 +1405,11 @@ export class MedicalClaimTransaction {
   branchName: string = '';
   bankId: number = 0;
   branchId: number = 0;
-  constructor () {
+  constructor() {
     this.recordId = 0;
-    this.dateOfEntry = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '/');
+    this.dateOfEntry = new Date()
+      .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      .replace(/ /g, '/');
     this.dependentId = 0;
     this.medicalCategoryId = 0;
     this.currencyId = 3045;
@@ -1472,5 +1495,5 @@ export class DatePickerObj {
   IsValidDate: boolean = true;
   isInValidCondition: boolean = false;
   isDisabled: boolean = false;
-  serverObj = { isError: false, msg: "" };
+  serverObj = { isError: false, msg: '' };
 }

@@ -1,1 +1,72 @@
-<p>upload-old-documents works!</p>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Upload Old Document</h3>
+            <small class="text-muted">Upload Old Document</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Upload' }"
+                (click)="selectedTab = 'Upload'"
+              >
+                Upload
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'UploadedDocuments' }"
+                (click)="selectedTab = 'UploadedDocuments'"
+              >
+                Uploaded Documents
+              </button>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Upload'">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [columnDefs]="UploadColumnDefs"
+                  [rowData]="rowData"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'UploadedDocuments'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-ag-grid-wrapper
+                  style="width: 100%; height: 550px"
+                  class="ag-theme-alpine"
+                  [apiUrl]="uploadApiUrl"
+                  [rowData]="rowData"
+                  [columnDefs]="UploadedDocColumnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
