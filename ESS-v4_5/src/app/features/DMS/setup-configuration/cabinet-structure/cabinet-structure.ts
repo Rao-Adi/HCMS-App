@@ -4,6 +4,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { DivisionService } from '@app/shared/services/division.services';
+import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
@@ -29,7 +30,8 @@ export class CabinetStructure {
   constructor(
     private cdr: ChangeDetectorRef,
     private _divisionServices: DivisionService,
-    private _departmentServices: DepartmentService
+    private _departmentServices: DepartmentService,
+    private _subDepartmentService: SubDepartmentService
   ) {}
 
   ngOnInit() {
@@ -262,6 +264,24 @@ export class CabinetStructure {
           console.log('Mapped departmentData:', this.departmentData);
         } else {
           this.departmentData = [];
+        }
+        this.cdr.detectChanges(); // force update
+    });
+  };
+
+  getAllSubDepartments = () => {
+    this._subDepartmentService.GetAllSubDepartments('SubDepartment', 'ASC', 'Name', true, 1, 10)
+    .subscribe((res) => {
+      if (res?.Success && res.Data?.Items) {
+          this.subDepartmentData = res.Data.Items.map((item: any) => ({
+            Code: item.code || item.Code,
+            Name: item.name || item.Name,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: item.createdAt || item.CreatedAt || '',
+          }));
+          console.log('Mapped subDepartmentData:', this.subDepartmentData);
+        } else {
+          this.subDepartmentData = [];
         }
         this.cdr.detectChanges(); // force update
     });

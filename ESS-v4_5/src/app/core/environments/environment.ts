@@ -11,7 +11,7 @@ export const environment = {
   // paymentRedirectURI: 'http://localhost:4200/admin',
   paymentRedirectURI: 'https://dmshost-dev.azureedge.net/admin',
   firebase: {
-    apiKey: "AIzaSyBGRZDWFd4UHrFwpw0BA9Ksztsy5u_Svxc",
+    apiKey: "3",
     authDomain: "atco-dms.firebaseapp.com",
     projectId: "DMSHost-Dev",
     storageBucket: "atco-dms.appspot.com",
