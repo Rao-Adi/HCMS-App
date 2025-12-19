@@ -40,7 +40,8 @@
     "ng-zorro-antd": "^20.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.15.0",
+    "signature_pad": "3.0.0-beta.4"
   },
   "devDependencies": {
     "@angular/build": "^20.3.6",

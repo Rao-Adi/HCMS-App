@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
+import { DepartmentService } from '@app/shared/services/department.service';
+import { DivisionService } from '@app/shared/services/division.services';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
@@ -16,11 +18,24 @@ export class CabinetStructure {
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
+  pageSize = 10;
+  divisionData: any[] = [];
+  departmentData: any[] = [];
+  subDepartmentData: any[] = [];
+  businessDomainData: any[] = [];
+  documentTypeData: any[] = [];
+  totalRows = 0;
 
-  constructor() {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private _divisionServices: DivisionService,
+    private _departmentServices: DepartmentService
+  ) {}
 
   ngOnInit() {
     this.loadData(this.pageSize);
+    this.getAllDivisions();
+    this.getAllDepartments();
   }
 
   // Default Column Definitions: Apply configuration across all columns
@@ -31,76 +46,38 @@ export class CabinetStructure {
   public noRowsOverlay: string = '';
 
   divisionColumnDefs = [
-    { field: 'divisionCode', headerName: 'Division Code', flex: 1 },
-    { field: 'Division', headerName: 'Division', minWidth: 300, flex: 1 },
+    { field: 'Code', headerName: 'Division Code', flex: 1 },
+    { field: 'Name', headerName: 'Name', minWidth: 300, flex: 1 },
+    { field: 'CreatedBy', headerName: 'Last Saved By', flex: 1 },
     {
-      field: 'lastSavedBy',
-      headerName: 'Last Saved By',
-      cellEditor: 'agDateCellEditor',
-      minWidth: 300,
-      flex: 1,
-    },
-    {
-      field: 'lastSavedOn',
+      field: 'CreatedAt',
       headerName: 'Last Saved On',
-      cellEditor: 'agDateCellEditor',
-      minWidth: 300,
       flex: 1,
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
+      valueFormatter: (params: any) => {
+        if (!params.value) return '';
+        // Parse string to Date and format as desired
+        const date = new Date(params.value);
+        if (isNaN(date.getTime())) return params.value; // fallback to raw string
+        return date.toLocaleString(); // or format however you want
+      },
     },
   ];
 
   departmentColumnDefs = [
-    { field: 'departmentCode', headerName: 'Department Code', flex: 1 },
-    { field: 'department', headerName: 'Department', minWidth: 300, flex: 1 },
+    { field: 'Code', headerName: 'Division Code', flex: 1 },
+    { field: 'Name', headerName: 'Name', minWidth: 300, flex: 1 },
+    { field: 'CreatedBy', headerName: 'Last Saved By', flex: 1 },
     {
-      field: 'division',
-      headerName: 'Division',
-      minWidth: 300,
-      flex: 1,
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-
-    {
-      field: 'lastSavedBy',
-      headerName: 'Last Saved By',
-      cellEditor: 'agDateCellEditor',
-      minWidth: 300,
-      flex: 1,
-    },
-    {
-      field: 'lastSavedOn',
+      field: 'CreatedAt',
       headerName: 'Last Saved On',
-      cellEditor: 'agDateCellEditor',
-      minWidth: 300,
       flex: 1,
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
+      valueFormatter: (params: any) => {
+        if (!params.value) return '';
+        // Parse string to Date and format as desired
+        const date = new Date(params.value);
+        if (isNaN(date.getTime())) return params.value; // fallback to raw string
+        return date.toLocaleString(); // or format however you want
+      },
     },
   ];
 
@@ -195,7 +172,7 @@ export class CabinetStructure {
       field: 'description',
       headerName: 'Descriptiont',
       minWidth: 300,
-      flex: 1
+      flex: 1,
     },
 
     {
@@ -238,10 +215,6 @@ export class CabinetStructure {
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
 
-  pageSize = 10;
-  rowData: any[] = [];
-  totalRows = 0;
-
   loadData(pageNumber: number) {
     // 🔹 TEMP: Dummy data mode
     const allData = this.getDummyData();
@@ -250,12 +223,49 @@ export class CabinetStructure {
     const start = (pageNumber - 1) * this.pageSize;
     const end = start + this.pageSize;
 
-    this.rowData = allData.slice(start, end);
+    this.divisionData = allData.slice(start, end);
     this.totalRows = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready
     // this.gridService.loadData(this.apiUrl, request).subscribe(...)
   }
+
+  getAllDivisions = () => {
+    this._divisionServices
+      .GetAllDivisions('Division', 'ASC', 'Name', true, 1, 10)
+      .subscribe((res) => {
+        if (res?.Success && res.Data?.Items) {
+          this.divisionData = res.Data.Items.map((item: any) => ({
+            Code: item.code || item.Code,
+            Name: item.name || item.Name,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: item.createdAt || item.CreatedAt || '',
+          }));
+          console.log('Mapped divisionData:', this.divisionData);
+        } else {
+          this.divisionData = [];
+        }
+        this.cdr.detectChanges(); // force update
+      });
+  };
+
+  getAllDepartments = () => {
+    this._departmentServices.GetAllDepartments('Department', 'ASC', 'Name', true, 1, 10)
+    .subscribe((res) => {
+      if (res?.Success && res.Data?.Items) {
+          this.departmentData = res.Data.Items.map((item: any) => ({
+            Code: item.code || item.Code,
+            Name: item.name || item.Name,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: item.createdAt || item.CreatedAt || '',
+          }));
+          console.log('Mapped departmentData:', this.departmentData);
+        } else {
+          this.departmentData = [];
+        }
+        this.cdr.detectChanges(); // force update
+    });
+  };
 
   private getDummyData(): any[] {
     return Array.from({ length: 100 }).map((_, i) => ({

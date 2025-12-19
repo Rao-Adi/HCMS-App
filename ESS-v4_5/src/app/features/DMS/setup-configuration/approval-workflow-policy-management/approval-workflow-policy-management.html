@@ -4,8 +4,10 @@
       <div class="card-custom">
         <div class="clearfix">
           <div class="pull-left">
-            <h3 class="mt-0">Upload Old Document</h3>
-            <small class="text-muted">Upload Old Document</small>
+            <h3 class="mt-0">Approval Workflow Policy - Document Creation/Revision/Obsoletion</h3>
+            <small class="text-muted"
+              >Approval Workflow Policy - Document Creation/Revision/Obsoletion</small
+            >
           </div>
         </div>
         <br />
@@ -41,103 +43,319 @@
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'RequestForDocumentCreation'">
-              <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="col-lg-12 col-md-12 col-sm-12">
-                  <div class="main-content d-flex flex-column min-vw-0">
-                    <div class="row">
-                      <div class="col-lg-12 col-md-12 col-sm-12">
-                        <div class="row">
-                          <div class="col-lg-3">
-                            <div class="form-group">
-                              <label class="ctrllbl">Document Type</label>
-                              <nz-select
-                                nzMode="multiple"
-                                nzPlaceHolder="Select users"
-                                nzAllowClear
-                                nzShowSearch
-                                nzServerSearch
-                                [(ngModel)]="selectedUser"
-                                (nzOnSearch)="onSearch($event)"
-                              >
-                                @if (!loading) { @for (o of optionList; track o) {
-                                <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                                } } @else {
-                                <nz-option nzDisabled nzCustomContent>
-                                  <nz-icon nzType="loading" class="loading-icon" />
-                                  Loading Data...
-                                </nz-option>
-                                }
-                              </nz-select>
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">
+                    {{ 'labels.Cabinet' | safeTranslate }}
+                  </h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 200px"
+                          [nzPlaceHolder]="'Select DocumentType'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of documentTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Division' | safeTranslate }} </label>
+                      </div>
+                      <div class="Divtxtemployeeschright" style="width: 200px">
+                        <div>
+                          <nz-select
+                            style="width: 200px"
+                            [nzPlaceHolder]="'Select Division'"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of divisions"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Department' | safeTranslate }}</label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 200px"
+                          [nzPlaceHolder]="'Select Department'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of departments"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 200px"
+                          [nzPlaceHolder]="'Select Sub-Department'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of subDepartments"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Approval Authorities</h3>
+                  <br />
+
+                  <div class="row row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <!-- Authority Type -->
+                    <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.AuthorityType*' | safeTranslate }}</label>
+                      </div>
+                      <nz-select
+                        style="width: 200px"
+                        [(ngModel)]="selectedAuthorityType"
+                        nzPlaceHolder="Select AuthorityType"
+                        (ngModelChange)="onAuthorityTypeChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of authorityTypes"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+
+                      <button
+                        aria-label="Collapse Menu"
+                        title="Collapse Menu"
+                        class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      >
+                        <i class="bi bi-plus-circle"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row row-space">
+                    <!-- Dynamic Columns -->
+                    <ng-container [ngSwitch]="selectedAuthorityType">
+                      <!-- CASE 1: 3 Columns -->
+                      <ng-container *ngSwitchCase="1">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Maximum 'Direct Reporting to' Levels</span>
+                          <input
+                            maxlength="10"
+                            appDecimalInput
+                            name="TotalClaim"
+                            type="text"
+                            style="width: 200px !important"
+                            [ngClass]="{
+                              'form-control': true,
+                              'input-sm': true
+                            }"
+                          />
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Workflow Should Exclude These</span>
+                          <nz-select
+                            style="width: 200px"
+                            [(ngModel)]="selectedWorkflowExclude"
+                            nzPlaceHolder="Select Exclusion"
+                            (ngModelChange)="onWorkflowExcludeChange($event)"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of workflowExclude"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <div [ngSwitch]="selectedWorkflowExclude">
+                            <div *ngSwitchCase="1">
+                              <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                                <span class="d-flex">Designation</span>
+                                <nz-select nzShowSearch nzPlaceHolder="Select Designation">
+                                  <nz-option
+                                    *ngFor="let emp of employees"
+                                    [nzValue]="emp.CODE"
+                                    [nzLabel]="emp.NAME"
+                                  >
+                                  </nz-option>
+                                </nz-select>
+                              </div>
+                            </div>
+                            <div *ngSwitchCase="2">
+                              <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                                <span class="d-flex">Role</span>
+                                <nz-select nzShowSearch nzPlaceHolder="Select Role">
+                                  <nz-option
+                                    *ngFor="let emp of employees"
+                                    [nzValue]="emp.CODE"
+                                    [nzLabel]="emp.NAME"
+                                  >
+                                  </nz-option>
+                                </nz-select>
+                              </div>
+                            </div>
+                            <div *ngSwitchCase="3">
+                              <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                                <span class="d-flex">Employee</span>
+                                <nz-select nzShowSearch nzPlaceHolder="Select Employee">
+                                  <nz-option
+                                    *ngFor="let emp of employees"
+                                    [nzValue]="emp.CODE"
+                                    [nzLabel]="emp.NAME"
+                                  >
+                                  </nz-option>
+                                </nz-select>
+                              </div>
+                            </div>
+                            <div *ngSwitchDefault>
+                              <small class="text-muted"></small>
                             </div>
                           </div>
-                          <div class="col-lg-3">
-                            <div class="form-group">
-                              <label class="ctrllbl">Division</label>
-                              <nz-select
-                                nzMode="multiple"
-                                nzPlaceHolder="Select users"
-                                nzAllowClear
-                                nzShowSearch
-                                nzServerSearch
-                                [(ngModel)]="selectedUser"
-                                (nzOnSearch)="onSearch($event)"
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 2: 1 Column -->
+                      <ng-container *ngSwitchCase="2">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Employee</span>
+                          <nz-select nzShowSearch nzPlaceHolder="Select Employee">
+                            <nz-option
+                              *ngFor="let emp of employees"
+                              [nzValue]="emp.CODE"
+                              [nzLabel]="emp.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 3 -->
+                      <ng-container *ngSwitchCase="3">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Role</span>
+                          <nz-select nzShowSearch nzPlaceHolder="Select Role">
+                            <nz-option
+                              *ngFor="let emp of employees"
+                              [nzValue]="emp.CODE"
+                              [nzLabel]="emp.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 4 -->
+                      <ng-container *ngSwitchCase="4">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Designation</span>
+                          <nz-select nzShowSearch nzPlaceHolder="Select Designation">
+                            <nz-option
+                              *ngFor="let emp of employees"
+                              [nzValue]="emp.CODE"
+                              [nzLabel]="emp.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 5 -->
+                      <ng-container *ngSwitchCase="5">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Division Head</span>
+                          <nz-select nzPlaceHolder="Select Division Head"></nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 6 -->
+                      <ng-container *ngSwitchCase="6">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Department Head</span>
+                          <nz-select nzPlaceHolder="Select Department Head"></nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 7 -->
+                      <ng-container *ngSwitchCase="7">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Sub-Department Head</span>
+                          <nz-select nzPlaceHolder="Select Sub-Department Head"></nz-select>
+                        </div>
+                      </ng-container>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="main-content d-flex flex-column min-vw-0">
+                  <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="status-box-leftColmd6-standard">
+                      <h3 class="PnlHeader">Other Policies</h3>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                          <div class="d-flex">
+                            <nz-radio-group [(ngModel)]="radioValue">
+                              <label nz-radio nzValue="A"
+                                >Approval Authorities can only give their observations, but not edit
+                                the document</label
                               >
-                                @if (!loading) { @for (o of optionList; track o) {
-                                <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                                } } @else {
-                                <nz-option nzDisabled nzCustomContent>
-                                  <nz-icon nzType="loading" class="loading-icon" />
-                                  Loading Data...
-                                </nz-option>
-                                }
-                              </nz-select>
-                            </div>
-                          </div>
-                          <div class="col-lg-3">
-                            <div class="form-group">
-                              <label class="ctrllbl">Department</label>
-                              <nz-select
-                                nzMode="multiple"
-                                nzPlaceHolder="Select users"
-                                nzAllowClear
-                                nzShowSearch
-                                nzServerSearch
-                                [(ngModel)]="selectedUser"
-                                (nzOnSearch)="onSearch($event)"
+
+                              <label nz-radio nzValue="B"
+                                >Approval Authorities can even edit the documents before
+                                approval</label
                               >
-                                @if (!loading) { @for (o of optionList; track o) {
-                                <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                                } } @else {
-                                <nz-option nzDisabled nzCustomContent>
-                                  <nz-icon nzType="loading" class="loading-icon" />
-                                  Loading Data...
-                                </nz-option>
-                                }
-                              </nz-select>
-                            </div>
-                          </div>
-                          <div class="col-lg-3">
-                            <div class="form-group">
-                              <label class="ctrllbl">Sub-Department</label>
-                              <nz-select
-                                nzMode="multiple"
-                                nzPlaceHolder="Select users"
-                                nzAllowClear
-                                nzShowSearch
-                                nzServerSearch
-                                [(ngModel)]="selectedUser"
-                                (nzOnSearch)="onSearch($event)"
-                              >
-                                @if (!loading) { @for (o of optionList; track o) {
-                                <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                                } } @else {
-                                <nz-option nzDisabled nzCustomContent>
-                                  <nz-icon nzType="loading" class="loading-icon" />
-                                  Loading Data...
-                                </nz-option>
-                                }
-                              </nz-select>
-                            </div>
+                            </nz-radio-group>
                           </div>
                         </div>
                       </div>
@@ -148,130 +366,30 @@
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'DocumentRevisionObsoletion'">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="row row-space">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                   <div class="main-content d-flex flex-column min-vw-0">
-                    <div class="custom-tab-container">
-                      <div class="row row-space">
-                        <div class="col-lg-6">
-                          <span class="d-flex">Manually Manage Employee(s) Info</span>
-                          <nz-switch
-                            [(ngModel)]="switchValue1"
-                            [nzControl]="true"
-                            (click)="clickSwitch('manual')"
-                            [nzLoading]="loading"
-                          >
-                          </nz-switch>
+                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                      <div class="status-box-leftColmd6-standard">
+                        <h3 class="PnlHeader">Approval Authorities for cross-functional users</h3>
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <nz-switch
+                              [(ngModel)]="switchValue1"
+                              [nzControl]="true"
+                              (click)="clickSwitch('manual')"
+                              [nzLoading]="loading"
+                            >
+                            </nz-switch>
+                            <span class="d-flex"
+                              >If a document has cross-functional users, then their respective Heads
+                              of Division will approve the document first (in parallel). After each
+                              Head approves, the document will then go to the next approval
+                              authority as per the sequence configured above.</span
+                            >
+                          </div>
                         </div>
-                        <div class="col-lg-6">
-                          <span class="d-flex">Integration With People.Partners</span>
-                          <nz-switch
-                            [(ngModel)]="switchValue2"
-                            [nzControl]="true"
-                            (click)="clickSwitch('integration')"
-                            [nzLoading]="loading"
-                          ></nz-switch>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="row row-space" *ngIf="activeMode === 'manual'">
-                      <div class="col-lg-12 col-md-12 col-sm-12">
-                        <app-ag-grid-wrapper
-                          style="width: 100%; height: 550px"
-                          class="ag-theme-alpine"
-                          [apiUrl]="uploadApiUrl"
-                          [columnDefs]="manuallyManageEmployeesColumnDefs"
-                          [rowData]="rowData"
-                          [defaultColDef]="defaultColDef"
-                          [overlayNoRowsTemplate]="noRowsOverlay"
-                          [pagination]="true"
-                          [pageSize]="10"
-                        >
-                        </app-ag-grid-wrapper>
-                      </div>
-                    </div>
-
-                    <div class="row row-space" *ngIf="activeMode === 'integration'">
-                      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <app-ag-grid-wrapper
-                          style="width: 100%; height: 550px"
-                          class="ag-theme-alpine"
-                          [apiUrl]="uploadApiUrl"
-                          [rowData]="rowData"
-                          [columnDefs]="integrateWithPoeplePartnerColumnDefs"
-                          [defaultColDef]="defaultColDef"
-                          [overlayNoRowsTemplate]="noRowsOverlay"
-                          [pagination]="true"
-                          [pageSize]="10"
-                        >
-                        </app-ag-grid-wrapper>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row row-space" *ngIf="selectedTab === 'RequestForDocumentCreation'">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="col-lg-12 col-md-12 col-sm-12">
-                  <div class="main-content d-flex flex-column min-vw-0">
-                    <div class="custom-tab-container">
-                      <div class="row row-space">
-                        <div class="col-lg-6">
-                          <span class="d-flex">Manually Manage Employee(s) Info</span>
-                          <nz-switch
-                            [(ngModel)]="switchValue1"
-                            [nzControl]="true"
-                            (click)="clickSwitch('manual')"
-                            [nzLoading]="loading"
-                          >
-                          </nz-switch>
-                        </div>
-                        <div class="col-lg-6">
-                          <span class="d-flex">Integration With People.Partners</span>
-                          <nz-switch
-                            [(ngModel)]="switchValue2"
-                            [nzControl]="true"
-                            (click)="clickSwitch('integration')"
-                            [nzLoading]="loading"
-                          ></nz-switch>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="row row-space" *ngIf="activeMode === 'manual'">
-                      <div class="col-lg-12 col-md-12 col-sm-12">
-                        <app-ag-grid-wrapper
-                          style="width: 100%; height: 550px"
-                          class="ag-theme-alpine"
-                          [apiUrl]="uploadApiUrl"
-                          [columnDefs]="manuallyManageEmployeesColumnDefs"
-                          [rowData]="rowData"
-                          [defaultColDef]="defaultColDef"
-                          [overlayNoRowsTemplate]="noRowsOverlay"
-                          [pagination]="true"
-                          [pageSize]="10"
-                        >
-                        </app-ag-grid-wrapper>
-                      </div>
-                    </div>
-
-                    <div class="row row-space" *ngIf="activeMode === 'integration'">
-                      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <app-ag-grid-wrapper
-                          style="width: 100%; height: 550px"
-                          class="ag-theme-alpine"
-                          [apiUrl]="uploadApiUrl"
-                          [rowData]="rowData"
-                          [columnDefs]="integrateWithPoeplePartnerColumnDefs"
-                          [defaultColDef]="defaultColDef"
-                          [overlayNoRowsTemplate]="noRowsOverlay"
-                          [pagination]="true"
-                          [pageSize]="10"
-                        >
-                        </app-ag-grid-wrapper>
                       </div>
                     </div>
                   </div>

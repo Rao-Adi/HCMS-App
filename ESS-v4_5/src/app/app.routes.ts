@@ -57,8 +57,8 @@ export const routes: Routes = [
             path: 'create-update',
             loadComponent: () =>
               import(
-                '@app/features/DMS/documents/document-request-management/document-request-management'
-              ).then((m) => m.DocumentRequestManagement),
+                '@app/features/DMS/documents/create-update-document/create-update-document'
+              ).then((m) => m.CreateUpdateDocument),
           },
           {
             path: 'my-approvals-documents',

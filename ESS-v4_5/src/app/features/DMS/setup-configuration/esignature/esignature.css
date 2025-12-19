@@ -1,0 +1,11 @@
+canvas {
+  display: block;
+  box-shadow: 0 0 5px 1px #999;
+  margin: 2em auto;
+}
+.signature-canvas {
+  border: 1px solid #ccc;
+  width: 50%;
+  height: 400px;
+  touch-action: none; /* 🔥 REQUIRED for mobile */
+}

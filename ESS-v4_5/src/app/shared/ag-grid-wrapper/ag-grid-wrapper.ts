@@ -27,9 +27,8 @@ import { AgGridDataService } from '@app/core/services/ag-grid-data.service';
 })
 export class AgGridWrapper implements OnInit {
   @Input() columnDefs: ColDef[] = [];
-  @Input() pagination: Boolean = true;
+  @Input() pagination: boolean = true;
   @Input() overlayNoRowsTemplate: string = '';
-  @Input() apiUrl!: string;
   @Input() pageSize = 10;
   @Input() rowData: any[] = [];
   @Input() defaultColDef: ColDef = {
@@ -38,37 +37,24 @@ export class AgGridWrapper implements OnInit {
     editable: true,
     resizable: true,
   };
-  @Input() useMockData = false;
-
-  ngOnInit(): void {}
+  @Input() gridStyle: { [key: string]: any } = {};
 
   gridApi!: GridApi;
   totalRows = 0;
 
-  //public UploadColumnDefs: ColDef[] = [];
+  ngOnInit(): void {}
+
   // Default Column Definitions: Apply configuration across all columns
 
   public noRowsOverlay: string = '';
 
   constructor(private gridService: AgGridDataService) {}
 
-  UploadColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID', width: 100 },
-    { field: 'documentName', headerName: 'Document Name', width: 100 },
-    { field: 'version', headerName: 'Version', width: 100 },
-    { field: 'documentType', headerName: 'Document Type', width: 100 },
-    { field: 'division', headerName: 'Division', width: 100 },
-    { field: 'department', headerName: 'Department', width: 100 },
-    { field: 'subDepartment', headerName: 'Sub-Department', width: 100 },
-    { field: 'nextReviewDate', headerName: 'Next Review Date', width: 100 },
-    { field: 'uploadDocument', headerName: 'Upload Document', width: 100 },
-  ];
-
   onGridReady(params: GridReadyEvent) {
     this.gridApi = params.api;
-    this.loadData(1);
+    //this.gridApi.setRowData(this.rowData); // initial set
   }
-
+ 
   loadData(pageNumber: number) {
     const request = {
       pageNumber,
@@ -80,10 +66,10 @@ export class AgGridWrapper implements OnInit {
       filterModel: this.gridApi.getFilterModel(),
     };
 
-    this.gridService.loadData(this.apiUrl, request).subscribe((res) => {
-      this.rowData = res.data;
-      this.totalRows = res.totalRecords;
-    });
+    // this.gridService.loadData(this.apiUrl, request).subscribe((res) => {
+    //   this.rowData = res.data;
+    //   this.totalRows = res.totalRecords;
+    // });
   }
 
   onCellValueChanged(event: any) {

@@ -1,90 +1,99 @@
 <div class="container-fluid">
   <div class="container">
-
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12">
         <div class="card-custom">
           <div class="clearfix">
             <div class="pull-left">
               <h3 class="mt-0">Medical Reimbursement Request</h3>
-              <small class="text-muted">Request reimbursement for eligible medical expenses as per company policy</small>
+              <small class="text-muted"
+                >Request reimbursement for eligible medical expenses as per company policy</small
+              >
             </div>
           </div>
           <div class="clearfix row-space">
-            <img [src]="image" class="profile-img pull-left" alt="Profile">
-            <div style="margin-left: 75px;">
-              <h3>{{MedicalReimbursement.EmployeeName}}</h3>
-              <label>{{MedicalReimbursement.Designation}}</label>
+            <img [src]="image" class="profile-img pull-left" alt="Profile" />
+            <div style="margin-left: 75px">
+              <h3>{{ MedicalReimbursement.EmployeeName }}</h3>
+              <label>{{ MedicalReimbursement.Designation }}</label>
             </div>
           </div>
           <br />
           <hr />
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="row">
-
               <div class="form-group">
                 <label class="ctrllbl">Fiscal Year</label>
                 <div class="row">
-                  <nz-select style="width: 220px;"
-                             [(ngModel)]="FiscalYear.ID"
-                             (ngModelChange)="onfiscalYearchange()"
-                             [nzPlaceHolder]="'Select Fiscal Year'"
-                             nzAllowClear
-                             nzShowSearch>
-
-                    <nz-option *ngFor="let CSL of fiscalYearBy"
-                               [nzValue]="CSL.ID"
-                               [nzLabel]="CSL.Name">
+                  <nz-select
+                    style="width: 220px"
+                    [(ngModel)]="FiscalYear.ID"
+                    (ngModelChange)="onfiscalYearchange()"
+                    [nzPlaceHolder]="'Select Fiscal Year'"
+                    nzAllowClear
+                    nzShowSearch
+                  >
+                    <nz-option
+                      *ngFor="let CSL of fiscalYearBy"
+                      [nzValue]="CSL.ID"
+                      [nzLabel]="CSL.Name"
+                    >
                     </nz-option>
                   </nz-select>
                 </div>
               </div>
-
             </div>
           </div>
           <div class="custom-tab-container">
-            <button class="tab-button" tabindex="0"
-                    [ngClass]="{'active-tab': selectedTab === 'MedicalEntitlementDetails'}"
-                    (click)="selectedTab = 'MedicalEntitlementDetails'">
+            <button
+              class="tab-button"
+              tabindex="0"
+              [ngClass]="{ 'active-tab': selectedTab === 'MedicalEntitlementDetails' }"
+              (click)="selectedTab = 'MedicalEntitlementDetails'"
+            >
               Medical Entitlement Details
-            </button>           
+            </button>
           </div>
-          <hr>
+          <hr />
           <div class="row row-space" *ngIf="selectedTab === 'MedicalEntitlementDetails'">
             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
               <div class="row">
                 <div class="col-lg-3 col-md-3 col-sm-3">
                   <h3 class="PnlHeader">
-                    {{'labels.DependentsName' | safeTranslate}}
+                    {{ 'labels.DependentsName' | safeTranslate }}
                   </h3>
                   <br />
                   <div class="PnlBody">
-                    <ag-grid-angular style="width: 100%;"
-                                     class="ag-theme-alpine"
-                                     [rowData]="Dependents"
-                                     [columnDefs]="DependentsColumnDefs"
-                                     [defaultColDef]="defaultColDef"
-                                     [overlayNoRowsTemplate]="noRowsOverlay"
-                                     domLayout="autoHeight"
-                                     [gridOptions]="gridOptions"
-                                     (rowSelected)="onSelectClick($event)">
+                    <ag-grid-angular
+                      style="width: 100%"
+                      class="ag-theme-alpine"
+                      [rowData]="Dependents"
+                      [columnDefs]="DependentsColumnDefs"
+                      [defaultColDef]="defaultColDef"
+                      [overlayNoRowsTemplate]="noRowsOverlay"
+                      domLayout="autoHeight"
+                      [gridOptions]="gridOptions"
+                      (rowSelected)="onSelectClick($event)"
+                    >
                     </ag-grid-angular>
                   </div>
                 </div>
                 <div class="col-lg-9 col-md-9 col-sm-9">
                   <h3 class="PnlHeader">
-                    {{'labels.MedicalEntitlementDetails' | safeTranslate}}
+                    {{ 'labels.MedicalEntitlementDetails' | safeTranslate }}
                   </h3>
                   <br />
                   <div class="PnlBody">
-                    <ag-grid-angular style="width: 100%;"
-                                     class="ag-theme-alpine"
-                                     [rowData]="MedicalInfoRows"
-                                     [columnDefs]="MedicalInfoColumnDefs"
-                                     [defaultColDef]="defaultColDef"
-                                     [overlayNoRowsTemplate]="noRowsOverlay"
-                                     [suppressRowHoverHighlight]=true
-                                     domLayout="autoHeight">
+                    <ag-grid-angular
+                      style="width: 100%"
+                      class="ag-theme-alpine"
+                      [rowData]="MedicalInfoRows"
+                      [columnDefs]="MedicalInfoColumnDefs"
+                      [defaultColDef]="defaultColDef"
+                      [overlayNoRowsTemplate]="noRowsOverlay"
+                      [suppressRowHoverHighlight]="true"
+                      domLayout="autoHeight"
+                    >
                     </ag-grid-angular>
                   </div>
                 </div>
@@ -95,19 +104,20 @@
             <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
               <div class="status-box-leftColmd6-standard">
                 <h3 class="PnlHeader">
-                  {{'labels.CreatedTransactionsasperselectedFiscalYear' | safeTranslate}}
+                  {{ 'labels.CreatedTransactionsasperselectedFiscalYear' | safeTranslate }}
                 </h3>
                 <br />
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.ClaimStatus' | safeTranslate}}</label>
+                      <label>{{ 'labels.ClaimStatus' | safeTranslate }}</label>
                     </div>
-                    <nz-select style="width: 200px;"
-                               [(ngModel)]="claimStatusId"
-                               (ngModelChange)="onclaimStatuschange($event)"
-                               [nzPlaceHolder]="'Select Claim Status'">
-
+                    <nz-select
+                      style="width: 200px"
+                      [(ngModel)]="claimStatusId"
+                      (ngModelChange)="onclaimStatuschange($event)"
+                      [nzPlaceHolder]="'Select Claim Status'"
+                    >
                       <nz-option nzValue="P" nzLabel="Pending"></nz-option>
                       <nz-option nzValue="A" nzLabel="Approved"></nz-option>
                       <nz-option nzValue="N" nzLabel="Not Approved"></nz-option>
@@ -116,74 +126,88 @@
                 </div>
                 <br />
                 <div class="PnlBody">
-                  <ag-grid-angular style="width: 100%;"
-                                   class="ag-theme-alpine"
-                                   [rowData]="GridMedicalTypeSetup"
-                                   [columnDefs]="MedicalTypeSetupColumnDefs"
-                                   [defaultColDef]="defaultColDef"
-                                   [overlayNoRowsTemplate]="noRowsOverlay"
-                                   [rowSelection]="'single'"
-                                   (rowSelected)="onGridRowSelected($event)"
-                                   [pagination]="true"
-                                   domLayout="autoHeight">
+                  <ag-grid-angular
+                    style="width: 100%"
+                    class="ag-theme-alpine"
+                    [rowData]="GridMedicalTypeSetup"
+                    [columnDefs]="MedicalTypeSetupColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [overlayNoRowsTemplate]="noRowsOverlay"
+                    [rowSelection]="'single'"
+                    (rowSelected)="onGridRowSelected($event)"
+                    [pagination]="true"
+                    domLayout="autoHeight"
+                  >
                   </ag-grid-angular>
                 </div>
                 <!--</div>-->
               </div>
             </div>
 
-
             <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
               <div class="status-box-leftColmd6-standard">
                 <div class="row">
-                  <div *ngIf="TopRightValidationMsg && TopRightValidationMsg.length>0" style="width: 100%; text-align: right;" >
-                    <label id="validationMessage" class="alertLabel pull-right">{{TopRightValidationMsg}}</label>
+                  <div
+                    *ngIf="TopRightValidationMsg && TopRightValidationMsg.length > 0"
+                    style="width: 100%; text-align: right"
+                  >
+                    <label id="validationMessage" class="alertLabel pull-right">{{
+                      TopRightValidationMsg
+                    }}</label>
                   </div>
                 </div>
                 <h3 class="PnlHeader">
-                  {{'labels.MedicalClaimTransaction' | safeTranslate}}
+                  {{ 'labels.MedicalClaimTransaction' | safeTranslate }}
                 </h3>
                 <br />
 
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.DateofEntry' | safeTranslate}}</label>
+                      <label>{{ 'labels.DateofEntry' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <nz-date-picker [nzPlaceHolder]="'Select Date'"
-                                      [(ngModel)]="MedicalClaimTransaction.dateOfEntry"
-                                      style="width: 200px;"
-                                      [nzDisabled]="true">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <nz-date-picker
+                        [nzPlaceHolder]="'Select Date'"
+                        [(ngModel)]="MedicalClaimTransaction.dateOfEntry"
+                        style="width: 200px"
+                        [nzDisabled]="true"
+                      >
                       </nz-date-picker>
                     </div>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.InvoiceNo' | safeTranslate}}	</label>
+                      <label>{{ 'labels.InvoiceNo' | safeTranslate }} </label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="10"
-                             name="InvoiceNumber"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.invoiceNumber"
-                             type="text" style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="10"
+                        name="InvoiceNumber"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.invoiceNumber"
+                        type="text"
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
 
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.Dependents' | safeTranslate}}</label>
+                      <label>{{ 'labels.Dependents' | safeTranslate }}</label>
                     </div>
-                    <nz-select style="width: 200px;"
-                               [(ngModel)]="MedicalClaimTransaction.dependentId"
-                               [nzPlaceHolder]="'Select dependent'"
-                               nzAllowClear
-                               nzShowSearch>
-
-                      <nz-option *ngFor="let dep of Dependents"
-                                 [nzValue]="dep.EMPDPDID"
-                                 [nzLabel]="dep.NAME">
+                    <nz-select
+                      style="width: 200px"
+                      [(ngModel)]="MedicalClaimTransaction.dependentId"
+                      [nzPlaceHolder]="'Select dependent'"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let dep of Dependents"
+                        [nzValue]="dep.EMPDPDID"
+                        [nzLabel]="dep.NAME"
+                      >
                       </nz-option>
                     </nz-select>
                   </div>
@@ -192,104 +216,126 @@
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>*{{'labels.DateofMedicalExpense' | safeTranslate}}</label>
-
+                      <label>*{{ 'labels.DateofMedicalExpense' | safeTranslate }}</label>
                     </div>
-                    <nz-date-picker [nzPlaceHolder]="'DD-MM-YYYY'"
-                                    [nzFormat]="'dd-MM-yyyy'"
-                                    style="width:200px"
-                                    name="medicalExpenseDate"
-                                    [(ngModel)]="medicalExpenseDateObj"
-                                    (ngModelChange)="onMedicalExpenseDateChange($event)"
-                                    [nzStatus]="(isMedicalExpenseDateInvalid && hasAttemptedSave) ? 'error' : ''">
+                    <nz-date-picker
+                      [nzPlaceHolder]="'DD-MM-YYYY'"
+                      [nzFormat]="'dd-MM-yyyy'"
+                      style="width: 200px"
+                      name="medicalExpenseDate"
+                      [(ngModel)]="medicalExpenseDateObj"
+                      (ngModelChange)="onMedicalExpenseDateChange($event)"
+                      [nzStatus]="isMedicalExpenseDateInvalid && hasAttemptedSave ? 'error' : ''"
+                    >
                     </nz-date-picker>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>*{{'labels.MedicalEntitlementCategory' | safeTranslate}}</label>
+                      <label>*{{ 'labels.MedicalEntitlementCategory' | safeTranslate }}</label>
                     </div>
-                    <nz-select style="width: 200px;"
-                               [(ngModel)]="MedicalClaimTransaction.medicalCategoryId"
-                               (ngModelChange)="onCategoryChange()"
-                               [nzPlaceHolder]="'Select Medical Category'"
-                               [nzStatus]="(isMedicalCategoryInvalid  && hasAttemptedSave) ? 'error' : ''"
-                               name="medicalCategory"
-                               nzAllowClear
-                               nzShowSearch>
-
-                      <nz-option *ngFor="let medType of empMedicalTypes"
-                                 [nzValue]="medType.ID"
-                                 [nzLabel]="medType.NAME">
+                    <nz-select
+                      style="width: 200px"
+                      [(ngModel)]="MedicalClaimTransaction.medicalCategoryId"
+                      (ngModelChange)="onCategoryChange()"
+                      [nzPlaceHolder]="'Select Medical Category'"
+                      [nzStatus]="isMedicalCategoryInvalid && hasAttemptedSave ? 'error' : ''"
+                      name="medicalCategory"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let medType of empMedicalTypes"
+                        [nzValue]="medType.ID"
+                        [nzLabel]="medType.NAME"
+                      >
                       </nz-option>
-                      </nz-select>
-</div>
+                    </nz-select>
+                  </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>*{{'labels.ClaimAmount' | safeTranslate}}</label>
+                      <label>*{{ 'labels.ClaimAmount' | safeTranslate }}</label>
                     </div>
                     <div class="Divtxtemployeeschright">
-                      <input maxlength="10" appDecimalInput
-                             name="TotalClaim"
-                             (input)="onAmountInput()"
-                             [ngClass]="{'form-control': true,'input-sm': true,'txtOnamount': isTotalClaimInvalid && (touched.totalClaim || hasAttemptedSave)}"
-                             [(ngModel)]="MedicalClaimTransaction.totalClaim"
-                             type="text" style="width:120px !important">
+                      <input
+                        maxlength="10"
+                        appDecimalInput
+                        name="TotalClaim"
+                        (input)="onAmountInput()"
+                        [ngClass]="{
+                          'form-control': true,
+                          'input-sm': true,
+                          txtOnamount:
+                            isTotalClaimInvalid && (touched.totalClaim || hasAttemptedSave)
+                        }"
+                        [(ngModel)]="MedicalClaimTransaction.totalClaim"
+                        type="text"
+                        style="width: 120px !important"
+                      />
                     </div>
-                    <nz-select style="width: 80px; "
-                               [(ngModel)]="MedicalClaimTransaction.currencyId"
-                               (ngModelChange)="onCurrencyChange()"
-                               [nzPlaceHolder]="'Select Currency'"
-                               [nzStatus]="isCurrencyInvalid ? 'error' : ''"
-                               nzAllowClear
-                               nzShowSearch>
-
-                      <nz-option *ngFor="let currency of currencies"
-                                 [nzValue]="currency.SDLID"
-                                 [nzLabel]="currency.Code">
+                    <nz-select
+                      style="width: 80px"
+                      [(ngModel)]="MedicalClaimTransaction.currencyId"
+                      (ngModelChange)="onCurrencyChange()"
+                      [nzPlaceHolder]="'Select Currency'"
+                      [nzStatus]="isCurrencyInvalid ? 'error' : ''"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let currency of currencies"
+                        [nzValue]="currency.SDLID"
+                        [nzLabel]="currency.Code"
+                      >
                       </nz-option>
                     </nz-select>
-                    
                   </div>
                 </div>
                 <br />
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.HospitalClinic' | safeTranslate}}</label>
+                      <label>{{ 'labels.HospitalClinic' | safeTranslate }}</label>
                     </div>
-                    <nz-select style="width: 200px; "
-                               [(ngModel)]="MedicalClaimTransaction.hospitalId"
-                               [nzPlaceHolder]="'Select Hospitals'"
-                               nzAllowClear
-                               nzShowSearch>
-
-                      <nz-option *ngFor="let hospital of Hospitals"
-                                 [nzValue]="hospital.HOSID"
-                                 [nzLabel]="hospital.NAME">
+                    <nz-select
+                      style="width: 200px"
+                      [(ngModel)]="MedicalClaimTransaction.hospitalId"
+                      [nzPlaceHolder]="'Select Hospitals'"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let hospital of Hospitals"
+                        [nzValue]="hospital.HOSID"
+                        [nzLabel]="hospital.NAME"
+                      >
                       </nz-option>
                     </nz-select>
-                    
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.ProcedureDone' | safeTranslate}}</label>
-                      </div>
-                    <div style="margin-top: 5px;">
-                      <input type="checkbox" [(ngModel)]="MedicalClaimTransaction.procedureDone" name="ProcedureDone">
-                    
+                      <label>{{ 'labels.ProcedureDone' | safeTranslate }}</label>
                     </div>
-                   
+                    <div style="margin-top: 5px">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="MedicalClaimTransaction.procedureDone"
+                        name="ProcedureDone"
+                      />
+                    </div>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.DoctorName' | safeTranslate}}</label>
+                      <label>{{ 'labels.DoctorName' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="100"
-                             name="DoctorName"
-                             [(ngModel)]="MedicalClaimTransaction.doctorName"
-                             [ngClass]="{'form-control input-sm':true}"
-                             type="text" style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="100"
+                        name="DoctorName"
+                        [(ngModel)]="MedicalClaimTransaction.doctorName"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        type="text"
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
                 </div>
@@ -297,37 +343,45 @@
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.Comments' | safeTranslate}}</label>
+                      <label>{{ 'labels.Comments' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="255"
-                             name="Comments"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.comments"
-                             type="text" style="width:200px !important">
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{'labels.WardNumber' | safeTranslate}}</label>
-                    </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="50"
-                             name="WardNumber"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.wardNumber"
-                             type="text" style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="255"
+                        name="Comments"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.comments"
+                        type="text"
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.DateofAdmission' | safeTranslate}}</label>
+                      <label>{{ 'labels.WardNumber' | safeTranslate }}</label>
                     </div>
-                    <nz-date-picker [nzPlaceHolder]="'DD-MM-YYYY'"
-                                    [nzFormat]="'dd-MM-yyyy'"
-                                    style="width:200px"
-                                    [(ngModel)]="admissionDateObj"
-                                    (ngModelChange)="onAdmissionDateChange($event)">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="50"
+                        name="WardNumber"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.wardNumber"
+                        type="text"
+                        style="width: 200px !important"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.DateofAdmission' | safeTranslate }}</label>
+                    </div>
+                    <nz-date-picker
+                      [nzPlaceHolder]="'DD-MM-YYYY'"
+                      [nzFormat]="'dd-MM-yyyy'"
+                      style="width: 200px"
+                      [(ngModel)]="admissionDateObj"
+                      (ngModelChange)="onAdmissionDateChange($event)"
+                    >
                     </nz-date-picker>
                   </div>
                 </div>
@@ -335,37 +389,45 @@
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.ModeofAdmission' | safeTranslate}}</label>
+                      <label>{{ 'labels.ModeofAdmission' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="50"
-                             name="AdmissionMode"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.admissionMode"
-                             type="text" style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="50"
+                        name="AdmissionMode"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.admissionMode"
+                        type="text"
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.DateofDischarge' | safeTranslate}}</label>
+                      <label>{{ 'labels.DateofDischarge' | safeTranslate }}</label>
                     </div>
-                    <nz-date-picker [nzPlaceHolder]="'DD-MM-YYYY'"
-                                    [nzFormat]="'dd-MM-yyyy'"
-                                    style="width:200px"
-                                    [(ngModel)]="dischargeDateObj"
-                                    (ngModelChange)="onDischargeDateChange($event)">
+                    <nz-date-picker
+                      [nzPlaceHolder]="'DD-MM-YYYY'"
+                      [nzFormat]="'dd-MM-yyyy'"
+                      style="width: 200px"
+                      [(ngModel)]="dischargeDateObj"
+                      (ngModelChange)="onDischargeDateChange($event)"
+                    >
                     </nz-date-picker>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.ReasonofClaimAdmission' | safeTranslate}}</label>
+                      <label>{{ 'labels.ReasonofClaimAdmission' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="255"
-                             name="AdmissionReason"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.admissionReason"
-                             type="text" style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="255"
+                        name="AdmissionReason"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.admissionReason"
+                        type="text"
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
                 </div>
@@ -373,71 +435,92 @@
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.DurationofAdmissionDays' | safeTranslate}}</label>
+                      <label>{{ 'labels.DurationofAdmissionDays' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="50"
-                             name="AdmissionDuration"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.admissionDuration"
-                             type="text" readonly style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="50"
+                        name="AdmissionDuration"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.admissionDuration"
+                        type="text"
+                        readonly
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.PrescribedMedicines' | safeTranslate}}</label>
+                      <label>{{ 'labels.PrescribedMedicines' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
-                      <input maxlength="50"
-                             name="PrescribedMedicines"
-                             [ngClass]="{'form-control input-sm':true}"
-                             [(ngModel)]="MedicalClaimTransaction.prescribedMedicines"
-                             type="text" style="width:200px !important">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
+                      <input
+                        maxlength="50"
+                        name="PrescribedMedicines"
+                        [ngClass]="{ 'form-control input-sm': true }"
+                        [(ngModel)]="MedicalClaimTransaction.prescribedMedicines"
+                        type="text"
+                        style="width: 200px !important"
+                      />
                     </div>
                   </div>
 
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{'labels.Attachment' | safeTranslate}}</label>
+                      <label>{{ 'labels.Attachment' | safeTranslate }}</label>
                     </div>
-                    <div class="Divtxtemployeeschright" style="width: 200px;">
+                    <div class="Divtxtemployeeschright" style="width: 200px">
                       <div class="file-upload-container">
-
-                        <nz-upload [nzFileList]="nzFileList"
-                                   [nzRemove]="removeFile"
-                                   [nzAction]="'dummy-url'"
-                                   [nzDownload]="handleDownload"
-                                   [nzCustomRequest]="dummyRequest"
-                                   (nzChange)="handleNzFileUpload($event)">
-
-                          <button nz-button nzType="default"
-                                  [disabled]="nzFileList.length >= 1">
-                            <img src="assets/images/attach.png" style="width: 20px; margin-right: 5px;" alt="Attach Icon" />
+                        <nz-upload
+                          [nzFileList]="nzFileList"
+                          [nzRemove]="removeFile"
+                          [nzAction]="'dummy-url'"
+                          [nzDownload]="handleDownload"
+                          [nzCustomRequest]="dummyRequest"
+                          (nzChange)="handleNzFileUpload($event)"
+                        >
+                          <button nz-button nzType="default" [disabled]="nzFileList.length >= 1">
+                            <img
+                              src="assets/images/attach.png"
+                              style="width: 20px; margin-right: 5px"
+                              alt="Attach Icon"
+                            />
                             Choose File
                           </button>
                         </nz-upload>
 
                         <div class="file-input-wrapper">
-                          <a *ngIf="MedicalClaimTransaction.hasAttachment && !selectedFile"
-                             (click)="downloadAttachment()"
-                             href="javascript:void(0);" class="view-file-link"
-                             style="cursor: pointer;">
-
+                          <a
+                            *ngIf="MedicalClaimTransaction.hasAttachment && !selectedFile"
+                            (click)="downloadAttachment()"
+                            href="javascript:void(0);"
+                            class="view-file-link"
+                            style="cursor: pointer"
+                          >
                             View Existing File ({{ MedicalClaimTransaction.fileExtension }})
                           </a>
 
-                          <button *ngIf="MedicalClaimTransaction.hasAttachment && nzFileList.length === 0"
-                                  (click)="resetFileState()"
-                                  type="button"
-                                  class="remove-file-btn">
+                          <button
+                            *ngIf="MedicalClaimTransaction.hasAttachment && nzFileList.length === 0"
+                            (click)="resetFileState()"
+                            type="button"
+                            class="remove-file-btn"
+                          >
                             &times;
                           </button>
 
                           <small class="file-info-text" [class.error]="fileSizeError">
                             <span *ngIf="fileSizeError">{{ fileSizeError }}</span>
-                            <span *ngIf="!fileSizeError && nzFileList.length === 0 && !MedicalClaimTransaction.hasAttachment" style="color:darkgrey">Max File Attachment Size: 2MB</span>
+                            <span
+                              *ngIf="
+                                !fileSizeError &&
+                                nzFileList.length === 0 &&
+                                !MedicalClaimTransaction.hasAttachment
+                              "
+                              style="color: darkgrey"
+                              >Max File Attachment Size: 2MB</span
+                            >
                           </small>
-
                         </div>
                       </div>
                     </div>
@@ -445,25 +528,31 @@
                 </div>
               </div>
               <br />
-
             </div>
             <div class="row mt-3">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12  text-center">
-                <button nz-button
-                        nzType="primary"
-                        nzSize="default"
-                        [disabled]="isSaveDisabled"
-                        (click)="saveClaim()">
-                  <img src="assets/images/menu-icon/upload.png" style="width: 20px; margin-right: 5px;" alt="Submit Icon" />
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+                <button
+                  nz-button
+                  nzType="primary"
+                  nzSize="default"
+                  [disabled]="isSaveDisabled"
+                  (click)="saveClaim()"
+                >
+                  <img
+                    src="assets/images/menu-icon/upload.png"
+                    style="width: 20px; margin-right: 5px"
+                    alt="Submit Icon"
+                  />
                   Submit
                 </button>
 
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <button nz-button
-                        nzType="primary"
-                        nzSize="default"
-                        (click)="reloadPage()">
-                  <img src="assets/images/menu-icon/refresh.png" style="width: 22px; margin-right: 5px;" alt="Submit Icon" />
+                <button nz-button nzType="primary" nzSize="default" (click)="reloadPage()">
+                  <img
+                    src="assets/images/menu-icon/refresh.png"
+                    style="width: 22px; margin-right: 5px"
+                    alt="Submit Icon"
+                  />
                   Refresh
                 </button>
               </div>
@@ -472,76 +561,82 @@
             <div *ngIf="showHrFields" class="row-space col-lg-12 col-md-12 col-sm-12">
               <div class="status-box-leftColmd6-standard">
                 <h3 class="PnlHeader">
-                  {{'labels.FilledbyHRDepartment' | safeTranslate}}
+                  {{ 'labels.FilledbyHRDepartment' | safeTranslate }}
                 </h3>
                 <br />
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.ClaimAmount' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.ClaimAmount' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value"> {{MedicalClaimTransaction.claimAmountHR | number}}  {{MedicalClaimTransaction.currencyname}}</label>
+                    <label class="label-value">
+                      {{ MedicalClaimTransaction.claimAmountHR | number }}
+                      {{ MedicalClaimTransaction.currencyname }}</label
+                    >
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.ChequeNumber' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.ChequeNumber' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value"> {{MedicalClaimTransaction.chequeNumber}}</label>
+                    <label class="label-value"> {{ MedicalClaimTransaction.chequeNumber }}</label>
                   </div>
 
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.LessDisallowedAmount' | safeTranslate}}</label>
+                    <label class="label-heading">{{
+                      'labels.LessDisallowedAmount' | safeTranslate
+                    }}</label>
                     <br />
-                    <label class="label-value"> {{MedicalClaimTransaction.lessDisallowedAmount | number:'1.2-2'}}</label>
+                    <label class="label-value">
+                      {{ MedicalClaimTransaction.lessDisallowedAmount | number : '1.2-2' }}</label
+                    >
                   </div>
                 </div>
                 <br />
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.DateofCheque' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.DateofCheque' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value"> {{MedicalClaimTransaction.chequeNumber}}</label>
+                    <label class="label-value"> {{ MedicalClaimTransaction.chequeNumber }}</label>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.NetAmount' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.NetAmount' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value"> {{MedicalClaimTransaction.netAmount | number}}</label>
+                    <label class="label-value">
+                      {{ MedicalClaimTransaction.netAmount | number }}</label
+                    >
                   </div>
 
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.Disallowedreason' | safeTranslate}}</label>
+                    <label class="label-heading">{{
+                      'labels.Disallowedreason' | safeTranslate
+                    }}</label>
                     <br />
-                    <label class="label-value">{{MedicalClaimTransaction.disallowedReason}}</label>
+                    <label class="label-value">{{
+                      MedicalClaimTransaction.disallowedReason
+                    }}</label>
                   </div>
                 </div>
                 <br />
                 <div class="row">
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.BankName' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.BankName' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value">{{MedicalClaimTransaction.bankName}}</label>
+                    <label class="label-value">{{ MedicalClaimTransaction.bankName }}</label>
                   </div>
 
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.Paid' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.Paid' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value">{{MedicalClaimTransaction.paid}}</label>
+                    <label class="label-value">{{ MedicalClaimTransaction.paid }}</label>
                   </div>
 
                   <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                    <label class="label-heading">{{'labels.BranchName' | safeTranslate}}</label>
+                    <label class="label-heading">{{ 'labels.BranchName' | safeTranslate }}</label>
                     <br />
-                    <label class="label-value">{{MedicalClaimTransaction.branchName}}</label>
+                    <label class="label-value">{{ MedicalClaimTransaction.branchName }}</label>
                   </div>
                 </div>
               </div>
             </div>
-
-
-
-
           </div>
-
-
-
         </div>
       </div>
     </div>
