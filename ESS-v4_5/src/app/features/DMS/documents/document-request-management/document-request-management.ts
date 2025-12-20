@@ -145,7 +145,7 @@ export class DocumentRequestManagement {
     { field: 'department', headerName: 'Department', flex: 1 },
     { field: 'subDepartment', headerName: 'Sub-Department', flex: 1 },
   ];
-  
+
   pendingRequestApprovalColumnDefs = [
     { field: 'requestId', headerName: 'Request ID', flex: 1 },
     { field: 'division', headerName: 'Division', flex: 1 },
@@ -236,7 +236,7 @@ export class DocumentRequestManagement {
     },
   ];
 
-   workflowAuthoritiesData: any[] = [
+  workflowAuthoritiesData: any[] = [
     {
       approvalSequence: 1,
       employeeCode: '000100442',
@@ -244,7 +244,7 @@ export class DocumentRequestManagement {
       division: 'Finance Division',
       department: 'IT',
       subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy'      
+      documentTitle: 'IT Security Policy',
     },
     {
       approvalSequence: 2,
@@ -253,7 +253,7 @@ export class DocumentRequestManagement {
       division: 'Finance Division',
       department: 'IT',
       subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy'
+      documentTitle: 'IT Security Policy',
     },
     {
       approvalSequence: 3,
@@ -262,7 +262,7 @@ export class DocumentRequestManagement {
       division: 'Finance Division',
       department: 'IT',
       subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy'
+      documentTitle: 'IT Security Policy',
     },
   ];
 
@@ -306,14 +306,18 @@ export class DocumentRequestManagement {
     { CODE: '3', NAME: 'Specific Employee' },
   ];
 
-  selectedAuthorityType: number | null = null;
+   filters: SelectList[] = [
+    { CODE: '1', NAME: 'Over Due' },
+    { CODE: '2', NAME: 'Less than 30 days' },
+  ];
+  selectedAuthorityType: string | null = null;
 
-  onAuthorityTypeChange(value: number | null): void {
+  onAuthorityTypeChange(value: string | null): void {
     this.selectedAuthorityType = value;
   }
 
-  selectedWorkflowExclude: number | null = null;
-  onWorkflowExcludeChange(value: number | null): void {
+  selectedWorkflowExclude: string | null = null;
+  onWorkflowExcludeChange(value: string | null): void {
     this.selectedWorkflowExclude = value;
   }
 }

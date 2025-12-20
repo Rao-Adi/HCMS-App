@@ -15,46 +15,137 @@
             <div class="main-content d-flex flex-column min-vw-0">
               <div class="row row-space">
                 <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="status-box-leftColmd6-standard">
-                    <h3 class="PnlHeader">Document Justification</h3>
-                    <br />
-                    <div class="row">
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label>{{ 'labels.RequestType' | safeTranslate }} </label>
-                        </div>
-                        <div>
-                          <nz-select
-                            style="width: 200px"
-                            [(ngModel)]="selectedAuthorityType"
-                            nzPlaceHolder="Select RequestType"
-                            (ngModelChange)="onAuthorityTypeChange($event)"
-                            nzAllowClear
-                            nzShowSearch
-                          >
-                            <nz-option
-                              *ngFor="let dep of requestTypes"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
-                          </nz-select>
-                        </div>
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.ActivityType' | safeTranslate }} </label>
                       </div>
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label>{{ 'labels.Company' | safeTranslate }} </label>
-                        </div>
-                        <div class="Divtxtemployeeschright" style="width: 200px">
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [(ngModel)]="selectedAuthorityType"
+                          nzPlaceHolder="Select RequestType"
+                          (ngModelChange)="onAuthorityTypeChange($event)"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of requestTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [(ngModel)]="selectedUsers"
+                          nzPlaceHolder="Select DocumentType"
+                          (ngModelChange)="onWorkflowExcludeChange($event)"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of documentTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                  </div>
+                  <br />
+                  <div class="row">
+                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                      <div class="PnlHeading">
+                        <h3 class="PnlHeader">Cabinet</h3>
+                      </div>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                          </div>
                           <div>
                             <nz-select
-                              style="width: 200px"
-                              [nzPlaceHolder]="'Select Company'"
+                              style="width: 250px"
+                              [nzPlaceHolder]="'Select DocumentType'"
                               nzAllowClear
                               nzShowSearch
                             >
                               <nz-option
-                                *ngFor="let dep of companies"
+                                *ngFor="let dep of documentTypes"
+                                [nzValue]="dep.CODE"
+                                [nzLabel]="dep.NAME"
+                              >
+                              </nz-option>
+                            </nz-select>
+                          </div>
+                        </div>
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.Division' | safeTranslate }} </label>
+                          </div>
+                          <div class="Divtxtemployeeschright" style="width: 250px">
+                            <div>
+                              <nz-select
+                                style="width: 250px"
+                                [nzPlaceHolder]="'Select Division'"
+                                nzAllowClear
+                                nzShowSearch
+                              >
+                                <nz-option
+                                  *ngFor="let dep of divisions"
+                                  [nzValue]="dep.CODE"
+                                  [nzLabel]="dep.NAME"
+                                >
+                                </nz-option>
+                              </nz-select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.Department' | safeTranslate }}</label>
+                          </div>
+                          <div>
+                            <nz-select
+                              style="width: 250px"
+                              [nzPlaceHolder]="'Select Department'"
+                              nzAllowClear
+                              nzShowSearch
+                            >
+                              <nz-option
+                                *ngFor="let dep of departments"
+                                [nzValue]="dep.CODE"
+                                [nzLabel]="dep.NAME"
+                              >
+                              </nz-option>
+                            </nz-select>
+                          </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                          </div>
+                          <div>
+                            <nz-select
+                              style="width: 250px"
+                              [nzPlaceHolder]="'Select Sub-Department'"
+                              nzAllowClear
+                              nzShowSearch
+                            >
+                              <nz-option
+                                *ngFor="let dep of subDepartments"
                                 [nzValue]="dep.CODE"
                                 [nzLabel]="dep.NAME"
                               >
@@ -64,124 +155,50 @@
                         </div>
                       </div>
                     </div>
-
-                    <div class="row row-space">
-                      <!-- Dynamic Columns -->
-                      <ng-container [ngSwitch]="selectedAuthorityType">
-                        <!-- CASE 1: 3 Columns -->
-                        <ng-container *ngSwitchCase="'1'">
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                            <span class="d-flex">Document Name</span>
-                            <input
-                              maxlength="10"
-                              appDecimalInput
-                              name="DocumentName"
-                              type="text"
-                              style="width: 200px !important"
-                              [ngClass]="{
-                                'form-control': true,
-                                'input-sm': true
-                              }"
-                            />
+                  </div>
+                  <div class="row row-space">
+                    <ng-container [ngSwitch]="selectedUsers">
+                      <ng-container *ngSwitchCase="'1'">
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <div class="PnlHeading">
+                            <h3 class="PnlHeader">Users</h3>
                           </div>
-                          <div class="col-lg-9 col-md-9 col-sm-6 mb-10">
-                            <span class="d-flex">Justification</span>
-                            <input
-                              maxlength="10"
-                              appDecimalInput
-                              name="Justification"
-                              type="text"
-                              style="width: 100% !important"
-                              [ngClass]="{
-                                'form-control': true,
-                                'input-sm': true
-                              }"
-                            />
-                          </div>
-
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">
-                              {{ 'labels.Cabinet' | safeTranslate }}
-                            </h3>
-                            <br />
-                            <div class="row">
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <div class="PnlHeading">
-                                  <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
-                                </div>
+                          <br />
+                          <div class="row">
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
+                              </div>
+                              <div>
+                                <nz-select
+                                  style="width: 250px"
+                                  [nzPlaceHolder]="'Select Training Mode'"
+                                  nzAllowClear
+                                  nzShowSearch
+                                >
+                                  <nz-option
+                                    *ngFor="let dep of documentTypes"
+                                    [nzValue]="dep.CODE"
+                                    [nzLabel]="dep.NAME"
+                                  >
+                                  </nz-option>
+                                </nz-select>
+                              </div>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.Trainers' | safeTranslate }} </label>
+                              </div>
+                              <div class="Divtxtemployeeschright" style="width: 250px">
                                 <div>
                                   <nz-select
-                                    style="width: 200px"
-                                    [nzPlaceHolder]="'Select DocumentType'"
+                                    style="width: 250px"
+                                    [nzPlaceHolder]="'Select Trainers'"
                                     nzAllowClear
                                     nzShowSearch
                                   >
                                     <nz-option
-                                      *ngFor="let dep of documentTypes"
-                                      [nzValue]="dep.CODE"
-                                      [nzLabel]="dep.NAME"
-                                    >
-                                    </nz-option>
-                                  </nz-select>
-                                </div>
-                              </div>
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <div class="PnlHeading">
-                                  <label>{{ 'labels.Division' | safeTranslate }} </label>
-                                </div>
-                                <div class="Divtxtemployeeschright" style="width: 200px">
-                                  <div>
-                                    <nz-select
-                                      style="width: 200px"
-                                      [nzPlaceHolder]="'Select Division'"
-                                      nzAllowClear
-                                      nzShowSearch
-                                    >
-                                      <nz-option
-                                        *ngFor="let dep of divisions"
-                                        [nzValue]="dep.CODE"
-                                        [nzLabel]="dep.NAME"
-                                      >
-                                      </nz-option>
-                                    </nz-select>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <div class="PnlHeading">
-                                  <label>{{ 'labels.Department' | safeTranslate }}</label>
-                                </div>
-                                <div>
-                                  <nz-select
-                                    style="width: 200px"
-                                    [nzPlaceHolder]="'Select Department'"
-                                    nzAllowClear
-                                    nzShowSearch
-                                  >
-                                    <nz-option
-                                      *ngFor="let dep of departments"
-                                      [nzValue]="dep.CODE"
-                                      [nzLabel]="dep.NAME"
-                                    >
-                                    </nz-option>
-                                  </nz-select>
-                                </div>
-                              </div>
-
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <div class="PnlHeading">
-                                  <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
-                                </div>
-                                <div>
-                                  <nz-select
-                                    style="width: 200px"
-                                    [nzPlaceHolder]="'Select Sub-Department'"
-                                    nzAllowClear
-                                    nzShowSearch
-                                  >
-                                    <nz-option
-                                      *ngFor="let dep of subDepartments"
+                                      *ngFor="let dep of divisions"
                                       [nzValue]="dep.CODE"
                                       [nzLabel]="dep.NAME"
                                     >
@@ -190,52 +207,99 @@
                                 </div>
                               </div>
                             </div>
-                          </div>
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">
-                              {{ 'labels.Users' | safeTranslate }}
-                            </h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                              <app-ag-grid-wrapper
-                                [gridStyle]="{ width: '100%', height: '250px' }"
-                                class="ag-theme-alpine"
-                                [columnDefs]="userGridColumnDefs"
-                                [rowData]="userData"
-                                [defaultColDef]="defaultColDef"
-                                [overlayNoRowsTemplate]="noRowsOverlay"
-                                [pagination]="false"
+
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.User' | safeTranslate }}</label>
+                              </div>
+                              <div>
+                                <nz-select
+                                  style="width: 250px"
+                                  [nzPlaceHolder]="'Select User'"
+                                  nzAllowClear
+                                  nzShowSearch
+                                >
+                                  <nz-option
+                                    *ngFor="let dep of departments"
+                                    [nzValue]="dep.CODE"
+                                    [nzLabel]="dep.NAME"
+                                  >
+                                  </nz-option>
+                                </nz-select>
+                              </div>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <button
+                                class="tab-button"
+                                tabindex="0"
+                                class="btn btn-primary"
                               >
-                              </app-ag-grid-wrapper>
+                                Add
+                              </button>
                             </div>
                           </div>
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">
-                              {{ 'labels.DistributionList' | safeTranslate }}
-                            </h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                              <app-ag-grid-wrapper
-                                [gridStyle]="{ width: '100%', height: '250px' }"
-                                class="ag-theme-alpine"
-                                [columnDefs]="distributionListGridColumnDefs"
-                                [rowData]="distributionListData"
-                                [defaultColDef]="defaultColDef"
-                                [overlayNoRowsTemplate]="noRowsOverlay"
-                                [pagination]="false"
-                              >
-                              </app-ag-grid-wrapper>
-                            </div>
+                        </div>
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <h3 class="PnlHeader">
+                            {{ 'labels.User List' | safeTranslate }}
+                          </h3>
+                          <br />
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              class="ag-theme-alpine"
+                              [columnDefs]="workflowAuthoritiesColumnDefs"
+                              [rowData]="workflowAuthoritiesData"
+                              [defaultColDef]="defaultColDef"
+                              [overlayNoRowsTemplate]="noRowsOverlay"
+                              [pagination]="false"
+                            >
+                            </app-ag-grid-wrapper>
                           </div>
+                        </div>
+                      </ng-container>
+                    </ng-container>
+                  </div>
 
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">
-                              {{ 'labels.DocumentContent' | safeTranslate }}
-                            </h3>
+                  <div class="row row-space">
+                    <!-- Dynamic Columns -->
+                    <ng-container [ngSwitch]="selectedAuthorityType">
+                      <!-- CASE 1: 3 Columns -->
+                      <ng-container *ngSwitchCase="'1'">
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <div class="row mb-10">
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.Request ID' | safeTranslate }} </label>
+                              </div>
+                              <div>
+                                <nz-select
+                                  style="width: 250px"
+                                  [nzPlaceHolder]="'Select Request ID'"
+                                  nzAllowClear
+                                  nzShowSearch
+                                >
+                                  <nz-option
+                                    *ngFor="let dep of documentTypes"
+                                    [nzValue]="dep.CODE"
+                                    [nzLabel]="dep.NAME"
+                                  >
+                                  </nz-option>
+                                </nz-select>
+                              </div>
+                            </div>
                             <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="PnlHeading">
+                              <label> Next Review Date </label>
+                              <label>3 Years from the date of approval </label>
+                            </div>
+                          </div>
+                          <br />
+                          <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                              <span class="d-flex">Document Content</span>
                               <input
-                                maxlength="1000"
+                                maxlength="10"
                                 appDecimalInput
                                 name="DocumentContent"
                                 type="text"
@@ -247,29 +311,96 @@
                               />
                             </div>
                           </div>
+                        </div>
 
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">
-                              {{ 'labels.WorkflowAuthorities' | safeTranslate }}
-                            </h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                              <app-ag-grid-wrapper
-                                [gridStyle]="{ width: '100%', height: '250px' }"
-                                class="ag-theme-alpine"
-                                [columnDefs]="workflowAuthoritiesColumnDefs"
-                                [rowData]="workflowAuthoritiesData"
-                                [defaultColDef]="defaultColDef"
-                                [overlayNoRowsTemplate]="noRowsOverlay"
-                                [pagination]="false"
-                              >
-                              </app-ag-grid-wrapper>
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <div class="PnlHeading">
+                            <h3 class="PnlHeader">Document Attributes</h3>
+                          </div>
+                          <br />
+                          <div class="row">
+                            <div class="col-lg-3 col-md-3 col-sm-6">
+                              <span class="d-flex">DateTime</span>
+                              <nz-date-picker [nzRenderExtraFooter]="footerRender"></nz-date-picker>
+                            </div>
+                            <div class="col-lg-9 col-md-9 col-sm-6">
+                              <span class="d-flex">Vendor</span>
+                              <input
+                                maxlength="10"
+                                appDecimalInput
+                                name="DocumentContent"
+                                type="text"
+                                style="width: 100% !important"
+                                [ngClass]="{
+                                  'form-control': true,
+                                  'input-sm': true
+                                }"
+                              />
                             </div>
                           </div>
-                        </ng-container>
-                        <!-- DEFAULT CASE: No Columns -->
+                        </div>
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <h3 class="PnlHeader">
+                            {{ 'labels.Workflow Authorities' | safeTranslate }}
+                          </h3>
+                          <br />
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              class="ag-theme-alpine"
+                              [columnDefs]="distributionListGridColumnDefs"
+                              [rowData]="distributionListData"
+                              [defaultColDef]="defaultColDef"
+                              [overlayNoRowsTemplate]="noRowsOverlay"
+                              [pagination]="false"
+                            >
+                            </app-ag-grid-wrapper>
+                          </div>
+                        </div>
                       </ng-container>
-                    </div>
+                      <ng-container *ngSwitchCase="'2'">
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <h3 class="PnlHeader">
+                            {{ 'labels.Documents' | safeTranslate }}
+                          </h3>
+                          <br />
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              class="ag-theme-alpine"
+                              [columnDefs]="workflowAuthoritiesColumnDefs"
+                              [rowData]="workflowAuthoritiesData"
+                              [defaultColDef]="defaultColDef"
+                              [overlayNoRowsTemplate]="noRowsOverlay"
+                              [pagination]="false"
+                            >
+                            </app-ag-grid-wrapper>
+                          </div>
+                        </div>
+                      </ng-container>
+
+                      <ng-container *ngSwitchCase="'3'">
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <h3 class="PnlHeader">
+                            {{ 'labels.Documents' | safeTranslate }}
+                          </h3>
+                          <br />
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              class="ag-theme-alpine"
+                              [columnDefs]="workflowAuthoritiesColumnDefs"
+                              [rowData]="workflowAuthoritiesData"
+                              [defaultColDef]="defaultColDef"
+                              [overlayNoRowsTemplate]="noRowsOverlay"
+                              [pagination]="false"
+                            >
+                            </app-ag-grid-wrapper>
+                          </div>
+                        </div>
+                      </ng-container>
+                      <!-- DEFAULT CASE: No Columns -->
+                    </ng-container>
                   </div>
                 </div>
               </div>

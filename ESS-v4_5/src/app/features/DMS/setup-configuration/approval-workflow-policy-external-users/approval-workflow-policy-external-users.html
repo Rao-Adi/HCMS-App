@@ -26,7 +26,7 @@
                   </div>
                   <div>
                     <nz-select
-                      style="width: 200px"
+                      style="width: 250px"
                       [nzPlaceHolder]="'Select DocumentType'"
                       nzAllowClear
                       nzShowSearch
@@ -44,10 +44,10 @@
                   <div class="PnlHeading">
                     <label>{{ 'labels.Division' | safeTranslate }} </label>
                   </div>
-                  <div class="Divtxtemployeeschright" style="width: 200px">
+                  <div class="Divtxtemployeeschright" style="width: 250px">
                     <div>
                       <nz-select
-                        style="width: 200px"
+                        style="width: 250px"
                         [nzPlaceHolder]="'Select Division'"
                         nzAllowClear
                         nzShowSearch
@@ -69,7 +69,7 @@
                   </div>
                   <div>
                     <nz-select
-                      style="width: 200px"
+                      style="width: 250px"
                       [nzPlaceHolder]="'Select Department'"
                       nzAllowClear
                       nzShowSearch
@@ -90,7 +90,7 @@
                   </div>
                   <div>
                     <nz-select
-                      style="width: 200px"
+                      style="width: 250px"
                       [nzPlaceHolder]="'Select Sub-Department'"
                       nzAllowClear
                       nzShowSearch
@@ -137,7 +137,7 @@
                     <label>{{ 'labels.AuthorityType*' | safeTranslate }}</label>
                   </div>
                   <nz-select
-                    style="width: 200px"
+                    style="width: 250px"
                     [(ngModel)]="selectedAuthorityType"
                     nzPlaceHolder="Select AuthorityType"
                     (ngModelChange)="onAuthorityTypeChange($event)"
@@ -165,7 +165,7 @@
                 <!-- Dynamic Columns -->
                 <ng-container [ngSwitch]="selectedAuthorityType">
                   <!-- CASE 1: 3 Columns -->
-                  <ng-container *ngSwitchCase="1">
+                  <ng-container *ngSwitchCase="'1'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Maximum 'Direct Reporting to' Levels</span>
                       <input
@@ -173,7 +173,7 @@
                         appDecimalInput
                         name="TotalClaim"
                         type="text"
-                        style="width: 200px !important"
+                        style="width: 250px !important"
                         [ngClass]="{
                           'form-control': true,
                           'input-sm': true
@@ -184,7 +184,7 @@
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Workflow Should Exclude These</span>
                       <nz-select
-                        style="width: 200px"
+                        style="width: 250px"
                         [(ngModel)]="selectedWorkflowExclude"
                         nzPlaceHolder="Select Exclusion"
                         (ngModelChange)="onWorkflowExcludeChange($event)"
@@ -202,7 +202,7 @@
 
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <div [ngSwitch]="selectedWorkflowExclude">
-                        <div *ngSwitchCase="1">
+                        <div *ngSwitchCase="'1'">
                           <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                             <span class="d-flex">Designation</span>
                             <nz-select nzShowSearch nzPlaceHolder="Select Designation">
@@ -215,7 +215,7 @@
                             </nz-select>
                           </div>
                         </div>
-                        <div *ngSwitchCase="2">
+                        <div *ngSwitchCase="'2'">
                           <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                             <span class="d-flex">Role</span>
                             <nz-select nzShowSearch nzPlaceHolder="Select Role">
@@ -228,7 +228,7 @@
                             </nz-select>
                           </div>
                         </div>
-                        <div *ngSwitchCase="3">
+                        <div *ngSwitchCase="'3'">
                           <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                             <span class="d-flex">Employee</span>
                             <nz-select nzShowSearch nzPlaceHolder="Select Employee">
@@ -249,7 +249,7 @@
                   </ng-container>
 
                   <!-- CASE 2: 1 Column -->
-                  <ng-container *ngSwitchCase="2">
+                  <ng-container *ngSwitchCase="'2'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Employee</span>
                       <nz-select nzShowSearch nzPlaceHolder="Select Employee">
@@ -264,7 +264,7 @@
                   </ng-container>
 
                   <!-- CASE 3 -->
-                  <ng-container *ngSwitchCase="3">
+                  <ng-container *ngSwitchCase="'3'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Role</span>
                       <nz-select nzShowSearch nzPlaceHolder="Select Role">
@@ -279,7 +279,7 @@
                   </ng-container>
 
                   <!-- CASE 4 -->
-                  <ng-container *ngSwitchCase="4">
+                  <ng-container *ngSwitchCase="'4'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Designation</span>
                       <nz-select nzShowSearch nzPlaceHolder="Select Designation">
@@ -294,7 +294,7 @@
                   </ng-container>
 
                   <!-- CASE 5 -->
-                  <ng-container *ngSwitchCase="5">
+                  <ng-container *ngSwitchCase="'5'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Division Head</span>
                       <nz-select nzPlaceHolder="Select Division Head"></nz-select>
@@ -302,7 +302,7 @@
                   </ng-container>
 
                   <!-- CASE 6 -->
-                  <ng-container *ngSwitchCase="6">
+                  <ng-container *ngSwitchCase="'6'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Department Head</span>
                       <nz-select nzPlaceHolder="Select Department Head"></nz-select>
@@ -310,7 +310,7 @@
                   </ng-container>
 
                   <!-- CASE 7 -->
-                  <ng-container *ngSwitchCase="7">
+                  <ng-container *ngSwitchCase="'7'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Sub-Department Head</span>
                       <nz-select nzPlaceHolder="Select Sub-Department Head"></nz-select>

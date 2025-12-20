@@ -1,1 +1,318 @@
-<p>personalized-email-alerts works!</p>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Personalized Email Alerts</h3>
+            <small class="text-muted">Personalized Email Alerts</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Filtering Criteria' }"
+                (click)="selectedTab = 'Filtering Criteria'"
+              >
+                Filtering Criteria
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Email Generation Criteria' }"
+                (click)="selectedTab = 'Email Generation Criteria'"
+              >
+                Email Generation Criteria
+              </button>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Filtering Criteria'">
+              <div class="col-lg-12 col-md-12 col-sm-12 mb-10 mb-4">
+                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <h3 class="PnlHeader">
+                    {{ 'labels.Filters' | safeTranslate }}
+                  </h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [nzPlaceHolder]="'Select DocumentType'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of documentTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Division' | safeTranslate }} </label>
+                      </div>
+                      <div class="Divtxtemployeeschright" style="width: 250px">
+                        <div>
+                          <nz-select
+                            style="width: 250px"
+                            [nzPlaceHolder]="'Select Division'"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of divisions"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Department' | safeTranslate }}</label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [nzPlaceHolder]="'Select Department'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of departments"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [nzPlaceHolder]="'Select Sub-Department'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of subDepartments"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <br />
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <h3 class="PnlHeader">
+                    {{ 'labels.Document Type Attributes' | safeTranslate }}
+                  </h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [(ngModel)]="selectedAuthorityType"
+                          nzPlaceHolder="Select Attribute"
+                          (ngModelChange)="onAuthorityTypeChange($event)"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of atributeTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="row row-space">
+                        <!-- Dynamic Columns -->
+                        <ng-container [ngSwitch]="selectedAuthorityType">
+                          <!-- CASE 1: 3 Columns -->
+                          <ng-container *ngSwitchCase="'1'">
+                            <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                              <span class="d-flex"> Documents approved in previous(Days)</span>
+                              <input
+                                maxlength="10"
+                                appDecimalInput
+                                name="TotalClaim"
+                                type="text"
+                                style="width: 250px !important"
+                                [ngClass]="{
+                                  'form-control': true,
+                                  'input-sm': true
+                                }"
+                              />
+                              <label nz-checkbox [(ngModel)]="checked">View only those</label>
+                            </div>
+                          </ng-container>
+
+                          <!-- CASE 2: 1 Column -->
+                          <ng-container *ngSwitchCase="'2'">
+                            <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                              <span class="d-flex">Send email if number is(Days)</span>
+                              <nz-select nzShowSearch nzPlaceHolder="Select Employee">
+                                <nz-option
+                                  *ngFor="let emp of subDepartments"
+                                  [nzValue]="emp.CODE"
+                                  [nzLabel]="emp.NAME"
+                                >
+                                </nz-option>
+                              </nz-select>
+                            </div>
+                          </ng-container>
+
+                          <!-- CASE 3 -->
+                          <ng-container *ngSwitchCase="'3'">
+                            <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                              <span class="d-flex"> Send email if textbox contains</span>
+                              <input
+                                maxlength="10"
+                                appDecimalInput
+                                name="TotalClaim"
+                                type="text"
+                                style="width: 250px !important"
+                                [ngClass]="{
+                                  'form-control': true,
+                                  'input-sm': true
+                                }"
+                              />
+                            </div>
+                          </ng-container>
+                        </ng-container>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row row-space" *ngIf="selectedTab === 'Email Generation Criteria'">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <h3 class="PnlHeader">Email Generation Criteria</h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Email To Be Sent To*' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [nzPlaceHolder]="'Select'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of documentTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Email Generation Frequency' | safeTranslate }} </label>
+                      </div>
+                      <div class="Divtxtemployeeschright" style="width: 250px">
+                        <div>
+                          <nz-select
+                            style="width: 250px"
+                            [nzPlaceHolder]="'Select'"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of divisions"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Email to be Send At' | safeTranslate }}</label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [nzPlaceHolder]="'Select Department'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of departments"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Email Subject*' | safeTranslate }}</label>
+                      </div>
+                      <div>
+                        <input
+                          maxlength="10"
+                          appDecimalInput
+                          name="DocumentName"
+                          type="text"
+                          style="width: 200px !important"
+                          [ngClass]="{
+                            'form-control': true,
+                            'input-sm': true
+                          }"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

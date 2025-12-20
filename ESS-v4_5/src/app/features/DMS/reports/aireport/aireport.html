@@ -1,1 +1,48 @@
-<p>aireport works!</p>
+<div class="container-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">View Document (Approved)</h3>
+            <small class="text-muted">View Document (Approved)</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="chat-container">
+            <header class="chat-header">
+              <div class="title">ChatGPT</div>
+            </header>
+
+            <main class="chat-body">
+              <div *ngFor="let msg of messages" class="message" [ngClass]="msg.role">
+                <div class="bubble">
+                  {{ msg.content }}
+                </div>
+                <div class="time">
+                  {{ msg.time | date : 'shortTime' }}
+                </div>
+              </div>
+
+              <div *ngIf="loading" class="message assistant">
+                <div class="bubble typing">Typing…</div>
+              </div>
+            </main>
+
+            <footer class="chat-input">
+              <textarea
+                [(ngModel)]="input"
+                rows="1"
+                placeholder="Send a message"
+                (keydown.enter)="$event.preventDefault(); send()"
+              ></textarea>
+              <button (click)="(send)">➤</button>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

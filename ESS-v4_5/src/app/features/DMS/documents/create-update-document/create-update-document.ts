@@ -12,6 +12,7 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DivisionService } from '@app/shared/services/division.services';
 import { DepartmentService } from '@app/shared/services/department.service';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 @Component({
   selector: 'app-create-update-document',
   imports: [
@@ -24,18 +25,31 @@ import { DepartmentService } from '@app/shared/services/department.service';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
+    NzDatePickerModule,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
+  styles: [
+    `
+      nz-date-picker,
+      nz-range-picker {
+        margin: 0 8px 12px 0;
+      }
+    `,
+  ],
 })
 export class CreateUpdateDocument {
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
 
-  constructor(private _divisionServices: DivisionService,
-    private _departmentServices:DepartmentService)
-     {}
+  plainFooter = 'plain extra footer';
+  footerRender = (): string => 'extra footer';
+
+  constructor(
+    private _divisionServices: DivisionService,
+    private _departmentServices: DepartmentService
+  ) {}
 
   ngOnInit() {
     //this.getAllDivisions();
@@ -319,23 +333,20 @@ export class CreateUpdateDocument {
           CODE: d.Code || d.CODE,
           NAME: d.Name || d.NAME,
         }));
-        
       } else {
-        this.divisions = []; 
+        this.divisions = [];
       }
       //this.cdr.detectChanges(); // force update
     });
   };
-
-  
 
   onAuthorityTypeChange(value: string): void {
     this.selectedAuthorityType = value;
     this.getAllDivisions();
   }
 
-  selectedWorkflowExclude: string = '';
+  selectedUsers: string = '';
   onWorkflowExcludeChange(value: string): void {
-    this.selectedWorkflowExclude = value;
+    this.selectedUsers = value;
   }
 }

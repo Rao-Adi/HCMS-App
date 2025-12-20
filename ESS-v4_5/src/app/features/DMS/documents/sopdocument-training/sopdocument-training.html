@@ -1,23 +1,162 @@
-<p>sopdocument-training works!</p>
-
 <div class="container-fluid">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="card-custom">
-          <div class="clearfix">
-            <div class="pull-left">
-              <h3 class="mt-0">Medical Reimbursement Request</h3>
-              <small class="text-muted"
-                >Request reimbursement for eligible medical expenses as per company policy</small
-              >
-            </div>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Training for SOP Documents</h3>
+            <small class="text-muted">Training for SOP Documents</small>
           </div>
-          <br />
-          <hr />
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <!--put page here-->
-            
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Class Room' }"
+                (click)="selectedTab = 'Class Room'"
+              >
+                Class Room
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Online' }"
+                (click)="selectedTab = 'Online'"
+              >
+                Uploaded Documents
+              </button>
+            </div>
+
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <div class="status-box-leftColmd6-standard">
+                <h3 class="PnlHeader">
+                  {{ 'labels.Cabinet' | safeTranslate }}
+                </h3>
+                <br />
+                <div class="row">
+                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                    </div>
+                    <div>
+                      <nz-select
+                        style="width: 250px"
+                        [nzPlaceHolder]="'Select DocumentType'"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of documentTypes"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.Division' | safeTranslate }} </label>
+                    </div>
+                    <div class="Divtxtemployeeschright" style="width: 250px">
+                      <div>
+                        <nz-select
+                          style="width: 250px"
+                          [nzPlaceHolder]="'Select Division'"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of divisions"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.Department' | safeTranslate }}</label>
+                    </div>
+                    <div>
+                      <nz-select
+                        style="width: 250px"
+                        [nzPlaceHolder]="'Select Department'"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of departments"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                    </div>
+                    <div>
+                      <nz-select
+                        style="width: 250px"
+                        [nzPlaceHolder]="'Select Sub-Department'"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of subDepartments"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Class Room'">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '550px' }"
+                  class="ag-theme-alpine"
+                  [columnDefs]="UploadColumnDefs"
+                  [rowData]="rowData"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Online'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '550px' }"
+                  class="ag-theme-alpine"
+                  [rowData]="rowData"
+                  [columnDefs]="UploadedDocColumnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [overlayNoRowsTemplate]="noRowsOverlay"
+                  [pagination]="true"
+                  [pageSize]="10"
+                >
+                </app-ag-grid-wrapper>
+              </div>
+            </div>
           </div>
         </div>
       </div>
