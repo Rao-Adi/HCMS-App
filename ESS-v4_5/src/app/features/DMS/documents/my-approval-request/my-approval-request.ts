@@ -10,6 +10,10 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
+import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
+import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
+import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+
 @Component({
   selector: 'app-my-approval-request',
   imports: [
@@ -22,6 +26,9 @@ import { FormsModule } from '@angular/forms';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
+    DivisionList,
+    SubDepartmentList,
+    DepartmentList,
   ],
   templateUrl: './my-approval-request.html',
   styleUrl: './my-approval-request.css',
@@ -29,9 +36,10 @@ import { FormsModule } from '@angular/forms';
 export class MyApprovalRequest {
   selectedTab: string = 'Pending';
 
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
+  selectedDivisions?: number | null = null;
+  selectedDepartment?: number | null = null;
+  selectedSubDepartment?: number | null = null;
+  selectedDocumentType?: number | null = null;
 
   constructor() {}
 
@@ -54,40 +62,28 @@ export class MyApprovalRequest {
     { CODE: '2', NAME: 'SOP' },
     { CODE: '3', NAME: 'Manual' },
   ];
-  divisions: SelectList[] = [
-    { CODE: '1', NAME: 'Marketing Division' },
-    { CODE: '2', NAME: 'Software Division' },
-  ];
+ 
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
-  departments: SelectList[] = [
-    { CODE: '1', NAME: 'Marketing' },
-    { CODE: '2', NAME: 'IT' },
-    { CODE: '3', NAME: 'Finance' },
-    { CODE: '4', NAME: 'HR' },
-  ];
-  subDepartments: SelectList[] = [
-    { CODE: '1', NAME: 'Digital Marketing' },
-    { CODE: '2', NAME: 'Software Marketing' },
-  ];
+ 
 
   pendingDocumentsGridColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
-    { field: 'requestId', headerName: 'Request Id'},
-    { field: 'documentName', headerName: 'Document Name'},
+    { field: 'requestId', headerName: 'Request Id' },
+    { field: 'documentName', headerName: 'Document Name' },
     { field: 'observation', headerName: 'Observation' },
     { field: 'justification', headerName: 'Justification' },
-    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number'},
-    { field: 'proposedVerion', headerName: 'Proposed Version'},
-    { field: 'division', headerName: 'Division'},
-    { field: 'department', headerName: 'Department'},
-    { field: 'subDepartment ', headerName: 'Sub-Department'},
-    { field: 'dateOfCreation', headerName: 'Date of Creation'},
-    { field: 'dateOfApproval', headerName: 'Date of Approval'},
-    { field: 'requestedBy', headerName: 'Requested By'},
-    { field: 'requestedOn', headerName: 'Requested On'},
+    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
+    { field: 'proposedVerion', headerName: 'Proposed Version' },
+    { field: 'division', headerName: 'Division' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'subDepartment ', headerName: 'Sub-Department' },
+    { field: 'dateOfCreation', headerName: 'Date of Creation' },
+    { field: 'dateOfApproval', headerName: 'Date of Approval' },
+    { field: 'requestedBy', headerName: 'Requested By' },
+    { field: 'requestedOn', headerName: 'Requested On' },
     { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
     { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
     { field: 'approvalHistory', headerName: 'Approval History' },
@@ -150,4 +146,8 @@ export class MyApprovalRequest {
       approvalHistory: 'Approved by Manager on 2024-06-07',
     },
   ];
+
+  onDepartmentsChange(value: number | null): void {
+    this.selectedDivisions = value;
+  }
 }

@@ -46,19 +46,15 @@
                       </div>
                       <div class="Divtxtemployeeschright" style="width: 250px">
                         <div>
-                          <nz-select
-                            style="width: 250px"
-                            [nzPlaceHolder]="'Select Division'"
-                            nzAllowClear
-                            nzShowSearch
+                          <app-division-list
+                            valueKey="CODE"
+                            labelKey="NAME"
+                            placeholder="Select Division"
+                            [(ngModel)]="selectedDivisions"
+                            (valueChange)="onDepartmentsChange($event)"
+                            width="250px"
                           >
-                            <nz-option
-                              *ngFor="let dep of divisions"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
-                          </nz-select>
+                          </app-division-list>
                         </div>
                       </div>
                     </div>
@@ -68,19 +64,15 @@
                         <label>{{ 'labels.Department' | safeTranslate }}</label>
                       </div>
                       <div>
-                        <nz-select
-                          style="width: 250px"
-                          [nzPlaceHolder]="'Select Department'"
-                          nzAllowClear
-                          nzShowSearch
+                        <app-department-list
+                          valueKey="CODE"
+                          labelKey="NAME"
+                          placeholder="Select Department"
+                          [(ngModel)]="selectedDepartment"
+                          (valueChange)="onDepartmentsChange($event)"
+                          width="250px"
                         >
-                          <nz-option
-                            *ngFor="let dep of departments"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
+                        </app-department-list>
                       </div>
                     </div>
 
@@ -89,19 +81,15 @@
                         <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
                       </div>
                       <div>
-                        <nz-select
-                          style="width: 250px"
-                          [nzPlaceHolder]="'Select Sub-Department'"
-                          nzAllowClear
-                          nzShowSearch
+                        <app-sub-department-list
+                          valueKey="CODE"
+                          labelKey="NAME"
+                          placeholder="Select Department"
+                          [(ngModel)]="selectedDepartment"
+                          (valueChange)="onDepartmentsChange($event)"
+                          width="250px"
                         >
-                          <nz-option
-                            *ngFor="let dep of subDepartments"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
+                        </app-sub-department-list>
                       </div>
                     </div>
                   </div>
@@ -110,13 +98,12 @@
 
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
-          
                   <div class="row">
                     <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                       <div class="PnlHeading">
                         <h3 class="PnlHeader">Documents</h3>
                       </div>
-                      <br>
+                      <br />
                       <div class="col-lg-12 col-md-12 col-sm-12">
                         <app-ag-grid-wrapper
                           [gridStyle]="{ width: '100%', height: '250px' }"

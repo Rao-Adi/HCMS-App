@@ -13,6 +13,9 @@ import { FormsModule } from '@angular/forms';
 import { DivisionService } from '@app/shared/services/division.services';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
+import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
+import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 @Component({
   selector: 'app-create-update-document',
   imports: [
@@ -26,6 +29,9 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
     NzRadioModule,
     NzButtonModule,
     NzDatePickerModule,
+    DivisionList,
+    SubDepartmentList,
+    DepartmentList,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -45,6 +51,11 @@ export class CreateUpdateDocument {
 
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
+
+  selectedDivisions?: number | null = null;
+  selectedDepartment?: number | null = null;
+  selectedSubDepartment?: number | null = null;
+  selectedDocumentType?: number | null = null;
 
   constructor(
     private _divisionServices: DivisionService,
@@ -288,25 +299,19 @@ export class CreateUpdateDocument {
     { CODE: '2', NAME: 'SOP' },
     { CODE: '3', NAME: 'Manual' },
   ];
-  divisions: SelectList[] = [];
-  // divisions: SelectList[] = [
-  //   { CODE: '1', NAME: 'Marketing Division' },
-  //   { CODE: '2', NAME: 'Software Division' },
-  // ];
+
+  trainers: SelectList[] = [];
+  
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
-  departments: SelectList[] = [
-    { CODE: '1', NAME: 'Marketing' },
-    { CODE: '2', NAME: 'IT' },
-    { CODE: '3', NAME: 'Finance' },
-    { CODE: '4', NAME: 'HR' },
-  ];
-  subDepartments: SelectList[] = [
+ 
+  users: SelectList[] = [
     { CODE: '1', NAME: 'Digital Marketing' },
     { CODE: '2', NAME: 'Software Marketing' },
   ];
+
   requestTypes: SelectList[] = [
     { CODE: '1', NAME: 'Creation of new document' },
     { CODE: '2', NAME: 'Revision of existing document' },
@@ -326,27 +331,19 @@ export class CreateUpdateDocument {
 
   selectedAuthorityType: string = '';
 
-  getAllDivisions = () => {
-    this._divisionServices.getDivisionList().subscribe((res) => {
-      if (res?.data) {
-        this.divisions = (res.data ?? []).map((d: any) => ({
-          CODE: d.Code || d.CODE,
-          NAME: d.Name || d.NAME,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      //this.cdr.detectChanges(); // force update
-    });
-  };
+   
 
   onAuthorityTypeChange(value: string): void {
     this.selectedAuthorityType = value;
-    this.getAllDivisions();
+    //this.getAllDivisions();
   }
 
   selectedUsers: string = '';
   onWorkflowExcludeChange(value: string): void {
     this.selectedUsers = value;
+  }
+
+  onDepartmentsChange(value: number | null): void {
+    this.selectedDivisions = value;
   }
 }

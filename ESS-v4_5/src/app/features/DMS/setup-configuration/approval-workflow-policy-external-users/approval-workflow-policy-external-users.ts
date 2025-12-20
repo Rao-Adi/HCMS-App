@@ -12,6 +12,9 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
+import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
+import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
+import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 
 @Component({
   selector: 'app-approval-workflow-policy-external-users',
@@ -19,12 +22,14 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
     CommonModule,
     FormsModule,
     SafeTranslatePipe,
-    NzSelectModule,
-    AgGridWrapper,
+    NzSelectModule, 
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
+    DivisionList,
+    SubDepartmentList,
+    DepartmentList,
   ],
   templateUrl: './approval-workflow-policy-external-users.html',
   styleUrl: './approval-workflow-policy-external-users.css',
@@ -32,28 +37,16 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
 export class ApprovalWorkflowPolicyExternalUsers {
   radioValue = '';
 
+  selectedDivisions?: number | null = null;
+  selectedDepartment?: number | null = null;
+  selectedSubDepartment?: number | null = null;
+  selectedDocumentType?: number | null = null;
+
   documentTypes: SelectList[] = [
     { CODE: '1', NAME: 'Policy' },
     { CODE: '2', NAME: 'SOP' },
     { CODE: '3', NAME: 'Manual' },
-  ];
-  divisions: SelectList[] = [
-    { CODE: '1', NAME: 'North' },
-    { CODE: '2', NAME: 'South' },
-    { CODE: '3', NAME: 'East' },
-    { CODE: '4', NAME: 'West' },
-  ];
-  departments: SelectList[] = [
-    { CODE: '1', NAME: 'HR' },
-    { CODE: '2', NAME: 'IT' },
-    { CODE: '3', NAME: 'Finance' },
-    { CODE: '4', NAME: 'Legal' },
-  ];
-  subDepartments: SelectList[] = [
-    { CODE: '1', NAME: 'Ops' },
-    { CODE: '2', NAME: 'Admin' },
-    { CODE: '3', NAME: 'Support' },
-  ];
+  ]; 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
     { CODE: '2', NAME: 'Employee' },
@@ -91,6 +84,8 @@ export class ApprovalWorkflowPolicyExternalUsers {
   onWorkflowExcludeChange(value: number | null): void {
     this.selectedWorkflowExclude = value;
   }
-}
 
- 
+  onDepartmentsChange(value: number | null): void {
+    this.selectedDivisions = value;
+  }
+}

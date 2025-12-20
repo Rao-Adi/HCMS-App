@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { DivisionService } from '@app/shared/services/division.services';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
@@ -9,7 +8,7 @@ import { ColDef } from 'ag-grid-community';
 
 @Component({
   selector: 'app-cabinet-structure',
-  imports: [CommonModule, SafeTranslatePipe, AgGridWrapper],
+  imports: [CommonModule,  AgGridWrapper],
   templateUrl: './cabinet-structure.html',
   styleUrl: './cabinet-structure.css',
 })

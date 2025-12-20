@@ -11,6 +11,10 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
+import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
+import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+
 @Component({
   selector: 'app-personalized-email-alerts',
   imports: [
@@ -18,12 +22,14 @@ import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
     FormsModule,
     SafeTranslatePipe,
     NzSelectModule,
-    AgGridWrapper,
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    NzCheckboxModule
+    NzCheckboxModule,
+    DivisionList,
+    SubDepartmentList,
+    DepartmentList,
   ],
   templateUrl: './personalized-email-alerts.html',
   styleUrl: './personalized-email-alerts.css',
@@ -36,9 +42,10 @@ export class PersonalizedEmailAlerts {
   totalRows = 0;
   checked = true;
 
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
+  selectedDivisions?: number | null = null;
+  selectedDepartment?: number | null = null;
+  selectedSubDepartment?: number | null = null;
+  selectedDocumentType?: number | null = null;
 
   constructor() {}
 
@@ -56,7 +63,7 @@ export class PersonalizedEmailAlerts {
     { CODE: '2', NAME: 'SOP' },
     { CODE: '3', NAME: 'Manual' },
   ];
-  divisions: SelectList[] = [
+  emailFrequencies: SelectList[] = [
     { CODE: '1', NAME: 'Marketing Division' },
     { CODE: '2', NAME: 'Software Division' },
   ];
@@ -64,26 +71,31 @@ export class PersonalizedEmailAlerts {
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
-  departments: SelectList[] = [
+  emailtobesend: SelectList[] = [
     { CODE: '1', NAME: 'Marketing' },
     { CODE: '2', NAME: 'IT' },
     { CODE: '3', NAME: 'Finance' },
     { CODE: '4', NAME: 'HR' },
   ];
-  subDepartments: SelectList[] = [
-    { CODE: '1', NAME: 'Digital Marketing' },
-    { CODE: '2', NAME: 'Software Marketing' },
+  emailnumberdays: SelectList[] = [
+    { CODE: '1', NAME: '1' },
+    { CODE: '2', NAME: '2' },
   ];
 
-   atributeTypes: SelectList[] = [
+  atributeTypes: SelectList[] = [
     { CODE: '1', NAME: 'Submit date' },
     { CODE: '2', NAME: 'Document Descriptoin' },
     { CODE: '3', NAME: 'Contract Type' },
   ];
 
-   selectedAuthorityType: number | null = null;
+  selectedAuthorityType: number | null = null;
 
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;
   }
+
+  onDepartmentsChange(value: number | null): void {
+    this.selectedDivisions = value;
+  }
+
 }

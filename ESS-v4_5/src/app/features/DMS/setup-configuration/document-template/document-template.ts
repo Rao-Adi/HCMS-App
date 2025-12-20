@@ -15,10 +15,11 @@ import { BehaviorSubject, catchError, debounceTime, map, Observable, of, switchM
 import { HttpClient } from '@angular/common/http';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
-
+import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
+import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
+import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
-
 
 interface MockUser {
   name: {
@@ -31,7 +32,8 @@ interface MockUser {
   imports: [
     CommonModule,
     FormsModule,
-    NzFormModule, NzInputModule,
+    NzFormModule,
+    NzInputModule,
     SafeTranslatePipe,
     NzDatePickerModule,
     NzUploadModule,
@@ -39,6 +41,9 @@ interface MockUser {
     NzButtonModule,
     NzIconModule,
     NzCheckboxModule,
+    DivisionList,
+    SubDepartmentList,
+    DepartmentList,
   ],
   providers: [
     MedicalReimbursementService,
@@ -56,10 +61,10 @@ export class DocumentTemplate {
   selectedUser?: string;
   loading = false;
 
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
+  selectedDivisions?: number | null = null;
+  selectedDepartment?: number | null = null;
+  selectedSubDepartment?: number | null = null;
+  selectedDocumentType?: number | null = null;
 
   constructor(
     private http: HttpClient,
@@ -85,11 +90,20 @@ export class DocumentTemplate {
 
   onfiscalYearchange() {}
 
+  onSearch(value: string): void {
+    this.loading = true;
+    this.searchChange$.next(value);
+  }
+
   getRandomNameList(name: string): Observable<string[]> {
     return this.http.get<{ results: MockUser[] }>(`${this.randomUserUrl}`).pipe(
       map((res) => res.results),
       catchError(() => of<MockUser[]>([])),
       map((list) => list.map((item) => `${item.name.first} ${name}`))
     );
+  }
+
+  onDepartmentsChange(value: number | null): void {
+    this.selectedDivisions = value;
   }
 }

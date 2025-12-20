@@ -95,19 +95,15 @@
                           </div>
                           <div class="Divtxtemployeeschright" style="width: 250px">
                             <div>
-                              <nz-select
-                                style="width: 250px"
-                                [nzPlaceHolder]="'Select Division'"
-                                nzAllowClear
-                                nzShowSearch
+                              <app-division-list
+                                valueKey="CODE"
+                                labelKey="NAME"
+                                placeholder="Select Division"
+                                [(ngModel)]="selectedDivisions"
+                                (valueChange)="onDepartmentsChange($event)"
+                                width="250px"
                               >
-                                <nz-option
-                                  *ngFor="let dep of divisions"
-                                  [nzValue]="dep.CODE"
-                                  [nzLabel]="dep.NAME"
-                                >
-                                </nz-option>
-                              </nz-select>
+                              </app-division-list>
                             </div>
                           </div>
                         </div>
@@ -117,19 +113,15 @@
                             <label>{{ 'labels.Department' | safeTranslate }}</label>
                           </div>
                           <div>
-                            <nz-select
-                              style="width: 250px"
-                              [nzPlaceHolder]="'Select Department'"
-                              nzAllowClear
-                              nzShowSearch
+                            <app-department-list
+                              valueKey="CODE"
+                              labelKey="NAME"
+                              placeholder="Select Department"
+                              [(ngModel)]="selectedDepartment"
+                              (valueChange)="onDepartmentsChange($event)"
+                              width="250px"
                             >
-                              <nz-option
-                                *ngFor="let dep of departments"
-                                [nzValue]="dep.CODE"
-                                [nzLabel]="dep.NAME"
-                              >
-                              </nz-option>
-                            </nz-select>
+                            </app-department-list>
                           </div>
                         </div>
 
@@ -138,19 +130,15 @@
                             <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
                           </div>
                           <div>
-                            <nz-select
-                              style="width: 250px"
-                              [nzPlaceHolder]="'Select Sub-Department'"
-                              nzAllowClear
-                              nzShowSearch
+                            <app-sub-department-list
+                              valueKey="CODE"
+                              labelKey="NAME"
+                              placeholder="Select Department"
+                              [(ngModel)]="selectedDepartment"
+                              (valueChange)="onDepartmentsChange($event)"
+                              width="250px"
                             >
-                              <nz-option
-                                *ngFor="let dep of subDepartments"
-                                [nzValue]="dep.CODE"
-                                [nzLabel]="dep.NAME"
-                              >
-                              </nz-option>
-                            </nz-select>
+                            </app-sub-department-list>
                           </div>
                         </div>
                       </div>
@@ -198,7 +186,7 @@
                                     nzShowSearch
                                   >
                                     <nz-option
-                                      *ngFor="let dep of divisions"
+                                      *ngFor="let dep of trainers"
                                       [nzValue]="dep.CODE"
                                       [nzLabel]="dep.NAME"
                                     >
@@ -220,7 +208,7 @@
                                   nzShowSearch
                                 >
                                   <nz-option
-                                    *ngFor="let dep of departments"
+                                    *ngFor="let dep of users"
                                     [nzValue]="dep.CODE"
                                     [nzLabel]="dep.NAME"
                                   >
@@ -229,11 +217,7 @@
                               </div>
                             </div>
                             <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <button
-                                class="tab-button"
-                                tabindex="0"
-                                class="btn btn-primary"
-                              >
+                              <button class="tab-button" tabindex="0" class="btn btn-primary">
                                 Add
                               </button>
                             </div>

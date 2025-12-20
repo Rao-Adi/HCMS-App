@@ -1,13 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 
 @Component({
   selector: 'app-misc-policies',
-  imports: [CommonModule, SafeTranslatePipe, AgGridWrapper],
+  imports: [CommonModule,  AgGridWrapper],
   templateUrl: './misc-policies.html',
   styleUrl: './misc-policies.css',
 })

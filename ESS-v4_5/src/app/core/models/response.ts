@@ -1,6 +1,6 @@
 export interface GenericResponse<T> {
     message: string | null;
-    data: T | null;
+    Data: T | null;
     statusCode: ResponseStatus;
 }
 

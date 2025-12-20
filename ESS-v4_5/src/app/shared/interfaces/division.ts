@@ -1,6 +1,6 @@
 export interface Division
 { 
-    code: string;
+    Code: string;
     Name: string; 
 }
 

@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -12,7 +11,6 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
   imports: [
     CommonModule,
     FormsModule,
-    SafeTranslatePipe,
     NzIconModule,
     NzSwitchModule,
     AgGridWrapper,
@@ -52,7 +50,7 @@ export class Users {
       this.loading = false;
     }, 300); // keep UX fast
   }
-  
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,

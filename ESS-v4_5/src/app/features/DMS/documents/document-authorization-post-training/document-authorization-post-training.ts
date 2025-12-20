@@ -10,8 +10,11 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
+import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
+import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
+import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 
- @Component({
+@Component({
   selector: 'app-document-authorization-post-training',
   imports: [
     CommonModule,
@@ -25,12 +28,20 @@ import { FormsModule } from '@angular/forms';
     NzButtonModule,
     SafeTranslatePipe,
     AgGridWrapper,
+    DivisionList,
+    SubDepartmentList,
+    DepartmentList,
   ],
   templateUrl: './document-authorization-post-training.html',
-  styleUrl: './document-authorization-post-training.css'
+  styleUrl: './document-authorization-post-training.css',
 })
 export class DocumentAuthorizationPostTraining {
-selectedTab: string = 'Pending Authorization';
+  selectedTab: string = 'Pending Authorization';
+
+  selectedDivisions?: number | null = null;
+  selectedDepartment?: number | null = null;
+  selectedSubDepartment?: number | null = null;
+  selectedDocumentType?: number | null = null;
 
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
@@ -38,7 +49,7 @@ selectedTab: string = 'Pending Authorization';
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
-  
+
   constructor() {}
 
   ngOnInit() {
@@ -116,33 +127,18 @@ selectedTab: string = 'Pending Authorization';
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
 
-  
   documentTypes: SelectList[] = [
     { CODE: '1', NAME: 'Policy' },
     { CODE: '2', NAME: 'SOP' },
     { CODE: '3', NAME: 'Manual' },
   ];
-  divisions: SelectList[] = [
-    { CODE: '1', NAME: 'Marketing Division' },
-    { CODE: '2', NAME: 'Software Division' },
-  ];
+ 
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
-  departments: SelectList[] = [
-    { CODE: '1', NAME: 'Marketing' },
-    { CODE: '2', NAME: 'IT' },
-    { CODE: '3', NAME: 'Finance' },
-    { CODE: '4', NAME: 'HR' },
-  ];
-  subDepartments: SelectList[] = [
-    { CODE: '1', NAME: 'Digital Marketing' },
-    { CODE: '2', NAME: 'Software Marketing' },
-  ];
-
-
-
+ 
+  
   loadData(pageNumber: number) {
     // 🔹 TEMP: Dummy data mode
     const allData = this.getDummyData();
@@ -172,5 +168,9 @@ selectedTab: string = 'Pending Authorization';
         .split('T')[0],
       uploadDocument: 'Upload',
     }));
+  }
+
+  onDepartmentsChange(value: number | null): void {
+    this.selectedDivisions = value;
   }
 }

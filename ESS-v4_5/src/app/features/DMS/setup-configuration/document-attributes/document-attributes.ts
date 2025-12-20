@@ -1,12 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
   selector: 'app-document-attributes',
-  imports: [CommonModule, SafeTranslatePipe, AgGridWrapper],
+  imports: [CommonModule, AgGridWrapper],
   templateUrl: './document-attributes.html',
   styleUrl: './document-attributes.css',
 })

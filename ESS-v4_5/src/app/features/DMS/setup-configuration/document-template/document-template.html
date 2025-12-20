@@ -45,79 +45,56 @@
         <div class="row">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="row">
-              <div class="col-lg-4">
-                <div class="form-group">
-                  <label class="ctrllbl">Division</label>
-                  <div class="row">
-                    <nz-select
-                      nzMode="multiple"
-                      nzPlaceHolder="Select users"
-                      nzAllowClear
-                      nzShowSearch
-                      nzServerSearch
-                      [(ngModel)]="selectedUser"
-                      (nzOnSearch)="onSearch($event)"
+              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Division' | safeTranslate }} </label>
+                </div>
+                <div class="Divtxtemployeeschright" style="width: 250px">
+                  <div>
+                    <app-division-list
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="Select Division"
+                      [(ngModel)]="selectedDivisions"
+                      (valueChange)="onDepartmentsChange($event)"
+                      width="250px"
                     >
-                      @if (!loading) { @for (o of optionList; track o) {
-                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                      } } @else {
-                      <nz-option nzDisabled nzCustomContent>
-                        <nz-icon nzType="loading" class="loading-icon" />
-                        Loading Data...
-                      </nz-option>
-                      }
-                    </nz-select>
+                    </app-division-list>
                   </div>
                 </div>
               </div>
-              <div class="col-lg-4">
-                <div class="form-group">
-                  <label class="ctrllbl">Department</label>
-                  <div class="row">
-                    <nz-select
-                      nzMode="multiple"
-                      nzPlaceHolder="Select users"
-                      nzAllowClear
-                      nzShowSearch
-                      nzServerSearch
-                      [(ngModel)]="selectedUser"
-                      (nzOnSearch)="onSearch($event)"
-                    >
-                      @if (!loading) { @for (o of optionList; track o) {
-                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                      } } @else {
-                      <nz-option nzDisabled nzCustomContent>
-                        <nz-icon nzType="loading" class="loading-icon" />
-                        Loading Data...
-                      </nz-option>
-                      }
-                    </nz-select>
-                  </div>
+
+              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Department' | safeTranslate }}</label>
+                </div>
+                <div>
+                  <app-department-list
+                    valueKey="CODE"
+                    labelKey="NAME"
+                    placeholder="Select Department"
+                    [(ngModel)]="selectedDepartment"
+                    (valueChange)="onDepartmentsChange($event)"
+                    width="250px"
+                  >
+                  </app-department-list>
                 </div>
               </div>
-              <div class="col-lg-4">
-                <div class="form-group">
-                  <label class="ctrllbl">Sub-Department</label>
-                  <div class="row">
-                    <nz-select
-                      nzMode="multiple"
-                      nzPlaceHolder="Select users"
-                      nzAllowClear
-                      nzShowSearch
-                      nzServerSearch
-                      [(ngModel)]="selectedUser"
-                      (nzOnSearch)="onSearch($event)"
-                    >
-                      @if (!loading) { @for (o of optionList; track o) {
-                      <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-                      } } @else {
-                      <nz-option nzDisabled nzCustomContent>
-                        <nz-icon nzType="loading" class="loading-icon" />
-                        Loading Data...
-                      </nz-option>
-                      }
-                    </nz-select>
-                  </div>
+
+              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                </div>
+                <div>
+                  <app-sub-department-list
+                    valueKey="CODE"
+                    labelKey="NAME"
+                    placeholder="Select Department"
+                    [(ngModel)]="selectedDepartment"
+                    (valueChange)="onDepartmentsChange($event)"
+                    width="250px"
+                  >
+                  </app-sub-department-list>
                 </div>
               </div>
             </div>
@@ -126,7 +103,7 @@
         <div class="row row-space">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="status-box">
-                <h3 class="PnlHeader"> Template </h3>
+              <h3 class="PnlHeader">Template</h3>
               <textarea rows="4" nz-input></textarea>
             </div>
           </div>

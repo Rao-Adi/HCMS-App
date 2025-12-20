@@ -248,48 +248,48 @@ export class DivisionService {
   //   return this.http.post(uri, payload, { headers: this.getHeaders() });
   // }
 
-  getOrderProccessingData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetOrderProcessingData`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // getOrderProccessingData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetOrderProcessingData`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetTotalRegistrationsData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetTotalRegistrations`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetTotalRegistrationsData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetTotalRegistrations`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetTotalMaritalStatusRegistrationsData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetTotalMaritalStatusRegistrations`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetTotalMaritalStatusRegistrationsData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetTotalMaritalStatusRegistrations`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetDeliveryLocationData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetDeliveryLocationData`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetDeliveryLocationData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetDeliveryLocationData`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetOrganizationDonationData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetOrganizationDonation`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetOrganizationDonationData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetOrganizationDonation`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetOrganizationDeliveryData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetOrganizationDeliveryData`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetOrganizationDeliveryData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetOrganizationDeliveryData`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetDailyOrderStatusData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetDailyOrderStatus`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetDailyOrderStatusData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetDailyOrderStatus`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetDonationBifurcationData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetDonationBifurcation`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetDonationBifurcationData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetDonationBifurcation`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 
-  GetDistributionBifurcationData(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DashboardReport/GetDistributionBifurcation`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  // GetDistributionBifurcationData(): Observable<GenericResponse<any>> {
+  //   const uri = `${environment.baseUrl}/DashboardReport/GetDistributionBifurcation`;
+  //   return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  // }
 }
