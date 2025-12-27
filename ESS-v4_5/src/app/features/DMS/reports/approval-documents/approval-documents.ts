@@ -15,6 +15,7 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-approval-documents',
@@ -32,6 +33,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './approval-documents.html',
   styleUrl: './approval-documents.css',
@@ -50,12 +52,12 @@ export class ApprovalDocuments {
 
   pageSize = 10;
   rowData: any[] = [];
-  totalRows = 0;
+  totalDocuments = 0;
 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -70,12 +72,6 @@ export class ApprovalDocuments {
   optionList: string[] = [];
   selectedUser?: string;
   documentTypeData: any[] = [];
-
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
@@ -128,9 +124,6 @@ export class ApprovalDocuments {
   ];
 
   radioValue = '';
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
   // single state
 
   constructor() {}
@@ -161,7 +154,7 @@ export class ApprovalDocuments {
     const end = start + this.pageSize;
 
     this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
+    this.totalDocuments = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready
     // this.gridService.loadData(this.apiUrl, request).subscribe(...)
@@ -183,7 +176,14 @@ export class ApprovalDocuments {
     }));
   }
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
   }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
+
+  GetAllDocuments(query: any) {}
 }

@@ -10,13 +10,24 @@
         </div>
         <br />
         <hr />
-        <div class="row">
+        <div class="row mb-4">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="row">
               <div class="col-lg-4">
                 <div class="form-group">
                   <label class="ctrllbl">Document Type</label>
-                  <div class="row">
+                  <div>
+                    <app-document-type-list
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="Select DocumentType"
+                      [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
+                      width="250px"
+                    >
+                    </app-document-type-list>
+                  </div>
+                  <!-- <div class="row">
                     <nz-select
                       nzMode="multiple"
                       nzPlaceHolder="Select users"
@@ -35,7 +46,7 @@
                       </nz-option>
                       }
                     </nz-select>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>

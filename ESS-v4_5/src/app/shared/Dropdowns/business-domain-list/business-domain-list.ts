@@ -3,22 +3,15 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
 
 @Component({
-  selector: 'app-document-type-list',
+  selector: 'app-business-domain-list',
   imports: [CommonModule, FormsModule, NzSelectModule],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => DocumentTypeList),
-      multi: true,
-    },
-  ],
-  templateUrl: './document-type-list.html',
-  styleUrl: './document-type-list.css',
+  templateUrl: './business-domain-list.html',
+  styleUrl: './business-domain-list.css',
 })
-export class DocumentTypeList implements ControlValueAccessor{
+export class BusinessDomainList {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
@@ -32,7 +25,7 @@ export class DocumentTypeList implements ControlValueAccessor{
   value: any;
   disabled = false;
 
-  constructor(private _documentTypeService: DocumentTypeService) {}
+  constructor(private _businessDomainService: BusinessDomainService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -65,7 +58,7 @@ export class DocumentTypeList implements ControlValueAccessor{
   }
 
   getDocumentTypeList = () => {
-    this._documentTypeService.getDocumentTypeList().subscribe((res) => {
+    this._businessDomainService.getBusinessDomainList().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,

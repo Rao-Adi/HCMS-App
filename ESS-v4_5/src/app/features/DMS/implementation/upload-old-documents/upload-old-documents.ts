@@ -21,7 +21,7 @@ export class UploadOldDocuments {
   constructor() {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
+    //this.loadData(this.pageSize);
   }
   
   // Default Column Definitions: Apply configuration across all columns
@@ -97,7 +97,8 @@ export class UploadOldDocuments {
 
   pageSize = 10;
   rowData: any[] = [];
-  totalRows = 0;
+  totalUplaodedDocuments = 0;
+totalUploads =0;
 
   loadData(pageNumber: number) {
   
@@ -109,11 +110,15 @@ export class UploadOldDocuments {
     const end = start + this.pageSize;
 
     this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
+    this.totalUploads = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready
     // this.gridService.loadData(this.apiUrl, request).subscribe(...)
   }
+
+  GetAllUploads(query:any){}
+  GetAllUploadedDocuments(query:any){}
+
 
   private getDummyData(): any[] {
     return Array.from({ length: 100 }).map((_, i) => ({

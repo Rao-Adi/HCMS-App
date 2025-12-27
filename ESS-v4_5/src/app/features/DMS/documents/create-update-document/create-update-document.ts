@@ -16,6 +16,7 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 @Component({
   selector: 'app-create-update-document',
   imports: [
@@ -32,6 +33,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -52,10 +54,10 @@ export class CreateUpdateDocument {
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   constructor(
     private _divisionServices: DivisionService,
@@ -76,6 +78,9 @@ export class CreateUpdateDocument {
   pageSize = 10;
   totalRows = 0;
   rowData: any[] = [];
+  totalWorkflowAuthorities = 0;
+  totalDistribution=0;
+  totalDocuments =0;
 
   public noRowsOverlay: string = '';
 
@@ -294,19 +299,13 @@ export class CreateUpdateDocument {
     },
   ];
 
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
-
   trainers: SelectList[] = [];
-  
+
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
- 
+
   users: SelectList[] = [
     { CODE: '1', NAME: 'Digital Marketing' },
     { CODE: '2', NAME: 'Software Marketing' },
@@ -331,8 +330,6 @@ export class CreateUpdateDocument {
 
   selectedAuthorityType: string = '';
 
-   
-
   onAuthorityTypeChange(value: string): void {
     this.selectedAuthorityType = value;
     //this.getAllDivisions();
@@ -343,7 +340,15 @@ export class CreateUpdateDocument {
     this.selectedUsers = value;
   }
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
   }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
+  GetAllWorkflowAuthorities(query: any) {}
+
+  GetAllDistribution(query: any) {}
 }

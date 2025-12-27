@@ -70,25 +70,21 @@
                   </app-sub-department-list>
                 </div>
               </div>
-              
+
               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                 <div class="PnlHeading">
                   <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
                 </div>
                 <div>
-                  <nz-select
-                    style="width: 250px"
-                    [nzPlaceHolder]="'Select DocumentType'"
-                    nzAllowClear
-                    nzShowSearch
+                  <app-document-type-list
+                    valueKey="CODE"
+                    labelKey="NAME"
+                    placeholder="Select Division"
+                    [(ngModel)]="selectedDocumentType"
+                    (valueChange)="onDocumentTypeChange($event)"
+                    width="250px"
                   >
-                    <nz-option
-                      *ngFor="let dep of documentTypes"
-                      [nzValue]="dep.CODE"
-                      [nzLabel]="dep.NAME"
-                    >
-                    </nz-option>
-                  </nz-select>
+                  </app-document-type-list>
                 </div>
               </div>
             </div>
@@ -132,17 +128,16 @@
                     <br />
                     <div class="row">
                       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <app-ag-grid-wrapper
-                          [gridStyle]="{ width: '100%', height: '550px' }"
-                          class="ag-theme-alpine"
-                          [rowData]="pendingDocumentData"
-                          [columnDefs]="pendingDocumentsGridColumnDefs"
-                          [defaultColDef]="defaultColDef"
-                          [overlayNoRowsTemplate]="noRowsOverlay"
-                          [pagination]="true"
-                          [pageSize]="10"
-                        >
-                        </app-ag-grid-wrapper>
+                         <app-ag-grid-wrapper
+                      [gridStyle]="{ width: '100%', height: '250px' }"
+                      [columnDefs]="pendingDocumentsGridColumnDefs"
+                      [defaultColDef]="defaultColDef"
+                      [rowData]="pendingDocumentData"
+                      [pageSize]="pageSize"
+                      [totalRows]="totalPendingDocuments"
+                      (serverQuery)="GetAllPendingDocuments($event)"
+                    >
+                    </app-ag-grid-wrapper>
                       </div>
                     </div>
                   </div>
@@ -155,14 +150,13 @@
                     <h3 class="PnlHeader">Documents</h3>
                     <br />
                     <app-ag-grid-wrapper
-                      [gridStyle]="{ width: '100%', height: '550px' }"
-                      class="ag-theme-alpine"
-                      [rowData]="pendingDocumentData"
+                      [gridStyle]="{ width: '100%', height: '250px' }"
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
-                      [overlayNoRowsTemplate]="noRowsOverlay"
-                      [pagination]="true"
-                      [pageSize]="10"
+                      [rowData]="pendingDocumentData"
+                      [pageSize]="pageSize"
+                      [totalRows]="totalApprovedDocuments"
+                      (serverQuery)="GetAllApprovedDocuments($event)"
                     >
                     </app-ag-grid-wrapper>
                   </div>
@@ -175,14 +169,13 @@
                     <h3 class="PnlHeader">Documents</h3>
                     <br />
                     <app-ag-grid-wrapper
-                      [gridStyle]="{ width: '100%', height: '550px' }"
-                      class="ag-theme-alpine"
-                      [rowData]="pendingDocumentData"
+                      [gridStyle]="{ width: '100%', height: '250px' }"
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
-                      [overlayNoRowsTemplate]="noRowsOverlay"
-                      [pagination]="true"
-                      [pageSize]="10"
+                      [rowData]="pendingDocumentData"
+                      [pageSize]="pageSize"
+                      [totalRows]="totalDisApprovedDocuments"
+                      (serverQuery)="GetAllDisApprovedDocuments($event)"
                     >
                     </app-ag-grid-wrapper>
                   </div>

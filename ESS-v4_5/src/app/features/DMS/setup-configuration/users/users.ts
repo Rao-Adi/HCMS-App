@@ -8,13 +8,7 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 
 @Component({
   selector: 'app-users',
-  imports: [
-    CommonModule,
-    FormsModule,
-    NzIconModule,
-    NzSwitchModule,
-    AgGridWrapper,
-  ],
+  imports: [CommonModule, FormsModule, NzIconModule, NzSwitchModule, AgGridWrapper],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
@@ -25,10 +19,10 @@ export class Users {
   switchValue2 = false;
   // single state
   activeMode: 'manual' | 'integration' | null = null;
-
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
+  pageSize = 10;
+  rowData: any[] = [];
+  totalIntergrated = 0;
+  totalManullayManageEmployees = 0;
 
   constructor() {}
 
@@ -176,10 +170,6 @@ export class Users {
     { field: 'accessLevel', headerName: 'Access Level' },
   ];
 
-  pageSize = 10;
-  rowData: any[] = [];
-  totalRows = 0;
-
   loadData(pageNumber: number) {
     // 🔹 TEMP: Dummy data mode
     const allData = this.getDummyData();
@@ -189,12 +179,15 @@ export class Users {
     const end = start + this.pageSize;
 
     this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
+    this.totalIntergrated = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready
     // this.gridService.loadData(this.apiUrl, request).subscribe(...)
   }
 
+  GetAllManuallyManageEmployee(query:any){}
+  GetAllIntegeratedPeoplepartners(query:any){}
+  
   private getDummyData(): any[] {
     return Array.from({ length: 100 }).map((_, i) => ({
       documentId: `DOC-${i + 1}`,

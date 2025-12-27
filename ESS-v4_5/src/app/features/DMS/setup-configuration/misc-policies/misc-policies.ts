@@ -6,7 +6,7 @@ import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 
 @Component({
   selector: 'app-misc-policies',
-  imports: [CommonModule,  AgGridWrapper],
+  imports: [CommonModule, AgGridWrapper],
   templateUrl: './misc-policies.html',
   styleUrl: './misc-policies.css',
 })
@@ -23,7 +23,6 @@ export class MiscPolicies {
       headerName: 'TraningRequired',
       flex: 1,
       cellEditor: 'agCheckboxCellEditor',
-      
     },
     {
       field: 'minimumscoreforpassing',
@@ -37,7 +36,7 @@ export class MiscPolicies {
     },
   ];
 
-  UploadedDocColumnDefs = [
+  documentReviewColumnDef = [
     { field: 'documentType', headerName: 'Document Types', flex: 1 },
     { field: 'reviewAfter', headerName: 'Review After (in years)', flex: 1 },
   ];
@@ -74,7 +73,8 @@ export class MiscPolicies {
     },
   ];
 
-  totalRows = 0;
+  totalDocumentReview = 0;
+  totalTrainingPolicies = 0;
   public noRowsOverlay: string = '';
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -88,4 +88,7 @@ export class MiscPolicies {
   ngOnInit() {
     //this.loadData(this.pageSize);
   }
+  GetAllDocumentReview(query: any) {}
+
+  GetAllTrainingPolicy(query: any) {}
 }

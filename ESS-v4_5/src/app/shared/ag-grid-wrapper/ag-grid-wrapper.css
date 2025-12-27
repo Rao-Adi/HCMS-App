@@ -1,0 +1,39 @@
+.ag-paging-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-top: 1px solid #dde2eb;
+  background-color: #fafafa;
+}
+
+.ag-paging-row-summary {
+  color: #666;
+}
+
+.ag-paging-controls {
+  display: flex;
+  align-items: center;
+}
+
+.ag-paging-button {
+  min-width: 22px;
+  height: 22px;
+  margin: 0 2px;
+  border: 1px solid #c3c3c3;
+  background: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ag-paging-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ag-paging-page-size select {
+  margin-left: 6px;
+  height: 22px;
+  font-size: 12px;
+}

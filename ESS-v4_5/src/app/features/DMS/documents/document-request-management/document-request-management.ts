@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-document-request-management',
@@ -29,17 +30,18 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
 })
 export class DocumentRequestManagement {
   selectedTab: string = 'NewRequest';
- 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   constructor() {}
 
@@ -54,11 +56,60 @@ export class DocumentRequestManagement {
 
   pageSize = 10;
   totalRows = 0;
+  totalUsers = 0;
+  totalDistributioinList = 0;
+  totalWorkflowAuthorities = 0;
+  totalDocuments = 0;
+  totalPendingApprovals = 0;
   rowData: any[] = [];
 
   public noRowsOverlay: string = '';
 
   userGridColumnDefs = [
+    {
+      field: 'division',
+      headerName: 'Division',
+      flex: 1,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: {
+        values: ['Marketing Division', 'Software Division', 'Finance Division', 'HR Division'],
+      },
+    },
+    {
+      field: 'department',
+      headerName: 'Department',
+      flex: 1,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: {
+        values: ['Marketing', 'IT', 'Finance', 'HR'],
+      },
+    },
+    {
+      field: 'subDepartment',
+      headerName: 'Sub-Department',
+      flex: 1,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: {
+        values: ['Digital Marketing', 'Software Marketing'],
+      },
+    },
+    {
+      field: 'users',
+      headerName: 'Users',
+      flex: 1,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: {
+        values: [
+          'Territory Sales Manager(TSM)',
+          'District Sales Manager(DSM)',
+          'Regional Sales Manager(RSM)',
+        ],
+      },
+    },
+  ];
+
+  
+  documentColumnDefs = [
     {
       field: 'division',
       headerName: 'Division',
@@ -273,12 +324,6 @@ export class DocumentRequestManagement {
     },
   ];
 
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
-
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
@@ -318,7 +363,24 @@ export class DocumentRequestManagement {
     this.selectedWorkflowExclude = value;
   }
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
   }
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
+
+  GetAllDocuments(query: any) {}
+
+  GetAllPendingApprovalRequests(query: any) {}
+
+  GetAllUsers(query: any) {}
+
+  GetAllUsers2(query: any) {}
+
+  GetAllWorkflowAuthorities(query: any) {}
+
+  GetAllUploadedDocuments(query: any) {}
+  GetAllDistributionList(query: any) {}
 }

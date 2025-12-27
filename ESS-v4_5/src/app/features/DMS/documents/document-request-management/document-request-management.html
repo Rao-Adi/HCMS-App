@@ -128,19 +128,15 @@
                                   <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
                                 </div>
                                 <div>
-                                  <nz-select
-                                    style="width: 200px"
-                                    [nzPlaceHolder]="'Select DocumentType'"
-                                    nzAllowClear
-                                    nzShowSearch
+                                  <app-document-type-list
+                                    valueKey="CODE"
+                                    labelKey="NAME"
+                                    placeholder="Select Division"
+                                    [(ngModel)]="selectedDocumentType"
+                                    (valueChange)="onDocumentTypeChange($event)"
+                                    width="250px"
                                   >
-                                    <nz-option
-                                      *ngFor="let dep of documentTypes"
-                                      [nzValue]="dep.CODE"
-                                      [nzLabel]="dep.NAME"
-                                    >
-                                    </nz-option>
-                                  </nz-select>
+                                  </app-document-type-list>
                                 </div>
                               </div>
                               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
@@ -203,12 +199,12 @@
                             <div class="col-lg-12 col-md-12 col-sm-12">
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
-                                class="ag-theme-alpine"
                                 [columnDefs]="userGridColumnDefs"
-                                [rowData]="userData"
                                 [defaultColDef]="defaultColDef"
-                                [overlayNoRowsTemplate]="noRowsOverlay"
-                                [pagination]="false"
+                                [rowData]="userData"
+                                [pageSize]="pageSize"
+                                [totalRows]="totalUsers"
+                                (serverQuery)="GetAllUsers($event)"
                               >
                               </app-ag-grid-wrapper>
                             </div>
@@ -219,12 +215,12 @@
                             <div class="col-lg-12 col-md-12 col-sm-12">
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
-                                class="ag-theme-alpine"
                                 [columnDefs]="distributionListGridColumnDefs"
-                                [rowData]="distributionListData"
                                 [defaultColDef]="defaultColDef"
-                                [overlayNoRowsTemplate]="noRowsOverlay"
-                                [pagination]="false"
+                                [rowData]="distributionListData"
+                                [pageSize]="pageSize"
+                                [totalRows]="totalDistributioinList"
+                                (serverQuery)="GetAllWorkflowAuthorities($event)"
                               >
                               </app-ag-grid-wrapper>
                             </div>
@@ -254,12 +250,12 @@
                             <div class="col-lg-12 col-md-12 col-sm-12">
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
-                                class="ag-theme-alpine"
                                 [columnDefs]="workflowAuthoritiesColumnDefs"
-                                [rowData]="workflowAuthoritiesData"
                                 [defaultColDef]="defaultColDef"
-                                [overlayNoRowsTemplate]="noRowsOverlay"
-                                [pagination]="false"
+                                [rowData]="workflowAuthoritiesData"
+                                [pageSize]="pageSize"
+                                [totalRows]="totalWorkflowAuthorities"
+                                (serverQuery)="GetAllWorkflowAuthorities($event)"
                               >
                               </app-ag-grid-wrapper>
                             </div>
@@ -294,12 +290,12 @@
                               <div>
                                 <app-ag-grid-wrapper
                                   [gridStyle]="{ width: '100%', height: '250px' }"
-                                  class="ag-theme-alpine"
-                                  [columnDefs]="workflowAuthoritiesColumnDefs"
-                                  [rowData]="workflowAuthoritiesData"
+                                  [columnDefs]="documentColumnDefs"
                                   [defaultColDef]="defaultColDef"
-                                  [overlayNoRowsTemplate]="noRowsOverlay"
-                                  [pagination]="false"
+                                  [rowData]="workflowAuthoritiesData"
+                                  [pageSize]="pageSize"
+                                  [totalRows]="totalDocuments"
+                                  (serverQuery)="GetAllDocuments($event)"
                                 >
                                 </app-ag-grid-wrapper>
                               </div>
@@ -384,19 +380,15 @@
                                     <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
                                   </div>
                                   <div>
-                                    <nz-select
-                                      style="width: 200px"
-                                      [nzPlaceHolder]="'Select DocumentType'"
-                                      nzAllowClear
-                                      nzShowSearch
+                                    <app-document-type-list
+                                      valueKey="CODE"
+                                      labelKey="NAME"
+                                      placeholder="Select Division"
+                                      [(ngModel)]="selectedDocumentType"
+                                      (valueChange)="onDocumentTypeChange($event)"
+                                      width="250px"
                                     >
-                                      <nz-option
-                                        *ngFor="let dep of documentTypes"
-                                        [nzValue]="dep.CODE"
-                                        [nzLabel]="dep.NAME"
-                                      >
-                                      </nz-option>
-                                    </nz-select>
+                                    </app-document-type-list>
                                   </div>
                                 </div>
                               </div>
@@ -412,12 +404,12 @@
                               <div>
                                 <app-ag-grid-wrapper
                                   [gridStyle]="{ width: '100%', height: '250px' }"
-                                  class="ag-theme-alpine"
-                                  [columnDefs]="workflowAuthoritiesColumnDefs"
-                                  [rowData]="workflowAuthoritiesData"
+                                  [columnDefs]="userGridColumnDefs"
                                   [defaultColDef]="defaultColDef"
-                                  [overlayNoRowsTemplate]="noRowsOverlay"
-                                  [pagination]="false"
+                                  [rowData]="workflowAuthoritiesData"
+                                  [pageSize]="pageSize"
+                                  [totalRows]="totalUsers"
+                                  (serverQuery)="GetAllUploadedDocuments($event)"
                                 >
                                 </app-ag-grid-wrapper>
                               </div>
@@ -433,12 +425,12 @@
                               <div>
                                 <app-ag-grid-wrapper
                                   [gridStyle]="{ width: '100%', height: '250px' }"
-                                  class="ag-theme-alpine"
-                                  [columnDefs]="workflowAuthoritiesColumnDefs"
-                                  [rowData]="workflowAuthoritiesData"
+                                  [columnDefs]="distributionListGridColumnDefs"
                                   [defaultColDef]="defaultColDef"
-                                  [overlayNoRowsTemplate]="noRowsOverlay"
-                                  [pagination]="false"
+                                  [rowData]="distributionListData"
+                                  [pageSize]="pageSize"
+                                  [totalRows]="totalRows"
+                                  (serverQuery)="GetAllDistributionList($event)"
                                 >
                                 </app-ag-grid-wrapper>
                               </div>
@@ -474,12 +466,12 @@
                               <div>
                                 <app-ag-grid-wrapper
                                   [gridStyle]="{ width: '100%', height: '250px' }"
-                                  class="ag-theme-alpine"
                                   [columnDefs]="workflowAuthoritiesColumnDefs"
-                                  [rowData]="workflowAuthoritiesData"
                                   [defaultColDef]="defaultColDef"
-                                  [overlayNoRowsTemplate]="noRowsOverlay"
-                                  [pagination]="false"
+                                  [rowData]="workflowAuthoritiesData"
+                                  [pageSize]="pageSize"
+                                  [totalRows]="totalRows"
+                                  (serverQuery)="GetAllUploadedDocuments($event)"
                                 >
                                 </app-ag-grid-wrapper>
                               </div>
@@ -496,14 +488,13 @@
               <div class="row row-space" *ngIf="selectedTab === 'MyRequestPendingApproval'">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                   <app-ag-grid-wrapper
-                    [gridStyle]="{ width: '100%', height: '550px' }"
-                    class="ag-theme-alpine"
-                    [rowData]="pendingApprovalData"
+                    [gridStyle]="{ width: '100%', height: '250px' }"
                     [columnDefs]="pendingRequestApprovalColumnDefs"
                     [defaultColDef]="defaultColDef"
-                    [overlayNoRowsTemplate]="noRowsOverlay"
-                    [pagination]="true"
-                    [pageSize]="10"
+                    [rowData]="pendingApprovalData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalPendingApprovals"
+                    (serverQuery)="GetAllPendingApprovalRequests($event)"
                   >
                   </app-ag-grid-wrapper>
                 </div>

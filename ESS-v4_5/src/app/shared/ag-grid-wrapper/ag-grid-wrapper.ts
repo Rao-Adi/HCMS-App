@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, input, Input, OnInit, Output } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 //import { ColDef, GridReadyEvent } from 'ag-grid-community';
 import {
@@ -15,13 +15,6 @@ import {
   ValidationModule,
 } from 'ag-grid-community';
 
-import { AgGridDataService } from '@app/core/services/ag-grid-data.service';
-import { SubDepartmentService } from '../services/subdepartment.service';
-import { DivisionService } from '../services/division.services';
-import { DepartmentService } from '../services/department.service';
-import { SelectList } from '../interfaces/interfaces';
-
-
 @Component({
   selector: 'app-ag-grid-wrapper',
   standalone: true,
@@ -31,221 +24,176 @@ import { SelectList } from '../interfaces/interfaces';
 })
 export class AgGridWrapper implements OnInit {
   @Input() columnDefs: ColDef[] = [];
-  @Input() pagination: boolean = true;
-  @Input() overlayNoRowsTemplate: string = '';
-  @Input() pageSize = 10;
   @Input() rowData: any[] = [];
-  @Input() defaultColDef: ColDef = {
-    sortable: true,
-    filter: true,
-    editable: true,
-    resizable: true,
-  };
-  @Input() gridStyle: { [key: string]: any } = {};
+  @Input() pageSize = 10;
+  @Input() defaultColDef!: ColDef;
+  @Input() totalRows = 0;
+  @Input() gridStyle: any = {};
+
+  @Output() serverQuery = new EventEmitter<any>();
+  @Output() rowEdited = new EventEmitter<any>();
 
   gridApi!: GridApi;
-  totalRows = 0;
-  public noRowsOverlay: string = '';
 
-  divisions: Array<{ CODE: string; NAME: string }> = [];
-  departments: Array<{ CODE: string; NAME: string }> = [];
-  subdepartments: Array<{ CODE: string; NAME: string }> = []; // load if available
+  private gridReadyDone = false;
+  private suppressEvents = false;
+  private suppressEmit = false;
+  private isProgrammaticUpdate = false;
+  private isGridInitialized = false;
+
+  @Input() pageSizeOptions = [10, 20, 30, 50];
+  @Input() defaultPageSize = 10;
+  pageNumber = 1;
+  //pageSize!: number;
+  totalPages = 0;
 
   ngOnInit(): void {
-    this.getAllDivisions();
-    this.loadDepartments();
-    this.loadSubdepartments();
-    // this.getAllDepartment();
-    //this.getAllSubDepartments();
+    this.pageSize = this.defaultPageSize;
   }
 
-  // Default Column Definitions: Apply configuration across all columns
+  ngOnChanges() {
+    this.totalPages = Math.ceil(this.totalRows / this.pageSize);
+  }
 
-  constructor(
-    private gridService: AgGridDataService,
-    private _departmentServices: DepartmentService,
-    private _divisionServices: DivisionService,
-    private _subDeparmentServices: SubDepartmentService
-  ) {}
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
+    this.pageNumber = page;
+    this.emitQuery();
+  }
 
-  columnDefs2 = [
-    {
-      field: 'division',
-      headerName: 'Division',
-      editable: true,
-      cellEditor: 'agRichSelectCellEditor',
-      cellEditorParams: {
-        values: this.divisions.map((d) => d.CODE),
-        formatValue: (code: string) => this.divisions.find((d) => d.CODE === code)?.NAME || code,
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      editable: true,
-      cellEditor: 'agRichSelectCellEditor',
-      cellEditorParams: {
-        values: this.departments.map((d) => d.CODE),
-        formatValue: (code: string) => this.departments.find((d) => d.CODE === code)?.NAME || code,
-      },
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Subdepartment',
-      editable: true,
-      cellEditor: 'agRichSelectCellEditor',
-      cellEditorParams: {
-        values: this.subdepartments.map((d) => d.CODE),
-        formatValue: (code: string) =>
-          this.subdepartments.find((d) => d.CODE === code)?.NAME || code,
-      },
-    },
-  ];
+  onPageSizeChange(value: any) {
+    const newSize = Number(value);
 
-  // onCellValueChanged(event: any) {
-  //   const colId = event.colDef.field;
+    if (!newSize || isNaN(newSize)) return;
 
-  //   if (colId === 'division') {
-  //     // When division changes, reset department and subdepartment
-  //     event.data.department = null;
-  //     event.data.subdepartment = null;
-
-  //     // Force refresh to show empty cells
-  //     this.gridApi.applyTransaction({ update: [event.data] });
-  //   } else if (colId === 'department') {
-  //     // When department changes, reset subdepartment
-  //     event.data.subdepartment = null;
-
-  //     this.gridApi.applyTransaction({ update: [event.data] });
-  //   }
-
-  //   console.log('Updated Cell:', event.data);
-  //   // Call API to save updated row if needed
-  // }
-
-  onCellValueChanged(event: any) {
-    const colId = event.colDef.field;
-
-    if (colId === 'division') {
-      event.data.department = null;
-      event.data.subdepartment = null;
-      this.gridApi.applyTransaction({ update: [event.data] });
-    } else if (colId === 'department') {
-      event.data.subdepartment = null;
-      this.gridApi.applyTransaction({ update: [event.data] });
-    }
+    this.pageSize = newSize;
+    this.pageNumber = 1;
+    this.emitQuery();
   }
 
   onGridReady(params: GridReadyEvent) {
     this.gridApi = params.api;
-    //this.gridApi.setRowData(this.rowData); // initial set
+
+    // Delay first emit to allow grid to stabilize
+    setTimeout(() => {
+      this.isGridInitialized = true;
+      this.emitQuery();
+    });
+  }
+  // onGridReady(params: GridReadyEvent) {
+  //   debugger;
+  //   this.gridApi = params.api;
+  //   this.gridReadyDone = true;
+
+  //   // 🔥 Initial load – call API ONCE
+  //   // setTimeout(() => this.emitServerQuery(true), 0);
+
+  //   const datasource = {
+  //     getRows: (params: any) => {
+  //       const page = params.request.startRow / this.pageSize + 1;
+
+  //       this.serverQuery.emit({
+  //         pageNumber: page,
+  //         pageSize: this.pageSize,
+  //         sortModel: params.request.sortModel,
+  //         filterModel: params.request.filterModel,
+  //         success: params.success,
+  //       });
+  //     },
+  //   };
+  // }
+
+  onSortChanged() {
+    if (!this.isGridInitialized) return;
+    this.pageNumber = 1;
+    this.emitQuery();
   }
 
-  loadData(pageNumber: number) {
-    const request = {
-      pageNumber,
-      pageSize: this.pageSize,
+  onFilterChanged() {
+    if (!this.isGridInitialized) return;
+    this.pageNumber = 1;
+    this.emitQuery();
+  }
+
+  private emitQuery() {
+    if (!this.gridApi) return;
+    if (!this.pageSize || !this.pageNumber) return;
+
+    this.serverQuery.emit({
       sortModel: this.gridApi
         .getColumnState()
         .filter((c) => c.sort)
         .map((c) => ({ colId: c.colId, sort: c.sort })),
       filterModel: this.gridApi.getFilterModel(),
-    };
-
-    // this.gridService.loadData(this.apiUrl, request).subscribe((res) => {
-    //   this.rowData = res.data;
-    //   this.totalRows = res.totalRecords;
-    // });
+    });
   }
 
-  // onCellValueChanged(event: any) {
-  //   console.log('Updated Cell:', event.data);
-  //   // Call update API here
+  // onPaginationChanged(event: any) {
+  //   if (this.isProgrammaticUpdate) return;
+  //   if (!event.api || !event.newPage) return;
+
+  //   this.emitServerQuery();
   // }
 
-  onFilterChanged() {
-    this.loadData(1);
-  }
+  // onSortChanged(event: any) {
+  //   if (this.isProgrammaticUpdate) return;
+  //   if (!event.source || event.source !== 'uiColumnSorted') return;
 
-  onSortChanged() {
-    this.loadData(1);
-  }
+  //   this.emitServerQuery(true);
+  // }
 
-  getAllDepartment = () => {
-    this._departmentServices.getDepartmentList().subscribe((res) => {
-      if (res?.Data) {
-        this.departments = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-        }));
-      } else {
-        this.departments = [];
-      }
-      //this.cdr.detectChanges(); // force update
-    });
-  };
+  // onFilterChanged(event: any) {
+  //   if (this.isProgrammaticUpdate) return;
+  //   if (!event.source || event.source !== 'uiFilterChanged') return;
 
-  getAllDivisions = () => {
-    this._divisionServices.getDivisionList().subscribe((res) => {
-      if (res?.Data) {
-        this.divisions = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      //this.cdr.detectChanges(); // force update
-    });
-  };
+  //   this.emitServerQuery(true);
+  // }
 
-  getAllSubDepartments = () => {
-    this._subDeparmentServices.getSubDepartmentList().subscribe((res) => {
-      if (res?.Data) {
-        this.subdepartments = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-        }));
-      } else {
-        this.subdepartments = [];
-      }
-      //this.cdr.detectChanges(); // force update
-    });
-  };
+  onCellValueChanged(event: any) {
+    if (
+      event.newValue === event.oldValue ||
+      event.newValue === null ||
+      event.newValue === undefined
+    ) {
+      return;
+    }
 
-  loadDepartments() {
-    this._departmentServices.getDepartmentList().subscribe((res) => {
-      if (res?.Data) {
-        const allDeps = res.Data.map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-          DivisionCode: d.DivisionCode, // make sure this exists in your API response
-        }));
-
-        // Group departments by divisionCode
-        this.departments = allDeps.reduce((acc: any, dep: any) => {
-          (acc[dep.DivisionCode] = acc[dep.DivisionCode] || []).push(dep);
-          return acc;
-        }, {} as { [key: string]: any[] });
-      }
+    this.rowEdited.emit({
+      data: event.data,
+      field: event.colDef.field,
+      newValue: event.newValue,
+      oldValue: event.oldValue,
     });
   }
 
-  loadSubdepartments() {
-    this._subDeparmentServices.getSubDepartmentList().subscribe((res) => {
-      if (res?.Data) {
-        const allSubs = res.Data.map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-          DepartmentCode: d.DepartmentCode, // make sure this exists in your API response
-        }));
+  private canEmit(): boolean {
+    return this.gridReadyDone && !this.suppressEvents;
+  }
 
-        // Group subdepartments by departmentCode
-        this.subdepartments = allSubs.reduce((acc: any, sub: any) => {
-          (acc[sub.DepartmentCode] = acc[sub.DepartmentCode] || []).push(sub);
-          return acc;
-        }, {} as { [key: string]: any[] });
-      }
+  private emitServerQuery(resetPage = false) {
+    if (!this.gridApi) return;
+
+    this.suppressEvents = true;
+
+    if (resetPage) {
+      this.gridApi.paginationGoToFirstPage();
+    }
+
+    const currentPage = this.gridApi.paginationGetCurrentPage() + 1;
+
+    const sortModel = this.gridApi
+      .getColumnState()
+      .filter((c) => !!c.sort)
+      .map((c) => ({ colId: c.colId, sort: c.sort }));
+
+    this.serverQuery.emit({
+      pageNumber: currentPage,
+      pageSize: this.pageSize,
+      sortModel,
+      filterModel: this.gridApi.getFilterModel(),
     });
+
+    // allow events again AFTER cycle completes
+    setTimeout(() => (this.suppressEvents = false));
   }
 }

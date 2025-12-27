@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -31,6 +32,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './document-authorization-post-training.html',
   styleUrl: './document-authorization-post-training.css',
@@ -38,10 +40,10 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
 export class DocumentAuthorizationPostTraining {
   selectedTab: string = 'Pending Authorization';
 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
@@ -49,6 +51,7 @@ export class DocumentAuthorizationPostTraining {
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
+  
 
   constructor() {}
 
@@ -126,19 +129,13 @@ export class DocumentAuthorizationPostTraining {
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
-
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
  
+
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
- 
-  
+
   loadData(pageNumber: number) {
     // 🔹 TEMP: Dummy data mode
     const allData = this.getDummyData();
@@ -170,7 +167,19 @@ export class DocumentAuthorizationPostTraining {
     }));
   }
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
+  }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
+  GetAllDocuments(query:any){
+
+  }
+
+  GetAllUploadedDocuments(query:any){
+    
   }
 }

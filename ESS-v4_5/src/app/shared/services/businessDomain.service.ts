@@ -5,17 +5,17 @@ import { GenericResponse } from '@app/core/models/response';
 import { SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
-import { Department } from '../interfaces/interfaces';
+import { BusinessDomain } from '../interfaces/businessdomain';
 
 // import { Customer } from './customer';
 
 @Injectable({ providedIn: 'root' })
-export class DepartmentService {
-  private _departments: ReplaySubject<Department[]> = new ReplaySubject<Department[]>(1);
+export class BusinessDomainService {
+  private _departments: ReplaySubject<BusinessDomain[]> = new ReplaySubject<BusinessDomain[]>(1);
 
   constructor(private http: HttpClient) {}
 
-  get departments$(): Observable<Department[]> {
+  get departments$(): Observable<BusinessDomain[]> {
     return this._departments.asObservable();
   }
 
@@ -29,17 +29,17 @@ export class DepartmentService {
     return headers;
   }
 
-  getDepartmentList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-all-department-list`;
+  getBusinessDomainList(): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/get-all-business-domain-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getDepartmentsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
+  getBusinessDomainsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/get-departments-by-division-code?dCode=${dCode}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllDepartments(
+  GetAllBusinessDomains(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
@@ -55,7 +55,7 @@ export class DepartmentService {
       .set('pageNo', pageNo.toString())
       .set('pageSize', pageSize.toString());
 
-    const uri = `${environment.baseUrl}/get-all-departments`;
+    const uri = `${environment.baseUrl}/get-all-business-domain`;
 
     return this.http.post(uri, null, {
       params,
@@ -63,45 +63,45 @@ export class DepartmentService {
     });
   }
 
-  create(shortcut: Department): Observable<Department> {
+  create(shortcut: BusinessDomain): Observable<BusinessDomain> {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.post<Department>('create-department', { shortcut }).pipe(
-          map((newDepartment) => {
+        this.http.post<BusinessDomain>('create-business-domain', { shortcut }).pipe(
+          map((newBusinessDomain) => {
             // Update the departments with the new shortcut
-            this._departments.next([...departments, newDepartment]);
+            this._departments.next([...departments, newBusinessDomain]);
 
             // Return the new shortcut from observable
-            return newDepartment;
+            return newBusinessDomain;
           })
         )
       )
     );
   }
 
-  update(code: string, shortcut: Department): Observable<Department> {
+  update(code: string, shortcut: BusinessDomain): Observable<BusinessDomain> {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
         this.http
-          .patch<Department>('update-department', {
+          .patch<BusinessDomain>('update-business-domain', {
             code,
             shortcut,
           })
           .pipe(
-            map((updatedDepartment: Department) => {
+            map((updatedBusinessDomain: BusinessDomain) => {
               // Find the index of the updated shortcut
               const index = departments.findIndex((item) => item.code === code);
 
               // Update the shortcut
-              departments[index] = updatedDepartment;
+              departments[index] = updatedBusinessDomain;
 
               // Update the departments
               this._departments.next(departments);
 
               // Return the updated shortcut
-              return updatedDepartment;
+              return updatedBusinessDomain;
             })
           )
       )
@@ -112,7 +112,7 @@ export class DepartmentService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.delete<boolean>('delete-department', { params: { code } }).pipe(
+        this.http.delete<boolean>('delete-business-domain', { params: { code } }).pipe(
           map((isDeleted: boolean) => {
             // Find the index of the deleted shortcut
             const index = departments.findIndex((item) => item.code === code);

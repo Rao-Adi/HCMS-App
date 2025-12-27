@@ -1,9 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -15,6 +13,7 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-approval-workflow-policy-management',
@@ -23,14 +22,14 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     FormsModule,
     SafeTranslatePipe,
     NzSelectModule,
-    AgGridWrapper,
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
     DivisionList,
     SubDepartmentList,
-    DepartmentList
+    DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './approval-workflow-policy-management.html',
   styleUrl: './approval-workflow-policy-management.css',
@@ -51,18 +50,11 @@ export class ApprovalWorkflowPolicyManagement {
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
   selectedUser?: string;
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
- 
- 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
     { CODE: '2', NAME: 'Employee' },
@@ -303,7 +295,7 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onDepartmentsChange(value: number | null): void {
-    this.selectedDivisions = value;
+    this.selectedDivisions = String(value);
   }
 
   clickSwitch(mode: 'manual' | 'integration'): void {
@@ -359,5 +351,10 @@ export class ApprovalWorkflowPolicyManagement {
         .split('T')[0],
       uploadDocument: 'Upload',
     }));
+  }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
   }
 }

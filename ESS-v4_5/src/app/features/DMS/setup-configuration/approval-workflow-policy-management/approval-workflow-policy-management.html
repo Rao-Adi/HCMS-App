@@ -55,19 +55,15 @@
                         <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
                       </div>
                       <div>
-                        <nz-select
-                          style="width: 250px"
-                          [nzPlaceHolder]="'Select DocumentType'"
-                          nzAllowClear
-                          nzShowSearch
+                        <app-document-type-list
+                          valueKey="CODE"
+                          labelKey="NAME"
+                          placeholder="Select DocumentType"
+                          [(ngModel)]="selectedDocumentType"
+                          (valueChange)="onDocumentTypeChange($event)"
+                          width="250px"
                         >
-                          <nz-option
-                            *ngFor="let dep of documentTypes"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
+                        </app-document-type-list>
                       </div>
                     </div>
 

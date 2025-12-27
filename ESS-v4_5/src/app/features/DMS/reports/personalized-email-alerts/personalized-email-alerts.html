@@ -44,19 +44,15 @@
                         <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
                       </div>
                       <div>
-                        <nz-select
-                          style="width: 250px"
-                          [nzPlaceHolder]="'Select DocumentType'"
-                          nzAllowClear
-                          nzShowSearch
+                        <app-document-type-list
+                          valueKey="CODE"
+                          labelKey="NAME"
+                          placeholder="Select DocumentType"
+                          [(ngModel)]="selectedDocumentType"
+                          (valueChange)="onDocumentTypeChange($event)"
+                          width="250px"
                         >
-                          <nz-option
-                            *ngFor="let dep of documentTypes"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
+                        </app-document-type-list>
                       </div>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
@@ -217,19 +213,15 @@
                         <label>{{ 'labels.Email To Be Sent To*' | safeTranslate }} </label>
                       </div>
                       <div>
-                        <nz-select
-                          style="width: 250px"
-                          [nzPlaceHolder]="'Select'"
-                          nzAllowClear
-                          nzShowSearch
+                        <app-document-type-list
+                          valueKey="CODE"
+                          labelKey="NAME"
+                          placeholder="Select DocumentType"
+                          [(ngModel)]="selectedDocumentType"
+                          (valueChange)="onDocumentTypeChange($event)"
+                          width="250px"
                         >
-                          <nz-option
-                            *ngFor="let dep of documentTypes"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
+                        </app-document-type-list>
                       </div>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 mb-10">

@@ -11,126 +11,335 @@
         <br />
         <hr />
         <div class="col-lg-12 col-md-12 col-sm-12">
-          <div _ngcontent-ng-c4214321369="" class="main-content d-flex flex-column min-vw-0">
+          <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
               <button
+                *ngFor="let tab of tabs"
+                class="tab-button"
+                [ngClass]="{ 'active-tab': selectedTabId === tab.id }"
+                (click)="onTabChange(tab)"
+              >
+                {{ tab.title }}
+              </button>
+              <!-- <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Level1' }"
-                (click)="selectedTab = 'Level1'"
+                [ngClass]="{ 'active-tab': selectedTab === '{{level1Title}}' }"
+                (click)="selectedTab = '{{level1Title}}'"
               >
-                Level 1
+                {{ level1Title }}
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Level2' }"
-                (click)="selectedTab = 'Level2'"
+                [ngClass]="{ 'active-tab': selectedTab === '{{level2Title}}' }"
+                (click)="selectedTab = '{{level2Title}}'"
               >
-                Level 2
+                {{ level2Title }}
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Level3' }"
-                (click)="selectedTab = 'Level3'"
+                [ngClass]="{ 'active-tab': selectedTab === '{{level3Title}}' }"
+                (click)="selectedTab = '{{level3Title}}'"
               >
-                Level 3
+                {{ level3Title }}
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Level4' }"
-                (click)="selectedTab = 'Level4'"
+                [ngClass]="{ 'active-tab': selectedTab === '{{level4Title}}' }"
+                (click)="selectedTab = '{{level4Title}}'"
               >
-                Level 4
+                {{ level4Title }}
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'DocumentType' }"
-                (click)="selectedTab = 'DocumentType'"
+                [ngClass]="{ 'active-tab': selectedTab === '{{level5Title}}' }"
+                (click)="selectedTab = '{{level5Title}}'"
               >
-                Document Type
-              </button>
+                {{ level5Title }}
+              </button> -->
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Level1'">
-              <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  class="ag-theme-alpine"
-                  [columnDefs]="divisionColumnDefs"
-                  [rowData]="divisionData"
-                  [defaultColDef]="defaultColDef"
-                  [overlayNoRowsTemplate]="noRowsOverlay"
-                  [pagination]="true"
-                  [pageSize]="10"
-                >
-                </app-ag-grid-wrapper>
+            <div class="row row-space" *ngIf="selectedTabId === 1">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Level Title</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      type="text"
+                      [(ngModel)]="selectedTabTitle"
+                      class="form-control input-sm"
+                      style="width: 200px"
+                    />
+                    <button
+                      aria-label="Collapse Menu"
+                      title="Collapse Menu"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '250px' }"
+                    [columnDefs]="divisionColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [rowData]="divisionData"
+                    [totalRows]="totalDivisions"
+                    (serverQuery)="getAllDivisions($event)"
+                  >
+                  </app-ag-grid-wrapper>
+                </div>
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Level2'">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  class="ag-theme-alpine"
-                  [rowData]="departmentData"
-                  [columnDefs]="departmentColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [overlayNoRowsTemplate]="noRowsOverlay"
-                  [pagination]="true"
-                  [pageSize]="10"
-                >
-                </app-ag-grid-wrapper>
+            <div class="row row-space" *ngIf="selectedTabId === 2">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+                  <span class="d-flex">Level Title</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true
+                      }"
+                    />
+                    <button
+                      aria-label="Collapse Menu"
+                      title="Collapse Menu"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '250px' }"
+                    [columnDefs]="departmentColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [rowData]="departmentData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalDepartments"
+                    (serverQuery)="getAllDepartments($event)"
+                  >
+                  </app-ag-grid-wrapper>
+                </div>
               </div>
             </div>
-            <div class="row row-space" *ngIf="selectedTab === 'Level3'">
-              <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  class="ag-theme-alpine"
-                  [columnDefs]="departmentColumnDefs"
-                  [rowData]="subDepartmentData"
-                  [defaultColDef]="defaultColDef"
-                  [overlayNoRowsTemplate]="noRowsOverlay"
-                  [pagination]="true"
-                  [pageSize]="10"
-                >
-                </app-ag-grid-wrapper>
+            <div class="row row-space" *ngIf="selectedTabId === 3">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Level Title</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true
+                      }"
+                    />
+                    <button
+                      aria-label="Collapse Menu"
+                      title="Collapse Menu"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '250px' }"
+                    [columnDefs]="subDepartmentColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [rowData]="subDepartmentData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalSubDepartments"
+                    (serverQuery)="getAllSubDepartments($event)"
+                    (rowEdited)="saveSubDepartment($event)"
+                  >
+                    >
+                  </app-ag-grid-wrapper>
+                </div>
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Level4'">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  class="ag-theme-alpine"
-                  [rowData]="businessDomainData"
-                  [columnDefs]="businessdomainColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [overlayNoRowsTemplate]="noRowsOverlay"
-                  [pagination]="true"
-                  [pageSize]="10"
-                >
-                </app-ag-grid-wrapper>
+            <div class="row row-space" *ngIf="selectedTabId === 4">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Level Title</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true
+                      }"
+                    />
+                    <button
+                      aria-label="Collapse Menu"
+                      title="Collapse Menu"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '250px' }"
+                    [columnDefs]="businessdomainColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [rowData]="businessDomainData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalBusinessDomains"
+                    (serverQuery)="getAllBusinessDomains($event)"
+                  >
+                  </app-ag-grid-wrapper>
+                </div>
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'DocumentType'">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  class="ag-theme-alpine"
-                  [rowData]="documentTypeData"
-                  [columnDefs]="documentTypeColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [overlayNoRowsTemplate]="noRowsOverlay"
-                  [pagination]="true"
-                  [pageSize]="10"
-                >
-                </app-ag-grid-wrapper>
+            <div class="row row-space" *ngIf="selectedTabId === 5">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Level Title</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true
+                      }"
+                    />
+                    <button
+                      aria-label="Collapse Menu"
+                      title="Collapse Menu"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '250px' }"
+                    [columnDefs]="documentTypeColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [rowData]="documentTypeData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalDocumentTypes"
+                    (serverQuery)="getAllDocumentTypes($event)"
+                  >
+                  </app-ag-grid-wrapper>
+                </div>
               </div>
             </div>
           </div>

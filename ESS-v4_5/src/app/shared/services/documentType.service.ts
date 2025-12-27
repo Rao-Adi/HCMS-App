@@ -5,17 +5,17 @@ import { GenericResponse } from '@app/core/models/response';
 import { SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
-import { Department } from '../interfaces/interfaces';
+import { DocumentType } from '../interfaces/interfaces';
 
 // import { Customer } from './customer';
 
 @Injectable({ providedIn: 'root' })
-export class DepartmentService {
-  private _departments: ReplaySubject<Department[]> = new ReplaySubject<Department[]>(1);
+export class DocumentTypeService {
+  private _departments: ReplaySubject<DocumentType[]> = new ReplaySubject<DocumentType[]>(1);
 
   constructor(private http: HttpClient) {}
 
-  get departments$(): Observable<Department[]> {
+  get departments$(): Observable<DocumentType[]> {
     return this._departments.asObservable();
   }
 
@@ -29,17 +29,17 @@ export class DepartmentService {
     return headers;
   }
 
-  getDepartmentList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-all-department-list`;
+  getDocumentTypeList(): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/get-all-document-type-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getDepartmentsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-departments-by-division-code?dCode=${dCode}`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+//   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
+//     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
+//     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+//   }
 
-  GetAllDepartments(
+  GetAllDocumentTypes(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
@@ -55,7 +55,7 @@ export class DepartmentService {
       .set('pageNo', pageNo.toString())
       .set('pageSize', pageSize.toString());
 
-    const uri = `${environment.baseUrl}/get-all-departments`;
+    const uri = `${environment.baseUrl}/get-all-document-types`;
 
     return this.http.post(uri, null, {
       params,
@@ -63,45 +63,45 @@ export class DepartmentService {
     });
   }
 
-  create(shortcut: Department): Observable<Department> {
+  create(shortcut: DocumentType): Observable<DocumentType> {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.post<Department>('create-department', { shortcut }).pipe(
-          map((newDepartment) => {
+        this.http.post<DocumentType>('create-document-type', { shortcut }).pipe(
+          map((newDocumentType) => {
             // Update the departments with the new shortcut
-            this._departments.next([...departments, newDepartment]);
+            this._departments.next([...departments, newDocumentType]);
 
             // Return the new shortcut from observable
-            return newDepartment;
+            return newDocumentType;
           })
         )
       )
     );
   }
 
-  update(code: string, shortcut: Department): Observable<Department> {
+  update(code: string, shortcut: DocumentType): Observable<DocumentType> {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
         this.http
-          .patch<Department>('update-department', {
+          .patch<DocumentType>('update-document-type', {
             code,
             shortcut,
           })
           .pipe(
-            map((updatedDepartment: Department) => {
+            map((updatedDocumentType: DocumentType) => {
               // Find the index of the updated shortcut
-              const index = departments.findIndex((item) => item.code === code);
+              const index = departments.findIndex((item) => item.CODE === code);
 
               // Update the shortcut
-              departments[index] = updatedDepartment;
+              departments[index] = updatedDocumentType;
 
               // Update the departments
               this._departments.next(departments);
 
               // Return the updated shortcut
-              return updatedDepartment;
+              return updatedDocumentType;
             })
           )
       )
@@ -112,10 +112,10 @@ export class DepartmentService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.delete<boolean>('delete-department', { params: { code } }).pipe(
+        this.http.delete<boolean>('delete-document-type', { params: { code } }).pipe(
           map((isDeleted: boolean) => {
             // Find the index of the deleted shortcut
-            const index = departments.findIndex((item) => item.code === code);
+            const index = departments.findIndex((item) => item.CODE === code);
 
             // Delete the shortcut
             departments.splice(index, 1);

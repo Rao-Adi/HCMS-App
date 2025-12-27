@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -29,6 +30,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -36,10 +38,10 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
 export class MyApprovalDocument {
   selectedTab: string = 'Pending';
 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   constructor() {}
 
@@ -52,23 +54,57 @@ export class MyApprovalDocument {
     editable: true,
   };
 
-  pageSize = 10;
-  totalRows = 0;
+  pageSize = 10; 
+  totalPendingDocuments = 0;
+  totalApprovedDocuments = 0;
+  totalDisApprovedDocuments = 0;
   rowData: any[] = [];
   public noRowsOverlay: string = '';
 
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
- 
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
-  ]; 
+  ];
 
   pendingDocumentsGridColumnDefs = [
+    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'requestId', headerName: 'Request Id' },
+    { field: 'documentName', headerName: 'Document Name' },
+    { field: 'observation', headerName: 'Observation' },
+    { field: 'justification', headerName: 'Justification' },
+    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
+    { field: 'proposedVerion', headerName: 'Proposed Version' },
+    { field: 'division', headerName: 'Division' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'subDepartment ', headerName: 'Sub-Department' },
+    { field: 'dateOfCreation', headerName: 'Date of Creation' },
+    { field: 'dateOfApproval', headerName: 'Date of Approval' },
+    { field: 'requestedBy', headerName: 'Requested By' },
+    { field: 'requestedOn', headerName: 'Requested On' },
+    { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'approvalHistory', headerName: 'Approval History' },
+  ];
+  approvedDocumentsGridColumnDefs = [
+    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'requestId', headerName: 'Request Id' },
+    { field: 'documentName', headerName: 'Document Name' },
+    { field: 'observation', headerName: 'Observation' },
+    { field: 'justification', headerName: 'Justification' },
+    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
+    { field: 'proposedVerion', headerName: 'Proposed Version' },
+    { field: 'division', headerName: 'Division' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'subDepartment ', headerName: 'Sub-Department' },
+    { field: 'dateOfCreation', headerName: 'Date of Creation' },
+    { field: 'dateOfApproval', headerName: 'Date of Approval' },
+    { field: 'requestedBy', headerName: 'Requested By' },
+    { field: 'requestedOn', headerName: 'Requested On' },
+    { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'approvalHistory', headerName: 'Approval History' },
+  ];
+  disapprovedDocumentsGridColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'requestId', headerName: 'Request Id' },
     { field: 'documentName', headerName: 'Document Name' },
@@ -146,7 +182,16 @@ export class MyApprovalDocument {
     },
   ];
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
   }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
+
+  GetAllPendingDocuments(query: any) {}
+  GetAllApprovedDocuments(query: any) {}
+  GetAllDisApprovedDocuments(query: any) {}
 }

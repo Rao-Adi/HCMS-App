@@ -14,7 +14,6 @@ export interface Division {
   IsActive: boolean;
 }
 
- 
 export interface OrganizationItem {
   id: string;
   logo?: string;
@@ -25,25 +24,46 @@ export interface OrganizationItem {
 }
 
 export interface OrderInterface {
-  orderID?: number,
-  hold?: boolean,
-  boxSize?: string,
-  noOfBoxes?: number
+  orderID?: number;
+  hold?: boolean;
+  boxSize?: string;
+  noOfBoxes?: number;
 }
 
 export interface SelectList {
-  CODE: string,
-  NAME: string
+  CODE: string;
+  NAME: string;
 }
 
 export class DocumentType {
-  CODE: number = 0;
+  CODE: string = '';
   NAME: string = '';
 }
 
+export interface SubDepartment {
+  code: string;
+  Name: string;
+}
 
-export interface SubDepartment
-{ 
-    code: string;
-    Name: string; 
+export interface Department {
+  code: string;
+  Name: string;
+}
+
+export interface Division {
+  Code: string;
+  Name: string;
+}
+
+export interface CabinetStructureTabsConfig {
+  Id: number;
+  Name: string;
+  CreatedBy: string | null;
+  CreatedAt: string | null;
+  LastModifiedAt: string | null;
+  LastModifiedBy: string | null;
+}
+export interface CabinetStructureTabsConfig2 {
+  Id: number;
+  name: string;
 }

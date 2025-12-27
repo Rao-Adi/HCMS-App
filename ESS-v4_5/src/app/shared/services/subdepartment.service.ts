@@ -34,6 +34,11 @@ export class SubDepartmentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getSubDepartmentsByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/get-subdepartment-by-department-code?departmentCode=${departmentCode}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllSubDepartments(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

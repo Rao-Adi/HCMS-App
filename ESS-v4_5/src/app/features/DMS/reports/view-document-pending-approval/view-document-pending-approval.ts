@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -16,6 +15,7 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -33,6 +33,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './view-document-pending-approval.html',
   styleUrl: './view-document-pending-approval.css',
@@ -41,14 +42,14 @@ export class ViewDocumentPendingApproval {
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   pageSize = 10;
   rowData: any[] = [];
-  totalRows = 0;
+  totalDocuments = 0;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -64,12 +65,6 @@ export class ViewDocumentPendingApproval {
   selectedUser?: string;
   documentTypeData: any[] = [];
 
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ]; 
-
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
     { CODE: '2', NAME: 'Employee' },
@@ -79,7 +74,7 @@ export class ViewDocumentPendingApproval {
     { CODE: '6', NAME: 'Head of Department' },
     { CODE: '7', NAME: 'Head of Sub-Department' },
   ];
-  
+
   employees: SelectList[] = [
     { CODE: '1', NAME: 'John Doe' },
     { CODE: '2', NAME: 'Jane Smith' },
@@ -150,7 +145,7 @@ export class ViewDocumentPendingApproval {
     const end = start + this.pageSize;
 
     this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
+    this.totalDocuments = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready
     // this.gridService.loadData(this.apiUrl, request).subscribe(...)
@@ -172,7 +167,13 @@ export class ViewDocumentPendingApproval {
     }));
   }
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
   }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
+  GetAllDocuments(query: any) {}
 }

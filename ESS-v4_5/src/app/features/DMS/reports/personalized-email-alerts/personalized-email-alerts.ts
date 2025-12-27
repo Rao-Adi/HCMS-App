@@ -14,6 +14,7 @@ import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 
 @Component({
   selector: 'app-personalized-email-alerts',
@@ -30,6 +31,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
     DivisionList,
     SubDepartmentList,
     DepartmentList,
+    DocumentTypeList,
   ],
   templateUrl: './personalized-email-alerts.html',
   styleUrl: './personalized-email-alerts.css',
@@ -42,10 +44,10 @@ export class PersonalizedEmailAlerts {
   totalRows = 0;
   checked = true;
 
-  selectedDivisions?: number | null = null;
-  selectedDepartment?: number | null = null;
-  selectedSubDepartment?: number | null = null;
-  selectedDocumentType?: number | null = null;
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedDocumentType?: string = '';
 
   constructor() {}
 
@@ -58,11 +60,7 @@ export class PersonalizedEmailAlerts {
   };
   public noRowsOverlay: string = '';
 
-  documentTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Policy' },
-    { CODE: '2', NAME: 'SOP' },
-    { CODE: '3', NAME: 'Manual' },
-  ];
+ 
   emailFrequencies: SelectList[] = [
     { CODE: '1', NAME: 'Marketing Division' },
     { CODE: '2', NAME: 'Software Division' },
@@ -94,8 +92,12 @@ export class PersonalizedEmailAlerts {
     this.selectedAuthorityType = value;
   }
 
-  onDepartmentsChange(value: number | null): void {
+  onDepartmentsChange(value: string): void {
     this.selectedDivisions = value;
   }
 
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+  }
 }

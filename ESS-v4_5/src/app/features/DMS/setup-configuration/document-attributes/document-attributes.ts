@@ -1,23 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { SelectList } from '@app/shared/interfaces/interfaces';
+import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
+import { tuple } from 'ng-zorro-antd/core/types';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 
 @Component({
   selector: 'app-document-attributes',
-  imports: [CommonModule, AgGridWrapper],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AgGridWrapper,
+    NzSelectModule,
+    SafeTranslatePipe,
+    DocumentTypeList,
+  ],
   templateUrl: './document-attributes.html',
   styleUrl: './document-attributes.css',
 })
 export class DocumentAttributes {
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
-
   constructor() {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
+    //this.loadData(this.pageSize);
   }
 
   // Default Column Definitions: Apply configuration across all columns
@@ -26,46 +35,67 @@ export class DocumentAttributes {
     cellDataType: false,
   };
   public noRowsOverlay: string = '';
+  selectedDocumentType?: string ='';
+  documentTypes: SelectList[] = [];
+  pageSize = 10;
+  totalRows = 0;
+  totalCount = 0;
 
-  UploadColumnDefs = [
+  documentAttributeColumnDefs = [
     { field: 'controlLebel', headerName: 'Control Lebel', flex: 1 },
     { field: 'controlType', headerName: 'Control Type', flex: 1 },
     { field: 'listValue', headerName: 'List Value', flex: 1 },
     { field: 'mandatoryCabinetWise', headerName: 'Mandatory (Cabinet Wise)', flex: 1 },
   ];
 
-  pageSize = 10;
-  rowData: any[] = [];
-  totalRows = 0;
+  rowData: any[] = [
+    {
+      controlLebel: 'Submit Date',
+      controlType: 'Date',
+      ListValue: null,
+      mandatoryCabinetWise: 'View Cabinet Wise',
+    },
+    {
+      controlLebel: 'Document Description',
+      controlType: 'Text Box',
+      listValue: null,
+      mandatoryCabinetWise: 'View Cabinet Wise',
+    },
+    {
+      controlLebel: 'Contract Type',
+      controlType: 'List Value',
+      listValue: null,
+      mandatoryCabinetWise: 'View Cabinet Wise',
+    },
+  ];
 
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
-
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
-
-    this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
+   onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
   }
 
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
+
+  loadBusinessDomains(query: any): void {
+    const sort = query.sortModel?.[0];
+
+    // this._businessDomainService
+    //   .GetAllBusinessDomains(
+    //     query.filterModel?.Name?.filter || '',
+    //     sort?.sort?.toUpperCase() || 'ASC',
+    //     sort?.colId || 'Name',
+    //     true,
+    //     query.pageNumber,
+    //     query.pageSize
+    //   )
+    //   .subscribe((res) => {
+    //     if (res?.Success) {
+    //       this.businessDomainData = res.Data.Items;
+    //       this.totalBusinessDomains = res.Data.TotalCount;
+    //     } else {
+    //       this.businessDomainData = [];
+    //       this.totalBusinessDomains = 0;
+    //     }
+    //   });
   }
+
 }
