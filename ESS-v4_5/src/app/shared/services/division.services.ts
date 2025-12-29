@@ -28,7 +28,7 @@ export class DivisionService {
   }
 
   getDivisionList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-all-division-list`;
+    const uri = `${environment.baseUrl}/DMSDivision/get-all-division-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -40,18 +40,18 @@ export class DivisionService {
     pageNo: number,
     pageSize: number
   ): Observable<any> {
-    const params = new HttpParams()
-      .set('SearchText', searchText)
-      .set('SortBy', sortBy)
-      .set('SortColumn', sortColumn)
-      .set('IsActive', isActive.toString())
-      .set('pageNo', pageNo.toString())
-      .set('pageSize', pageSize.toString());
+    const body = {
+      searchText,
+      sortBy,
+      sortColumn,
+      isActive,
+      pageNo,
+      pageSize,
+    };
 
-    const uri = `${environment.baseUrl}/get-all-divisions`;
+    const uri = `${environment.baseUrl}/DMSDivision/get-all-divisions`;
 
-    return this.http.post(uri, null, {
-      params,
+    return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
@@ -60,7 +60,7 @@ export class DivisionService {
     return this.divisions$.pipe(
       take(1),
       switchMap((divisions) =>
-        this.http.post<Division>('create-division', { shortcut }).pipe(
+        this.http.post<Division>('/DMSDivision/create-division', { shortcut }).pipe(
           map((newDivision) => {
             // Update the divisions with the new shortcut
             this._divisions.next([...divisions, newDivision]);
@@ -78,7 +78,7 @@ export class DivisionService {
       take(1),
       switchMap((divisions) =>
         this.http
-          .patch<Division>('update-division', {
+          .patch<Division>('/DMSDivision/update-division', {
             code,
             shortcut,
           })
@@ -105,7 +105,7 @@ export class DivisionService {
     return this.divisions$.pipe(
       take(1),
       switchMap((divisions) =>
-        this.http.delete<boolean>('delete-division', { params: { code } }).pipe(
+        this.http.delete<boolean>('/DMSDivision/delete-division', { params: { code } }).pipe(
           map((isDeleted: boolean) => {
             // Find the index of the deleted shortcut
             const index = divisions.findIndex((item) => item.Code === code);

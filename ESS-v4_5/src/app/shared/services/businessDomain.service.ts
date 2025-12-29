@@ -4,7 +4,7 @@ import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
-import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
+import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { BusinessDomain } from '../interfaces/businessdomain';
 
 // import { Customer } from './customer';
@@ -30,12 +30,12 @@ export class BusinessDomainService {
   }
 
   getBusinessDomainList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-all-business-domain-list`;
+    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-all-business-domain-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getBusinessDomainsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-departments-by-division-code?dCode=${dCode}`;
+    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-departments-by-division-code?dCode=${dCode}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -47,18 +47,18 @@ export class BusinessDomainService {
     pageNo: number,
     pageSize: number
   ): Observable<any> {
-    const params = new HttpParams()
-      .set('SearchText', searchText)
-      .set('SortBy', sortBy)
-      .set('SortColumn', sortColumn)
-      .set('IsActive', isActive.toString())
-      .set('pageNo', pageNo.toString())
-      .set('pageSize', pageSize.toString());
+    const body = {
+      searchText,
+      sortBy,
+      sortColumn,
+      isActive,
+      pageNo,
+      pageSize,
+    };
 
-    const uri = `${environment.baseUrl}/get-all-business-domain`;
+    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-all-business-domain`;
 
-    return this.http.post(uri, null, {
-      params,
+    return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
@@ -67,67 +67,67 @@ export class BusinessDomainService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.post<BusinessDomain>('create-business-domain', { shortcut }).pipe(
-          map((newBusinessDomain) => {
-            // Update the departments with the new shortcut
-            this._departments.next([...departments, newBusinessDomain]);
-
-            // Return the new shortcut from observable
-            return newBusinessDomain;
-          })
-        )
-      )
-    );
-  }
-
-  update(code: string, shortcut: BusinessDomain): Observable<BusinessDomain> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
         this.http
-          .patch<BusinessDomain>('update-business-domain', {
-            code,
-            shortcut,
-          })
+          .post<BusinessDomain>('/DMSBusinessDomain/create-business-domain', { shortcut })
           .pipe(
-            map((updatedBusinessDomain: BusinessDomain) => {
-              // Find the index of the updated shortcut
-              const index = departments.findIndex((item) => item.code === code);
+            map((newcabietStructureConfig) => {
+              // Update the departments with the new shortcut
+              this._departments.next([...departments, newcabietStructureConfig]);
 
-              // Update the shortcut
-              departments[index] = updatedBusinessDomain;
-
-              // Update the departments
-              this._departments.next(departments);
-
-              // Return the updated shortcut
-              return updatedBusinessDomain;
+              // Return the new shortcut from observable
+              return newcabietStructureConfig;
             })
           )
       )
     );
   }
 
-  delete(code: string): Observable<boolean> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http.delete<boolean>('delete-business-domain', { params: { code } }).pipe(
-          map((isDeleted: boolean) => {
-            // Find the index of the deleted shortcut
-            const index = departments.findIndex((item) => item.code === code);
+  update(shortcut: BusinessDomain): Observable<BusinessDomain> {
+    const payload = {
+      code: shortcut.code,
+      name: shortcut.Name,
+      isActive: true,
+    };
 
-            // Delete the shortcut
-            departments.splice(index, 1);
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json-patch+json',
+      accept: '*/*',
+    });
 
-            // Update the departments
-            this._departments.next(departments);
-
-            // Return the deleted status
-            return isDeleted;
-          })
-        )
+    return this.http
+      .put<BusinessDomain>(
+        `${environment.baseUrl}/DMSBusinessDomain/update-business-domain`,
+        payload,
+        {
+          headers,
+        }
       )
-    );
+      .pipe(
+        tap((updated) => {
+          // 🔹 Update cached state AFTER API success
+          this.departments$.pipe(take(1)).subscribe((list) => {
+            const index = list.findIndex((i) => i.code === updated.code);
+            if (index !== -1) {
+              const newList = [...list];
+              newList[index] = updated;
+              this._departments.next(newList);
+            }
+          });
+        })
+      );
+  }
+
+  delete(code: string): Observable<boolean> {
+    return this.http
+      .delete<boolean>(`${environment.baseUrl}/DMSBusinessDomain/delete-business-domain`, {
+        params: { code },
+      })
+      .pipe(
+        tap(() => {
+          this.departments$.pipe(take(1)).subscribe((list) => {
+            this._departments.next(list.filter((item) => item.code !== code));
+          });
+        })
+      );
   }
 }

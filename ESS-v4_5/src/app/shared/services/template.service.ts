@@ -2,19 +2,18 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { CabinetStructureTabsConfig2, SelectList } from '../interfaces/interfaces';
-//import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { CabinetStructureTabsConfig } from '../interfaces/interfaces';
-// import { Customer } from './customer';
+import { Template } from '../interfaces/interfaces';
 
-@Injectable({ providedIn: 'root' })
-export class CabinetStructureTabsConfigService {
-  private _cabietStructureConfig = new ReplaySubject<CabinetStructureTabsConfig[]>(1);
+@Injectable({
+  providedIn: 'root',
+})
+export class TemplateService {
+  private _cabietStructureConfig = new ReplaySubject<Template[]>(1);
 
   constructor(private http: HttpClient) {}
 
-  get cabietStructureConfig$(): Observable<CabinetStructureTabsConfig[]> {
+  get cabietStructureConfig$(): Observable<Template[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
@@ -29,12 +28,12 @@ export class CabinetStructureTabsConfigService {
   }
 
   getCabietStructureTabsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-all-cabinet-tabs-list`;
+    const uri = `${environment.baseUrl}/DMSTemplate/get-all-templates-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-cabinet-tab-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSTemplate/get-template-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -55,41 +54,34 @@ export class CabinetStructureTabsConfigService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-all-cabinet-tabs`;
+    const uri = `${environment.baseUrl}/DMSTemplate/get-all-template`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
 
-  create(shortcut: CabinetStructureTabsConfig): Observable<CabinetStructureTabsConfig> {
+  create(shortcut: Template): Observable<Template> {
     return this.cabietStructureConfig$.pipe(
       take(1),
       switchMap((cabietStructureConfig) =>
-        this.http
-          .post<CabinetStructureTabsConfig>('/DMSCabinetStructureTabsConfig/create-cabinet-tab', {
-            shortcut,
-          })
-          .pipe(
-            map((newcabietStructureConfig) => {
-              // Update the cabietStructureConfig with the new shortcut
-              this._cabietStructureConfig.next([
-                ...cabietStructureConfig,
-                newcabietStructureConfig,
-              ]);
+        this.http.post<Template>('/DMSTemplate/create-template', { shortcut }).pipe(
+          map((newcabietStructureConfig) => {
+            // Update the cabietStructureConfig with the new shortcut
+            this._cabietStructureConfig.next([...cabietStructureConfig, newcabietStructureConfig]);
 
-              // Return the new shortcut from observable
-              return newcabietStructureConfig;
-            })
-          )
+            // Return the new shortcut from observable
+            return newcabietStructureConfig;
+          })
+        )
       )
     );
   }
 
-  update(shortcut: CabinetStructureTabsConfig): Observable<CabinetStructureTabsConfig> {
+  update(shortcut: Template): Observable<Template> {
     const payload = {
-      id: shortcut.Id,
-      name: shortcut.Name,
+      id: shortcut.id,
+      departmentCode: shortcut.departmentCode,
       isActive: true,
     };
 
@@ -99,18 +91,14 @@ export class CabinetStructureTabsConfigService {
     });
 
     return this.http
-      .put<CabinetStructureTabsConfig>(
-        `${environment.baseUrl}/DMSCabinetStructureTabsConfig/update-cabinet-tab`,
-        payload,
-        {
-          headers,
-        }
-      )
+      .put<Template>(`${environment.baseUrl}/DMSTemplate/update-template`, payload, {
+        headers,
+      })
       .pipe(
         tap((updated) => {
           // 🔹 Update cached state AFTER API success
           this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.Id === updated.Id);
+            const index = list.findIndex((i) => i.id === updated.id);
             if (index !== -1) {
               const newList = [...list];
               newList[index] = updated;
@@ -121,15 +109,15 @@ export class CabinetStructureTabsConfigService {
       );
   }
 
-  delete(id: number): Observable<boolean> {
+  delete(id: string): Observable<boolean> {
     return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSCabinetStructureTabsConfig/delete-cabinet-tab`, {
+      .delete<boolean>(`${environment.baseUrl}/DMSTemplate/delete-template`, {
         params: { id },
       })
       .pipe(
         tap(() => {
           this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.Id !== id));
+            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
           });
         })
       );

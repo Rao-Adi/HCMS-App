@@ -2,19 +2,18 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { CabinetStructureTabsConfig2, SelectList } from '../interfaces/interfaces';
-//import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { CabinetStructureTabsConfig } from '../interfaces/interfaces';
-// import { Customer } from './customer';
+import { AttributeMandatoryScope } from '../interfaces/interfaces';
 
-@Injectable({ providedIn: 'root' })
-export class CabinetStructureTabsConfigService {
-  private _cabietStructureConfig = new ReplaySubject<CabinetStructureTabsConfig[]>(1);
+@Injectable({
+  providedIn: 'root',
+})
+export class AttributeMandatoryScopeService {
+  private _cabietStructureConfig = new ReplaySubject<AttributeMandatoryScope[]>(1);
 
   constructor(private http: HttpClient) {}
 
-  get cabietStructureConfig$(): Observable<CabinetStructureTabsConfig[]> {
+  get cabietStructureConfig$(): Observable<AttributeMandatoryScope[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
@@ -29,12 +28,12 @@ export class CabinetStructureTabsConfigService {
   }
 
   getCabietStructureTabsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-all-cabinet-tabs-list`;
+    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-cabinet-tab-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-attribute-mandatory-scopes-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -55,21 +54,22 @@ export class CabinetStructureTabsConfigService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-all-cabinet-tabs`;
+    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
 
-  create(shortcut: CabinetStructureTabsConfig): Observable<CabinetStructureTabsConfig> {
+  create(shortcut: AttributeMandatoryScope): Observable<AttributeMandatoryScope> {
     return this.cabietStructureConfig$.pipe(
       take(1),
       switchMap((cabietStructureConfig) =>
         this.http
-          .post<CabinetStructureTabsConfig>('/DMSCabinetStructureTabsConfig/create-cabinet-tab', {
-            shortcut,
-          })
+          .post<AttributeMandatoryScope>(
+            '/DMSAttributeMandatoryScope/create-attribute-mandatory-scopes',
+            { shortcut }
+          )
           .pipe(
             map((newcabietStructureConfig) => {
               // Update the cabietStructureConfig with the new shortcut
@@ -86,10 +86,10 @@ export class CabinetStructureTabsConfigService {
     );
   }
 
-  update(shortcut: CabinetStructureTabsConfig): Observable<CabinetStructureTabsConfig> {
+  update(shortcut: AttributeMandatoryScope): Observable<AttributeMandatoryScope> {
     const payload = {
-      id: shortcut.Id,
-      name: shortcut.Name,
+      id: shortcut.id,
+      name: shortcut.departmentCode,
       isActive: true,
     };
 
@@ -99,8 +99,8 @@ export class CabinetStructureTabsConfigService {
     });
 
     return this.http
-      .put<CabinetStructureTabsConfig>(
-        `${environment.baseUrl}/DMSCabinetStructureTabsConfig/update-cabinet-tab`,
+      .put<AttributeMandatoryScope>(
+        `${environment.baseUrl}/DMSAttributeMandatoryScope/update-attribute-mandatory-scopes`,
         payload,
         {
           headers,
@@ -110,7 +110,7 @@ export class CabinetStructureTabsConfigService {
         tap((updated) => {
           // 🔹 Update cached state AFTER API success
           this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.Id === updated.Id);
+            const index = list.findIndex((i) => i.id === updated.id);
             if (index !== -1) {
               const newList = [...list];
               newList[index] = updated;
@@ -121,15 +121,18 @@ export class CabinetStructureTabsConfigService {
       );
   }
 
-  delete(id: number): Observable<boolean> {
+  delete(id: string): Observable<boolean> {
     return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSCabinetStructureTabsConfig/delete-cabinet-tab`, {
-        params: { id },
-      })
+      .delete<boolean>(
+        `${environment.baseUrl}/DMSAttributeMandatoryScope/delete-attribute-mandatory-scopes`,
+        {
+          params: { id },
+        }
+      )
       .pipe(
         tap(() => {
           this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.Id !== id));
+            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
           });
         })
       );

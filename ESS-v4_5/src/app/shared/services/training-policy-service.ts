@@ -2,19 +2,18 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { CabinetStructureTabsConfig2, SelectList } from '../interfaces/interfaces';
-//import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { CabinetStructureTabsConfig } from '../interfaces/interfaces';
-// import { Customer } from './customer';
+import { TrainingPolicy } from '../interfaces/interfaces';
 
-@Injectable({ providedIn: 'root' })
-export class CabinetStructureTabsConfigService {
-  private _cabietStructureConfig = new ReplaySubject<CabinetStructureTabsConfig[]>(1);
+@Injectable({
+  providedIn: 'root',
+})
+export class TrainingPolicyService {
+  private _cabietStructureConfig = new ReplaySubject<TrainingPolicy[]>(1);
 
   constructor(private http: HttpClient) {}
 
-  get cabietStructureConfig$(): Observable<CabinetStructureTabsConfig[]> {
+  get cabietStructureConfig$(): Observable<TrainingPolicy[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
@@ -29,12 +28,12 @@ export class CabinetStructureTabsConfigService {
   }
 
   getCabietStructureTabsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-all-cabinet-tabs-list`;
+    const uri = `${environment.baseUrl}/DMSTrainingPolicies/get-all-training-policy-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-cabinet-tab-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSTrainingPolicies/get-training-policy-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -55,21 +54,19 @@ export class CabinetStructureTabsConfigService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSCabinetStructureTabsConfig/get-all-cabinet-tabs`;
+    const uri = `${environment.baseUrl}/DMSTrainingPolicies/get-all-training-policy`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
 
-  create(shortcut: CabinetStructureTabsConfig): Observable<CabinetStructureTabsConfig> {
+  create(shortcut: TrainingPolicy): Observable<TrainingPolicy> {
     return this.cabietStructureConfig$.pipe(
       take(1),
       switchMap((cabietStructureConfig) =>
         this.http
-          .post<CabinetStructureTabsConfig>('/DMSCabinetStructureTabsConfig/create-cabinet-tab', {
-            shortcut,
-          })
+          .post<TrainingPolicy>('/DMSTrainingPolicies/create-training-policy', { shortcut })
           .pipe(
             map((newcabietStructureConfig) => {
               // Update the cabietStructureConfig with the new shortcut
@@ -86,10 +83,10 @@ export class CabinetStructureTabsConfigService {
     );
   }
 
-  update(shortcut: CabinetStructureTabsConfig): Observable<CabinetStructureTabsConfig> {
+  update(shortcut: TrainingPolicy): Observable<TrainingPolicy> {
     const payload = {
-      id: shortcut.Id,
-      name: shortcut.Name,
+      id: shortcut.id,
+      documentTypeId: shortcut.documentTypeId,
       isActive: true,
     };
 
@@ -99,8 +96,8 @@ export class CabinetStructureTabsConfigService {
     });
 
     return this.http
-      .put<CabinetStructureTabsConfig>(
-        `${environment.baseUrl}/DMSCabinetStructureTabsConfig/update-cabinet-tab`,
+      .put<TrainingPolicy>(
+        `${environment.baseUrl}/DMSTrainingPolicies/update-training-policy`,
         payload,
         {
           headers,
@@ -110,7 +107,7 @@ export class CabinetStructureTabsConfigService {
         tap((updated) => {
           // 🔹 Update cached state AFTER API success
           this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.Id === updated.Id);
+            const index = list.findIndex((i) => i.id === updated.id);
             if (index !== -1) {
               const newList = [...list];
               newList[index] = updated;
@@ -121,15 +118,15 @@ export class CabinetStructureTabsConfigService {
       );
   }
 
-  delete(id: number): Observable<boolean> {
+  delete(id: string): Observable<boolean> {
     return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSCabinetStructureTabsConfig/delete-cabinet-tab`, {
+      .delete<boolean>(`${environment.baseUrl}/DMSTrainingPolicies/delete-training-policy`, {
         params: { id },
       })
       .pipe(
         tap(() => {
           this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.Id !== id));
+            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
           });
         })
       );

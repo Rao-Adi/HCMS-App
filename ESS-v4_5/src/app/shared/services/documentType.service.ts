@@ -30,14 +30,14 @@ export class DocumentTypeService {
   }
 
   getDocumentTypeList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-all-document-type-list`;
+    const uri = `${environment.baseUrl}/DMSDocumentType/get-all-document-type-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-//   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
-//     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
-//     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-//   }
+  //   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
+  //     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
+  //     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  //   }
 
   GetAllDocumentTypes(
     searchText: string,
@@ -47,18 +47,18 @@ export class DocumentTypeService {
     pageNo: number,
     pageSize: number
   ): Observable<any> {
-    const params = new HttpParams()
-      .set('SearchText', searchText)
-      .set('SortBy', sortBy)
-      .set('SortColumn', sortColumn)
-      .set('IsActive', isActive.toString())
-      .set('pageNo', pageNo.toString())
-      .set('pageSize', pageSize.toString());
+    const body = {
+      searchText,
+      sortBy,
+      sortColumn,
+      isActive,
+      pageNo,
+      pageSize,
+    };
 
-    const uri = `${environment.baseUrl}/get-all-document-types`;
+    const uri = `${environment.baseUrl}/DMSDocumentType/get-all-document-types`;
 
-    return this.http.post(uri, null, {
-      params,
+    return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
@@ -67,7 +67,7 @@ export class DocumentTypeService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.post<DocumentType>('create-document-type', { shortcut }).pipe(
+        this.http.post<DocumentType>('/DMSDocumentType/create-document-type', { shortcut }).pipe(
           map((newDocumentType) => {
             // Update the departments with the new shortcut
             this._departments.next([...departments, newDocumentType]);
@@ -85,7 +85,7 @@ export class DocumentTypeService {
       take(1),
       switchMap((departments) =>
         this.http
-          .patch<DocumentType>('update-document-type', {
+          .patch<DocumentType>('/DMSDocumentType/update-document-type', {
             code,
             shortcut,
           })
@@ -112,21 +112,23 @@ export class DocumentTypeService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.delete<boolean>('delete-document-type', { params: { code } }).pipe(
-          map((isDeleted: boolean) => {
-            // Find the index of the deleted shortcut
-            const index = departments.findIndex((item) => item.CODE === code);
+        this.http
+          .delete<boolean>('/DMSDocumentType/delete-document-type', { params: { code } })
+          .pipe(
+            map((isDeleted: boolean) => {
+              // Find the index of the deleted shortcut
+              const index = departments.findIndex((item) => item.CODE === code);
 
-            // Delete the shortcut
-            departments.splice(index, 1);
+              // Delete the shortcut
+              departments.splice(index, 1);
 
-            // Update the departments
-            this._departments.next(departments);
+              // Update the departments
+              this._departments.next(departments);
 
-            // Return the deleted status
-            return isDeleted;
-          })
-        )
+              // Return the deleted status
+              return isDeleted;
+            })
+          )
       )
     );
   }

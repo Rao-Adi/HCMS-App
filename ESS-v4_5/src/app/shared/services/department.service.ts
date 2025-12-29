@@ -30,12 +30,12 @@ export class DepartmentService {
   }
 
   getDepartmentList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-all-department-list`;
+    const uri = `${environment.baseUrl}/DMSDepartment/get-all-department-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDepartmentsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/get-departments-by-division-code?dCode=${dCode}`;
+    const uri = `${environment.baseUrl}/DMSDepartment/get-departments-by-division-code?dCode=${dCode}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -47,18 +47,18 @@ export class DepartmentService {
     pageNo: number,
     pageSize: number
   ): Observable<any> {
-    const params = new HttpParams()
-      .set('SearchText', searchText)
-      .set('SortBy', sortBy)
-      .set('SortColumn', sortColumn)
-      .set('IsActive', isActive.toString())
-      .set('pageNo', pageNo.toString())
-      .set('pageSize', pageSize.toString());
+    const body = {
+      searchText,
+      sortBy,
+      sortColumn,
+      isActive,
+      pageNo,
+      pageSize,
+    };
 
-    const uri = `${environment.baseUrl}/get-all-departments`;
+    const uri = `${environment.baseUrl}/DMSDepartment/get-all-departments`;
 
-    return this.http.post(uri, null, {
-      params,
+    return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
@@ -67,7 +67,7 @@ export class DepartmentService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.post<Department>('create-department', { shortcut }).pipe(
+        this.http.post<Department>('/DMSDepartment/create-department', { shortcut }).pipe(
           map((newDepartment) => {
             // Update the departments with the new shortcut
             this._departments.next([...departments, newDepartment]);
@@ -85,7 +85,7 @@ export class DepartmentService {
       take(1),
       switchMap((departments) =>
         this.http
-          .patch<Department>('update-department', {
+          .patch<Department>('/DMSDepartment/update-department', {
             code,
             shortcut,
           })
@@ -112,7 +112,7 @@ export class DepartmentService {
     return this.departments$.pipe(
       take(1),
       switchMap((departments) =>
-        this.http.delete<boolean>('delete-department', { params: { code } }).pipe(
+        this.http.delete<boolean>('/DMSDepartment/delete-department', { params: { code } }).pipe(
           map((isDeleted: boolean) => {
             // Find the index of the deleted shortcut
             const index = departments.findIndex((item) => item.code === code);
