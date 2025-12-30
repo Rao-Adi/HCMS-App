@@ -14,7 +14,7 @@
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
               <button
-                *ngFor="let tab of tabs"
+                *ngFor="let tab of tabs; trackBy: trackByTabId"
                 class="tab-button"
                 [ngClass]="{ 'active-tab': selectedTabId === tab.id }"
                 (click)="onTabChange(tab)"
@@ -76,8 +76,8 @@
                       style="width: 200px"
                     />
                     <button
-                      aria-label="Collapse Menu"
-                      title="Collapse Menu"
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
                       (click)="saveTabTitle()"
                       class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                     >
@@ -107,6 +107,9 @@
                     [defaultColDef]="defaultColDef"
                     [rowData]="divisionData"
                     [totalRows]="totalDivisions"
+                    [pageSize]="selectedPageSize"
+                    gridId="divisionGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="getAllDivisions($event)"
                   >
                   </app-ag-grid-wrapper>
@@ -132,8 +135,8 @@
                       }"
                     />
                     <button
-                      aria-label="Collapse Menu"
-                      title="Collapse Menu"
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
                       (click)="saveTabTitle()"
                       class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                     >
@@ -164,6 +167,9 @@
                     [rowData]="departmentData"
                     [pageSize]="pageSize"
                     [totalRows]="totalDepartments"
+                    [pageSize]="selectedPageSize"
+                    gridId="departmentGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="getAllDepartments($event)"
                   >
                   </app-ag-grid-wrapper>
@@ -188,8 +194,8 @@
                       }"
                     />
                     <button
-                      aria-label="Collapse Menu"
-                      title="Collapse Menu"
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
                       (click)="saveTabTitle()"
                       class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                     >
@@ -220,6 +226,9 @@
                     [rowData]="subDepartmentData"
                     [pageSize]="pageSize"
                     [totalRows]="totalSubDepartments"
+                    [pageSize]="selectedPageSize"
+                    gridId="subDepartmentGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="getAllSubDepartments($event)"
                     (rowEdited)="saveSubDepartment($event)"
                   >
@@ -247,8 +256,8 @@
                       }"
                     />
                     <button
-                      aria-label="Collapse Menu"
-                      title="Collapse Menu"
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
                       (click)="saveTabTitle()"
                       class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                     >
@@ -279,6 +288,9 @@
                     [rowData]="businessDomainData"
                     [pageSize]="pageSize"
                     [totalRows]="totalBusinessDomains"
+                    [pageSize]="selectedPageSize"
+                    gridId="businessDomainGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="getAllBusinessDomains($event)"
                   >
                   </app-ag-grid-wrapper>
@@ -304,8 +316,8 @@
                       }"
                     />
                     <button
-                      aria-label="Collapse Menu"
-                      title="Collapse Menu"
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
                       (click)="saveTabTitle()"
                       class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                     >
@@ -336,6 +348,9 @@
                     [rowData]="documentTypeData"
                     [pageSize]="pageSize"
                     [totalRows]="totalDocumentTypes"
+                    [pageSize]="selectedPageSize"
+                    gridId="documentTypeGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="getAllDocumentTypes($event)"
                   >
                   </app-ag-grid-wrapper>

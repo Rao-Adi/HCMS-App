@@ -351,4 +351,58 @@ export class CreateUpdateDocument {
   GetAllWorkflowAuthorities(query: any) {}
 
   GetAllDistribution(query: any) {}
+
+   // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'distributionListGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllDistribution({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break; 
+      case 'document2Grid':
+        this.employeePageSize = pageSize;
+        this.GetAllDistribution({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'documentGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDistribution({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'userListGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDistribution({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      // handle other grids...
+
+      default:
+        break;
+    }
+  }
+
 }

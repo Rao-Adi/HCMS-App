@@ -204,6 +204,9 @@
                                 [rowData]="userData"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalUsers"
+                                [pageSize]="selectedPageSize"
+                                gridId="user2Grid"
+                                (pageSizeChange)="onPageSizeChanged($event)"
                                 (serverQuery)="GetAllUsers($event)"
                               >
                               </app-ag-grid-wrapper>
@@ -220,6 +223,9 @@
                                 [rowData]="distributionListData"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalDistributioinList"
+                                [pageSize]="selectedPageSize"
+                                gridId="distributionList2Grid"
+                                (pageSizeChange)="onPageSizeChanged($event)"
                                 (serverQuery)="GetAllWorkflowAuthorities($event)"
                               >
                               </app-ag-grid-wrapper>
@@ -255,6 +261,9 @@
                                 [rowData]="workflowAuthoritiesData"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalWorkflowAuthorities"
+                                [pageSize]="selectedPageSize"
+                                gridId="workflowAuthorities1Grid1Grid"
+                                (pageSizeChange)="onPageSizeChanged($event)"
                                 (serverQuery)="GetAllWorkflowAuthorities($event)"
                               >
                               </app-ag-grid-wrapper>
@@ -295,6 +304,9 @@
                                   [rowData]="workflowAuthoritiesData"
                                   [pageSize]="pageSize"
                                   [totalRows]="totalDocuments"
+                                  [pageSize]="selectedPageSize"
+                                  gridId="documentGrid"
+                                  (pageSizeChange)="onPageSizeChanged($event)"
                                   (serverQuery)="GetAllDocuments($event)"
                                 >
                                 </app-ag-grid-wrapper>
@@ -409,6 +421,9 @@
                                   [rowData]="workflowAuthoritiesData"
                                   [pageSize]="pageSize"
                                   [totalRows]="totalUsers"
+                                  [pageSize]="selectedPageSize"
+                                  gridId="usersGrid"
+                                  (pageSizeChange)="onPageSizeChanged($event)"
                                   (serverQuery)="GetAllUploadedDocuments($event)"
                                 >
                                 </app-ag-grid-wrapper>
@@ -430,6 +445,9 @@
                                   [rowData]="distributionListData"
                                   [pageSize]="pageSize"
                                   [totalRows]="totalRows"
+                                  [pageSize]="selectedPageSize"
+                                  gridId="distributionListGrid"
+                                  (pageSizeChange)="onPageSizeChanged($event)"
                                   (serverQuery)="GetAllDistributionList($event)"
                                 >
                                 </app-ag-grid-wrapper>
@@ -471,6 +489,9 @@
                                   [rowData]="workflowAuthoritiesData"
                                   [pageSize]="pageSize"
                                   [totalRows]="totalRows"
+                                  [pageSize]="selectedPageSize"
+                                  gridId="workflowAuthorities2Grid"
+                                  (pageSizeChange)="onPageSizeChanged($event)"
                                   (serverQuery)="GetAllUploadedDocuments($event)"
                                 >
                                 </app-ag-grid-wrapper>
@@ -492,8 +513,10 @@
                     [columnDefs]="pendingRequestApprovalColumnDefs"
                     [defaultColDef]="defaultColDef"
                     [rowData]="pendingApprovalData"
-                    [pageSize]="pageSize"
                     [totalRows]="totalPendingApprovals"
+                    [pageSize]="selectedPageSize"
+                    gridId="myRequestPendingApprovalGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="GetAllPendingApprovalRequests($event)"
                   >
                   </app-ag-grid-wrapper>

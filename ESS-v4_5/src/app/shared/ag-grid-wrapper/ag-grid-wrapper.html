@@ -17,10 +17,13 @@
   [rowData]="rowData"
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
+  [context]="{ componentParent: this }"
   [pagination]="false"
   (gridReady)="onGridReady($event)"
   (sortChanged)="onSortChanged()"
   (filterChanged)="onFilterChanged()"
+  (cellValueChanged)="onCellValueChanged($event)"
+  (cellClicked)="onCellClicked($event)"
 >
 </ag-grid-angular>
 

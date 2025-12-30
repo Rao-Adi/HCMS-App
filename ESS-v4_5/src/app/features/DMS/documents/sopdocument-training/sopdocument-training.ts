@@ -174,4 +174,37 @@ export class SOPDocumentTraining {
 
   GetAllClassRooms(query: any) {}
   GetAllOnline(query: any) {}
+
+   // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'classroomGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllClassRooms({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'onlineGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllClassRooms({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break; 
+      default:
+        break;
+    }
+  }
 }

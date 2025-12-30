@@ -133,7 +133,9 @@
                           [columnDefs]="pendingDocumentData"
                           [defaultColDef]="defaultColDef"
                           [rowData]="pendingDocumentsGridColumnDefs"
-                          [pageSize]="pageSize"
+                          [pageSize]="selectedPageSize"
+                          gridId="pendingGrid"
+                          (pageSizeChange)="onPageSizeChanged($event)"
                           [totalRows]="totalPendingDocuments"
                           (serverQuery)="GetAllPendingDocuments($event)"
                         >
@@ -154,7 +156,9 @@
                       [columnDefs]="approvedDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
                       [rowData]="pendingDocumentData"
-                      [pageSize]="pageSize"
+                      [pageSize]="selectedPageSize"
+                      gridId="approvedGrid"
+                      (pageSizeChange)="onPageSizeChanged($event)"
                       [totalRows]="totalApprovedDocuments"
                       (serverQuery)="GetAllApprovedDocuments($event)"
                     >
@@ -173,7 +177,9 @@
                       [columnDefs]="disapprovedDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
                       [rowData]="pendingDocumentData"
-                      [pageSize]="pageSize"
+                      [pageSize]="selectedPageSize"
+                      gridId="disapprovedGrid"
+                      (pageSizeChange)="onPageSizeChanged($event)"
                       [totalRows]="totalDisApprovedDocuments"
                       (serverQuery)="GetAllDisApprovedDocuments($event)"
                     >

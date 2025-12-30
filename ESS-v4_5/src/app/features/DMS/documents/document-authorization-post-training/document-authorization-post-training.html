@@ -146,6 +146,9 @@
                   [rowData]="rowData"
                   [pageSize]="pageSize"
                   [totalRows]="totalRows"
+                  [pageSize]="selectedPageSize"
+                  gridId="documentGrid"
+                  (pageSizeChange)="onPageSizeChanged($event)"
                   (serverQuery)="GetAllDocuments($event)"
                 >
                 </app-ag-grid-wrapper>
@@ -161,6 +164,9 @@
                   [rowData]="rowData"
                   [pageSize]="pageSize"
                   [totalRows]="totalRows"
+                  [pageSize]="selectedPageSize"
+                  gridId="authorizationStatusGrid"
+                  (pageSizeChange)="onPageSizeChanged($event)"
                   (serverQuery)="GetAllUploadedDocuments($event)"
                 >
                 </app-ag-grid-wrapper>

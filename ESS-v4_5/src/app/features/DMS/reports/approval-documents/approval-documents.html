@@ -106,7 +106,9 @@
                           [columnDefs]="documentsColumnDefs"
                           [defaultColDef]="defaultColDef"
                           [rowData]="documentTypeData"
-                          [pageSize]="pageSize"
+                          [pageSize]="selectedPageSize"
+                          gridId="documentGrid"
+                          (pageSizeChange)="onPageSizeChanged($event)"
                           [totalRows]="totalDocuments"
                           (serverQuery)="GetAllDocuments($event)"
                         >

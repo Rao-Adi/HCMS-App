@@ -128,16 +128,18 @@
                     <br />
                     <div class="row">
                       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                         <app-ag-grid-wrapper
-                      [gridStyle]="{ width: '100%', height: '250px' }"
-                      [columnDefs]="pendingDocumentsGridColumnDefs"
-                      [defaultColDef]="defaultColDef"
-                      [rowData]="pendingDocumentData"
-                      [pageSize]="pageSize"
-                      [totalRows]="totalPendingDocuments"
-                      (serverQuery)="GetAllPendingDocuments($event)"
-                    >
-                    </app-ag-grid-wrapper>
+                        <app-ag-grid-wrapper
+                          [gridStyle]="{ width: '100%', height: '250px' }"
+                          [columnDefs]="pendingDocumentsGridColumnDefs"
+                          [defaultColDef]="defaultColDef"
+                          [rowData]="pendingDocumentData"
+                          [pageSize]="selectedPageSize"
+                          gridId="pendingGrid"
+                          (pageSizeChange)="onPageSizeChanged($event)"
+                          [totalRows]="totalPendingDocuments"
+                          (serverQuery)="GetAllPendingDocuments($event)"
+                        >
+                        </app-ag-grid-wrapper>
                       </div>
                     </div>
                   </div>
@@ -154,7 +156,9 @@
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
                       [rowData]="pendingDocumentData"
-                      [pageSize]="pageSize"
+                      [pageSize]="selectedPageSize"
+                      gridId="approvedGrid"
+                      (pageSizeChange)="onPageSizeChanged($event)"
                       [totalRows]="totalApprovedDocuments"
                       (serverQuery)="GetAllApprovedDocuments($event)"
                     >
@@ -173,7 +177,9 @@
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
                       [rowData]="pendingDocumentData"
-                      [pageSize]="pageSize"
+                      [pageSize]="selectedPageSize"
+                      gridId="disapprovedGrid"
+                      (pageSizeChange)="onPageSizeChanged($event)"
                       [totalRows]="totalDisApprovedDocuments"
                       (serverQuery)="GetAllDisApprovedDocuments($event)"
                     >

@@ -182,4 +182,37 @@ export class DocumentAuthorizationPostTraining {
   GetAllUploadedDocuments(query:any){
     
   }
+
+   // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'documentGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break; 
+      case 'authorizationStatusGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      default:
+        break;
+    }
+  }
 }

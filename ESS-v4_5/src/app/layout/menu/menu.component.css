@@ -521,7 +521,7 @@ ul {
 
 
 .menu-link.active {
-  background-color: #b8b9ba; /* or your theme color */
+  background-color: #e6e9ee; /* or your theme color */
   color: rgb(0, 0, 0);
   font-weight: 600;
 }

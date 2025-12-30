@@ -203,4 +203,38 @@ export class Users {
       uploadDocument: 'Upload',
     }));
   }
+
+   // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'manualGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllIntegeratedPeoplepartners({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+
+      case 'integrationGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllIntegeratedPeoplepartners({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break; 
+      default:
+        break;
+    }
+  }
 }

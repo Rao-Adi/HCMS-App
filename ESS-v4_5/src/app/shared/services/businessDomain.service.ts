@@ -44,7 +44,7 @@ export class BusinessDomainService {
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
     isActive: boolean,
-    pageNo: number,
+    pageNumber: number,
     pageSize: number
   ): Observable<any> {
     const body = {
@@ -52,7 +52,7 @@ export class BusinessDomainService {
       sortBy,
       sortColumn,
       isActive,
-      pageNo,
+      pageNumber,
       pageSize,
     };
 

@@ -194,4 +194,47 @@ export class MyApprovalDocument {
   GetAllPendingDocuments(query: any) {}
   GetAllApprovedDocuments(query: any) {}
   GetAllDisApprovedDocuments(query: any) {}
+
+   // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'pendingGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllPendingDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+
+      case 'approvedGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllApprovedDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'disapprovedGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDisApprovedDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break; 
+      default:
+        break;
+    }
+  }
 }

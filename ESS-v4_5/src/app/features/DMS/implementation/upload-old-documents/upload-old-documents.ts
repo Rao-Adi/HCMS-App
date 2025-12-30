@@ -1,29 +1,23 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 
 @Component({
   selector: 'app-upload-old-documents',
-  imports: [CommonModule, SafeTranslatePipe, AgGridWrapper],
+  imports: [CommonModule, AgGridWrapper],
   templateUrl: './upload-old-documents.html',
   styleUrl: './upload-old-documents.css',
 })
 export class UploadOldDocuments {
   selectedTab: string = 'Upload';
 
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
-
   constructor() {}
 
   ngOnInit() {
     //this.loadData(this.pageSize);
   }
-  
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -98,42 +92,42 @@ export class UploadOldDocuments {
   pageSize = 10;
   rowData: any[] = [];
   totalUplaodedDocuments = 0;
-totalUploads =0;
+  totalUploads = 0;
 
-  loadData(pageNumber: number) {
-  
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
+  GetAllUploads(query: any) {}
 
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
+  GetAllUploadedDocuments(query: any) {}
 
-    this.rowData = allData.slice(start, end);
-    this.totalUploads = allData.length;
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
 
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
-  }
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
 
-  GetAllUploads(query:any){}
-  GetAllUploadedDocuments(query:any){}
-
-
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
+    switch (gridId) {
+      case 'uploadGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllUploadedDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'uploadedGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllUploadedDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      default:
+        break;
+    }
   }
 }
- 

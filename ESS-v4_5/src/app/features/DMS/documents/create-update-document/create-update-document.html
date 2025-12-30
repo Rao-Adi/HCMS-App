@@ -222,6 +222,9 @@
                               [rowData]="workflowAuthoritiesData"
                               [pageSize]="pageSize"
                               [totalRows]="totalWorkflowAuthorities"
+                              [pageSize]="selectedPageSize"
+                              gridId="userListGrid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
                               (serverQuery)="GetAllWorkflowAuthorities($event)"
                             >
                             </app-ag-grid-wrapper>
@@ -318,6 +321,9 @@
                               [rowData]="distributionListData"
                               [pageSize]="pageSize"
                               [totalRows]="totalDistribution"
+                              [pageSize]="selectedPageSize"
+                              gridId="distributionListGrid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
                               (serverQuery)="GetAllDistribution($event)"
                             >
                             </app-ag-grid-wrapper>
@@ -338,6 +344,9 @@
                               [rowData]="workflowAuthoritiesData"
                               [pageSize]="pageSize"
                               [totalRows]="totalDocuments"
+                              [pageSize]="selectedPageSize"
+                              gridId="document2Grid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
                               (serverQuery)="GetAllDistribution($event)"
                             >
                             </app-ag-grid-wrapper>
@@ -359,6 +368,9 @@
                               [rowData]="workflowAuthoritiesData"
                               [pageSize]="pageSize"
                               [totalRows]="totalDocuments"
+                              [pageSize]="selectedPageSize"
+                              gridId="documentGrid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
                               (serverQuery)="GetAllDistribution($event)"
                             >
                             </app-ag-grid-wrapper>

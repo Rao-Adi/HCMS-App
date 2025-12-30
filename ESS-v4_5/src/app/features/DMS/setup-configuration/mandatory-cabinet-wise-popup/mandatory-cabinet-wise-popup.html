@@ -1,0 +1,12 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '250px' }"
+  [columnDefs]="documentAttributeColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowData]="rowData"
+  [pageSize]="selectedPageSize"
+  gridId="documentTypeGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  [totalRows]="totalCount"
+  (serverQuery)="loadBusinessDomains($event)"
+>
+</app-ag-grid-wrapper>

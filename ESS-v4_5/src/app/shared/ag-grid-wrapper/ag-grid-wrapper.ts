@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, input, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  input,
+  Input,
+  OnInit,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 //import { ColDef, GridReadyEvent } from 'ag-grid-community';
 import {
@@ -29,79 +38,82 @@ export class AgGridWrapper implements OnInit {
   @Input() defaultColDef!: ColDef;
   @Input() totalRows = 0;
   @Input() gridStyle: any = {};
+  @Input() gridId!: string;
 
-  @Output() serverQuery = new EventEmitter<any>();
+  //@Input() pageSizeOptions = [10, 20, 30, 50];
+  @Input() pageSizeOptions = [1, 2, 3, 50];
+  @Input() defaultPageSize = 10;
+
+  @Output() pageSizeChange = new EventEmitter<{ gridId: string; pageSize: number }>();
+  @Output() cellClicked = new EventEmitter<any>();
+
+  @Output() serverQuery = new EventEmitter<{
+    pageNumber: number;
+    pageSize: number;
+    sortModel: any;
+    filterModel: any;
+  }>();
+
   @Output() rowEdited = new EventEmitter<any>();
 
   gridApi!: GridApi;
 
-  private gridReadyDone = false;
-  private suppressEvents = false;
-  private suppressEmit = false;
-  private isProgrammaticUpdate = false;
   private isGridInitialized = false;
 
-  @Input() pageSizeOptions = [10, 20, 30, 50];
-  @Input() defaultPageSize = 10;
   pageNumber = 1;
   //pageSize!: number;
   totalPages = 0;
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
-    this.pageSize = this.defaultPageSize;
+    //this.pageSize = this.defaultPageSize;
   }
 
-  ngOnChanges() {
-    this.totalPages = Math.ceil(this.totalRows / this.pageSize);
+  gridOptions: GridOptions = {
+    context: {
+      componentParent: this,
+    },
+  };
+
+  ngOnChanges(changes: SimpleChanges) {
+    //console.log('ngOnChanges - totalRows:', this.totalRows, 'pageSize:', this.pageSize);
+    if (changes['totalRows'] || changes['pageSize']) {
+      this.totalPages = Math.max(1, Math.ceil(this.totalRows / this.pageSize));
+      if (this.pageNumber > this.totalPages) {
+        this.pageNumber = this.totalPages;
+      }
+      //console.log('Updated totalPages:', this.totalPages, 'pageNumber:', this.pageNumber);
+      this.cdr.detectChanges();
+    }
   }
 
   goToPage(page: number) {
+    //console.log('goToPage called:', page, 'totalPages:', this.totalPages);
     if (page < 1 || page > this.totalPages) return;
     this.pageNumber = page;
     this.emitQuery();
+    this.cdr.detectChanges();
   }
 
   onPageSizeChange(value: any) {
-    const newSize = Number(value);
-
-    if (!newSize || isNaN(newSize)) return;
-
-    this.pageSize = newSize;
+    this.pageSize = Number(value);
     this.pageNumber = 1;
+
+    this.pageSizeChange.emit({ gridId: this.gridId, pageSize: this.pageSize }); // <-- emit page size to parent
     this.emitQuery();
   }
 
   onGridReady(params: GridReadyEvent) {
     this.gridApi = params.api;
+    this.isGridInitialized = true;
 
     // Delay first emit to allow grid to stabilize
-    setTimeout(() => {
-      this.isGridInitialized = true;
-      this.emitQuery();
-    });
+    // setTimeout(() => {
+    //   this.isGridInitialized = true;
+    //   this.emitQuery();
+    // });
   }
-  // onGridReady(params: GridReadyEvent) {
-  //   debugger;
-  //   this.gridApi = params.api;
-  //   this.gridReadyDone = true;
-
-  //   // 🔥 Initial load – call API ONCE
-  //   // setTimeout(() => this.emitServerQuery(true), 0);
-
-  //   const datasource = {
-  //     getRows: (params: any) => {
-  //       const page = params.request.startRow / this.pageSize + 1;
-
-  //       this.serverQuery.emit({
-  //         pageNumber: page,
-  //         pageSize: this.pageSize,
-  //         sortModel: params.request.sortModel,
-  //         filterModel: params.request.filterModel,
-  //         success: params.success,
-  //       });
-  //     },
-  //   };
-  // }
 
   onSortChanged() {
     if (!this.isGridInitialized) return;
@@ -120,6 +132,8 @@ export class AgGridWrapper implements OnInit {
     if (!this.pageSize || !this.pageNumber) return;
 
     this.serverQuery.emit({
+      pageNumber: this.pageNumber,
+      pageSize: this.pageSize,
       sortModel: this.gridApi
         .getColumnState()
         .filter((c) => c.sort)
@@ -127,27 +141,6 @@ export class AgGridWrapper implements OnInit {
       filterModel: this.gridApi.getFilterModel(),
     });
   }
-
-  // onPaginationChanged(event: any) {
-  //   if (this.isProgrammaticUpdate) return;
-  //   if (!event.api || !event.newPage) return;
-
-  //   this.emitServerQuery();
-  // }
-
-  // onSortChanged(event: any) {
-  //   if (this.isProgrammaticUpdate) return;
-  //   if (!event.source || event.source !== 'uiColumnSorted') return;
-
-  //   this.emitServerQuery(true);
-  // }
-
-  // onFilterChanged(event: any) {
-  //   if (this.isProgrammaticUpdate) return;
-  //   if (!event.source || event.source !== 'uiFilterChanged') return;
-
-  //   this.emitServerQuery(true);
-  // }
 
   onCellValueChanged(event: any) {
     if (
@@ -166,34 +159,7 @@ export class AgGridWrapper implements OnInit {
     });
   }
 
-  private canEmit(): boolean {
-    return this.gridReadyDone && !this.suppressEvents;
-  }
-
-  private emitServerQuery(resetPage = false) {
-    if (!this.gridApi) return;
-
-    this.suppressEvents = true;
-
-    if (resetPage) {
-      this.gridApi.paginationGoToFirstPage();
-    }
-
-    const currentPage = this.gridApi.paginationGetCurrentPage() + 1;
-
-    const sortModel = this.gridApi
-      .getColumnState()
-      .filter((c) => !!c.sort)
-      .map((c) => ({ colId: c.colId, sort: c.sort }));
-
-    this.serverQuery.emit({
-      pageNumber: currentPage,
-      pageSize: this.pageSize,
-      sortModel,
-      filterModel: this.gridApi.getFilterModel(),
-    });
-
-    // allow events again AFTER cycle completes
-    setTimeout(() => (this.suppressEvents = false));
+  onCellClicked(event: any) {
+    this.cellClicked.emit(event);
   }
 }

@@ -108,7 +108,6 @@ export class DocumentRequestManagement {
     },
   ];
 
-  
   documentColumnDefs = [
     {
       field: 'division',
@@ -383,4 +382,93 @@ export class DocumentRequestManagement {
 
   GetAllUploadedDocuments(query: any) {}
   GetAllDistributionList(query: any) {}
+
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'distributionList2Grid':
+        this.divisionPageSize = pageSize;
+        this.GetAllDistributionList({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'documentGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllDistributionList({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'usersGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDistributionList({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'users2Grid':
+        this.employeePageSize = pageSize;
+        this.GetAllDistributionList({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'distributionListGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'workflowAuthorities1Grid':
+        this.employeePageSize = pageSize;
+        this.GetAllDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'workflowAuthorities2Grid':
+        this.employeePageSize = pageSize;
+        this.GetAllDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'myRequestPendingApprovalGrid':
+        this.employeePageSize = pageSize;
+        this.GetAllDistributionList({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      // handle other grids...
+
+      default:
+        break;
+    }
+  }
 }

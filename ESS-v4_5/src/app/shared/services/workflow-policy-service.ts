@@ -42,7 +42,7 @@ export class WorkflowPolicyService {
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
     isActive: boolean,
-    pageNo: number,
+    pageNumber: number,
     pageSize: number
   ): Observable<any> {
     const body = {
@@ -50,7 +50,7 @@ export class WorkflowPolicyService {
       sortBy,
       sortColumn,
       isActive,
-      pageNo,
+      pageNumber,
       pageSize,
     };
 

@@ -91,4 +91,38 @@ export class MiscPolicies {
   GetAllDocumentReview(query: any) {}
 
   GetAllTrainingPolicy(query: any) {}
+
+   // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'TrainingPoliciyGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllDocumentReview({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+
+      case 'DocumentReview':
+        this.employeePageSize = pageSize;
+        this.GetAllDocumentReview({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break; 
+      default:
+        break;
+    }
+  }
 }

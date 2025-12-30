@@ -37,11 +37,8 @@ export class CabinetStructure {
   level4Title: string = 'Level 4';
   level5Title: string = 'Document Type';
   selectedTab: any = null;
-  // selectedTab: string = this.level1Title;
-
-  //tabs = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Document Type'];
-
-  //selectedTab = this.tabs[0];
+ 
+  selectedPageSize = 1; // default value
 
   totalDivisions = 0;
   totalDepartments = 0;
@@ -54,13 +51,13 @@ export class CabinetStructure {
   subDepartmentData: any[] = [];
   businessDomainData: any[] = [];
   documentTypeData: any[] = [];
-  totalRows = 0;
 
   tabs: TabConfig[] = [];
   selectedTabId!: number;
   selectedTabTitle = ''; // for textbox editing
 
   constructor(
+    private cdr: ChangeDetectorRef,
     private _divisionServices: DivisionService,
     private _departmentServices: DepartmentService,
     private _subDepartmentService: SubDepartmentService,
@@ -70,13 +67,7 @@ export class CabinetStructure {
   ) {}
 
   ngOnInit() {
-    //this.loadData(this.pageSize);
     this.loadTabs();
-    // this.getAllDivisions();
-    // this.getAllDepartments();
-    // this.getAllDocumentTypes();
-    // this.getAllSubDepartments();
-    // this.getAllBusinessDomains();
   }
 
   // Default Column Definitions: Apply configuration across all columns
@@ -275,7 +266,7 @@ export class CabinetStructure {
             LastModifiedBy: d.LastModifiedBy,
             LastModifiedAt: d.LastModifiedAt,
           }));
-          console.log('Mapped tabs:', this.tabs);
+          //console.log('Mapped tabs:', this.tabs);
         } else {
           this.tabs = [];
         }
@@ -344,7 +335,7 @@ export class CabinetStructure {
     const sort = query.sortModel?.[0];
 
     const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
 
     this._divisionServices
       .GetAllDivisions(
@@ -388,6 +379,7 @@ export class CabinetStructure {
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
+          this.totalDepartments = res.Data.TotalCount;
           this.departmentData = res.Data.Items.map((item: any) => ({
             Code: item.code || item.Code,
             Name: item.name || item.Name,
@@ -420,6 +412,7 @@ export class CabinetStructure {
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
+          this.totalSubDepartments = res.Data.TotalCount;
           this.subDepartmentData = res.Data.Items.map((item: any) => ({
             Code: item.code || item.Code,
             Name: item.name || item.Name,
@@ -451,6 +444,7 @@ export class CabinetStructure {
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
+          this.totalDocumentTypes = res.Data.TotalCount;
           this.documentTypeData = res.Data.Items.map((item: any) => ({
             Code: item.code || item.Code,
             Name: item.name || item.Name,
@@ -482,6 +476,7 @@ export class CabinetStructure {
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
+          this.totalBusinessDomains = res.Data.TotalCount;
           this.businessDomainData = res.Data.Items.map((item: any) => ({
             Code: item.code || item.Code,
             Name: item.name || item.Name,
@@ -536,21 +531,21 @@ export class CabinetStructure {
     };
 
     this._cabietTabConfigService.update(payload).subscribe({
-      next: (updated) => {
+      next: (updated:any) => {
         // Update tabs array
         this.tabs = this.tabs.map((tab) =>
-          tab.id === updated.Id
+          tab.id === updated.Data.Id
             ? {
                 ...tab,
-                title: updated.Name,
-                lastModifiedBy: updated.LastModifiedBy,
-                lastModifiedAt: updated.LastModifiedAt,
+                title: updated.Data.Name,
+                lastModifiedBy: updated.Data.LastModifiedBy,
+                lastModifiedAt: updated.Data.LastModifiedAt,
               }
             : tab
         );
-
+  
         // Update selected tab reference too (for UI refresh)
-        if (this.selectedTab.id === updated.Id) {
+        if (this.selectedTab.id === updated.Data.Id) {
           this.selectedTab = {
             ...this.selectedTab,
             title: updated.Name,
@@ -558,6 +553,7 @@ export class CabinetStructure {
             lastModifiedAt: updated.LastModifiedAt,
           };
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
@@ -565,9 +561,74 @@ export class CabinetStructure {
     });
   }
 
+  trackByTabId(index: number, tab: any) {
+    return tab.id;
+  }
   revertCell(event: any, message: string) {
     alert(message); // replace with toast
     event.data[event.field] = event.oldValue;
     this.subDepartmentData = [...this.subDepartmentData];
+  }
+
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'divisionGrid':
+        this.divisionPageSize = pageSize;
+        this.getAllDivisions({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+
+      case 'departmentGrid':
+        this.employeePageSize = pageSize;
+        this.getAllDepartments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'subDepartmentGrid':
+        this.employeePageSize = pageSize;
+        this.getAllSubDepartments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'businessDomainGrid':
+        this.employeePageSize = pageSize;
+        this.getAllBusinessDomains({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      case 'documentTypeGrid':
+        this.employeePageSize = pageSize;
+        this.getAllDocumentTypes({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      // handle other grids...
+
+      default:
+        break;
+    }
   }
 }

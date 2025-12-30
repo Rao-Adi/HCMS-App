@@ -176,4 +176,27 @@ export class ViewDocumentPendingApproval {
     this.selectedDocumentType = value;
   }
   GetAllDocuments(query: any) {}
+
+  // Store page sizes for each grid separately
+  divisionPageSize = 10; 
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    switch (gridId) {
+      case 'documentGrid':
+        this.divisionPageSize = pageSize;
+        this.GetAllDocuments({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+      default:
+        break;
+    }
+  }
 }

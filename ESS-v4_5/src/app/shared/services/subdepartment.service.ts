@@ -40,7 +40,7 @@ export class SubDepartmentService {
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
     isActive: boolean,
-    pageNo: number,
+    pageNumber: number,
     pageSize: number
   ): Observable<any> {
     const body = {
@@ -48,7 +48,7 @@ export class SubDepartmentService {
       sortBy,
       sortColumn,
       isActive,
-      pageNo,
+      pageNumber,
       pageSize,
     };
 
