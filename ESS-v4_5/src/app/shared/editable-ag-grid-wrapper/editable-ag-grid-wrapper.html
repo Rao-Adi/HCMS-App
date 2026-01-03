@@ -1,0 +1,25 @@
+<ag-grid-angular
+  [gridId]="gridId"
+  style="width: 100%; height:550px"
+  [class]="config.theme || 'ag-theme-alpine'"
+  [rowData]="rowData"
+  [columnDefs]="columnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowHeight]="config.rowHeight"
+  [headerHeight]="config.headerHeight"
+  [pagination]="config.enablePagination"
+ 
+  [paginationPageSize]="config.pageSize"
+  [paginationPageSizeSelector]="config.pageSizeOptions"
+  [suppressCellFocus]="config.suppressCellFocus"
+  [pinnedTopRowData]="pinnedTopRowData"
+  [pinnedBottomRowData]="pinnedBottomRowData"
+  [rowSelection]="config.enableSelection ? 'multiple' : undefined"
+  (gridReady)="onGridReady($event)"
+  (cellClicked)="onCellClicked($event)"
+  (selectionChanged)="onSelectionChanged($event)"
+  (filterChanged)="refreshGrid()"
+>
+</ag-grid-angular>
+
+ <!-- domLayout="{{ config.domLayout }}" -->

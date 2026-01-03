@@ -46,7 +46,7 @@
                       <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
-                        placeholder="Select Division"
+                        placeholder="Select DocumentType"
                         [(ngModel)]="selectedDocumentType"
                         (valueChange)="onDocumentTypeChange($event)"
                         width="250px"
@@ -65,7 +65,7 @@
                           labelKey="NAME"
                           placeholder="Select Division"
                           [(ngModel)]="selectedDivisions"
-                          (valueChange)="onDepartmentsChange($event)"
+                          (valueChange)="onDivisionChange($event)"
                           width="250px"
                         >
                         </app-division-list>
@@ -82,6 +82,7 @@
                         valueKey="CODE"
                         labelKey="NAME"
                         placeholder="Select Department"
+                        [division]="selectedDivisions"
                         [(ngModel)]="selectedDepartment"
                         (valueChange)="onDepartmentsChange($event)"
                         width="250px"
@@ -98,9 +99,9 @@
                       <app-sub-department-list
                         valueKey="CODE"
                         labelKey="NAME"
-                        placeholder="Select Department"
-                        [(ngModel)]="selectedDepartment"
-                        (valueChange)="onDepartmentsChange($event)"
+                        placeholder="Select SubDepartment"
+                        [department]="selectedDepartment"
+                        [(ngModel)]="selectedSubDepartment"
                         width="250px"
                       >
                       </app-sub-department-list>

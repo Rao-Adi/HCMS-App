@@ -71,9 +71,8 @@ export class MenuComponent implements OnDestroy {
   constructor(
     private _dataService: DataService, // Injected DataService
     private renderer: Renderer2,
-    private elRef: ElementRef
-  ) // You do NOT need to inject the Router, which is correct
-  {}
+    private elRef: ElementRef // You do NOT need to inject the Router, which is correct
+  ) {}
 
   public ngOnInit() {
     //this.RootItems = [];
@@ -94,7 +93,19 @@ export class MenuComponent implements OnDestroy {
             Value: 'upload-old-documents',
             NavigateUrl: '/implementation/upload-old-documents',
             Class: 'menu-l2',
-          }
+          },
+          {
+            Text: 'AG-Grid inline edit test',
+            Value: 'aggridinlineediting',
+            NavigateUrl: '/implementation/aggridinlineediting',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Upload Old Documents Edit',
+            Value: 'upload-old-documents-edit',
+            NavigateUrl: '/implementation/upload-old-documents-edit',
+            Class: 'menu-l2',
+          },
         ],
       },
       {
@@ -108,7 +119,7 @@ export class MenuComponent implements OnDestroy {
             NavigateUrl: '/setups-configurations/cabinet-structure',
             Class: 'menu-l2',
           },
-           {
+          {
             Text: 'Document Attributes',
             Value: 'Document-Attributes',
             NavigateUrl: '/setups-configurations/document-attributes',
@@ -163,7 +174,7 @@ export class MenuComponent implements OnDestroy {
             NavigateUrl: '/documents/request',
             Class: 'menu-l2',
           },
-           {
+          {
             Text: 'My Approvals-Reuest for Document Creation/Update',
             Value: 'My-Approvals-Reuest-for-Document-Creation-Update',
             NavigateUrl: '/documents/my-approvals-request',
@@ -206,7 +217,7 @@ export class MenuComponent implements OnDestroy {
             NavigateUrl: '/reports/view-document',
             Class: 'menu-l2',
           },
-           {
+          {
             Text: 'Personalized Email Alerts',
             Value: 'personalized-Email-Alerts',
             NavigateUrl: '/reports/personalized-email-alerts',
@@ -223,7 +234,7 @@ export class MenuComponent implements OnDestroy {
             Value: 'View-Documents-Pending-Apprvovals',
             NavigateUrl: '/reports/pending-approval',
             Class: 'menu-l2',
-          }
+          },
         ],
       },
       // {

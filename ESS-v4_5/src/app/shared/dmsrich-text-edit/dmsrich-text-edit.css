@@ -1,0 +1,12 @@
+::ng-deep .ql-snow .ql-editor h1 {
+    font-size: 18px;
+}
+
+
+.quill-10-percent .ql-container {
+    height: 10vh;
+}
+
+.quill-10-percent .ql-editor {
+    min-height: 10vh;
+}

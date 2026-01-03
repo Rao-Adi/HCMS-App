@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, forwardRef, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, input, OnChanges, SimpleChanges } from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -18,7 +18,8 @@ import { SubDepartmentService } from '@app/shared/services/subdepartment.service
   templateUrl: './sub-department-list.html',
   styleUrl: './sub-department-list.css',
 })
-export class SubDepartmentList implements ControlValueAccessor {
+export class SubDepartmentList implements ControlValueAccessor, OnChanges  {
+  @Input() department: string | undefined;
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
@@ -31,14 +32,23 @@ export class SubDepartmentList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
+  isLoading = false;
 
   constructor(private _subDeparmentServices: SubDepartmentService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
-  ngOnInit() {
-    this.getAllSubDepartments();
+   ngOnChanges(changes: SimpleChanges) {
+    if (changes['department']) {
+      const dept = changes['department'].currentValue;
+      if (dept) {
+        this.isLoading = true;
+        this.getAllSubDepartments(dept);
+      } else {
+        this.data = [];  // Clear if no department selected
+      }
+    }
   }
 
   writeValue(value: any): void {
@@ -64,13 +74,18 @@ export class SubDepartmentList implements ControlValueAccessor {
     this.valueChange.emit(value);
   }
 
-  getAllSubDepartments = () => {
-    this._subDeparmentServices.getSubDepartmentList().subscribe((res) => {
+  getAllSubDepartments = (departmentCode:string) => {
+    if (!departmentCode) {
+      this.data = [];
+      return;
+    }
+    this._subDeparmentServices.getSubDepartmentsByDivisionCode(departmentCode).subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
-          NAME: d.Value,
+          NAME: d.Name,
         }));
+        this.isLoading = false;
       } else {
         this.data = [];
       }

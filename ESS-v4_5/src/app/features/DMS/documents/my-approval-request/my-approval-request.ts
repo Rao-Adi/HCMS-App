@@ -144,8 +144,14 @@ export class MyApprovalRequest {
     },
   ];
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   onDocumentTypeChange(value: string): void {
@@ -157,7 +163,7 @@ export class MyApprovalRequest {
   GetAllApprovedDocuments(query: any) {}
   GetAllDisApprovedDocuments(query: any) {}
 
-   // Store page sizes for each grid separately
+  // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
@@ -167,7 +173,7 @@ export class MyApprovalRequest {
     const { gridId, pageSize } = event;
 
     switch (gridId) {
-     case 'pendingGrid':
+      case 'pendingGrid':
         this.divisionPageSize = pageSize;
         this.GetAllPendingDocuments({
           pageNumber: 1,
@@ -194,7 +200,7 @@ export class MyApprovalRequest {
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
-        break; 
+        break;
       default:
         break;
     }

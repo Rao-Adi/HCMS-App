@@ -25,7 +25,7 @@ interface HeaderDetailsResponse {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterModule, MenuComponent, SpinnerComponent],
+  imports: [CommonModule, RouterOutlet, RouterModule, MenuComponent],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css']
 })

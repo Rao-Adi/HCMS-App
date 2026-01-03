@@ -48,7 +48,7 @@
                         labelKey="NAME"
                         placeholder="Select Division"
                         [(ngModel)]="selectedDivisions"
-                        (valueChange)="onDepartmentsChange($event)"
+                        (valueChange)="onDivisionChange($event)"
                         width="250px"
                       >
                       </app-division-list>
@@ -65,6 +65,7 @@
                       valueKey="CODE"
                       labelKey="NAME"
                       placeholder="Select Department"
+                      [division]="selectedDivisions"
                       [(ngModel)]="selectedDepartment"
                       (valueChange)="onDepartmentsChange($event)"
                       width="250px"
@@ -81,9 +82,9 @@
                     <app-sub-department-list
                       valueKey="CODE"
                       labelKey="NAME"
-                      placeholder="Select Department"
-                      [(ngModel)]="selectedDepartment"
-                      (valueChange)="onDepartmentsChange($event)"
+                      placeholder="Select SubDepartment"
+                      [department]="selectedDepartment"
+                      [(ngModel)]="selectedSubDepartment"
                       width="250px"
                     >
                     </app-sub-department-list>
@@ -106,7 +107,7 @@
                         >Approval Authorities can only give their observations, but not edit the
                         document</label
                       >
-
+                      <br />
                       <label nz-radio nzValue="B"
                         >Approval Authorities can even edit the documents before approval</label
                       >
@@ -114,7 +115,7 @@
                   </div>
                 </div>
               </div>
-
+              <br />
               <div class="row row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <!-- Authority Type -->
                 <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
@@ -140,6 +141,7 @@
                   <button
                     aria-label="Collapse Menu"
                     title="Collapse Menu"
+                    (click)="addExclusion()"
                     class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                   >
                     <i class="bi bi-plus-circle"></i>
@@ -302,6 +304,27 @@
                     </div>
                   </ng-container>
                 </ng-container>
+              </div>
+
+              <div class="row row-space">
+                <div *ngIf="showExclusionTable" class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4">
+                  <table class="table">
+                    <thead>
+                      <th>Approval Sequence</th>
+                      <th></th>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>
+                          Ebad Khan<br />
+                          Role: Developer<br />
+                          Designation: Business Manager
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

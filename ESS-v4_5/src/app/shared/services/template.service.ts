@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { Template } from '../interfaces/interfaces';
+import { Template, TemplateCreateDto } from '../interfaces/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -61,7 +61,7 @@ export class TemplateService {
     });
   }
 
-  create(shortcut: Template): Observable<Template> {
+  create(shortcut: TemplateCreateDto): Observable<Template> {
     return this.cabietStructureConfig$.pipe(
       take(1),
       switchMap((cabietStructureConfig) =>

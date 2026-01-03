@@ -95,9 +95,22 @@ export const routes: Routes = [
                 '@app/features/DMS/implementation/upload-old-documents/upload-old-documents'
               ).then((m) => m.UploadOldDocuments),
           },
+          {
+            path: 'aggridinlineediting',
+            loadComponent: () =>
+              import(
+                '@app/features/DMS/implementation/aggrid-inline-editing-test/aggrid-inline-editing-test'
+              ).then((m) => m.AGGridInlineEditingTest),
+          },
+          {
+            path: 'upload-old-documents-edit',
+            loadComponent: () =>
+              import(
+                '@app/features/DMS/implementation/editable-upload-document/editable-upload-document'
+              ).then((m) => m.EditableUploadDocument),
+          },
         ],
       },
-
       // ---------- Reports ----------
       {
         path: 'reports',

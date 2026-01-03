@@ -1,0 +1,9 @@
+<quill-editor
+  style="height: 10vh; display: block"
+  class="quill-10-percent"
+  [(ngModel)]="htmlText"
+  placeholder="Enter Text"
+  [modules]="quillConfig"
+  (onSelectionChanged)="onSelectionChanged($event)"
+  (onContentChanged)="onContentChanged($event)"
+></quill-editor>

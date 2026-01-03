@@ -31,20 +31,20 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     DivisionList,
     SubDepartmentList,
     DepartmentList,
-    DocumentTypeList
+    DocumentTypeList,
   ],
   templateUrl: './approval-workflow-policy-external-users.html',
   styleUrl: './approval-workflow-policy-external-users.css',
 })
 export class ApprovalWorkflowPolicyExternalUsers {
+  
   radioValue = '';
-
+  showExclusionTable = false;
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
 
- 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
     { CODE: '2', NAME: 'Employee' },
@@ -83,11 +83,22 @@ export class ApprovalWorkflowPolicyExternalUsers {
     this.selectedWorkflowExclude = value;
   }
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
   }
+
+   addExclusion() {
+    this.showExclusionTable = this.showExclusionTable == true ? false : true;
+  }
+
 }

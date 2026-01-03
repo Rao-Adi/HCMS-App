@@ -60,7 +60,6 @@ export class PersonalizedEmailAlerts {
   };
   public noRowsOverlay: string = '';
 
- 
   emailFrequencies: SelectList[] = [
     { CODE: '1', NAME: 'Marketing Division' },
     { CODE: '2', NAME: 'Software Division' },
@@ -92,8 +91,14 @@ export class PersonalizedEmailAlerts {
     this.selectedAuthorityType = value;
   }
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   onDocumentTypeChange(value: string): void {

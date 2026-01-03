@@ -1,0 +1,23 @@
+/*
+Source - https://stackoverflow.com/a
+Posted by rossipedia, modified by community. See post 'Timeline' for change history
+Retrieved 2026-01-02, License - CC BY-SA 4.0
+*/
+
+table {
+    border:none;
+    border-collapse: collapse;
+}
+
+table td {
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+}
+
+table td:first-child {
+    border-left: none;
+}
+
+table td:last-child {
+    border-right: none;
+}

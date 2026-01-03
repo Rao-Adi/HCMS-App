@@ -27,7 +27,7 @@ export class UserService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getUserList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSUser/get-all-user-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
@@ -37,7 +37,7 @@ export class UserService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllUser(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

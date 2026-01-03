@@ -340,8 +340,14 @@ export class CreateUpdateDocument {
     this.selectedUsers = value;
   }
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   onDocumentTypeChange(value: string): void {

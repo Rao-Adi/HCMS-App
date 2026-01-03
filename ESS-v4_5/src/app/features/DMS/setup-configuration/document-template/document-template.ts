@@ -19,6 +19,9 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { TemplateService } from '@app/shared/services/template.service';
+import { Template, TemplateCreateDto } from '@app/shared/interfaces/interfaces';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 
@@ -46,6 +49,7 @@ interface MockUser {
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    DMSRichTextEdit,
   ],
   providers: [
     MedicalReimbursementService,
@@ -62,6 +66,7 @@ export class DocumentTemplate {
   optionList: string[] = [];
   selectedUser?: string;
   loading = false;
+  templateHtml: string = '';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -72,7 +77,8 @@ export class DocumentTemplate {
     private http: HttpClient,
     private datePipe: DatePipe,
     private decimalPipe: DecimalPipe,
-    private iconService: NzIconService
+    private iconService: NzIconService,
+    private documentTemplateService: TemplateService
   ) {
     this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
@@ -105,12 +111,43 @@ export class DocumentTemplate {
     );
   }
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
+  }
+
+  saveTemplate(data: any) {
+    if (!this.selectedDocumentType || !this.templateHtml) {
+      alert('Required fields missing');
+      return;
+    }
+
+    const payload: TemplateCreateDto = {
+      id: '', // or generate if needed; usually backend handles this
+      documentTypeCode: this.selectedDocumentType,
+      templateName: this.selectedDocumentType,
+      templateFileURL: this.randomUserUrl || '', // fallback empty string if no URL
+      templateType: 1, // hardcoded, or make dynamic if needed
+      divisionCode: this.selectedDivisions || null,
+      departmentCode: this.selectedDepartment || null,
+      subDepartmentCode: this.selectedSubDepartment || null,
+      isDefault: false, // add this field since it's in interface
+      // Plus fields from AuditableEntity if required or optional
+    };
+
+    this.documentTemplateService.create(payload).subscribe({
+      next: () => alert('Template saved successfully'),
+      error: (err) => console.error(err),
+    });
   }
 }

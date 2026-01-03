@@ -175,11 +175,16 @@ export class ApprovalDocuments {
       uploadDocument: 'Upload',
     }));
   }
-
-  onDepartmentsChange(value: string): void {
+  
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
   }
-
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
+  }
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
@@ -187,8 +192,8 @@ export class ApprovalDocuments {
 
   GetAllDocuments(query: any) {}
 
-   // Store page sizes for each grid separately
-  divisionPageSize = 10; 
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
   // add more as needed...
   selectedPageSize = 1; // default value
 
@@ -204,7 +209,7 @@ export class ApprovalDocuments {
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
-        break; 
+        break;
 
       default:
         break;

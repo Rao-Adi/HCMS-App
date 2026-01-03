@@ -3,10 +3,13 @@ import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
 
 @Component({
   selector: 'app-misc-policies',
-  imports: [CommonModule, AgGridWrapper],
+  imports: [CommonModule, NzIconModule, NzSwitchModule, AgGridWrapper, NzModalModule],
   templateUrl: './misc-policies.html',
   styleUrl: './misc-policies.css',
 })
@@ -15,7 +18,7 @@ export class MiscPolicies {
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
-
+  value!: boolean;
   UploadColumnDefs = [
     { field: 'documentType', headerName: 'Document Types', flex: 1 },
     {
@@ -23,6 +26,11 @@ export class MiscPolicies {
       headerName: 'TraningRequired',
       flex: 1,
       cellEditor: 'agCheckboxCellEditor',
+      cellRenderer: (params: any) => {
+        return `
+          <nz-switch [(ngModel)]="switchValue1"></nz-switch>
+      `;
+      },
     },
     {
       field: 'minimumscoreforpassing',
@@ -92,7 +100,7 @@ export class MiscPolicies {
 
   GetAllTrainingPolicy(query: any) {}
 
-   // Store page sizes for each grid separately
+  // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
@@ -120,7 +128,7 @@ export class MiscPolicies {
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
-        break; 
+        break;
       default:
         break;
     }

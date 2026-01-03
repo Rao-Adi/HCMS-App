@@ -13,14 +13,14 @@ import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
 
-interface TabConfig {
-  id: number;
-  title: string;
-  CreatedBy: string;
-  CreatedAt: string;
-  LastModifiedAt: string;
-  LastModifiedBy: string;
-}
+// interface TabConfig {
+//   id: number;
+//   Name: string;
+//   CreatedBy: string;
+//   CreatedAt: string;
+//   LastModifiedAt: string;
+//   LastModifiedBy: string;
+// }
 
 @Component({
   selector: 'app-cabinet-structure',
@@ -36,8 +36,8 @@ export class CabinetStructure {
   level3Title: string = 'Level 3';
   level4Title: string = 'Level 4';
   level5Title: string = 'Document Type';
-  selectedTab: any = null;
- 
+  selectedTab!: CabinetStructureTabsConfig;
+
   selectedPageSize = 1; // default value
 
   totalDivisions = 0;
@@ -52,7 +52,7 @@ export class CabinetStructure {
   businessDomainData: any[] = [];
   documentTypeData: any[] = [];
 
-  tabs: TabConfig[] = [];
+  tabs: CabinetStructureTabsConfig[] = [];
   selectedTabId!: number;
   selectedTabTitle = ''; // for textbox editing
 
@@ -259,8 +259,8 @@ export class CabinetStructure {
       .subscribe((res) => {
         if (res?.Data) {
           this.tabs = (res.Data.Items ?? []).map((d: any) => ({
-            id: Number(d.Id), // 🔥 FIX
-            title: d.Name,
+            Id: Number(d.Id), // 🔥 FIX
+            Name: d.Name,
             CreatedBy: d.CreatedBy,
             CreatedAt: d.CreatedAt,
             LastModifiedBy: d.LastModifiedBy,
@@ -278,12 +278,12 @@ export class CabinetStructure {
       });
   }
 
-  onTabChange(tab: TabConfig): void {
+  onTabChange(tab: CabinetStructureTabsConfig): void {
     this.selectedTab = tab;
-    this.selectedTabId = tab.id;
-    this.selectedTabTitle = tab.title;
+    this.selectedTabId = tab.Id;
+    this.selectedTabTitle = tab.Name;
 
-    this.loadDataByTab(tab.id);
+    this.loadDataByTab(tab.Id);
   }
 
   loadDataByTab(tabId: number): void {
@@ -531,26 +531,26 @@ export class CabinetStructure {
     };
 
     this._cabietTabConfigService.update(payload).subscribe({
-      next: (updated:any) => {
+      next: (updated: any) => {
         // Update tabs array
         this.tabs = this.tabs.map((tab) =>
-          tab.id === updated.Data.Id
+          tab.Id === updated.Data.Id
             ? {
                 ...tab,
-                title: updated.Data.Name,
-                lastModifiedBy: updated.Data.LastModifiedBy,
-                lastModifiedAt: updated.Data.LastModifiedAt,
+                Name: updated.Data.Name,
+                LastModifiedBy: updated.Data.LastModifiedBy,
+                LastModifiedAt: updated.Data.LastModifiedAt,
               }
             : tab
         );
-  
+
         // Update selected tab reference too (for UI refresh)
-        if (this.selectedTab.id === updated.Data.Id) {
+        if (this.selectedTab.Id === updated.Data.Id) {
           this.selectedTab = {
             ...this.selectedTab,
-            title: updated.Name,
-            lastModifiedBy: updated.LastModifiedBy,
-            lastModifiedAt: updated.LastModifiedAt,
+            Name: updated.Data.Name,
+            LastModifiedBy: updated.Data.LastModifiedBy,
+            LastModifiedAt: updated.Data.LastModifiedAt,
           };
         }
         this.cdr.detectChanges();
@@ -562,7 +562,7 @@ export class CabinetStructure {
   }
 
   trackByTabId(index: number, tab: any) {
-    return tab.id;
+    return tab.Id;
   }
   revertCell(event: any, message: string) {
     alert(message); // replace with toast

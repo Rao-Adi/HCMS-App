@@ -14,6 +14,9 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
+import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 
 @Component({
   selector: 'app-approval-workflow-policy-management',
@@ -30,6 +33,8 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    DesignationList,
+    RoleList,
   ],
   templateUrl: './approval-workflow-policy-management.html',
   styleUrl: './approval-workflow-policy-management.css',
@@ -43,10 +48,13 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
   ],
 })
 export class ApprovalWorkflowPolicyManagement {
+  public noRowsOverlay: string = '';
+
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
   switchValue2 = false;
   loading = false;
+  showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
   selectedUser?: string;
@@ -54,6 +62,15 @@ export class ApprovalWorkflowPolicyManagement {
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
+  selectedDesignation?: string = '';
+  selectedRole?: string = '';
+  radioValue = '';
+  // single state
+  activeMode: 'manual' | 'integration' | null = null;
+
+  pageSize = 10;
+  rowData: any[] = [];
+  totalRows = 0;
 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
@@ -76,25 +93,17 @@ export class ApprovalWorkflowPolicyManagement {
     { CODE: '3', NAME: 'Specific Employee' },
   ];
 
-  radioValue = '';
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
-  // single state
-  activeMode: 'manual' | 'integration' | null = null;
+  // Default Column Definitions: Apply configuration across all columns
+  defaultColDef: ColDef = {
+    filter: true,
+    cellDataType: false,
+  };
 
   constructor() {}
 
   ngOnInit() {
     this.loadData(this.pageSize);
   }
-
-  // Default Column Definitions: Apply configuration across all columns
-  defaultColDef: ColDef = {
-    filter: true,
-    cellDataType: false,
-  };
-  public noRowsOverlay: string = '';
 
   UploadColumnDefs = [
     { field: 'documentId', headerName: 'Document ID' },
@@ -278,6 +287,7 @@ export class ApprovalWorkflowPolicyManagement {
     { field: 'accessLevel', headerName: 'Access Level' },
   ];
 
+ 
   onSearch(value: string): void {
     this.loading = true;
     this.searchChange$.next(value);
@@ -287,6 +297,15 @@ export class ApprovalWorkflowPolicyManagement {
 
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;
+    //reset preselected values
+    this.selectedUser = '';
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedDocumentType = '';
+    this.selectedDesignation = '';
+    this.selectedRole = '';
+    this.selectedWorkflowExclude = 0;
   }
 
   selectedWorkflowExclude: number | null = null;
@@ -294,8 +313,14 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedWorkflowExclude = value;
   }
 
-  onDepartmentsChange(value: number | null): void {
-    this.selectedDivisions = String(value);
+  onDivisionChange(value: string): void {
+    this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   clickSwitch(mode: 'manual' | 'integration'): void {
@@ -317,10 +342,6 @@ export class ApprovalWorkflowPolicyManagement {
   async saveClaim(): Promise<void> {
     return;
   }
-
-  pageSize = 10;
-  rowData: any[] = [];
-  totalRows = 0;
 
   loadData(pageNumber: number) {
     // 🔹 TEMP: Dummy data mode
@@ -351,6 +372,10 @@ export class ApprovalWorkflowPolicyManagement {
         .split('T')[0],
       uploadDocument: 'Upload',
     }));
+  }
+
+  addExclusion() {
+    this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
 
   onDocumentTypeChange(value: string): void {

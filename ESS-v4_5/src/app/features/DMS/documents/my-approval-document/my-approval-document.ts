@@ -54,7 +54,7 @@ export class MyApprovalDocument {
     editable: true,
   };
 
-  pageSize = 10; 
+  pageSize = 10;
   totalPendingDocuments = 0;
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
@@ -182,10 +182,15 @@ export class MyApprovalDocument {
     },
   ];
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
   }
-
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
+  }
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
@@ -195,7 +200,7 @@ export class MyApprovalDocument {
   GetAllApprovedDocuments(query: any) {}
   GetAllDisApprovedDocuments(query: any) {}
 
-   // Store page sizes for each grid separately
+  // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
@@ -232,7 +237,7 @@ export class MyApprovalDocument {
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
-        break; 
+        break;
       default:
         break;
     }

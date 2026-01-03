@@ -16,51 +16,11 @@
               <button
                 *ngFor="let tab of tabs; trackBy: trackByTabId"
                 class="tab-button"
-                [ngClass]="{ 'active-tab': selectedTabId === tab.id }"
+                [ngClass]="{ 'active-tab': selectedTabId === tab.Id }"
                 (click)="onTabChange(tab)"
               >
-                {{ tab.title }}
+                {{ tab.Name }}
               </button>
-              <!-- <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === '{{level1Title}}' }"
-                (click)="selectedTab = '{{level1Title}}'"
-              >
-                {{ level1Title }}
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === '{{level2Title}}' }"
-                (click)="selectedTab = '{{level2Title}}'"
-              >
-                {{ level2Title }}
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === '{{level3Title}}' }"
-                (click)="selectedTab = '{{level3Title}}'"
-              >
-                {{ level3Title }}
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === '{{level4Title}}' }"
-                (click)="selectedTab = '{{level4Title}}'"
-              >
-                {{ level4Title }}
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === '{{level5Title}}' }"
-                (click)="selectedTab = '{{level5Title}}'"
-              >
-                {{ level5Title }}
-              </button> -->
             </div>
 
             <div class="row row-space" *ngIf="selectedTabId === 1">
@@ -89,13 +49,19 @@
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                  <span>{{ selectedTab.LastModifiedBy || 'N/A' }}</span>
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-4">
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                  <span>
+                    {{
+                      selectedTab.LastModifiedAt
+                        ? (selectedTab.LastModifiedAt | customDateFormat)
+                        : 'N/A'
+                    }}
+                  </span>
                 </div>
               </div>
               <br />
@@ -148,13 +114,19 @@
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                  <span>{{ selectedTab.LastModifiedBy || 'N/A' }}</span>
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-4">
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                  <span>
+                    {{
+                      selectedTab.LastModifiedAt
+                        ? (selectedTab.LastModifiedAt | customDateFormat)
+                        : 'N/A'
+                    }}
+                  </span>
                 </div>
               </div>
               <br />
@@ -207,13 +179,19 @@
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                  <span>{{ selectedTab.LastModifiedBy || 'N/A' }}</span>
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-4">
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                  <span>
+                    {{
+                      selectedTab.LastModifiedAt
+                        ? (selectedTab.LastModifiedAt | customDateFormat)
+                        : 'N/A'
+                    }}
+                  </span>
                 </div>
               </div>
               <br />
@@ -269,13 +247,19 @@
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                  <span>{{ selectedTab.LastModifiedBy || 'N/A' }}</span>
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-4">
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                  <span>
+                    {{
+                      selectedTab.LastModifiedAt
+                        ? (selectedTab.LastModifiedAt | customDateFormat)
+                        : 'N/A'
+                    }}
+                  </span>
                 </div>
               </div>
               <br />
@@ -329,13 +313,19 @@
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedBy || 'N/A' }}</span>
+                  <span>{{ selectedTab.LastModifiedBy || 'N/A' }}</span>
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-4">
                   <div class="PnlHeading">
                     <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
                   </div>
-                  <span>{{ selectedTab?.CreatedAt | customDateFormat }}</span>
+                  <span>
+                    {{
+                      selectedTab.LastModifiedAt
+                        ? (selectedTab.LastModifiedAt | customDateFormat)
+                        : 'N/A'
+                    }}
+                  </span>
                 </div>
               </div>
               <br />

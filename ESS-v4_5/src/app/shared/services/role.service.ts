@@ -27,17 +27,17 @@ export class RoleService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getRoleList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSRole/get-all-role-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getRoleById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSRole/get-role-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllRole(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

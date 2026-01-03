@@ -51,7 +51,6 @@ export class DocumentAuthorizationPostTraining {
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
-  
 
   constructor() {}
 
@@ -129,7 +128,6 @@ export class DocumentAuthorizationPostTraining {
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
- 
 
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
@@ -167,23 +165,25 @@ export class DocumentAuthorizationPostTraining {
     }));
   }
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
   }
-  GetAllDocuments(query:any){
+  GetAllDocuments(query: any) {}
 
-  }
+  GetAllUploadedDocuments(query: any) {}
 
-  GetAllUploadedDocuments(query:any){
-    
-  }
-
-   // Store page sizes for each grid separately
+  // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
@@ -201,7 +201,7 @@ export class DocumentAuthorizationPostTraining {
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
-        break; 
+        break;
       case 'authorizationStatusGrid':
         this.employeePageSize = pageSize;
         this.GetAllDocuments({

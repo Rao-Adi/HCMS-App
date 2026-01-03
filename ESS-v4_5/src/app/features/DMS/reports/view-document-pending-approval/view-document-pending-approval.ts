@@ -167,8 +167,14 @@ export class ViewDocumentPendingApproval {
     }));
   }
 
-  onDepartmentsChange(value: string): void {
+  onDivisionChange(value: string): void {
     this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
   }
 
   onDocumentTypeChange(value: string): void {
@@ -178,7 +184,7 @@ export class ViewDocumentPendingApproval {
   GetAllDocuments(query: any) {}
 
   // Store page sizes for each grid separately
-  divisionPageSize = 10; 
+  divisionPageSize = 10;
   // add more as needed...
   selectedPageSize = 1; // default value
 

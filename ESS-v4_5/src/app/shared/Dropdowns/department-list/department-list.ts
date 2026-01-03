@@ -1,5 +1,13 @@
 import { DepartmentService } from '@app/shared/services/department.service';
-import { Component, Input, Output, EventEmitter, forwardRef, input } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  forwardRef,
+  input,
+  SimpleChanges,
+} from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -19,6 +27,7 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
   styleUrl: './department-list.css',
 })
 export class DepartmentList implements ControlValueAccessor {
+  @Input() division: string | undefined;
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
@@ -31,14 +40,23 @@ export class DepartmentList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
+  isLoading = false;
 
   constructor(private _departmentServices: DepartmentService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
-  ngOnInit() {
-    this.getAllDepartment();
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['division']) {
+      const dept = changes['division'].currentValue;
+      if (dept) {
+        this.isLoading = true;
+        this.getAllDepartmentByDivisionCode(dept);
+      } else {
+        this.data = []; // Clear if no department selected
+      }
+    }
   }
 
   writeValue(value: any): void {
@@ -64,13 +82,14 @@ export class DepartmentList implements ControlValueAccessor {
     this.valueChange.emit(value);
   }
 
-  getAllDepartment = () => {
-    this._departmentServices.getDepartmentList().subscribe((res) => {
+  getAllDepartmentByDivisionCode = (division: string) => {
+    this._departmentServices.getDepartmentsByDivisionCode(division).subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
-          NAME: d.Value,
+          NAME: d.Name,
         }));
+        this.isLoading = false;
       } else {
         this.data = [];
       }
