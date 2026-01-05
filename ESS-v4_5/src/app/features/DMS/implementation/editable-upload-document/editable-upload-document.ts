@@ -16,42 +16,25 @@ import {
 export class EditableUploadDocument {
   gridConfig: GridConfig;
   employeeData: any[] = [];
-  // divisions = [
-  //   { id: 1, text: 'Software Division' },
-  //   { id: 2, text: 'Quality Management' },
-  //   { id: 3, text: 'Development' },
-  //   { id: 4, text: 'Pharma' },
-  // ];
-
-  // departments = [
-  //   { id: 1, text: 'Quality Assurance' },
-  //   { id: 2, text: 'Marketing' },
-  //   { id: 3, text: 'HR Sub-Dept' },
-  //   { id: 4, text: 'Software Department' },
-  // ];
-
-  // roles = [
-  //   { id: 1, text: 'Developer' },
-  //   { id: 2, text: 'Senior Developer' },
-  //   { id: 3, text: 'Quality Assurance' },
-  //   { id: 4, text: 'Data Engineer' },
-  //   { id: 5, text: 'HR Specialist' },
-  // ];
-
+  documentTypes = [
+    { id: 'DT1', text: 'SOP' },
+    { id: 'DT2', text: 'Policy' },
+  ];
   divisions = [
-    { id: '0001', text: 'Software Division' },
-    { id: '0002', text: 'Quality Management' },
-    { id: '0003', text: 'Development' },
-    { id: '0004', text: 'Pharma' },
+    { id: 'D1', text: 'Software', documentTypeId: 'DT1' },
+    { id: 'D2', text: 'QA', documentTypeId: 'DT1' },
+    { id: 'D3', text: 'HR', documentTypeId: 'DT2' },
   ];
-
   departments = [
-    { id: '0001', text: 'Quality Assurance' },
-    { id: '0002', text: 'Marketing' },
-    { id: '0003', text: 'HR Sub-Dept' },
-    { id: '0004', text: 'Software Department' },
+    { id: 'DEP1', text: 'Frontend', divisionId: 'D1' },
+    { id: 'DEP2', text: 'Backend', divisionId: 'D1' },
+    { id: 'DEP3', text: 'Testing', divisionId: 'D2' },
   ];
-
+  subDepartments = [
+    { id: 'SD1', text: 'Angular', departmentId: 'DEP1' },
+    { id: 'SD2', text: 'React', departmentId: 'DEP1' },
+    { id: 'SD3', text: 'API', departmentId: 'DEP2' },
+  ];
   roles = [
     { id: '0001', text: 'Developer' },
     { id: '0002', text: 'Senior Developer' },
@@ -87,15 +70,26 @@ export class EditableUploadDocument {
       documentId: '',
       documentName: '',
       version: '',
-      documentTypeId: '',
-      documentType: '',
-      division: '',
-      divisionId: '',
-      departmentId: '',
-      department: '',
-      subDepartmentId: '',
-      subDepartment: '',
+      documentTypeId: null,
+      divisionId: null,
+      departmentId: null,
+      subDepartmentId: null,
+      nextReviewDate: null,
+      uploadDocument: null,
       isNewRow: true,
+
+      // documentId: '',
+      // documentName: '',
+      // version: '',
+      // documentTypeId: '',
+      // documentType: '',
+      // division: '',
+      // divisionId: '',
+      // departmentId: '',
+      // department: '',
+      // subDepartmentId: '',
+      // subDepartment: '',
+      // isNewRow: true,
     },
   ];
 
@@ -125,61 +119,65 @@ export class EditableUploadDocument {
         pinned: 'left',
         required: true,
       },
+      // ✅ DOCUMENT TYPE
       {
-        
-        field: 'documentType',
-        headerName: 'DocumentType',
+        field: 'documentTypeId',
+        headerName: 'Document Type',
         type: 'dropdown',
-        minWidth: 180,
-        dropdownOptions: this.divisions,
-        dropdownValueField: 'documentTypeCode',
-        dropdownDisplayField: 'documentTypeName',
-        required: true,
+        dropdownOptions: this.documentTypes,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
       },
+
+      // ✅ DIVISION
       {
         field: 'divisionId',
         headerName: 'Division',
         type: 'dropdown',
-        minWidth: 180,
-        dropdownOptions: this.divisions,
-        dropdownValueField: 'divisionId',
-        dropdownDisplayField: 'divisionName',
-        required: true,
+        dependsOn: 'documentTypeId',
+        dataSourceKey: 'divisions',
+        filterKey: 'documentTypeId',
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
       },
+
+      // ✅ DEPARTMENT
       {
         field: 'departmentId',
         headerName: 'Department',
         type: 'dropdown',
-        minWidth: 180,
-        dropdownOptions: this.departments,
-        dropdownValueField: 'departmentId',
-        dropdownDisplayField: 'departmentName',
+        dependsOn: 'divisionId',
+        dataSourceKey: 'departments',
+        filterKey: 'divisionId',
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
         required: true,
       },
+
+      // ✅ SUB DEPARTMENT
       {
         field: 'subDepartmentId',
-        headerName: 'SubDepartment',
+        headerName: 'Sub Department',
         type: 'dropdown',
-        minWidth: 180,
-        dropdownOptions: this.departments,
-        dropdownValueField: 'subDepartmentId',
-        dropdownDisplayField: 'subDepartmentName',
+        dependsOn: 'departmentId',
+        dataSourceKey: 'subDepartments',
+        filterKey: 'departmentId',
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
         required: true,
       },
+
       {
         field: 'nextReviewDate',
         headerName: 'Next Review Date',
         type: 'date',
-        minWidth: 150,
-        pinned: 'left',
         required: true,
       },
+
       {
         field: 'uploadDocument',
         headerName: 'Upload Document',
         type: 'file',
-        minWidth: 150,
-        pinned: 'left',
         required: true,
       },
       // {
@@ -236,13 +234,13 @@ export class EditableUploadDocument {
         documentId: 'DOC001',
         documentName: 'Employee Handbook',
         version: '3.1',
-        documentTypeCode: '0001',
+        documentTypeId: 'DT1',
         documentTypeName: 'SOP',
-        divisionId: '0001',
+        divisionId: 'D1',
         divisionName: 'Corporate',
-        departmentId: '0001',
+        departmentId: 'DEP1',
         departmentName: 'Software Department',
-        subDepartmentId: '0001',
+        subDepartmentId: 'SD1',
         subDepartmentName: 'Recruitment',
         nextReviewDate: '2023-01-15',
         isActive: true,
@@ -251,13 +249,13 @@ export class EditableUploadDocument {
         documentId: 'DOC001',
         documentName: 'Employee Handbook',
         version: '3.1',
-        documentTypeCode: '0001',
+        documentTypeId: 'DT1',
         documentTypeName: 'SOP',
-        divisionId: '0001',
+        divisionId: 'D1',
         divisionName: 'Corporate',
-        departmentId: '0001',
+        departmentId: 'DEP1',
         departmentName: 'Software Department',
-        subDepartmentId: '0001',
+        subDepartmentId: 'SD1',
         subDepartmentName: 'Recruitment',
         nextReviewDate: '2026-01-15',
         isActive: true,
@@ -301,7 +299,7 @@ export class EditableUploadDocument {
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
-    console.log('Cell value changed:', event);
+    console.log('Cell value changed:', JSON.stringify(event));
 
     // Handle calculations if needed
     if (event.field === 'currentSalary' || event.field === 'incrementPercentage') {
@@ -366,15 +364,16 @@ class UploadDocumentColumns {
   documentId: string = '';
   documentName: string = '';
   version: string = '';
-  documentTypeId: string = '';
-  documentType: string = '';
+  documentTypeId: string | null = null;
+  //documentType: string = '';
 
-  divisionId: string = '';
-  division: string = '';
-  departmentId: string = '';
-  department: string = '';
-  subDepartmentId: string = '';
-  subDepartment: string = '';
-
+  divisionId: string | null = null;
+  //division: string | null = null;
+  departmentId: string | null = null;
+  //department: string | null = null;
+  subDepartmentId: string | null = null;
+  //subDepartment: string | null = null;
+  nextReviewDate: string | null = null;
+  uploadDocument: any = null;
   isNewRow: boolean = false;
 }

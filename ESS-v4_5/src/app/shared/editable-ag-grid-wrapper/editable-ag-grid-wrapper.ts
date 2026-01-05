@@ -151,6 +151,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   editingRowData: any = null;
   editingRowIndex: number = -1;
 
+  gridContext: any;
+
   constructor() {
     this.defaultColDef = {
       sortable: this.config.enableSorting,
@@ -165,63 +167,71 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     };
   }
 
-   // Data sources for cascade dropdowns
+  // Data sources for cascade dropdowns
   documentTypes = [
-    { id: 1, text: 'SOP' },
-    { id: 2, text: 'Policy' },
-    { id: 3, text: 'Guideline' },
-    { id: 4, text: 'Form' }
+    { id: 'DT1', text: 'SOP' },
+    { id: 'DT2', text: 'Policy' },
+    { id: 'DT3', text: 'Guideline' },
+    { id: 'DT4', text: 'Form' },
   ];
-  
+
   divisions = [
-    { id: 1, text: 'Software Division', documentTypeId: 1 },
-    { id: 2, text: 'Quality Management', documentTypeId: 1 },
-    { id: 3, text: 'HR Division', documentTypeId: 2 },
-    { id: 4, text: 'Finance Division', documentTypeId: 3 },
-    { id: 5, text: 'IT Division', documentTypeId: 4 }
+    { id: 'D1', text: 'Software Division', documentTypeId: 'DT1' },
+    { id: 'D2', text: 'Quality Management', documentTypeId: 'DT1' },
+    { id: 'D3', text: 'HR Division', documentTypeId: 'DT2' },
+    { id: 'D4', text: 'Finance Division', documentTypeId: 'DT3' },
+    { id: 'D5', text: 'IT Division', documentTypeId: 'DT4' },
   ];
-  
+
   departments = [
-    { id: 1, text: 'Software Department', divisionId: 1 },
-    { id: 2, text: 'QA Department', divisionId: 1 },
-    { id: 3, text: 'Development', divisionId: 2 },
-    { id: 4, text: 'Testing', divisionId: 2 },
-    { id: 5, text: 'HR Operations', divisionId: 3 },
-    { id: 6, text: 'Recruitment', divisionId: 3 },
-    { id: 7, text: 'Accounts', divisionId: 4 },
-    { id: 8, text: 'Budget', divisionId: 4 },
-    { id: 9, text: 'Infrastructure', divisionId: 5 },
-    { id: 10, text: 'Support', divisionId: 5 }
+    { id: 'DEP1', text: 'Software Department', divisionId: 'D1' },
+    { id: 'DEP2', text: 'QA Department', divisionId: 'D1' },
+    { id: 'DEP3', text: 'Development', divisionId: 'D2' },
+    { id: 'DEP4', text: 'Testing', divisionId: 'D2' },
+    { id: 'DEP5', text: 'HR Operations', divisionId: 'D3' },
+    { id: 'DEP6', text: 'Recruitment', divisionId: 'D3' },
+    { id: 'DEP7', text: 'Accounts', divisionId: 'D4' },
+    { id: 'DEP8', text: 'Budget', divisionId: 'D4' },
+    { id: 'DEP9', text: 'Infrastructure', divisionId: 'D5' },
+    { id: 'DEP10', text: 'Support', divisionId: 'D5' },
   ];
-  
+
   subDepartments = [
-    { id: 1, text: 'Frontend Team', departmentId: 1 },
-    { id: 2, text: 'Backend Team', departmentId: 1 },
-    { id: 3, text: 'Mobile Team', departmentId: 1 },
-    { id: 4, text: 'Manual QA', departmentId: 2 },
-    { id: 5, text: 'Automation QA', departmentId: 2 },
-    { id: 6, text: 'Angular Team', departmentId: 3 },
-    { id: 7, text: 'React Team', departmentId: 3 },
-    { id: 8, text: 'Functional Testing', departmentId: 4 },
-    { id: 9, text: 'Performance Testing', departmentId: 4 },
-    { id: 10, text: 'Payroll', departmentId: 5 },
-    { id: 11, text: 'Benefits', departmentId: 5 },
-    { id: 12, text: 'Campus Hiring', departmentId: 6 },
-    { id: 13, text: 'Lateral Hiring', departmentId: 6 }
+    { id: 'SD1', text: 'Frontend Team', departmentId: 'DEP1' },
+    { id: 'SD2', text: 'Backend Team', departmentId: 'DEP1' },
+    { id: 'SD3', text: 'Mobile Team', departmentId: 'DEP1' },
+
+    { id: 'SD4', text: 'Manual QA', departmentId: 'DEP2' },
+    { id: 'SD5', text: 'Automation QA', departmentId: 'DEP2' },
+
+    { id: 'SD6', text: 'Angular Team', departmentId: 'DEP3' },
+    { id: 'SD7', text: 'React Team', departmentId: 'DEP3' },
+
+    { id: 'SD8', text: 'Functional Testing', departmentId: 'DEP4' },
+    { id: 'SD9', text: 'Performance Testing', departmentId: 'DEP4' },
+
+    { id: 'SD10', text: 'Payroll', departmentId: 'DEP5' },
+    { id: 'SD11', text: 'Benefits', departmentId: 'DEP5' },
+
+    { id: 'SD12', text: 'Campus Hiring', departmentId: 'DEP6' },
+    { id: 'SD13', text: 'Lateral Hiring', departmentId: 'DEP6' },
   ];
 
   ngOnInit(): void {
     //this.buildColumnDefs();
+    this.gridContext = this.getContextData();
+    this.buildColumnDefs();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['config'] || changes['rowData']) {
-      this.buildColumnDefs();
-    }
+    this.gridContext = this.getContextData();
+    this.buildColumnDefs();
+    // if (changes['config'] || changes['rowData']) {
+    //   this.buildColumnDefs();
+    // }
   }
 
   private buildColumnDefs(): void {
-    debugger;
     this.columnDefs = [];
 
     // Add action column if inline edit/delete is enabled
@@ -370,8 +380,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
             return {
               component: column.customRenderer || rendererComponent,
               params: {
+                // 🔥 ALWAYS pass options (for root dropdown)
                 options: column.dropdownOptions || [],
-                value: params.data?.[column.dropdownValueField || column.field],
+
+                // 🔥 ALWAYS read value from rowData
+                value: params.data?.[column.field],
+                //value: params.data?.[column.dropdownValueField || column.field],
+
                 disabled: params.data?.disabled,
                 placeholder: column.placeholder || '--Select--',
                 emptyValue: 0,
@@ -385,18 +400,21 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 context: this.getContextData(),
 
                 onValueChange: (value: any, data: any) => {
-                  if (column.dropdownValueField) {
-                    data[column.dropdownValueField] = value;
-                  }
-                  if (column.dropdownDisplayField) {
-                    const matched = this.getOptionText(column, value);
-                    data[column.dropdownDisplayField] = matched || '';
-                  }
+                  // 1️⃣ Set value
+                  data[column.field] = value;
 
-                  // Clear dependent fields
+                  // 2️⃣ Clear children
                   this.clearDependentFields(data, column.field);
 
+                  // 3️⃣ IMPORTANT: refresh pinned row manually
+                  if (params.node.rowPinned === 'top') {
+                    this.pinnedTopRowData[0][column.field] = value;
+                    this.gridApi.setGridOption('pinnedTopRowData', this.pinnedTopRowData);
+                  }
+
+                  // 4️⃣ Emit change
                   this.emitCellValueChanged(column.field, value, data, params.rowIndex);
+ 
                 },
                 ...column.customRendererParams,
               },
@@ -628,21 +646,31 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     return String(value);
   }
 
-  private clearDependentFields(data: any, field: string): void {
-    // Find all columns that depend on this field
+  private clearDependentFields(data: any, parentField: string) {
     this.config.columns.forEach((col) => {
-      if (col.dependsOn === field) {
-        // Clear the dependent field
-        data[col.field] = col || 0;
-        if (col.dropdownDisplayField) {
-          data[col.dropdownDisplayField] = '';
-        }
-
-        // Recursively clear fields that depend on this one
+      if (col.dependsOn === parentField) {
+        data[col.field] = null;
         this.clearDependentFields(data, col.field);
       }
     });
   }
+
+  // private clearDependentFields(data: any, field: string): void {
+  //   // Find all columns that depend on this field
+  //   this.config.columns.forEach((col) => {
+  //     if (col.dependsOn === field) {
+  //       // Clear the dependent field
+  //       data[col.field] = col || 0;
+  //       if (col.dropdownDisplayField) {
+  //         data[col.dropdownDisplayField] = '';
+  //       }
+
+  //       // Recursively clear fields that depend on this one
+  //       this.clearDependentFields(data, col.field);
+  //     }
+  //   });
+  // }
+
   private emitCellValueChanged(field: string, value: any, rowData: any, rowIndex: number): void {
     this.cellValueChanged.emit({
       field,
@@ -794,10 +822,14 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     const pinnedData = this.pinnedTopRowData?.[0];
     if (!pinnedData) return;
 
+    console.log('pinnedData:', JSON.stringify(pinnedData));
+
     // Validate required fields
     const requiredColumns = this.config.columns.filter((col) => col.required);
     const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
-
+    
+    
+    console.log('Missing Fields:', missingFields);
     if (missingFields.length > 0) {
       alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
       return;
