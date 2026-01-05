@@ -5,6 +5,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
 import { ColDef } from 'ag-grid-community';
+import { filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-business-domain-component',
@@ -82,71 +83,29 @@ export class BusinessDomainComponent {
     this._masterCacheService
       .getMasterData({
         cacheKey: 'BUSINESSDOMAINS',
-
         getCount$: () => this._businessDomainService.getBusinessDomainCount(),
 
-        getData$: () =>
-          this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
+            // ✅ RETURN RAW API RESPONSE
+        getData$: () => this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
+
+        // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
-          Code: item.code || item.Code,
-          Name: item.name || item.Name,
-          Department: item.department || item.Department,
-          CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          Id: item.Id || item.id,
+          Code: item.Code || item.code,
+          Name: item.Name || item.name,
+          SubDepartment: item.SubDepartment || item.subDepartment || '',
+          SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedAt: item.CreatedAt || item.createdAt || '',
+          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
+          LastModifiedAt: item.LastModifiedAt || item.lastModifiedAt || '',
         }),
       })
       .subscribe((data) => {
+        // 'data' here is now the mapped array from mapFn
         this.businessDomainData = data;
-        this.totalBusinessDomains = data.length;
+        this.totalBusinessDomains = data ? data.length : 0;
       });
-
-    // const sort = query.sortModel?.[0];
-    // const pageNumber = Number(query?.pageNumber) || 1;
-    // const pageSize = Number(query?.pageSize) || 10;
-
-    // const cacheKey = 'BUSINESSDOMAINS';
-    // const cached = localStorage.getItem(cacheKey);
-
-    // // 1️⃣ If cache exists → check count
-    // if (cached) {
-    //   const parsed = JSON.parse(cached);
-
-    //   this._businessDomainService
-    //     .GetAllBusinessDomains(
-    //       query?.filterModel?.Name?.filter || '',
-    //       sort?.sort?.toUpperCase() || 'ASC',
-    //       sort?.colId || 'Name',
-    //       true,
-    //       pageNumber,
-    //       pageSize
-    //     )
-    //     .subscribe((res) => {
-    //       if (res?.Success && res.Data?.Items) {
-    //         this.totalBusinessDomains = res.Data.TotalCount;
-    //         this.businessDomainData = res.Data.Items.map((item: any) => ({
-    //           Code: item.code || item.Code,
-    //           Name: item.name || item.Name,
-    //           SubDepartment: item.SubDepartment || item.SubDepartment,
-    //           SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-    //           CreatedBy: item.createdBy || item.CreatedBy || '',
-    //           CreatedAt: item.createdAt || item.CreatedAt || '',
-    //         }));
-    //         //console.log('Mapped BusinessDomain:', this.businessDomainData);
-    //         localStorage.setItem(
-    //           'BUSINESSDOMAINS',
-    //           JSON.stringify({
-    //             count: this.totalBusinessDomains,
-    //             data: this.businessDomainData,
-    //           })
-    //         );
-    //       } else {
-    //         this.businessDomainData = [];
-    //       }
-    //       //this.cdr.detectChanges(); // force update
-    //     });
-    // }
-    // // 2️⃣ No cache → fetch
-    // this.fetchBusinessDomains(query, sort, pageNumber, pageSize);
   };
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {

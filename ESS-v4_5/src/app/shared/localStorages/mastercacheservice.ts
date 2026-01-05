@@ -50,35 +50,42 @@ export class Mastercacheservice {
    * Fetch fresh data and update cache
    */
   private fetchAndCache<T>(
-    config: {
-      cacheKey: string;
-      getCount$: () => Observable<any>;
-      getData$: () => Observable<any>;
-      mapFn: (item: any) => T;
-    },
-    knownCount?: number
-  ): Observable<T[]> {
-    return config.getData$().pipe(
-      tap((res) => {
-        const items = res?.Data?.Items ?? res?.Data ?? [];
-        const totalCount = knownCount ?? res?.Data?.TotalCount ?? items.length;
+  config: {
+    cacheKey: string;
+    getCount$: () => Observable<any>;
+    getData$: () => Observable<any>;
+    mapFn: (item: any) => T;
+  },
+  knownCount?: number
+): Observable<T[]> {
+  return config.getData$().pipe(
+    switchMap((res) => {
+      const items = res?.Data?.Items ?? [];
+      const totalCount = knownCount ?? res?.Data?.TotalCount ?? items.length;
 
-        const mapped = items.map(config.mapFn);
-
-        localStorage.setItem(
-          config.cacheKey,
-          JSON.stringify({
-            count: totalCount,
-            data: mapped,
-          })
+      // 🔒 HARD STOP: do NOT cache empty data
+      if (!items.length || totalCount === 0) {
+        console.warn(
+          `[MasterCacheService] Skipping cache update for ${config.cacheKey} (empty result)`
         );
-      }),
-      switchMap((res) => {
-        const items = res?.Data?.Items ?? res?.Data ?? [];
-        return of(items.map(config.mapFn));
-      })
-    );
-  }
+        return of([] as T[]);
+      }
+
+      const mapped = items.map(config.mapFn);
+
+      localStorage.setItem(
+        config.cacheKey,
+        JSON.stringify({
+          count: totalCount,
+          data: mapped,
+        })
+      );
+
+      return of(mapped);
+    })
+  );
+}
+
 
   /**
    * Manual cache clear

@@ -5,6 +5,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
+import { filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-document-type-component',
@@ -78,8 +79,8 @@ export class DocumentTypeComponent {
 
         getCount$: () => this._documentTypeService.getDocumentTypeCount(),
 
-        getData$: () =>
-          this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+           // ✅ RETURN RAW API RESPONSE
+        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (item) => ({
           Code: item.code || item.Code,
           Name: item.name || item.Name,

@@ -5,6 +5,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
+import { filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-sub-department-component',
@@ -74,71 +75,28 @@ export class SubDepartmentComponent {
     this._masterCacheService
       .getMasterData({
         cacheKey: 'SUBDEPARTMENTS',
-
         getCount$: () => this._subDepartmentService.getSubDepartmentCount(),
 
-        getData$: () =>
-          this._subDepartmentService.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+            // ✅ RETURN RAW API RESPONSE
+        getData$: () => this._subDepartmentService.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+        // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
-          Code: item.code || item.Code,
-          Name: item.name || item.Name,
-          Department: item.department || item.Department,
-          CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          Id: item.Id || item.id,
+          Code: item.Code || item.code,
+          Name: item.Name || item.name,
+          Department: item.Department || item.department || '',
+          DepartmentCode: item.DepartmentCode || item.departmentCode || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedAt: item.CreatedAt || item.createdAt || '',
+          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
+          LastModifiedAt: item.LastModifiedAt || item.lastModifiedAt || '',
         }),
       })
       .subscribe((data) => {
+        // 'data' here is now the mapped array from mapFn
         this.subDepartmentData = data;
-        this.totalSubDepartments = data.length;
-      });
-
-    // const sort = query.sortModel?.[0];
-    // const pageNumber = Number(query?.pageNumber) || 1;
-    // const pageSize = Number(query?.pageSize) || 10;
-
-    // const cacheKey = 'SUBDEPARTMENTS';
-    // const cached = localStorage.getItem(cacheKey);
-
-    // // 1️⃣ If cache exists → check count
-    // if (cached) {
-    //   const parsed = JSON.parse(cached);
-
-    //   this._subDepartmentService
-    //     .GetAllSubDepartments(
-    //       query?.filterModel?.Name?.filter || '',
-    //       sort?.sort?.toUpperCase() || 'ASC',
-    //       sort?.colId || 'Name',
-    //       true,
-    //       pageNumber,
-    //       pageSize
-    //     )
-    //     .subscribe((res) => {
-    //       if (res?.Success && res.Data?.Items) {
-    //         this.totalSubDepartments = res.Data.TotalCount;
-    //         this.subDepartmentData = res.Data.Items.map((item: any) => ({
-    //           Code: item.code || item.Code,
-    //           Name: item.name || item.Name,
-    //           Department: item.department || item.Department,
-    //           CreatedBy: item.createdBy || item.CreatedBy || '',
-    //           CreatedAt: item.createdAt || item.CreatedAt || '',
-    //         }));
-    //         //console.log('Mapped subDepartmentData:', this.subDepartmentData);
-
-    //         localStorage.setItem(
-    //           'SUBDEPARTMENTS',
-    //           JSON.stringify({
-    //             count: this.totalSubDepartments,
-    //             data: this.subDepartmentData,
-    //           })
-    //         );
-    //       } else {
-    //         this.subDepartmentData = [];
-    //       }
-    //       //this.cdr.detectChanges(); // force update
-    //     });
-    // }
-    // // 2️⃣ No cache → fetch
-    // this.fetchSubDepartments(query, sort, pageNumber, pageSize);
+        this.totalSubDepartments = data ? data.length : 0;
+      }); 
   };
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {

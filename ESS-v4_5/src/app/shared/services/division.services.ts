@@ -61,73 +61,86 @@ export class DivisionService {
     });
   }
 
-  create(shortcut: Division): Observable<Division> {
-    return this.divisions$.pipe(
-      take(1),
-      switchMap((divisions) =>
-        this.http.post<Division>('/DMSDivision/create-division', { shortcut }).pipe(
-          map((newDivision) => {
-            // Update the divisions with the new shortcut
-            this._divisions.next([...divisions, newDivision]);
-
-            // Return the new shortcut from observable
-            return newDivision;
-          })
-        )
-      )
-    );
+  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
+    return this.http.post(`${environment.baseUrl}/DMSDivision/create-division`, payload);
   }
 
-  update(code: string, shortcut: Division): Observable<Division> {
-    return this.divisions$.pipe(
-      take(1),
-      switchMap((divisions) =>
-        this.http
-          .patch<Division>('/DMSDivision/update-division', {
-            code,
-            shortcut,
-          })
-          .pipe(
-            map((updatedDivision: Division) => {
-              // Find the index of the updated shortcut
-              const index = divisions.findIndex((item) => item.Code === code);
-
-              // Update the shortcut
-              divisions[index] = updatedDivision;
-
-              // Update the divisions
-              this._divisions.next(divisions);
-
-              // Return the updated shortcut
-              return updatedDivision;
-            })
-          )
-      )
-    );
+  update(payload: any) {
+    return this.http.put(`${environment.baseUrl}/DMSDivision/update-division`, payload);
   }
 
-  delete(code: string): Observable<boolean> {
-    return this.divisions$.pipe(
-      take(1),
-      switchMap((divisions) =>
-        this.http.delete<boolean>('/DMSDivision/delete-division', { params: { code } }).pipe(
-          map((isDeleted: boolean) => {
-            // Find the index of the deleted shortcut
-            const index = divisions.findIndex((item) => item.Code === code);
-
-            // Delete the shortcut
-            divisions.splice(index, 1);
-
-            // Update the divisions
-            this._divisions.next(divisions);
-
-            // Return the deleted status
-            return isDeleted;
-          })
-        )
-      )
-    );
+  delete(code: string) {
+    return this.http.delete(`${environment.baseUrl}/DMSDivision/delete-division/${code}`);
   }
+
+  // create(shortcut: Division): Observable<Division> {
+  //   return this.divisions$.pipe(
+  //     take(1),
+  //     switchMap((divisions) =>
+  //       this.http.post<Division>('/DMSDivision/create-division', { shortcut }).pipe(
+  //         map((newDivision) => {
+  //           // Update the divisions with the new shortcut
+  //           this._divisions.next([...divisions, newDivision]);
+
+  //           // Return the new shortcut from observable
+  //           return newDivision;
+  //         })
+  //       )
+  //     )
+  //   );
+  // }
+
+  // update(shortcut: Division): Observable<Division> {
+  //   return this.divisions$.pipe(
+  //     take(1),
+  //     switchMap((divisions) =>
+  //       this.http
+  //         .patch<Division>('/DMSDivision/update-division', {
+  //           shortcut,
+  //         })
+  //         .pipe(
+  //           map((updatedDivision: Division) => {
+  //             // Find the index of the updated shortcut
+  //             const index = divisions.findIndex((item) => item.Code === updatedDivision.Code);
+
+  //             // Update the shortcut
+  //             divisions[index] = updatedDivision;
+
+  //             // Update the divisions
+  //             this._divisions.next(divisions);
+
+  //             // Return the updated shortcut
+  //             return updatedDivision;
+  //           })
+  //         )
+  //     )
+  //   );
+  // }
+
+  // delete(code: string): Observable<boolean> {
+  //   return this.divisions$.pipe(
+  //     take(1),
+  //     switchMap((divisions) =>
+  //       this.http.delete<boolean>('/DMSDivision/delete-division', { params: { code } }).pipe(
+  //         map((isDeleted: boolean) => {
+  //           // Find the index of the deleted shortcut
+  //           const index = divisions.findIndex((item) => item.Code === code);
+
+  //           // Delete the shortcut
+  //           divisions.splice(index, 1);
+
+  //           // Update the divisions
+  //           this._divisions.next(divisions);
+
+  //           // Return the deleted status
+  //           return isDeleted;
+  //         })
+  //       )
+  //     )
+  //   );
+  // }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // OrderHold(orderList: SelectList): Observable<GenericResponse<any>> {
   //   const uri = `${environment.baseUrl}/Organization/OrderHold`;

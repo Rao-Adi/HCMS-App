@@ -34,7 +34,7 @@ import { CascadeDropdownCellRenderer } from '../ag-grid-renderers/cascade-dropdo
 export interface GridColumn {
   field: string;
   headerName: string;
-  type: 'text' | 'number' | 'dropdown' | 'date' | 'checkbox' | 'file' | 'action';
+  type: 'text' | 'number' | 'dropdown' | 'date' | 'checkbox' | 'file' | 'action' | 'readonly';
   width?: number;
   minWidth?: number;
   maxWidth?: number;
@@ -128,11 +128,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     suppressCellFocus: true,
   };
 
-
-  @Input() documentTypeList : any[] = [];
-  @Input() divisionList : any[] = [];
-  @Input() departmentList : any[] = [];
-  @Input() subDepartmentList : any[] = []; 
+  @Input() documentTypeList: any[] = [];
+  @Input() divisionList: any[] = [];
+  @Input() departmentList: any[] = [];
+  @Input() subDepartmentList: any[] = [];
 
   @Input() rowData: any[] = [];
   @Input() pinnedTopRowData: any[] = [];
@@ -422,7 +421,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
                   // 4️⃣ Emit change
                   this.emitCellValueChanged(column.field, value, data, params.rowIndex);
- 
                 },
                 ...column.customRendererParams,
               },
@@ -631,7 +629,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       documentTypes: this.documentTypeList,
       divisions: this.divisionList,
       departments: this.departmentList,
-      subDepartments: this.subDepartmentList    ,
+      subDepartments: this.subDepartmentList,
       // Add any other data sources needed
     };
   }
@@ -825,7 +823,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     }
   }
 
-  addFromPinnedRow(): void { 
+  addFromPinnedRow(): void {
     const pinnedData = this.pinnedTopRowData?.[0];
     if (!pinnedData) return;
 
@@ -834,8 +832,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     // Validate required fields
     const requiredColumns = this.config.columns.filter((col) => col.required);
     const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
-    
-    
+
     //console.log('Missing Fields:', missingFields);
     if (missingFields.length > 0) {
       alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);

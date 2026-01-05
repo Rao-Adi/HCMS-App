@@ -68,71 +68,83 @@ export class DepartmentService {
     });
   }
 
-  create(shortcut: Department): Observable<Department> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http.post<Department>('/DMSDepartment/create-department', { shortcut }).pipe(
-          map((newDepartment) => {
-            // Update the departments with the new shortcut
-            this._departments.next([...departments, newDepartment]);
-
-            // Return the new shortcut from observable
-            return newDepartment;
-          })
-        )
-      )
-    );
+    create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
+    return this.http.post(`${environment.baseUrl}/DMSDepartment/create-department`, payload);
   }
 
-  update(code: string, shortcut: Department): Observable<Department> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http
-          .patch<Department>('/DMSDepartment/update-department', {
-            code,
-            shortcut,
-          })
-          .pipe(
-            map((updatedDepartment: Department) => {
-              // Find the index of the updated shortcut
-              const index = departments.findIndex((item) => item.code === code);
-
-              // Update the shortcut
-              departments[index] = updatedDepartment;
-
-              // Update the departments
-              this._departments.next(departments);
-
-              // Return the updated shortcut
-              return updatedDepartment;
-            })
-          )
-      )
-    );
+  update(payload: any) {
+    return this.http.put(`${environment.baseUrl}/DMSDepartment/update-department`, payload);
   }
 
-  delete(code: string): Observable<boolean> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http.delete<boolean>('/DMSDepartment/delete-department', { params: { code } }).pipe(
-          map((isDeleted: boolean) => {
-            // Find the index of the deleted shortcut
-            const index = departments.findIndex((item) => item.code === code);
-
-            // Delete the shortcut
-            departments.splice(index, 1);
-
-            // Update the departments
-            this._departments.next(departments);
-
-            // Return the deleted status
-            return isDeleted;
-          })
-        )
-      )
-    );
+  delete(code: string) {
+    return this.http.delete(`${environment.baseUrl}/DMSDepartment/delete-department/${code}`);
   }
+
+  // create(shortcut: Department): Observable<Department> {
+  //   return this.departments$.pipe(
+  //     take(1),
+  //     switchMap((departments) =>
+  //       this.http.post<Department>('/DMSDepartment/create-department', { shortcut }).pipe(
+  //         map((newDepartment) => {
+  //           // Update the departments with the new shortcut
+  //           this._departments.next([...departments, newDepartment]);
+
+  //           // Return the new shortcut from observable
+  //           return newDepartment;
+  //         })
+  //       )
+  //     )
+  //   );
+  // }
+
+  // update(code: string, shortcut: Department): Observable<Department> {
+  //   return this.departments$.pipe(
+  //     take(1),
+  //     switchMap((departments) =>
+  //       this.http
+  //         .patch<Department>('/DMSDepartment/update-department', {
+  //           code,
+  //           shortcut,
+  //         })
+  //         .pipe(
+  //           map((updatedDepartment: Department) => {
+  //             // Find the index of the updated shortcut
+  //             const index = departments.findIndex((item) => item.code === code);
+
+  //             // Update the shortcut
+  //             departments[index] = updatedDepartment;
+
+  //             // Update the departments
+  //             this._departments.next(departments);
+
+  //             // Return the updated shortcut
+  //             return updatedDepartment;
+  //           })
+  //         )
+  //     )
+  //   );
+  // }
+
+  // delete(code: string): Observable<boolean> {
+  //   return this.departments$.pipe(
+  //     take(1),
+  //     switchMap((departments) =>
+  //       this.http.delete<boolean>('/DMSDepartment/delete-department', { params: { code } }).pipe(
+  //         map((isDeleted: boolean) => {
+  //           // Find the index of the deleted shortcut
+  //           const index = departments.findIndex((item) => item.code === code);
+
+  //           // Delete the shortcut
+  //           departments.splice(index, 1);
+
+  //           // Update the departments
+  //           this._departments.next(departments);
+
+  //           // Return the deleted status
+  //           return isDeleted;
+  //         })
+  //       )
+  //     )
+  //   );
+  // }
 }

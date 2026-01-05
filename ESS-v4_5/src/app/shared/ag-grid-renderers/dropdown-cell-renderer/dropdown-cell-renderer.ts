@@ -45,7 +45,7 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     onValueChange?: (value: number, data: any) => void;
   };
 
-  agInit(params: any): void {
+  agInit(params: any): void { 
     this.params = params;
 
     // 🔥 FIX 1: always read value from rowData
