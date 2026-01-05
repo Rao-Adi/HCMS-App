@@ -14,7 +14,9 @@ import {
   styleUrl: './editable-upload-document.css',
 })
 export class EditableUploadDocument {
+
   gridConfig: GridConfig;
+  
   employeeData: any[] = [];
   documentTypes = [
     { id: 'DT1', text: 'SOP' },
