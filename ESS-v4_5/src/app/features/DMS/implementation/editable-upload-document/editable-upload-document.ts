@@ -19,22 +19,52 @@ export class EditableUploadDocument {
   documentTypes = [
     { id: 'DT1', text: 'SOP' },
     { id: 'DT2', text: 'Policy' },
+    { id: 'DT3', text: 'Guideline' },
+    { id: 'DT4', text: 'Form' },
   ];
+
   divisions = [
-    { id: 'D1', text: 'Software', documentTypeId: 'DT1' },
-    { id: 'D2', text: 'QA', documentTypeId: 'DT1' },
-    { id: 'D3', text: 'HR', documentTypeId: 'DT2' },
+    { id: 'D1', text: 'Software Division', documentTypeId: 'DT1' },
+    { id: 'D2', text: 'Quality Management', documentTypeId: 'DT1' },
+    { id: 'D3', text: 'HR Division', documentTypeId: 'DT2' },
+    { id: 'D4', text: 'Finance Division', documentTypeId: 'DT3' },
+    { id: 'D5', text: 'IT Division', documentTypeId: 'DT4' },
   ];
+
   departments = [
-    { id: 'DEP1', text: 'Frontend', divisionId: 'D1' },
-    { id: 'DEP2', text: 'Backend', divisionId: 'D1' },
-    { id: 'DEP3', text: 'Testing', divisionId: 'D2' },
+    { id: 'DEP1', text: 'Software Department', divisionId: 'D1' },
+    { id: 'DEP2', text: 'QA Department', divisionId: 'D1' },
+    { id: 'DEP3', text: 'Development', divisionId: 'D2' },
+    { id: 'DEP4', text: 'Testing', divisionId: 'D2' },
+    { id: 'DEP5', text: 'HR Operations', divisionId: 'D3' },
+    { id: 'DEP6', text: 'Recruitment', divisionId: 'D3' },
+    { id: 'DEP7', text: 'Accounts', divisionId: 'D4' },
+    { id: 'DEP8', text: 'Budget', divisionId: 'D4' },
+    { id: 'DEP9', text: 'Infrastructure', divisionId: 'D5' },
+    { id: 'DEP10', text: 'Support', divisionId: 'D5' },
   ];
+
   subDepartments = [
-    { id: 'SD1', text: 'Angular', departmentId: 'DEP1' },
-    { id: 'SD2', text: 'React', departmentId: 'DEP1' },
-    { id: 'SD3', text: 'API', departmentId: 'DEP2' },
+    { id: 'SD1', text: 'Frontend Team', departmentId: 'DEP1' },
+    { id: 'SD2', text: 'Backend Team', departmentId: 'DEP1' },
+    { id: 'SD3', text: 'Mobile Team', departmentId: 'DEP1' },
+
+    { id: 'SD4', text: 'Manual QA', departmentId: 'DEP2' },
+    { id: 'SD5', text: 'Automation QA', departmentId: 'DEP2' },
+
+    { id: 'SD6', text: 'Angular Team', departmentId: 'DEP3' },
+    { id: 'SD7', text: 'React Team', departmentId: 'DEP3' },
+
+    { id: 'SD8', text: 'Functional Testing', departmentId: 'DEP4' },
+    { id: 'SD9', text: 'Performance Testing', departmentId: 'DEP4' },
+
+    { id: 'SD10', text: 'Payroll', departmentId: 'DEP5' },
+    { id: 'SD11', text: 'Benefits', departmentId: 'DEP5' },
+
+    { id: 'SD12', text: 'Campus Hiring', departmentId: 'DEP6' },
+    { id: 'SD13', text: 'Lateral Hiring', departmentId: 'DEP6' },
   ];
+
   roles = [
     { id: '0001', text: 'Developer' },
     { id: '0002', text: 'Senior Developer' },

@@ -47,8 +47,14 @@ export class TextCellRenderer implements ICellRendererAngularComp {
   currentValue: any;
 
   agInit(params: any): void {
+    // this.params = params;
+    // this.currentValue = params.value || params.params?.value || '';
     this.params = params;
-    this.currentValue = params.value || params.params?.value || '';
+
+    const field = params.colDef.field as string;
+
+    // ✅ read from rowData (important for pinned row)
+    this.displayValue = params.data?.[field] ?? '';
   }
 
   onInput(value: any): void {
@@ -68,13 +74,20 @@ export class TextCellRenderer implements ICellRendererAngularComp {
   }
 
   onValueChange(value: string): void {
-   
-    const numericValue = parseFloat(value?.toString().replace(/[^0-9.-]/g, '')) || 0;
-    this.params.data[this.params.colDef?.field as string] = numericValue;
+    const field = this.params.colDef.field as string;
+
+    // ✅ store EXACT string
+    this.params.data[field] = value;
 
     if (this.params.onValueChange) {
-      this.params.onValueChange(numericValue, this.params.data);
+      this.params.onValueChange(value, this.params.data);
     }
+
+    // const numericValue = parseFloat(value?.toString().replace(/[^0-9.-]/g, '')) || 0;
+    // this.params.data[this.params.colDef?.field as string] = numericValue;
+
+    // if (this.params.onValueChange) {
+    //   this.params.onValueChange(numericValue, this.params.data);
+    // }
   }
-  
 }

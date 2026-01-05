@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TextboxRendererComponent } from './textbox-renderer-component';
+import { DivisionComponent } from './division-component';
 
-describe('TextboxRendererComponent', () => {
-  let component: TextboxRendererComponent;
-  let fixture: ComponentFixture<TextboxRendererComponent>;
+describe('DivisionComponent', () => {
+  let component: DivisionComponent;
+  let fixture: ComponentFixture<DivisionComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TextboxRendererComponent]
+      imports: [DivisionComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TextboxRendererComponent);
+    fixture = TestBed.createComponent(DivisionComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -32,6 +32,11 @@ export class DivisionService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getDivisionCount(): Observable<GenericResponse<Number>> {
+    const uri = `${environment.baseUrl}/DMSDivision/get-division-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllDivisions(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

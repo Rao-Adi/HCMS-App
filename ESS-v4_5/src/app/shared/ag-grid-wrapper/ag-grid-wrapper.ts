@@ -40,8 +40,8 @@ export class AgGridWrapper implements OnInit {
   @Input() gridStyle: any = {};
   @Input() gridId!: string;
 
-  //@Input() pageSizeOptions = [10, 20, 30, 50];
-  @Input() pageSizeOptions = [1, 2, 3, 50];
+  @Input() pageSizeOptions = [10, 20, 30, 50];
+  // @Input() pageSizeOptions = [1, 2, 3, 50];
   @Input() defaultPageSize = 10;
 
   @Output() pageSizeChange = new EventEmitter<{ gridId: string; pageSize: number }>();

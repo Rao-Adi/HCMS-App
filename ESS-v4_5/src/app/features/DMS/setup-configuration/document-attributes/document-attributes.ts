@@ -12,8 +12,6 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzModalModule } from 'ng-zorro-antd/modal';
-import { TextboxRendererComponent } from '@app/shared/controlls/textbox-renderer-component/textbox-renderer-component';
-
 @Component({
   selector: 'app-document-attributes',
   imports: [
@@ -98,8 +96,8 @@ export class DocumentAttributes {
       sortable: false,
       filter: false,
     },
-    { field: 'controlLebel', headerName: 'Control Lebel', flex: 1,editable: true, },
-    { field: 'controlType', headerName: 'Control Type', flex: 1,editable: true, },
+    { field: 'controlLebel', headerName: 'Control Lebel', flex: 1, editable: true },
+    { field: 'controlType', headerName: 'Control Type', flex: 1, editable: true },
     {
       field: 'listValue',
       headerName: 'List Value',
@@ -107,7 +105,6 @@ export class DocumentAttributes {
       editable: true,
       cellEditor: 'agTextCellEditor', // correct for built-in editor
       cellEditorParams: { maxLength: 100 }, // fine for extra params
-      cellEditorFramework: TextboxRendererComponent, // ⚠️ conflict here
     },
     {
       field: 'mandatoryCabinetWise',
@@ -129,7 +126,7 @@ export class DocumentAttributes {
       // },
     },
   ];
-  
+
   rowData = [
     {
       id: 1,

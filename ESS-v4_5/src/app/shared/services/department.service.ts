@@ -39,6 +39,11 @@ export class DepartmentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getDepartmentCount(): Observable<GenericResponse<Number>> {
+    const uri = `${environment.baseUrl}/DMSDepartment/get-department-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllDepartments(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

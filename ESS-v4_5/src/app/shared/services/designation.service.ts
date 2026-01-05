@@ -31,6 +31,7 @@ export class DesignationService {
     const uri = `${environment.baseUrl}/DMSDesignation/get-all-designation-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
+  
 
   GetAllDesignations(
     searchText: string,

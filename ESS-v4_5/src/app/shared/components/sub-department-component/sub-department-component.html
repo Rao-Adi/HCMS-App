@@ -1,0 +1,15 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '250px' }"
+  [columnDefs]="subDepartmentColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowData]="subDepartmentData"
+  [pageSize]="pageSize"
+  [totalRows]="totalSubDepartments"
+  [pageSize]="selectedPageSize"
+  gridId="subDepartmentGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="getAllSubDepartments($event)"
+  (rowEdited)="saveSubDepartment($event)"
+>
+  >
+</app-ag-grid-wrapper>

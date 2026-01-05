@@ -1,0 +1,13 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '250px' }"
+  [columnDefs]="documentTypeColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowData]="documentTypeData"
+  [pageSize]="pageSize"
+  [totalRows]="totalDocumentTypes"
+  [pageSize]="selectedPageSize"
+  gridId="documentTypeGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="getAllDocumentTypes($event)"
+>
+</app-ag-grid-wrapper>

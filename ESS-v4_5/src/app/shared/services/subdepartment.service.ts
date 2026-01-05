@@ -35,6 +35,11 @@ export class SubDepartmentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getSubDepartmentCount(): Observable<GenericResponse<Number>> {
+    const uri = `${environment.baseUrl}/DMSSubDepartment/get-subdepartment-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllSubDepartments(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

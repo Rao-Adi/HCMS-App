@@ -128,6 +128,12 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     suppressCellFocus: true,
   };
 
+
+  @Input() documentTypeList : any[] = [];
+  @Input() divisionList : any[] = [];
+  @Input() departmentList : any[] = [];
+  @Input() subDepartmentList : any[] = []; 
+
   @Input() rowData: any[] = [];
   @Input() pinnedTopRowData: any[] = [];
   @Input() pinnedBottomRowData: any[] = [];
@@ -168,54 +174,54 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   // Data sources for cascade dropdowns
-  documentTypes = [
-    { id: 'DT1', text: 'SOP' },
-    { id: 'DT2', text: 'Policy' },
-    { id: 'DT3', text: 'Guideline' },
-    { id: 'DT4', text: 'Form' },
-  ];
+  // documentTypes = [
+  //   { id: 'DT1', text: 'SOP' },
+  //   { id: 'DT2', text: 'Policy' },
+  //   { id: 'DT3', text: 'Guideline' },
+  //   { id: 'DT4', text: 'Form' },
+  // ];
 
-  divisions = [
-    { id: 'D1', text: 'Software Division', documentTypeId: 'DT1' },
-    { id: 'D2', text: 'Quality Management', documentTypeId: 'DT1' },
-    { id: 'D3', text: 'HR Division', documentTypeId: 'DT2' },
-    { id: 'D4', text: 'Finance Division', documentTypeId: 'DT3' },
-    { id: 'D5', text: 'IT Division', documentTypeId: 'DT4' },
-  ];
+  // divisions = [
+  //   { id: 'D1', text: 'Software Division', documentTypeId: 'DT1' },
+  //   { id: 'D2', text: 'Quality Management', documentTypeId: 'DT1' },
+  //   { id: 'D3', text: 'HR Division', documentTypeId: 'DT2' },
+  //   { id: 'D4', text: 'Finance Division', documentTypeId: 'DT3' },
+  //   { id: 'D5', text: 'IT Division', documentTypeId: 'DT4' },
+  // ];
 
-  departments = [
-    { id: 'DEP1', text: 'Software Department', divisionId: 'D1' },
-    { id: 'DEP2', text: 'QA Department', divisionId: 'D1' },
-    { id: 'DEP3', text: 'Development', divisionId: 'D2' },
-    { id: 'DEP4', text: 'Testing', divisionId: 'D2' },
-    { id: 'DEP5', text: 'HR Operations', divisionId: 'D3' },
-    { id: 'DEP6', text: 'Recruitment', divisionId: 'D3' },
-    { id: 'DEP7', text: 'Accounts', divisionId: 'D4' },
-    { id: 'DEP8', text: 'Budget', divisionId: 'D4' },
-    { id: 'DEP9', text: 'Infrastructure', divisionId: 'D5' },
-    { id: 'DEP10', text: 'Support', divisionId: 'D5' },
-  ];
+  // departments = [
+  //   { id: 'DEP1', text: 'Software Department', divisionId: 'D1' },
+  //   { id: 'DEP2', text: 'QA Department', divisionId: 'D1' },
+  //   { id: 'DEP3', text: 'Development', divisionId: 'D2' },
+  //   { id: 'DEP4', text: 'Testing', divisionId: 'D2' },
+  //   { id: 'DEP5', text: 'HR Operations', divisionId: 'D3' },
+  //   { id: 'DEP6', text: 'Recruitment', divisionId: 'D3' },
+  //   { id: 'DEP7', text: 'Accounts', divisionId: 'D4' },
+  //   { id: 'DEP8', text: 'Budget', divisionId: 'D4' },
+  //   { id: 'DEP9', text: 'Infrastructure', divisionId: 'D5' },
+  //   { id: 'DEP10', text: 'Support', divisionId: 'D5' },
+  // ];
 
-  subDepartments = [
-    { id: 'SD1', text: 'Frontend Team', departmentId: 'DEP1' },
-    { id: 'SD2', text: 'Backend Team', departmentId: 'DEP1' },
-    { id: 'SD3', text: 'Mobile Team', departmentId: 'DEP1' },
+  // subDepartments = [
+  //   { id: 'SD1', text: 'Frontend Team', departmentId: 'DEP1' },
+  //   { id: 'SD2', text: 'Backend Team', departmentId: 'DEP1' },
+  //   { id: 'SD3', text: 'Mobile Team', departmentId: 'DEP1' },
 
-    { id: 'SD4', text: 'Manual QA', departmentId: 'DEP2' },
-    { id: 'SD5', text: 'Automation QA', departmentId: 'DEP2' },
+  //   { id: 'SD4', text: 'Manual QA', departmentId: 'DEP2' },
+  //   { id: 'SD5', text: 'Automation QA', departmentId: 'DEP2' },
 
-    { id: 'SD6', text: 'Angular Team', departmentId: 'DEP3' },
-    { id: 'SD7', text: 'React Team', departmentId: 'DEP3' },
+  //   { id: 'SD6', text: 'Angular Team', departmentId: 'DEP3' },
+  //   { id: 'SD7', text: 'React Team', departmentId: 'DEP3' },
 
-    { id: 'SD8', text: 'Functional Testing', departmentId: 'DEP4' },
-    { id: 'SD9', text: 'Performance Testing', departmentId: 'DEP4' },
+  //   { id: 'SD8', text: 'Functional Testing', departmentId: 'DEP4' },
+  //   { id: 'SD9', text: 'Performance Testing', departmentId: 'DEP4' },
 
-    { id: 'SD10', text: 'Payroll', departmentId: 'DEP5' },
-    { id: 'SD11', text: 'Benefits', departmentId: 'DEP5' },
+  //   { id: 'SD10', text: 'Payroll', departmentId: 'DEP5' },
+  //   { id: 'SD11', text: 'Benefits', departmentId: 'DEP5' },
 
-    { id: 'SD12', text: 'Campus Hiring', departmentId: 'DEP6' },
-    { id: 'SD13', text: 'Lateral Hiring', departmentId: 'DEP6' },
-  ];
+  //   { id: 'SD12', text: 'Campus Hiring', departmentId: 'DEP6' },
+  //   { id: 'SD13', text: 'Lateral Hiring', departmentId: 'DEP6' },
+  // ];
 
   ngOnInit(): void {
     //this.buildColumnDefs();
@@ -400,15 +406,17 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 context: this.getContextData(),
 
                 onValueChange: (value: any, data: any) => {
+                  debugger;
                   // 1️⃣ Set value
                   data[column.field] = value;
 
                   // 2️⃣ Clear children
                   this.clearDependentFields(data, column.field);
-
+                  console.log('After clearing dependents:', JSON.stringify(data));
                   // 3️⃣ IMPORTANT: refresh pinned row manually
                   if (params.node.rowPinned === 'top') {
-                    this.pinnedTopRowData[0][column.field] = value;
+                    // this.pinnedTopRowData[0][column.field] = value;
+                    this.pinnedTopRowData = [{ ...data }];
                     this.gridApi.setGridOption('pinnedTopRowData', this.pinnedTopRowData);
                   }
 
@@ -620,10 +628,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   private getContextData(): any {
     // Return data that can be accessed by renderers via context
     return {
-      documentTypes: this.documentTypes,
-      divisions: this.divisions,
-      departments: this.departments,
-      subDepartments: this.subDepartments,
+      documentTypes: this.documentTypeList,
+      divisions: this.divisionList,
+      departments: this.departmentList,
+      subDepartments: this.subDepartmentList    ,
       // Add any other data sources needed
     };
   }
@@ -817,19 +825,18 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     }
   }
 
-  addFromPinnedRow(): void {
-    debugger;
+  addFromPinnedRow(): void { 
     const pinnedData = this.pinnedTopRowData?.[0];
     if (!pinnedData) return;
 
-    console.log('pinnedData:', JSON.stringify(pinnedData));
+    //console.log('pinnedData:', JSON.stringify(pinnedData));
 
     // Validate required fields
     const requiredColumns = this.config.columns.filter((col) => col.required);
     const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
     
     
-    console.log('Missing Fields:', missingFields);
+    //console.log('Missing Fields:', missingFields);
     if (missingFields.length > 0) {
       alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
       return;

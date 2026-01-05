@@ -39,6 +39,11 @@ export class BusinessDomainService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getBusinessDomainCount(): Observable<GenericResponse<Number>> {
+    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-business-domain-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllBusinessDomains(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

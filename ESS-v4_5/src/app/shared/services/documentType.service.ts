@@ -34,6 +34,13 @@ export class DocumentTypeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+
+  getDocumentTypeCount(): Observable<GenericResponse<Number>> {
+    const uri = `${environment.baseUrl}/DMSDocumentType/get-doucment-type-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+
   //   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
   //     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
   //     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });

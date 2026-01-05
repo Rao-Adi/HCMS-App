@@ -1,0 +1,13 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '250px' }"
+  [columnDefs]="departmentColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowData]="departmentData"
+  [pageSize]="pageSize"
+  [totalRows]="totalDepartments"
+  [pageSize]="selectedPageSize"
+  gridId="departmentGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="getAllDepartments($event)"
+>
+</app-ag-grid-wrapper>

@@ -1,0 +1,13 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '250px' }"
+  [columnDefs]="businessdomainColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowData]="businessDomainData"
+  [pageSize]="pageSize"
+  [totalRows]="totalBusinessDomains"
+  [pageSize]="selectedPageSize"
+  gridId="businessDomainGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="getAllBusinessDomains($event)"
+>
+</app-ag-grid-wrapper>

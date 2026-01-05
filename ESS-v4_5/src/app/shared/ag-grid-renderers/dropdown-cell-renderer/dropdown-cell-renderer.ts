@@ -11,6 +11,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
   imports: [CommonModule, FormsModule, NzSelectModule],
   template: `
     <nz-select
+      class="ag-input"
       style="width: 200px;"
       [(ngModel)]="selectedValue"
       (ngModelChange)="onSelectionChange($event)"
@@ -43,7 +44,6 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     options: { id: number; text: string }[];
     onValueChange?: (value: number, data: any) => void;
   };
-  
 
   agInit(params: any): void {
     this.params = params;
