@@ -68,71 +68,16 @@ export class BusinessDomainService {
     });
   }
 
-  create(shortcut: BusinessDomain): Observable<BusinessDomain> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http
-          .post<BusinessDomain>('/DMSBusinessDomain/create-business-domain', { shortcut })
-          .pipe(
-            map((newcabietStructureConfig) => {
-              // Update the departments with the new shortcut
-              this._departments.next([...departments, newcabietStructureConfig]);
-
-              // Return the new shortcut from observable
-              return newcabietStructureConfig;
-            })
-          )
-      )
-    );
+  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
+    return this.http.post(`${environment.baseUrl}/DMSBusinessDomain/create-business-domain`, payload);
   }
 
-  update(shortcut: BusinessDomain): Observable<BusinessDomain> {
-    const payload = {
-      code: shortcut.code,
-      name: shortcut.Name,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<BusinessDomain>(
-        `${environment.baseUrl}/DMSBusinessDomain/update-business-domain`,
-        payload,
-        {
-          headers,
-        }
-      )
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.departments$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.code === updated.code);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._departments.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.put(`${environment.baseUrl}/DMSBusinessDomain/update-business-domain`, payload);
   }
 
-  delete(code: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSBusinessDomain/delete-business-domain`, {
-        params: { code },
-      })
-      .pipe(
-        tap(() => {
-          this.departments$.pipe(take(1)).subscribe((list) => {
-            this._departments.next(list.filter((item) => item.code !== code));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete(`${environment.baseUrl}/DMSBusinessDomain/delete-business-domain/${code}`);
   }
+ 
 }

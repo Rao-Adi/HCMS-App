@@ -61,66 +61,78 @@ export class UserService {
     });
   }
 
-  create(shortcut: User): Observable<User> {
-    return this.cabietStructureConfig$.pipe(
-      take(1),
-      switchMap((cabietStructureConfig) =>
-        this.http.post<User>('/DMSUser/create-user', { shortcut }).pipe(
-          map((newcabietStructureConfig) => {
-            // Update the cabietStructureConfig with the new shortcut
-            this._cabietStructureConfig.next([...cabietStructureConfig, newcabietStructureConfig]);
-
-            // Return the new shortcut from observable
-            return newcabietStructureConfig;
-          })
-        )
-      )
-    );
+   create(payload: any) {
+    return this.http.post(`${environment.baseUrl}/DMSUser/create-user`, payload);
   }
 
-  update(shortcut: User): Observable<User> {
-    const payload = {
-      id: shortcut.id,
-      departmentCode: shortcut.departmentCode,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      'x-api-version': '1.0',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<User>(`${environment.baseUrl}/DMSUser/update-user`, payload, {
-        headers,
-      })
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.id === updated.id);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._cabietStructureConfig.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.put(`${environment.baseUrl}/DMSUser/update-user`, payload);
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSUser/delete-user`, {
-        params: { id },
-      })
-      .pipe(
-        tap(() => {
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete(`${environment.baseUrl}/DMSUser/delete-user/${code}`);
   }
+
+  // create(shortcut: User): Observable<User> {
+  //   return this.cabietStructureConfig$.pipe(
+  //     take(1),
+  //     switchMap((cabietStructureConfig) =>
+  //       this.http.post<User>('/DMSUser/create-user', { shortcut }).pipe(
+  //         map((newcabietStructureConfig) => {
+  //           // Update the cabietStructureConfig with the new shortcut
+  //           this._cabietStructureConfig.next([...cabietStructureConfig, newcabietStructureConfig]);
+
+  //           // Return the new shortcut from observable
+  //           return newcabietStructureConfig;
+  //         })
+  //       )
+  //     )
+  //   );
+  // }
+
+  // update(shortcut: User): Observable<User> {
+  //   const payload = {
+  //     id: shortcut.id,
+  //     departmentCode: shortcut.departmentCode,
+  //     isActive: true,
+  //   };
+
+  //   const headers = new HttpHeaders({
+  //     'Content-Type': 'application/json-patch+json',
+  //     'x-api-version': '1.0',
+  //     accept: '*/*',
+  //   });
+
+  //   return this.http
+  //     .put<User>(`${environment.baseUrl}/DMSUser/update-user`, payload, {
+  //       headers,
+  //     })
+  //     .pipe(
+  //       tap((updated) => {
+  //         // 🔹 Update cached state AFTER API success
+  //         this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
+  //           const index = list.findIndex((i) => i.id === updated.id);
+  //           if (index !== -1) {
+  //             const newList = [...list];
+  //             newList[index] = updated;
+  //             this._cabietStructureConfig.next(newList);
+  //           }
+  //         });
+  //       })
+  //     );
+  // }
+
+  // delete(id: string): Observable<boolean> {
+  //   return this.http
+  //     .delete<boolean>(`${environment.baseUrl}/DMSUser/delete-user`, {
+  //       params: { id },
+  //     })
+  //     .pipe(
+  //       tap(() => {
+  //         this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
+  //           this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
+  //         });
+  //       })
+  //     );
+  // }
 }

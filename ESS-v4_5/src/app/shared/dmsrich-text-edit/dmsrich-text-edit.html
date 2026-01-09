@@ -7,3 +7,15 @@
   (onSelectionChanged)="onSelectionChanged($event)"
   (onContentChanged)="onContentChanged($event)"
 ></quill-editor>
+
+<input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" />
+
+<!-- <div
+  class="ql-attachment"
+  data-url="https://cdn.company.com/files/abc123.pdf"
+  data-name="report.pdf"
+  data-size="245 KB"
+>
+  📎 <a href="https://cdn.company.com/files/abc123.pdf">report.pdf</a>
+  <span>(245 KB)</span>
+</div> -->

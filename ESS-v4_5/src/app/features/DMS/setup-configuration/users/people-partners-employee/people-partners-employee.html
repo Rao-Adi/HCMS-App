@@ -3,12 +3,8 @@
   class="ag-theme-alpine"
   [gridId]="'employee-planning-grid'"
   [config]="gridConfig"
-  [rowData]="subDepartmentData" 
+  [rowData]="integrationUserData"
   [pinnedTopRowData]="pinnedTopRowDataPlanning"
-  (rowAdded)="onRowAdded($event)"
-  (rowUpdated)="onRowUpdated($event)"
-  (rowDeleted)="onRowDeleted($event)"
-  (cellValueChanged)="onCellValueChanged($event)"
   (selectionChanged)="onSelectionChanged($event)"
   (gridReady)="onGridReady($event)"
 >

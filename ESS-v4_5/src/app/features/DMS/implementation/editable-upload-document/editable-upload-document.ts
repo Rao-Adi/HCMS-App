@@ -16,7 +16,7 @@ import {
 export class EditableUploadDocument {
 
   gridConfig: GridConfig;
-  
+
   employeeData: any[] = [];
   documentTypes = [
     { id: 'DT1', text: 'SOP' },
@@ -108,20 +108,7 @@ export class EditableUploadDocument {
       subDepartmentId: null,
       nextReviewDate: null,
       uploadDocument: null,
-      isNewRow: true,
-
-      // documentId: '',
-      // documentName: '',
-      // version: '',
-      // documentTypeId: '',
-      // documentType: '',
-      // division: '',
-      // divisionId: '',
-      // departmentId: '',
-      // department: '',
-      // subDepartmentId: '',
-      // subDepartment: '',
-      // isNewRow: true,
+      isNewRow: true
     },
   ];
 
@@ -211,52 +198,7 @@ export class EditableUploadDocument {
         headerName: 'Upload Document',
         type: 'file',
         required: true,
-      },
-      // {
-      //   field: 'roleId',
-      //   headerName: 'Role',
-      //   type: 'dropdown',
-      //   minWidth: 150,
-      //   dropdownOptions: this.roles,
-      //   dropdownValueField: 'roleId',
-      //   dropdownDisplayField: 'roleName',
-      // },
-      // {
-      //   field: 'currentSalary',
-      //   headerName: 'Current Salary',
-      //   type: 'number',
-      //   minWidth: 150,
-      //   prefix: 'Rs.',
-      //   decimalPlaces: 2,
-      // },
-      // {
-      //   field: 'incrementPercentage',
-      //   headerName: 'Increment %',
-      //   type: 'number',
-      //   minWidth: 120,
-      //   suffix: '%',
-      //   decimalPlaces: 1,
-      // },
-      // {
-      //   field: 'revisedSalary',
-      //   headerName: 'Revised Salary',
-      //   type: 'number',
-      //   minWidth: 150,
-      //   prefix: 'Rs.',
-      //   decimalPlaces: 2,
-      // },
-      // {
-      //   field: 'joinDate',
-      //   headerName: 'Join Date',
-      //   type: 'date',
-      //   minWidth: 120,
-      // },
-      // {
-      //   field: 'isActive',
-      //   headerName: 'Active',
-      //   type: 'checkbox',
-      //   minWidth: 80,
-      // },
+      }
     ];
   }
 

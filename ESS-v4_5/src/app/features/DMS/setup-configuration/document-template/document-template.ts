@@ -20,8 +20,7 @@ import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { TemplateService } from '@app/shared/services/template.service';
-import { Template, TemplateCreateDto } from '@app/shared/interfaces/interfaces';
+import { TemplateService } from '@app/shared/services/template.service'; 
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 
@@ -36,15 +35,11 @@ interface MockUser {
   imports: [
     CommonModule,
     FormsModule,
-    NzFormModule,
-    NzInputModule,
+    NzFormModule, 
     SafeTranslatePipe,
-    NzDatePickerModule,
-    NzUploadModule,
+    NzDatePickerModule, 
     NzSelectModule,
-    NzButtonModule,
-    NzIconModule,
-    NzCheckboxModule,
+    NzButtonModule, 
     DivisionList,
     SubDepartmentList,
     DepartmentList,
@@ -67,11 +62,28 @@ export class DocumentTemplate {
   selectedUser?: string;
   loading = false;
   templateHtml: string = '';
+  templateName: string = '';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
+  selectedTemplateType?: string = '';
+
+  templateTypes: any[] = [
+    {
+      id: '1',
+      text: 'PDF',
+    },
+    {
+      id: '2',
+      text: 'Word Document',
+    },
+    {
+      id: '3',
+      text: 'HTML',
+    },
+  ];
 
   constructor(
     private http: HttpClient,
@@ -127,21 +139,22 @@ export class DocumentTemplate {
   }
 
   saveTemplate(data: any) {
-    if (!this.selectedDocumentType || !this.templateHtml) {
-      alert('Required fields missing');
-      return;
-    }
+   
+    // if (!this.selectedDocumentType || !this.templateHtml) {
+    //   alert('Required fields missing');
+    //   return;
+    // }
 
-    const payload: TemplateCreateDto = {
+    const payload = {
       id: '', // or generate if needed; usually backend handles this
       documentTypeCode: this.selectedDocumentType,
-      templateName: this.selectedDocumentType,
+      templateName: this.templateName,
       templateFileURL: this.randomUserUrl || '', // fallback empty string if no URL
-      templateType: 1, // hardcoded, or make dynamic if needed
+      templateType: this.selectedTemplateType,
       divisionCode: this.selectedDivisions || null,
       departmentCode: this.selectedDepartment || null,
       subDepartmentCode: this.selectedSubDepartment || null,
-      isDefault: false, // add this field since it's in interface
+      isDefault: true, // add this field since it's in interface
       // Plus fields from AuditableEntity if required or optional
     };
 

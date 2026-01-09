@@ -10,3 +10,61 @@
 .quill-10-percent .ql-editor {
     min-height: 10vh;
 }
+
+/* 1. Show Font Size values in the dropdown */
+.ql-snow .ql-picker.ql-size .ql-picker-label::before,
+.ql-snow .ql-picker.ql-size .ql-picker-item::before {
+    content: attr(data-value) !important;
+}
+
+/* 2. Show Font Family names in the dropdown */
+.ql-snow .ql-picker.ql-font .ql-picker-label::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item::before {
+    content: attr(data-value) !important;
+    text-transform: capitalize;
+}
+
+/* 3. Define the actual font-family classes for the editor content */
+.ql-font-roboto {
+    font-family: 'Roboto', sans-serif;
+}
+
+.ql-font-arial {
+    font-family: Arial, sans-serif;
+}
+
+/* Ensure the custom icon behaves like other toolbar buttons */
+.ql-snow .ql-toolbar button.ql-attach svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Optional: Add a text label if the icon fails to load */
+.ql-snow .ql-toolbar button.ql-attach::after {
+    content: 'Attach';
+    font-size: 10px;
+    display: none;
+    /* Hide if icon is present, or show for text-only */
+}
+
+
+.ql-attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    background: #f7f8fa;
+    margin: 6px 0;
+}
+
+.ql-attachment a {
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ql-attachment .size {
+    color: #888;
+    font-size: 12px;
+}

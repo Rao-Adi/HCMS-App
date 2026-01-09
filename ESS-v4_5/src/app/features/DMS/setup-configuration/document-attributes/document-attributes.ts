@@ -1,23 +1,26 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
-import { tuple } from 'ng-zorro-antd/core/types';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzModalService } from 'ng-zorro-antd/modal';
-import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import {
+  EditableAgGridWrapper,
+  GridColumn,
+  GridConfig,
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
+import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
+import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
 @Component({
   selector: 'app-document-attributes',
   imports: [
     CommonModule,
     FormsModule,
-    AgGridWrapper,
+    EditableAgGridWrapper,
     NzSelectModule,
     SafeTranslatePipe,
     DocumentTypeList,
@@ -28,313 +31,280 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
   styleUrl: './document-attributes.css',
 })
 export class DocumentAttributes {
-  constructor(private modal: NzModalService) {}
+  gridConfig: GridConfig = {} as GridConfig;
 
-  ngOnInit() {
-    //this.loadData(this.pageSize);
-  }
+  selectedPageSize = 10;
+  pageSize = 10;
+  totalDocumentAttributes = 0;
+  documentAttributeData: any[] = [];
 
-  // Default Column Definitions: Apply configuration across all columns
+  controlTypes: any[] = [
+    {
+      id: '1',
+      text: 'Date',
+    },
+    {
+      id: '2',
+      text: 'Numeric',
+    },
+    {
+      id: '3',
+      text: 'TextBox',
+    },
+    {
+      id: '4',
+      text: 'List',
+    },
+  ]; // for dropdowns
+  selectedDocumentType?: string = '';
+  documentTypes: SelectList[] = [];
+
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
   };
-  public noRowsOverlay: string = '';
-  selectedDocumentType?: string = '';
-  documentTypes: SelectList[] = [];
-  pageSize = 10;
-  totalRows = 0;
-  totalCount = 0;
 
-  documentAttributeColumnDefs = [
+  constructor(
+    private _documentAttribute: DocumentAttributeService,
+    private modal: NzModalService
+  ) {}
+
+  ngOnInit() {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+    //this.loadSampleData();
+
+    this.getAllDocumentAttributes({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
+  }
+
+  pinnedTopRowDataPlanning: DocumentAttributeColumns[] = [
     {
-      headerName: 'Actions',
-      field: 'save',
-      width: 100,
-      cellRenderer: (params: any) => {
-        if (params.data.isNewRow) {
-          // Green plus button for new row insert
-          return `<button class="btn-insert" title="Add New Record" style="background: transparent; border: none; padding: 0; cursor: pointer;">
-                          <img  class="save-btn"
-                          src="/assets/images/tablePlus.png"
-                          alt="+"
-                          style="width: 18px; height: 18px; display: block;"/>
-                </button>`;
-        } else {
-          // Edit and delete icons for existing rows
-          return `
-            <button class="btn-edit" title="Edit" style="background: transparent; border: none; padding: 0; cursor: pointer;">
-            <img  class="save-btn"
-                          src="/assets/images/imgEdit.png"
-                          alt="+"
-                          style="width: 18px; height: 18px; display: block;"/>
-            </button> 
-            <button class="btn-delete" title="Delete" style="background: transparent; border: none; padding: 0; cursor: pointer;">
-            <img  class="save-btn"
-                          src="/assets/images/imgRemove.png"
-                          alt="+"
-                          style="width: 18px; height: 18px; display: block;"/>
-            </button>
-          `;
-        }
-      },
-      //cellRenderer: (params: any) => `<i class="bi bi-plus save-btn" style="font-weight: 900; font-size: 18px; line-height: 1; color: inherit;  cursor: pointer;"></i>`,
-      // cellRenderer: (params: any) => `
-      //         <button
-      //         class="save-btn"
-      //         style="background: transparent; border: none; padding: 0; cursor: pointer;"
-      //       >
-      //         <img  class="save-btn"
-      //           src="/assets/images/tablePlus.png"
-      //           alt="+"
-      //           style="width: 18px; height: 18px; display: block;"
-      //         />
-      //       </button>
-      //       `,
-      editable: false,
-      sortable: false,
-      filter: false,
-    },
-    { field: 'controlLebel', headerName: 'Control Lebel', flex: 1, editable: true },
-    { field: 'controlType', headerName: 'Control Type', flex: 1, editable: true },
-    {
-      field: 'listValue',
-      headerName: 'List Value',
-      flex: 1,
-      editable: true,
-      cellEditor: 'agTextCellEditor', // correct for built-in editor
-      cellEditorParams: { maxLength: 100 }, // fine for extra params
-    },
-    {
-      field: 'mandatoryCabinetWise',
-      headerName: 'Mandatory (Cabinet Wise)',
-      flex: 1,
-      editable: false,
-      cellRenderer: (params: any) => {
-        return `
-        <span 
-          style="color:#1976d2; cursor:pointer; text-decoration:underline"
-          data-action="open"
-        >
-          ${params.value ? 'View Cabinet' : 'View Cabinet'}
-        </span>
-      `;
-      },
-      // onCellClicked: (event: any) => {
-      //   this.openMandatoryCabinetModal(event.data);
-      // },
+      ControlLabel: '',
+      ControlTypeId: '',
+      ControlTypeName: '',
+      ListValue: '',
+      Mandatory: '',
     },
   ];
 
-  rowData = [
-    {
-      id: 1,
-      controlLabel: 'Submit Date',
-      controlType: 'Date',
-      listValue: '',
-      mandatoryCabinetWise: true,
-      isNewRow: false,
-    },
-    {
-      id: 2,
-      controlLabel: 'Document Description',
-      controlType: 'Text Box',
-      listValue: '',
-      mandatoryCabinetWise: false,
-      isNewRow: false,
-    },
-    {
-      id: 3,
-      controlLabel: 'Contract Type',
-      controlType: 'List Value',
-      listValue: 'Development Contract, Main Contract',
-      mandatoryCabinetWise: true,
-      isNewRow: false,
-    },
-  ];
-  // This getter adds the new blank row on top
-  get rowDataWithNewRow() {
-    return [
+  private loadSampleData(): void {
+    this.documentAttributeData = [
       {
-        id: 0,
-        controlLabel: '',
-        controlType: '',
-        listValue: '',
-        mandatoryCabinetWise: false,
-        isNewRow: true,
-      }, // blank new row
-      ...this.rowData,
+        ControlLabel: 'Control Type',
+        ControlTypeId: 'Text Box',
+        ListValue: 'Car, House, Bike',
+        Mandatory: 'View Cabinet',
+      },
     ];
   }
+
+  private getColumns(): GridColumn[] {
+    return [
+      {
+        field: 'ControlLabel',
+        headerName: 'Control Label',
+        type: 'text',
+        required: true,
+        minWidth: 150,
+        pinned: 'left',
+      },
+      {
+        field: 'ControlTypeId',
+        headerName: 'Control Type',
+        type: 'dropdown',
+        dropdownOptions: this.controlTypes,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        required: true,
+        minWidth: 200,
+      },
+      {
+        field: 'ListValue',
+        headerName: 'List Value',
+        type: 'text',
+        required: false,
+        minWidth: 150,
+        pinned: 'left',
+      },
+      {
+        field: 'Mandatory',
+        headerName: 'Mandatory(Cabinet Wise)',
+        type: 'button',
+        minWidth: 150,
+        pinned: 'left',
+        required: false,
+      },
+    ];
+  }
+
+  getAllDocumentAttributes = (query: any) => {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._documentAttribute
+      .GetAllDocumentAttribute(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize
+      )
+      .subscribe((res) => {
+        const items = res?.Data?.Items;
+
+        if (Array.isArray(items)) {
+          this.documentAttributeData = items.map((item: any) => ({
+            Id: item.Id,
+            DocumentTypeCode: item.DocumentTypeCode,
+            ControlLabel: item.ControlLabel,
+            ControlTypeId:
+              this.controlTypes.find((ct) => ct.id === String(item.ControlType))?.text ||
+              item.ControlType, // ✅ matches column
+            ListValue: item.ListValues, // ✅ plural in API
+            Mandatory: item.IsMandatory, // ✅ boolean
+          }));
+        } else {
+          this.documentAttributeData = [];
+        }
+
+        console.log('RowData length:', this.documentAttributeData.length);
+      });
+  };
 
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
   }
 
-  loadBusinessDomains(query: any): void {
-    const sort = query.sortModel?.[0];
-
-    // this._businessDomainService
-    //   .GetAllBusinessDomains(
-    //     query.filterModel?.Name?.filter || '',
-    //     sort?.sort?.toUpperCase() || 'ASC',
-    //     sort?.colId || 'Name',
-    //     true,
-    //     query.pageNumber,
-    //     query.pageSize
-    //   )
-    //   .subscribe((res) => {
-    //     if (res?.Success) {
-    //       this.businessDomainData = res.Data.Items;
-    //       this.totalBusinessDomains = res.Data.TotalCount;
-    //     } else {
-    //       this.businessDomainData = [];
-    //       this.totalBusinessDomains = 0;
-    //     }
-    //   });
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    this.getAllDocumentAttributes({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
   }
 
-  GetAllDocumentTypeGrid(query: any) {}
+  onGridReady(gridApi: any): void {
+    //console.log('Grid ready:', gridApi);
+    // Store grid API if needed for external operations
+  }
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
+  // private generateId(): number {
+  //   return Date.now();
+  // }
 
-  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
+  // private getDisplayName(options: any[], id: any): string {
+  //   const option = options.find((opt) => opt.id == id);
+  //   return option ? option.text : '';
+  // }
 
-    switch (gridId) {
-      case 'documentTypeGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDocumentTypeGrid({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
+  /* ================= Inline Events ================= */
+
+  onRowAdded(row: any): void {
+    //console.log('➕ Row Added:', row);
+ 
+    const payLoad = {
+      documentTypeCode: this.selectedDocumentType,
+      controlLabel: row.ControlLabel,
+      controlType: row.ControlTypeId,
+      listvalues: row.ListValue,
+      isMandatory: false,
+      IsActive: true,
+      IsDeleted: false,
+    };
+
+    this._documentAttribute.create(payLoad).subscribe(() => {
+      console.log('Created');
+    });
+  }
+
+  onRowUpdated(event: { rowData: any }): void {
+  
+    //console.log('✏️ Row Updated:', event.rowData);
+    const payLoad = {
+      id: event.rowData.Id,
+      documentTypeCode: this.selectedDocumentType,
+      controlLabel: event.rowData.ControlLabel,
+      controlType: event.rowData.ControlTypeId,
+      listValues: event.rowData.ListValue,
+      isMandatory: true,
+      IsActive: true,
+      IsDeleted: false,
+    };
+    this._documentAttribute.update(payLoad).subscribe(() => {
+      console.log('Updated');
+    });
+  }
+
+  onRowDeleted(index: number): void {
+    const row = this.documentAttributeData[index];
+
+    //console.log('🗑️ Row Deleted:', row);
+
+    this._documentAttribute.delete(row.Code).subscribe(() => {
+      //console.log('Deleted');
+    });
+  }
+
+  onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
+    //console.log('Cell value changed:', event);
+  }
+
+  onSelectionChanged(selectedRows: any[]): void {
+    //console.log('Selected rows:', selectedRows);
+    // Handle selection logic
+  }
+
+  handleGridAction(event: { action: string; rowData: any }) {
+    if (event.action === 'VIEW_CABINET') {
+      this.openCabinetModal(event.rowData);
     }
   }
 
-  openMandatoryCabinetModal(rowData: any) {
-    console.log('Row clicked:', rowData);
-
+  openCabinetModal(rowData: any): void {
     const modalRef = this.modal.create({
       nzTitle: 'Mandatory (Cabinet Wise)',
       nzContent: MandatoryCabinetWisePopup,
       nzData: {
-        name: 'Rao Adnan',
+        name: 'Access Level',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
-      console.log('Modal closed with:', result);
+      //console.log('Modal closed with:', result);
     });
   }
+}
 
-  onRowEdited(event: any) {
-    console.log('Cell edited:', event);
-
-    // You can also save row here or debounce saves as needed
-  }
-
-  // Catch save button clicks inside the grid - by subscribing to the wrapper's cellClicked (add if needed)
-  // Called when any cell is clicked inside the grid
-  onGridCellClicked(event: any) {
-    if (event.colDef.field === 'actions') {
-      const target = event.event.target as HTMLElement;
-
-      if (target.classList.contains('btn-insert')) {
-        this.insertNewRecord(event.data);
-      } else if (target.classList.contains('btn-edit')) {
-        this.editRecord(event.data);
-      } else if (target.classList.contains('btn-delete')) {
-        this.deleteRecord(event.data);
-      }
-    }
-
-    if (event.colDef.field === 'mandatoryCabinetWise') {
-      this.openMandatoryCabinetModal(event.data);
-    }
-
-    // // Handle Save button click
-    // if (event.colDef.field === 'save' && event.event.target.classList.contains('save-btn')) {
-    //   this.saveRow(event.data);
-    //   return;
-    // }
-
-    // // Handle mandatoryCabinetWise click
-    // if (
-    //   event.colDef.field === 'mandatoryCabinetWise' &&
-    //   event.event.target.dataset.action === 'open'
-    // ) {
-    //   this.openMandatoryCabinetModal(event.data);
-    //   return;
-    // }
-  }
-
-  insertNewRecord(newRowData: any) {
-    console.log('Insert new record:', newRowData);
-
-    // Validate inputs, then add to rowData and clear new row inputs
-    if (!newRowData.controlLabel) {
-      alert('Control Label is required!');
-      return;
-    }
-
-    // Assign new ID (in real apps, get from backend)
-    const newId = this.rowData.length ? Math.max(...this.rowData.map((r) => r.id)) + 1 : 1;
-
-    const newRecord = {
-      ...newRowData,
-      id: newId,
-      isNewRow: false,
-    };
-
-    this.rowData = [newRecord, ...this.rowData];
-
-    // Clear new row fields by resetting newRowData (you'll need a better form of 2-way binding or state management)
-    this.rowData[0].controlLabel = '';
-    this.rowData[0].controlType = '';
-    this.rowData[0].listValue = '';
-    this.rowData[0].mandatoryCabinetWise = false;
-  }
-
-  editRecord(data: any) {
-    alert(`Edit record: ${data.controlLabel}`);
-    // Put your logic to enable editing mode or open modal, etc.
-  }
-
-  deleteRecord(data: any) {
-    if (confirm(`Are you sure to delete ${data.controlLabel}?`)) {
-      this.rowData = this.rowData.filter((row) => row.id !== data.id);
-    }
-  }
-
-  saveRow(rowData: any) {
-    console.log('Saving row:', rowData);
-    // Replace with actual API call
-
-    setTimeout(() => {
-      alert(`Saved row with Control Label: ${rowData.controlLabel}`);
-    }, 500);
-  }
-
-  addNewRow() {
-    const newItem = {
-      controlLabel: '',
-      controlType: '',
-      listValue: '',
-      mandatoryCabinetWise: false,
-    };
-    //this.rowData = [newItem, ...this.rowData];
-  }
+class DocumentAttributeColumns {
+  ControlLabel: string = '';
+  ControlTypeId: string = '';
+  ControlTypeName: string = '';
+  ListValue: string = '';
+  Mandatory: string = '';
 }

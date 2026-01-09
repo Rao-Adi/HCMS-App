@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -11,8 +10,6 @@ import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice
 import { DepartmentService } from '@app/shared/services/department.service';
 import { DivisionService } from '@app/shared/services/division.services';
 import { ColDef } from 'ag-grid-community';
-import { filter, map, tap } from 'rxjs';
-
 @Component({
   selector: 'app-department-component',
   imports: [CommonModule, FormsModule, EditableAgGridWrapper],
@@ -33,13 +30,13 @@ export class DepartmentComponent {
     filter: true,
     cellDataType: false,
   };
-  
+
   pinnedTopRowDataPlanning: DepartmentColumns[] = [
     {
       Code: '',
       Name: '',
-      divisionId: '',
-      DivisionName: '',
+      departmentId: '',
+      departmentName: '',
       LastModifiedBy: '',
       LastModifiedAt: '',
     },
@@ -106,17 +103,6 @@ export class DepartmentComponent {
         dropdownDisplayField: 'text',
         required: true,
       },
-      // {
-      //   field: 'divisionId',
-      //   headerName: 'Division',
-      //   type: 'dropdown',
-      //   dependsOn: 'documentTypeId',
-      //   dropdownOptions: this.documentTypes,
-      //   filterKey: 'documentTypeId',
-      //   dropdownValueField: 'id',
-      //   dropdownDisplayField: 'text',
-      // },
-
       {
         field: 'LastModifiedBy',
         headerName: 'Last Saved By',
@@ -167,8 +153,9 @@ export class DepartmentComponent {
         cacheKey: 'DEPARTMENTS',
         getCount$: () => this._departmentServices.getDepartmentCount(),
 
-          // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._departmentServices.GetAllDepartments('', 'ASC', 'Name', true, 1, 1000),
+        // ✅ RETURN RAW API RESPONSE
+        getData$: () =>
+          this._departmentServices.GetAllDepartments('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.Code || item.code,
@@ -198,8 +185,6 @@ export class DepartmentComponent {
       } else {
         this.divisions = [];
       }
-      //this.cdr.detectChanges(); // force update
-
       // ✅ build grid ONLY after divisions are ready
       this.buildGrid();
     });
@@ -251,15 +236,21 @@ export class DepartmentComponent {
   onRowUpdated(event: { rowData: any }): void {
     debugger;
     console.log('✏️ Row Updated:', event.rowData);
+    const payLoad = {
+      Code: event.rowData.Code,
+      Name: event.rowData.Name,
+      DivisionCode: event.rowData.DivisionCode,
+      IsActive: true,
+      IsDeleted: false,
+    };
 
-    this._departmentServices.update(event.rowData).subscribe(() => {
+    this._departmentServices.update(payLoad).subscribe(() => {
       this._masterCacheService.clear('DIVISIONS');
       this.loadDepartments();
     });
   }
 
   onRowDeleted(index: number): void {
-    debugger;
     const row = this.departmentData[index];
 
     console.log('🗑️ Row Deleted:', row);
@@ -283,8 +274,8 @@ export class DepartmentComponent {
 class DepartmentColumns {
   Code: string = '';
   Name: string = '';
-  divisionId: string = '';
-  DivisionName: string = '';
+  departmentId: string = '';
+  departmentName: string = '';
   LastModifiedBy: string = '';
   LastModifiedAt: string = '';
 }

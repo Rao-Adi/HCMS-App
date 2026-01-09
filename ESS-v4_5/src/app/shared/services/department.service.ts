@@ -68,7 +68,7 @@ export class DepartmentService {
     });
   }
 
-    create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
+  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
     return this.http.post(`${environment.baseUrl}/DMSDepartment/create-department`, payload);
   }
 

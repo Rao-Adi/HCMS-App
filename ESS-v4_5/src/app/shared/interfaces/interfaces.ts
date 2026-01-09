@@ -11,7 +11,10 @@ export interface Division {
   Id: number;
   Code: string;
   Name: string;
-  IsActive: boolean;
+  CreatedBy: string;
+  CreatedAt: string;
+  LastModifiedBy: string;
+  LastModifiedAt: string;
 }
 
 export interface OrganizationItem {
@@ -41,18 +44,35 @@ export interface SelectList2 {
 }
 
 export class DocumentType {
-  CODE: string = '';
-  NAME: string = '';
+  Id: number = 0;
+  Code: string = '';
+  Name: string = '';
+  CreatedBy: string = '';
+  CreatedAt: string = '';
+  LastModifiedBy: string = '';
+  LastModifiedAt: string = '';
 }
 
 export interface SubDepartment {
-  code: string;
+  Id: number;
+  Code: string;
   Name: string;
+  CreatedBy: string;
+  CreatedAt: string;
+  LastModifiedBy: string;
+  LastModifiedAt: string;
 }
 
 export interface Department {
-  code: string;
+  Id: number;
+  Code: string;
   Name: string;
+  Division: string;
+  DivisionCode: string;
+  CreatedBy: string;
+  CreatedAt: string;
+  LastModifiedBy: string;
+  LastModifiedAt: string;
 }
 
 export interface AuditableEntity {

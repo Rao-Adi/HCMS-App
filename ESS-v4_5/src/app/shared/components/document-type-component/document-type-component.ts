@@ -1,19 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import {
+  EditableAgGridWrapper,
+  GridColumn,
+  GridConfig,
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
-import { filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-document-type-component',
-  imports: [CommonModule, FormsModule, AgGridWrapper],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
   templateUrl: './document-type-component.html',
   styleUrl: './document-type-component.css',
 })
 export class DocumentTypeComponent {
+  gridConfig: GridConfig = {} as GridConfig;
   selectedPageSize = 10;
   pageSize = 10;
   totalDocumentTypes = 0;
@@ -24,36 +29,13 @@ export class DocumentTypeComponent {
     cellDataType: false,
   };
 
-  documentTypeColumnDefs = [
-    { field: 'Code', headerName: 'Document Code', flex: 1, editable: true },
-    { field: 'Name', headerName: 'Document Type', flex: 1, editable: true },
-    { field: 'Description', headerName: 'Description', flex: 1, editable: true },
+  pinnedTopRowDataPlanning: DocumentTypeColumns[] = [
     {
-      field: 'CreatedBy',
-      headerName: 'Last Saved By',
-      cellEditor: 'agDateCellEditor',
-
-      flex: 1,
-    },
-    {
-      field: 'CreatedAt',
-      headerName: 'Last Saved On',
-      cellEditor: 'agDateCellEditor',
-
-      flex: 1,
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
+      Code: '',
+      Name: '',
+      Description: '',
+      LastModifiedBy: '',
+      LastModifiedAt: '',
     },
   ];
 
@@ -64,6 +46,24 @@ export class DocumentTypeComponent {
   ) {}
 
   ngOnInit() {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+
     this.getAllDocumentTypes({
       pageNumber: 1,
       pageSize: this.pageSize,
@@ -72,74 +72,98 @@ export class DocumentTypeComponent {
     });
   }
 
-  getAllDocumentTypes = (query: any) => {
+  private getColumns(): GridColumn[] {
+    return [
+      {
+        field: 'Code',
+        headerName: 'Code',
+        type: 'text',
+        required: true,
+        minWidth: 150,
+        pinned: 'left',
+      },
+      {
+        field: 'Name',
+        headerName: 'Name',
+        type: 'text',
+        required: true,
+        minWidth: 200,
+      },
+      {
+        field: 'Description',
+        headerName: 'Description',
+        type: 'text',
+        required: false,
+        minWidth: 200,
+      },
+      {
+        field: 'LastModifiedBy',
+        headerName: 'Last Saved By',
+        type: 'readonly',
+        minWidth: 150,
+        pinned: 'left',
+        required: false,
+      },
+      {
+        field: 'LastModifiedAt',
+        headerName: 'Last Saved On',
+        type: 'readonly',
+        minWidth: 150,
+        pinned: 'left',
+        required: false,
+      },
+    ];
+  }
+
+  loadDocumentTypes(): void {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'DOCUMENTTYPES',
-
+        cacheKey: MASTER_CACHE_KEYS.DOCUMENT_TYPES,
         getCount$: () => this._documentTypeService.getDocumentTypeCount(),
-
-           // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () =>
+          this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (item) => ({
+          Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
-          Department: item.department || item.Department,
+          Description: item.description || item.Description,
           CreatedBy: item.createdBy || item.CreatedBy || '',
           CreatedAt: item.createdAt || item.CreatedAt || '',
+          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
         }),
       })
       .subscribe((data) => {
         this.documentTypeData = data;
         this.totalDocumentTypes = data.length;
       });
+  }
 
-    // const sort = query.sortModel?.[0];
-    // const pageNumber = Number(query?.pageNumber) || 1;
-    // const pageSize = Number(query?.pageSize) || 10;
+  getAllDocumentTypes = (query: any) => {
+    this._masterCacheService
+      .getMasterData({
+        cacheKey: MASTER_CACHE_KEYS.DOCUMENT_TYPES,
 
-    // const cacheKey = 'DOCUMENTTYPES';
-    // const cached = localStorage.getItem(cacheKey);
+        getCount$: () => this._documentTypeService.getDocumentTypeCount(),
 
-    // // 1️⃣ If cache exists → check count
-    // if (cached) {
-    //   const parsed = JSON.parse(cached);
-
-    //   this._documentTypeService
-    //     .GetAllDocumentTypes(
-    //       query?.filterModel?.Name?.filter || '',
-    //       sort?.sort?.toUpperCase() || 'ASC',
-    //       sort?.colId || 'Name',
-    //       true,
-    //       pageNumber,
-    //       pageSize
-    //     )
-    //     .subscribe((res) => {
-    //       if (res?.Success && res.Data?.Items) {
-    //         this.totalDocumentTypes = res.Data.TotalCount;
-    //         this.documentTypeData = res.Data.Items.map((item: any) => ({
-    //           Code: item.code || item.Code,
-    //           Name: item.name || item.Name,
-    //           Description: item.description || item.Description,
-    //           CreatedBy: item.createdBy || item.CreatedBy || '',
-    //           CreatedAt: item.createdAt || item.CreatedAt || '',
-    //         }));
-    //         //console.log('Mapped documentTypeData:', this.documentTypeData);
-    //         localStorage.setItem(
-    //           'DOCUMENTTYPES',
-    //           JSON.stringify({
-    //             count: this.totalDocumentTypes,
-    //             data: this.documentTypeData,
-    //           })
-    //         );
-    //       } else {
-    //         this.documentTypeData = [];
-    //       }
-    //       //this.cdr.detectChanges(); // force update
-    //     });
-    // }
-    // // ❌ Cache outdated → fetch fresh
-    // this.fetchDocumentTypes(query, sort, pageNumber, pageSize);
+        // ✅ RETURN RAW API RESPONSE
+        getData$: () =>
+          this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+        mapFn: (item) => ({
+          Id: item.Id || item.id,
+          Code: item.code || item.Code,
+          Name: item.name || item.Name,
+          Description: item.description || item.Description,
+          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedAt: item.createdAt || item.CreatedAt || '',
+          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+        }),
+      })
+      .subscribe((data) => {
+        this.documentTypeData = data;
+        this.totalDocumentTypes = data.length;
+      });
   };
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -150,4 +174,71 @@ export class DocumentTypeComponent {
       filterModel: {},
     });
   }
+
+  onGridReady(gridApi: any): void {
+    //console.log('Grid ready:', gridApi);
+    // Store grid API if needed for external operations
+  }
+
+  /* ================= Inline Events ================= */
+
+  onRowAdded(row: any): void {
+    console.log('➕ Row Added:', row);
+
+    const payLoad = {
+      Code: row.Code,
+      Name: row.Name,
+      Description: row.Description,
+      IsActive: true,
+      IsDeleted: false,
+    };
+
+    this._documentTypeService.create(payLoad).subscribe(() => {
+      this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
+      this.loadDocumentTypes();
+    });
+  }
+
+  onRowUpdated(event: { rowData: any }): void {
+    console.log('✏️ Row Updated:', event.rowData);
+    const payLoad = {
+      Code: event.rowData.Code,
+      Name: event.rowData.Name,
+      Description: event.rowData.Description,
+      IsActive: true,
+      IsDeleted: false,
+    };
+    this._documentTypeService.update(payLoad).subscribe(() => {
+      this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
+      this.loadDocumentTypes();
+    });
+  }
+
+  onRowDeleted(index: number): void {
+    const row = this.documentTypeData[index];
+
+    console.log('🗑️ Row Deleted:', row);
+
+    this._documentTypeService.delete(row.Code).subscribe(() => {
+      this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
+      this.loadDocumentTypes();
+    });
+  }
+
+  onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
+    //console.log('Cell value changed:', event);
+  }
+
+  onSelectionChanged(selectedRows: any[]): void {
+    //console.log('Selected rows:', selectedRows);
+    // Handle selection logic
+  }
+}
+
+class DocumentTypeColumns {
+  Code: string = '';
+  Name: string = '';
+  Description: string = '';
+  LastModifiedBy: string = '';
+  LastModifiedAt: string = '';
 }

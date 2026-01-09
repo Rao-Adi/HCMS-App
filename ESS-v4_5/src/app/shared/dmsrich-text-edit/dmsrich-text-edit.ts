@@ -3,7 +3,13 @@ import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import 'quill-mention';
 import 'quill-emoji';
-import { QuillModule } from 'ngx-quill';
+import { QuillEditorComponent, QuillModule } from 'ngx-quill';
+import Quill from 'quill';
+import '../AttachmentBlot/attachment.blot';
+
+const BlockEmbed = Quill.import('blots/block/embed');
+const icons = Quill.import('ui/icons') as any;
+icons['attach'] = '📎';
 
 @Component({
   selector: 'app-dmsrich-text-edit',
@@ -12,6 +18,8 @@ import { QuillModule } from 'ngx-quill';
   styleUrl: './dmsrich-text-edit.css',
 })
 export class DMSRichTextEdit {
+  @ViewChild('fileInput') fileInput!: any;
+  editor!: QuillEditorComponent;
   hasFocus = false;
   subject: string = '';
   htmlText = '<p>Testing</p>';
@@ -25,30 +33,42 @@ export class DMSRichTextEdit {
     { id: 4, value: 'Patrik Sjölin 2' },
   ];
 
+  // Import the Quill object if you're using Quill v1.x (common with ngx-quill)
+  // const Quill: any = QuillNamespace;
+
+  // Define your custom font size array (use 'false' for default/normal size)
+  fontSizeArr = ['8px', '10px', '12px', '14px', '16px', '18px', '24px', '36px', '48px', false];
+  fontFamilyArr = ['roboto', 'arial', 'serif', 'monospace'];
+
   quillConfig = {
-    //toolbar: '.toolbar',
-     theme: 'snow',
+    theme: 'snow',
     toolbar: {
       container: [
-        ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-        ['code-block'],
-        [{ header: 1 }, { header: 2 }], // custom button values
+        [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+        // [{ size: this.fontSizeArr }],
+        [{ font: this.fontFamilyArr }], // 👈 Add this line
+        ['bold', 'italic', 'underline'], // toggled buttons
+        // ['code-block'],
+        // [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: 'ordered' }, { list: 'bullet' }],
         //[{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
         //[{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
         //[{ 'direction': 'rtl' }],                         // text direction
 
-        //[{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
         //[{ 'header': [1, 2, 3, 4, 5, 6, false] }],
 
         //[{ 'font': [] }],
         //[{ 'align': [] }],
 
-        ['clean'], // remove formatting button
+        // ['clean'], // remove formatting button
 
         ['link'],
         //['link', 'image', 'video']
+        ['attach'], // 👈 custom button
       ],
+      handlers: {
+        attach: () => this.openFilePicker(),
+      },
     },
 
     mention: {
@@ -124,4 +144,37 @@ export class DMSRichTextEdit {
   onBlur = () => {
     console.log('Blurred');
   };
+
+  openFilePicker() {
+    this.fileInput.nativeElement.click();
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    // 🔴 TEST URL
+    this.insertAttachment('https://cdn.company.com/files/abc123.pdf', file);
+
+    event.target.value = ''; // reset input
+
+    // this.uploadFile(file).subscribe((res) => {
+    //   this.insertAttachment(res.url, file);
+    // });
+  }
+
+  insertAttachment(url: string, file: File) {
+    const quill = this.editor.quillEditor;
+    const range = quill.getSelection(true);
+
+    quill.insertEmbed(range.index, 'attachment', {
+      url,
+      name: file.name,
+      size: `${(file.size / 1024).toFixed(1)} KB`,
+    });
+
+    quill.insertText(range.index + 1, '\n');
+  }
 }
+
+

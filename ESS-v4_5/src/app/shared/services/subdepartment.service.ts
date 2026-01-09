@@ -64,73 +64,16 @@ export class SubDepartmentService {
     });
   }
 
-  create(shortcut: SubDepartment): Observable<SubDepartment> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http.post<SubDepartment>('/DMSSubDepartment/create-subdepartment', { shortcut }).pipe(
-          map((newSubDepartment) => {
-            // Update the departments with the new shortcut
-            this._departments.next([...departments, newSubDepartment]);
-
-            // Return the new shortcut from observable
-            return newSubDepartment;
-          })
-        )
-      )
-    );
+  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
+    return this.http.post(`${environment.baseUrl}/DMSSubDepartment/create-subdepartment`, payload);
   }
 
-  update(code: string, shortcut: SubDepartment): Observable<SubDepartment> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http
-          .patch<SubDepartment>('/DMSSubDepartment/update-subdepartment', {
-            code,
-            shortcut,
-          })
-          .pipe(
-            map((updatedSubDepartment: SubDepartment) => {
-              // Find the index of the updated shortcut
-              const index = departments.findIndex((item) => item.code === code);
-
-              // Update the shortcut
-              departments[index] = updatedSubDepartment;
-
-              // Update the departments
-              this._departments.next(departments);
-
-              // Return the updated shortcut
-              return updatedSubDepartment;
-            })
-          )
-      )
-    );
+  update(payload: any) {
+    return this.http.put(`${environment.baseUrl}/DMSSubDepartment/update-subdepartment`, payload);
   }
 
-  delete(code: string): Observable<boolean> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http
-          .delete<boolean>('/DMSSubDepartment/delete-subdepartment', { params: { code } })
-          .pipe(
-            map((isDeleted: boolean) => {
-              // Find the index of the deleted shortcut
-              const index = departments.findIndex((item) => item.code === code);
-
-              // Delete the shortcut
-              departments.splice(index, 1);
-
-              // Update the departments
-              this._departments.next(departments);
-
-              // Return the deleted status
-              return isDeleted;
-            })
-          )
-      )
-    );
+  delete(code: string) {
+    return this.http.delete(`${environment.baseUrl}/DMSSubDepartment/delete-subdepartment/${code}`);
   }
+ 
 }

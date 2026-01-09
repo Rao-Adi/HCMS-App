@@ -1,23 +1,30 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import {
+  EditableAgGridWrapper,
+  GridColumn,
+  GridConfig,
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { DepartmentService } from '@app/shared/services/department.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
-import { filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-sub-department-component',
-  imports: [CommonModule, FormsModule, AgGridWrapper],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
   templateUrl: './sub-department-component.html',
   styleUrl: './sub-department-component.css',
 })
 export class SubDepartmentComponent {
+  gridConfig: GridConfig = {} as GridConfig;
+
   selectedPageSize = 10;
   pageSize = 10;
   totalSubDepartments = 0;
   subDepartmentData: any[] = [];
+  departments: any[] = [];
 
   defaultColDef: ColDef = {
     filter: true,
@@ -57,13 +64,43 @@ export class SubDepartmentComponent {
     },
   ];
 
+  pinnedTopRowDataPlanning: DepartmentColumns[] = [
+    {
+      Code: '',
+      Name: '',
+      departmentId: '',
+      departmentName: '',
+      LastModifiedBy: '',
+      LastModifiedAt: '',
+    },
+  ];
+
   constructor(
-    private _subDepartmentService: SubDepartmentService,
-    private _masterCacheService: Mastercacheservice
+    private _subDepartmentServices: SubDepartmentService,
+    private _masterCacheService: Mastercacheservice,
+    private _departmentService: DepartmentService
   ) {}
 
   ngOnInit() {
-    this.getAllSubDepartments({
+    this.getAllDepartmeList();
+  }
+
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+
+    this.getAllDepartments({
       pageNumber: 1,
       pageSize: this.pageSize,
       sortModel: [],
@@ -71,14 +108,145 @@ export class SubDepartmentComponent {
     });
   }
 
+  private getColumns(): GridColumn[] {
+    return [
+      {
+        field: 'Code',
+        headerName: 'Sub-Department Code',
+        type: 'text',
+        required: true,
+        minWidth: 150,
+        pinned: 'left',
+      },
+      {
+        field: 'Name',
+        headerName: 'Sub-Department Name',
+        type: 'text',
+        required: true,
+        minWidth: 200,
+      },
+      // ✅ Department
+      {
+        field: 'Department',
+        headerName: 'Department',
+        type: 'dropdown',
+        dropdownOptions: this.departments,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        required: true,
+      },
+      {
+        field: 'LastModifiedBy',
+        headerName: 'Last Saved By',
+        type: 'readonly',
+        minWidth: 150,
+        pinned: 'left',
+        required: false,
+      },
+      {
+        field: 'LastModifiedAt',
+        headerName: 'Last Saved On',
+        type: 'readonly',
+        minWidth: 150,
+        pinned: 'left',
+        required: false,
+      },
+    ];
+  }
+
+  loadDepartments(): void {
+    this._masterCacheService
+      .getMasterData({
+        cacheKey: 'SUBDEPARTMENTS',
+        getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
+        getData$: () =>
+          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+        mapFn: (item) => ({
+          Id: item.Id || item.id,
+          Code: item.code || item.Code,
+          Name: item.name || item.Name,
+          Department: item.Department || item.Department || '',
+          DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
+          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedAt: item.createdAt || item.CreatedAt || '',
+          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+        }),
+      })
+      .subscribe((data) => {
+        this.subDepartmentData = data;
+        this.totalSubDepartments = data.length;
+      });
+  }
+
+  getAllDepartments = (query: any) => {
+    this._masterCacheService
+      .getMasterData({
+        cacheKey: 'SUBDEPARTMENTS',
+        getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
+
+        // ✅ RETURN RAW API RESPONSE
+        getData$: () =>
+          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+        mapFn: (item) => ({
+          Id: item.Id || item.id,
+          Code: item.Code || item.code,
+          Name: item.Name || item.name,
+          Department: item.Department || item.Department || '',
+          DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedAt: item.CreatedAt || item.createdAt || '',
+          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
+          LastModifiedAt: item.LastModifiedAt || item.lastModifiedAt || '',
+        }),
+      })
+      .subscribe((data) => {
+        // 'data' here is now the mapped array from mapFn
+        this.subDepartmentData = data;
+        this.totalSubDepartments = data ? data.length : 0;
+      });
+  };
+
+  getAllDepartmeList = () => {
+    this._departmentService.getDepartmentList().subscribe((res) => {
+      if (res?.Data) {
+        this.departments = (res.Data ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Value,
+        }));
+      } else {
+        this.departments = [];
+      }
+      //this.cdr.detectChanges(); // force update
+
+      // ✅ build grid ONLY after Departmes are ready
+      this.buildGrid();
+    });
+  };
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    this.getAllDepartments({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
+  }
+
+  onGridReady(gridApi: any): void {
+    //console.log('Grid ready:', gridApi);
+    // Store grid API if needed for external operations
+  }
+
   getAllSubDepartments = (query: any) => {
     this._masterCacheService
       .getMasterData({
         cacheKey: 'SUBDEPARTMENTS',
-        getCount$: () => this._subDepartmentService.getSubDepartmentCount(),
+        getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
 
-            // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._subDepartmentService.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+        // ✅ RETURN RAW API RESPONSE
+        getData$: () =>
+          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
         // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
           Id: item.Id || item.id,
@@ -96,48 +264,71 @@ export class SubDepartmentComponent {
         // 'data' here is now the mapped array from mapFn
         this.subDepartmentData = data;
         this.totalSubDepartments = data ? data.length : 0;
-      }); 
+      });
   };
 
-  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    this.getAllSubDepartments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+  /* ================= Inline Events ================= */
+
+  onRowAdded(row: any): void { 
+    console.log('➕ Row Added:', row);
+
+    const payLoad = {
+      Code: row.Code,
+      Name: row.Name,
+      DepartmentCode: row.Department,
+      IsActive: true,
+      IsDeleted: false,
+    };
+
+    this._subDepartmentServices.create(payLoad).subscribe(() => {
+      this._masterCacheService.clear('SUBDEPARTMENTS');
+      this.loadDepartments();
     });
   }
 
-  saveSubDepartment(event: any): void {
-    // 🔒 Business validation
-    if (!event.newValue || event.newValue.trim().length < 3) {
-      this.revertCell(event, 'Minimum 3 characters required');
-      return;
-    }
+  onRowUpdated(event: { rowData: any }): void { 
+    console.log('✏️ Row Updated:', event.rowData);
 
-    // if (this.isDuplicateName(event.data.Code, event.newValue)) {
-    //   this.revertCell(event, 'Name already exists');
-    //   return;
-    // }
-
-    const payload = {
-      code: event.data.Code,
-      name: event.newValue,
+    const payLoad = {
+      Code: event.rowData.Code,
+      Name: event.rowData.Name,
+      DepartmentCode: event.rowData.Department,
+      IsActive: true,
+      // IsDeleted: false,
     };
 
-    // this._subDepartmentService.updateSubDepartment(payload).subscribe({
-    //   next: () => {
-    //     console.log('Saved successfully');
-    //   },
-    //   error: () => {
-    //     this.revertCell(event, 'Save failed');
-    //   },
-    // });
+    this._subDepartmentServices.update(payLoad).subscribe(() => {
+      this._masterCacheService.clear('SUBDEPARTMENTS');
+      this.loadDepartments();
+    });
   }
 
-  revertCell(event: any, message: string) {
-    alert(message); // replace with toast
-    event.data[event.field] = event.oldValue;
-    this.subDepartmentData = [...this.subDepartmentData];
+  onRowDeleted(index: number): void { 
+    const row = this.subDepartmentData[index];
+
+    console.log('🗑️ Row Deleted:', row);
+
+    this._subDepartmentServices.delete(row.Code).subscribe(() => {
+      this._masterCacheService.clear('SUBDEPARTMENTS');
+      this.loadDepartments();
+    });
   }
+
+  onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
+    //console.log('Cell value changed:', event);
+  }
+
+  onSelectionChanged(selectedRows: any[]): void {
+    console.log('Selected rows:', selectedRows);
+    // Handle selection logic
+  }
+}
+
+class DepartmentColumns {
+  Code: string = '';
+  Name: string = '';
+  departmentId: string = '';
+  departmentName: string = '';
+  LastModifiedBy: string = '';
+  LastModifiedAt: string = '';
 }

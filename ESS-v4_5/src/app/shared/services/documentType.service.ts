@@ -70,73 +70,16 @@ export class DocumentTypeService {
     });
   }
 
-  create(shortcut: DocumentType): Observable<DocumentType> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http.post<DocumentType>('/DMSDocumentType/create-document-type', { shortcut }).pipe(
-          map((newDocumentType) => {
-            // Update the departments with the new shortcut
-            this._departments.next([...departments, newDocumentType]);
-
-            // Return the new shortcut from observable
-            return newDocumentType;
-          })
-        )
-      )
-    );
-  }
-
-  update(code: string, shortcut: DocumentType): Observable<DocumentType> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http
-          .patch<DocumentType>('/DMSDocumentType/update-document-type', {
-            code,
-            shortcut,
-          })
-          .pipe(
-            map((updatedDocumentType: DocumentType) => {
-              // Find the index of the updated shortcut
-              const index = departments.findIndex((item) => item.CODE === code);
-
-              // Update the shortcut
-              departments[index] = updatedDocumentType;
-
-              // Update the departments
-              this._departments.next(departments);
-
-              // Return the updated shortcut
-              return updatedDocumentType;
-            })
-          )
-      )
-    );
-  }
-
-  delete(code: string): Observable<boolean> {
-    return this.departments$.pipe(
-      take(1),
-      switchMap((departments) =>
-        this.http
-          .delete<boolean>('/DMSDocumentType/delete-document-type', { params: { code } })
-          .pipe(
-            map((isDeleted: boolean) => {
-              // Find the index of the deleted shortcut
-              const index = departments.findIndex((item) => item.CODE === code);
-
-              // Delete the shortcut
-              departments.splice(index, 1);
-
-              // Update the departments
-              this._departments.next(departments);
-
-              // Return the deleted status
-              return isDeleted;
-            })
-          )
-      )
-    );
-  }
+    create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
+      return this.http.post(`${environment.baseUrl}/DMSDocumentType/create-document-type`, payload);
+    }
+  
+    update(payload: any) {
+      return this.http.put(`${environment.baseUrl}/DMSDocumentType/update-document-type`, payload);
+    }
+  
+    delete(code: string) {
+      return this.http.delete(`${environment.baseUrl}/DMSDocumentType/delete-document-type/${code}`);
+    }
+ 
 }

@@ -12,7 +12,8 @@ import { NzUploadModule } from 'ng-zorro-antd/upload';
     AgGridModule,
     QuillModule.forRoot(),
     NzCheckboxModule,
-    NzUploadModule
+    NzUploadModule,
+    QuillModule
   ],
   exports: []
 })

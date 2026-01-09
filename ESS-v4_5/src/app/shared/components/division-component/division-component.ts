@@ -35,6 +35,8 @@ export class DivisionComponent {
     {
       Code: '',
       Name: '',
+      CreatedBy: '',
+      CreateddAt: '',
       LastModifiedBy: '',
       LastModifiedAt: '',
     },
@@ -181,8 +183,7 @@ export class DivisionComponent {
 
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void {
-    debugger;
+  onRowAdded(row: any): void { 
     console.log('➕ Row Added:', row);
 
     const payLoad = {
@@ -199,17 +200,21 @@ export class DivisionComponent {
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    debugger;
     console.log('✏️ Row Updated:', event.rowData);
-
-    this._divisionServices.update(event.rowData).subscribe(() => {
+    const payLoad = {
+      Code: event.rowData.Code,
+      Name: event.rowData.Name,
+      IsActive: true,
+      IsDeleted: false,
+    };
+    this._divisionServices.update(payLoad).subscribe(() => {
       this._masterCacheService.clear('DIVISIONS');
       this.loadDivisions();
     });
   }
 
   onRowDeleted(index: number): void {
-    debugger;
+ 
     const row = this.divisionData[index];
 
     console.log('🗑️ Row Deleted:', row);
@@ -233,6 +238,8 @@ export class DivisionComponent {
 class DivisionColumns {
   Code: string = '';
   Name: string = '';
+  CreatedBy: string = '';
+  CreateddAt: string = '';
   LastModifiedBy: string = '';
   LastModifiedAt: string = '';
 }

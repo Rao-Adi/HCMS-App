@@ -12,7 +12,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
   template: `
     <nz-select
       class="ag-input"
-      style="width: 200px;"
+      style="width: auto;"
       [(ngModel)]="selectedValue"
       (ngModelChange)="onSelectionChange($event)"
     >
@@ -55,10 +55,10 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     // 🔥 FIX 2: accept string/number IDs
     this.options = params.options || [];
 
-    console.log('DOCUMENT TYPE INIT', {
-      value: this.selectedValue,
-      options: this.options,
-    });
+    // console.log('DOCUMENT TYPE INIT', {
+    //   value: this.selectedValue,
+    //   options: this.options,
+    // });
   }
 
   refresh(params: any): boolean {

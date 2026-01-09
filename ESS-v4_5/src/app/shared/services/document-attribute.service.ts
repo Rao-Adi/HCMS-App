@@ -27,17 +27,17 @@ export class DocumentAttributeService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getDocumentAttributeList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-all-document-attributes-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getDocumentAttributeById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllDocumentAttribute(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
@@ -61,74 +61,16 @@ export class DocumentAttributeService {
     });
   }
 
-  create(shortcut: DocumentAttribute): Observable<DocumentAttribute> {
-    return this.cabietStructureConfig$.pipe(
-      take(1),
-      switchMap((cabietStructureConfig) =>
-        this.http
-          .post<DocumentAttribute>('/DMSDocumentAttribute/create-document-attributes', { shortcut })
-          .pipe(
-            map((newcabietStructureConfig) => {
-              // Update the cabietStructureConfig with the new shortcut
-              this._cabietStructureConfig.next([
-                ...cabietStructureConfig,
-                newcabietStructureConfig,
-              ]);
-
-              // Return the new shortcut from observable
-              return newcabietStructureConfig;
-            })
-          )
-      )
-    );
+   create(payload: any) {
+    return this.http.post(`${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`, payload);
   }
 
-  update(shortcut: DocumentAttribute): Observable<DocumentAttribute> {
-    const payload = {
-      id: shortcut.id,
-      controlLabel: shortcut.controlLabel,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<DocumentAttribute>(
-        `${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`,
-        payload,
-        {
-          headers,
-        }
-      )
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.id === updated.id);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._cabietStructureConfig.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.put(`${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`, payload);
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes`, {
-        params: { id },
-      })
-      .pipe(
-        tap(() => {
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete(`${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`);
   }
+ 
 }

@@ -3,7 +3,10 @@
   class="ag-theme-alpine"
   [gridId]="'employee-planning-grid'"
   [config]="gridConfig"
-  [rowData]="subDepartmentData" 
+  [rowData]="manualUserData"
+  [divisionList]="divisions"
+  [departmentList]="departments"
+  [subDepartmentList]="subDepartments"
   [pinnedTopRowData]="pinnedTopRowDataPlanning"
   (rowAdded)="onRowAdded($event)"
   (rowUpdated)="onRowUpdated($event)"
@@ -11,5 +14,6 @@
   (cellValueChanged)="onCellValueChanged($event)"
   (selectionChanged)="onSelectionChanged($event)"
   (gridReady)="onGridReady($event)"
+  (actionClicked)="handleGridAction($event)"
 >
 </app-editable-ag-grid-wrapper>
