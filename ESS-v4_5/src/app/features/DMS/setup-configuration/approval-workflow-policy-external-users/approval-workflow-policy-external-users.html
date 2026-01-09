@@ -192,20 +192,24 @@
                         <div *ngSwitchCase="'1'">
                           <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                             <span class="d-flex">Designation</span>
-                            <nz-select nzShowSearch nzPlaceHolder="Select Designation">
-                              <nz-option
-                                *ngFor="let emp of employees"
-                                [nzValue]="emp.CODE"
-                                [nzLabel]="emp.NAME"
-                              >
-                              </nz-option>
-                            </nz-select>
+                            <app-designation-list
+                              valueKey="CODE"
+                              labelKey="NAME"
+                              placeholder="Select Designation"
+                              [(ngModel)]="selectedDesignation"
+                              width="250px"
+                            >
+                            </app-designation-list>
                           </div>
                         </div>
                         <div *ngSwitchCase="'2'">
                           <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                             <span class="d-flex">Role</span>
-                            <nz-select nzShowSearch nzPlaceHolder="Select Role">
+                            <nz-select
+                              nzShowSearch
+                              nzPlaceHolder="Select Role"
+                              style="width: 250px"
+                            >
                               <nz-option
                                 *ngFor="let emp of employees"
                                 [nzValue]="emp.CODE"
@@ -218,7 +222,7 @@
                         <div *ngSwitchCase="'3'">
                           <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                             <span class="d-flex">Employee</span>
-                            <nz-select nzShowSearch nzPlaceHolder="Select Employee">
+                            <nz-select nzShowSearch nzPlaceHolder="Select Employee" style="width: 250px">
                               <nz-option
                                 *ngFor="let emp of employees"
                                 [nzValue]="emp.CODE"
@@ -239,7 +243,7 @@
                   <ng-container *ngSwitchCase="'2'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Employee</span>
-                      <nz-select nzShowSearch nzPlaceHolder="Select Employee">
+                      <nz-select nzShowSearch nzPlaceHolder="Select Employee" style="width: 250px">
                         <nz-option
                           *ngFor="let emp of employees"
                           [nzValue]="emp.CODE"
@@ -254,7 +258,7 @@
                   <ng-container *ngSwitchCase="'3'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Role</span>
-                      <nz-select nzShowSearch nzPlaceHolder="Select Role">
+                      <nz-select nzShowSearch nzPlaceHolder="Select Role" style="width: 250px">
                         <nz-option
                           *ngFor="let emp of employees"
                           [nzValue]="emp.CODE"
@@ -269,14 +273,14 @@
                   <ng-container *ngSwitchCase="'4'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Designation</span>
-                      <nz-select nzShowSearch nzPlaceHolder="Select Designation">
-                        <nz-option
-                          *ngFor="let emp of employees"
-                          [nzValue]="emp.CODE"
-                          [nzLabel]="emp.NAME"
-                        >
-                        </nz-option>
-                      </nz-select>
+                      <app-designation-list
+                        valueKey="CODE"
+                        labelKey="NAME"
+                        placeholder="Select Designation"
+                        [(ngModel)]="selectedDesignation"
+                        width="250px"
+                      >
+                      </app-designation-list>
                     </div>
                   </ng-container>
 
@@ -307,7 +311,10 @@
               </div>
 
               <div class="row row-space">
-                <div *ngIf="showExclusionTable" class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4">
+                <div
+                  *ngIf="showExclusionTable"
+                  class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+                >
                   <table class="table">
                     <thead>
                       <th>Approval Sequence</th>

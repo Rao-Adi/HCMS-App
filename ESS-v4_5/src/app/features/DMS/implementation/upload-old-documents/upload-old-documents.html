@@ -33,7 +33,26 @@
 
             <div class="row row-space" *ngIf="selectedTab === 'Upload'">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-ag-grid-wrapper
+                <app-editable-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '500px' }"
+                  class="ag-theme-alpine"
+                  [gridId]="'employee-planning-grid'"
+                  [config]="gridConfig"
+                  [rowData]="uploadedDocumentsData"
+                  [divisionList]="divisions"
+                  [departmentList]="departments"
+                  [subDepartmentList]="subDepartments"
+                  [pinnedTopRowData]="pinnedTopRowDataPlanning"
+                  (rowAdded)="onRowAdded($event)"
+                  (rowUpdated)="onRowUpdated($event)"
+                  (rowDeleted)="onRowDeleted($event)"
+                  (cellValueChanged)="onCellValueChanged($event)"
+                  (selectionChanged)="onSelectionChanged($event)"
+                  (gridReady)="onGridReady($event)"
+                >
+                </app-editable-ag-grid-wrapper>
+
+                <!-- <app-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '550px' }"
                   [columnDefs]="UploadColumnDefs"
                   [defaultColDef]="defaultColDef"
@@ -44,7 +63,7 @@
                   [totalRows]="totalUploads"
                   (serverQuery)="GetAllUploads($event)"
                 >
-                </app-ag-grid-wrapper>
+                </app-ag-grid-wrapper> -->
               </div>
             </div>
 
@@ -54,7 +73,7 @@
                   [gridStyle]="{ width: '100%', height: '550px' }"
                   [columnDefs]="UploadedDocColumnDefs"
                   [defaultColDef]="defaultColDef"
-                  [rowData]="rowData"
+                  [rowData]="uploadedDocumentsData"
                   [pageSize]="selectedPageSize"
                   gridId="uploadedGrid"
                   (pageSizeChange)="onPageSizeChanged($event)"

@@ -1,201 +1,178 @@
 <div class="container-fluid">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="card-custom">
-          <div class="clearfix">
-            <div class="pull-left">
-              <h3 class="mt-0">Create/Update Document</h3>
-              <small class="text-muted">Create/Update Document</small>
-            </div>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Create/Update Document</h3>
+            <small class="text-muted">Create/Update Document</small>
           </div>
-          <br />
-          <hr />
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="main-content d-flex flex-column min-vw-0">
-              <div class="row row-space">
-                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="row">
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.ActivityType' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <nz-select
-                          style="width: 250px"
-                          [(ngModel)]="selectedAuthorityType"
-                          nzPlaceHolder="Select RequestType"
-                          (ngModelChange)="onAuthorityTypeChange($event)"
-                          nzAllowClear
-                          nzShowSearch
-                        >
-                          <nz-option
-                            *ngFor="let dep of requestTypes"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
-                      </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="row row-space">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="row">
+                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.ActivityType' | safeTranslate }} </label>
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <app-document-type-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select DocumentType"
-                          [(ngModel)]="selectedDocumentType"
-                          (valueChange)="onDocumentTypeChange($event)"
-                          width="250px"
+                    <div>
+                      <nz-select
+                        style="width: 250px"
+                        [(ngModel)]="selectedAuthorityType"
+                        nzPlaceHolder="Select RequestType"
+                        (ngModelChange)="onAuthorityTypeChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of requestTypes"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
                         >
-                        </app-document-type-list>
-                      </div>
+                        </nz-option>
+                      </nz-select>
                     </div>
                   </div>
-                  <br />
-                  <div class="row">
-                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <div class="PnlHeading">
-                        <h3 class="PnlHeader">Cabinet</h3>
+                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                    </div>
+                    <div>
+                      <app-document-type-list
+                        valueKey="CODE"
+                        labelKey="NAME"
+                        placeholder="Select DocumentType"
+                        [(ngModel)]="selectedDocumentType"
+                        (valueChange)="onDocumentTypeChange($event)"
+                        width="250px"
+                      >
+                      </app-document-type-list>
+                    </div>
+                  </div>
+                </div>
+                <br />
+                <div class="row">
+                  <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="PnlHeading">
+                      <h3 class="PnlHeader">Cabinet</h3>
+                    </div>
+                    <br />
+                    <div class="row">
+                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="PnlHeading">
+                          <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                        </div>
+                        <div>
+                          <app-document-type-list
+                            valueKey="CODE"
+                            labelKey="NAME"
+                            placeholder="Select DocumentType"
+                            [(ngModel)]="selectedDocumentType"
+                            (valueChange)="onDocumentTypeChange($event)"
+                            width="250px"
+                          >
+                          </app-document-type-list>
+                        </div>
                       </div>
-                      <br />
-                      <div class="row">
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                          <div class="PnlHeading">
-                            <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
-                          </div>
+                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="PnlHeading">
+                          <label>{{ 'labels.Division' | safeTranslate }} </label>
+                        </div>
+                        <div class="Divtxtemployeeschright" style="width: 250px">
                           <div>
-                            <app-document-type-list
+                            <app-division-list
                               valueKey="CODE"
                               labelKey="NAME"
-                              placeholder="Select DocumentType"
-                              [(ngModel)]="selectedDocumentType"
-                              (valueChange)="onDocumentTypeChange($event)"
+                              placeholder="Select Division"
+                              [(ngModel)]="selectedDivisions"
+                              (valueChange)="onDivisionChange($event)"
                               width="250px"
                             >
-                            </app-document-type-list>
+                            </app-division-list>
                           </div>
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.Division' | safeTranslate }} </label>
-                    </div>
-                    <div class="Divtxtemployeeschright" style="width: 250px">
-                      <div>
-                        <app-division-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select Division"
-                          [(ngModel)]="selectedDivisions"
-                          (valueChange)="onDivisionChange($event)"
-                          width="250px"
-                        >
-                        </app-division-list>
+                      </div>
+
+                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="PnlHeading">
+                          <label>{{ 'labels.Department' | safeTranslate }}</label>
+                        </div>
+                        <div>
+                          <app-department-list
+                            valueKey="CODE"
+                            labelKey="NAME"
+                            placeholder="Select Department"
+                            [division]="selectedDivisions"
+                            [(ngModel)]="selectedDepartment"
+                            (valueChange)="onDepartmentsChange($event)"
+                            width="250px"
+                          >
+                          </app-department-list>
+                        </div>
+                      </div>
+
+                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="PnlHeading">
+                          <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                        </div>
+                        <div>
+                          <app-sub-department-list
+                            valueKey="CODE"
+                            labelKey="NAME"
+                            placeholder="Select SubDepartment"
+                            [department]="selectedDepartment"
+                            [(ngModel)]="selectedSubDepartment"
+                            width="250px"
+                          >
+                          </app-sub-department-list>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.Department' | safeTranslate }}</label>
-                    </div>
-                    <div>
-                      <app-department-list
-                        valueKey="CODE"
-                        labelKey="NAME"
-                        placeholder="Select Department"
-                        [division]="selectedDivisions"
-                        [(ngModel)]="selectedDepartment"
-                        (valueChange)="onDepartmentsChange($event)"
-                        width="250px"
-                      >
-                      </app-department-list>
-                    </div>
-                  </div>
-
-                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
-                    </div>
-                    <div>
-                      <app-sub-department-list
-                        valueKey="CODE"
-                        labelKey="NAME"
-                        placeholder="Select SubDepartment"
-                        [department]="selectedDepartment"
-                        [(ngModel)]="selectedSubDepartment"
-                        width="250px"
-                      >
-                      </app-sub-department-list>
-                    </div>
-                  </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row row-space">
-                    <ng-container [ngSwitch]="selectedUsers">
-                      <ng-container *ngSwitchCase="'1'">
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <div class="PnlHeading">
-                            <h3 class="PnlHeader">Users</h3>
+                </div>
+                <div class="row row-space">
+                  <ng-container [ngSwitch]="selectedUsers">
+                    <ng-container *ngSwitchCase="'1'">
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <div class="PnlHeading">
+                          <h3 class="PnlHeader">Users</h3>
+                        </div>
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
+                            </div>
+                            <div>
+                              <app-document-type-list
+                                valueKey="CODE"
+                                labelKey="NAME"
+                                placeholder="Select DocumentType"
+                                [(ngModel)]="selectedDocumentType"
+                                (valueChange)="onDocumentTypeChange($event)"
+                                width="250px"
+                              >
+                              </app-document-type-list>
+                            </div>
                           </div>
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
-                              </div>
-                              <div>
-                                <app-document-type-list
-                                  valueKey="CODE"
-                                  labelKey="NAME"
-                                  placeholder="Select DocumentType"
-                                  [(ngModel)]="selectedDocumentType"
-                                  (valueChange)="onDocumentTypeChange($event)"
-                                  width="250px"
-                                >
-                                </app-document-type-list>
-                              </div>
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <label>{{ 'labels.Trainers' | safeTranslate }} </label>
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <label>{{ 'labels.Trainers' | safeTranslate }} </label>
-                              </div>
-                              <div class="Divtxtemployeeschright" style="width: 250px">
-                                <div>
-                                  <nz-select
-                                    style="width: 250px"
-                                    [nzPlaceHolder]="'Select Trainers'"
-                                    nzAllowClear
-                                    nzShowSearch
-                                  >
-                                    <nz-option
-                                      *ngFor="let dep of trainers"
-                                      [nzValue]="dep.CODE"
-                                      [nzLabel]="dep.NAME"
-                                    >
-                                    </nz-option>
-                                  </nz-select>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <label>{{ 'labels.User' | safeTranslate }}</label>
-                              </div>
+                            <div class="Divtxtemployeeschright" style="width: 250px">
                               <div>
                                 <nz-select
                                   style="width: 250px"
-                                  [nzPlaceHolder]="'Select User'"
+                                  [nzPlaceHolder]="'Select Trainers'"
                                   nzAllowClear
                                   nzShowSearch
                                 >
                                   <nz-option
-                                    *ngFor="let dep of users"
+                                    *ngFor="let dep of trainers"
                                     [nzValue]="dep.CODE"
                                     [nzLabel]="dep.NAME"
                                   >
@@ -203,184 +180,205 @@
                                 </nz-select>
                               </div>
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <button class="tab-button" tabindex="0" class="btn btn-primary">
-                                Add
-                              </button>
-                            </div>
                           </div>
-                        </div>
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <h3 class="PnlHeader">
-                            {{ 'labels.User List' | safeTranslate }}
-                          </h3>
-                          <br />
-                          <div class="col-lg-12 col-md-12 col-sm-12">
-                            <app-ag-grid-wrapper
-                              [gridStyle]="{ width: '100%', height: '250px' }"
-                              [columnDefs]="workflowAuthoritiesColumnDefs"
-                              [defaultColDef]="defaultColDef"
-                              [rowData]="workflowAuthoritiesData"
-                              [pageSize]="pageSize"
-                              [totalRows]="totalWorkflowAuthorities"
-                              [pageSize]="selectedPageSize"
-                              gridId="userListGrid"
-                              (pageSizeChange)="onPageSizeChanged($event)"
-                              (serverQuery)="GetAllWorkflowAuthorities($event)"
-                            >
-                            </app-ag-grid-wrapper>
-                          </div>
-                        </div>
-                      </ng-container>
-                    </ng-container>
-                  </div>
 
-                  <div class="row row-space">
-                    <!-- Dynamic Columns -->
-                    <ng-container [ngSwitch]="selectedAuthorityType">
-                      <!-- CASE 1: 3 Columns -->
-                      <ng-container *ngSwitchCase="'1'">
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <div class="row mb-10">
-                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <label>{{ 'labels.Request ID' | safeTranslate }} </label>
-                              </div>
-                              <div>
-                                <app-document-type-list
-                                  valueKey="CODE"
-                                  labelKey="NAME"
-                                  placeholder="Select Request"
-                                  [(ngModel)]="selectedDocumentType"
-                                  (valueChange)="onDocumentTypeChange($event)"
-                                  width="250px"
-                                >
-                                </app-document-type-list>
-                              </div>
-                            </div>
-                            <br />
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                             <div class="PnlHeading">
-                              <label> Next Review Date </label>
-                              <label>3 Years from the date of approval </label>
+                              <label>{{ 'labels.User' | safeTranslate }}</label>
+                            </div>
+                            <div>
+                              <nz-select
+                                style="width: 250px"
+                                [nzPlaceHolder]="'Select User'"
+                                nzAllowClear
+                                nzShowSearch
+                              >
+                                <nz-option
+                                  *ngFor="let dep of users"
+                                  [nzValue]="dep.CODE"
+                                  [nzLabel]="dep.NAME"
+                                >
+                                </nz-option>
+                              </nz-select>
                             </div>
                           </div>
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                              <span class="d-flex">Document Content</span>
-                              <input
-                                maxlength="10"
-                                appDecimalInput
-                                name="DocumentContent"
-                                type="text"
-                                style="width: 100% !important"
-                                [ngClass]="{
-                                  'form-control': true,
-                                  'input-sm': true
-                                }"
-                              />
-                            </div>
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                            <button class="tab-button" tabindex="0" class="btn btn-primary">
+                              Add
+                            </button>
                           </div>
                         </div>
-
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <div class="PnlHeading">
-                            <h3 class="PnlHeader">Document Attributes</h3>
-                          </div>
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-3 col-md-3 col-sm-6">
-                              <span class="d-flex">DateTime</span>
-                              <nz-date-picker [nzRenderExtraFooter]="footerRender"></nz-date-picker>
-                            </div>
-                            <div class="col-lg-9 col-md-9 col-sm-6">
-                              <span class="d-flex">Vendor</span>
-                              <input
-                                maxlength="10"
-                                appDecimalInput
-                                name="DocumentContent"
-                                type="text"
-                                style="width: 100% !important"
-                                [ngClass]="{
-                                  'form-control': true,
-                                  'input-sm': true
-                                }"
-                              />
-                            </div>
-                          </div>
+                      </div>
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <h3 class="PnlHeader">
+                          {{ 'labels.User List' | safeTranslate }}
+                        </h3>
+                        <br />
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                          <app-ag-grid-wrapper
+                            [gridStyle]="{ width: '100%', height: '250px' }"
+                            [columnDefs]="workflowAuthoritiesColumnDefs"
+                            [defaultColDef]="defaultColDef"
+                            [rowData]="workflowAuthoritiesData"
+                            [pageSize]="pageSize"
+                            [totalRows]="totalWorkflowAuthorities"
+                            [pageSize]="selectedPageSize"
+                            gridId="userListGrid"
+                            (pageSizeChange)="onPageSizeChanged($event)"
+                            (serverQuery)="GetAllWorkflowAuthorities($event)"
+                          >
+                          </app-ag-grid-wrapper>
                         </div>
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <h3 class="PnlHeader">
-                            {{ 'labels.Workflow Authorities' | safeTranslate }}
-                          </h3>
-                          <br />
-                          <div class="col-lg-12 col-md-12 col-sm-12">
-                            <app-ag-grid-wrapper
-                              [gridStyle]="{ width: '100%', height: '250px' }"
-                              [columnDefs]="distributionListGridColumnDefs"
-                              [defaultColDef]="defaultColDef"
-                              [rowData]="distributionListData"
-                              [pageSize]="pageSize"
-                              [totalRows]="totalDistribution"
-                              [pageSize]="selectedPageSize"
-                              gridId="distributionListGrid"
-                              (pageSizeChange)="onPageSizeChanged($event)"
-                              (serverQuery)="GetAllDistribution($event)"
-                            >
-                            </app-ag-grid-wrapper>
-                          </div>
-                        </div>
-                      </ng-container>
-                      <ng-container *ngSwitchCase="'2'">
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <h3 class="PnlHeader">
-                            {{ 'labels.Documents' | safeTranslate }}
-                          </h3>
-                          <br />
-                          <div class="col-lg-12 col-md-12 col-sm-12">
-                            <app-ag-grid-wrapper
-                              [gridStyle]="{ width: '100%', height: '250px' }"
-                              [columnDefs]="workflowAuthoritiesColumnDefs"
-                              [defaultColDef]="defaultColDef"
-                              [rowData]="workflowAuthoritiesData"
-                              [pageSize]="pageSize"
-                              [totalRows]="totalDocuments"
-                              [pageSize]="selectedPageSize"
-                              gridId="document2Grid"
-                              (pageSizeChange)="onPageSizeChanged($event)"
-                              (serverQuery)="GetAllDistribution($event)"
-                            >
-                            </app-ag-grid-wrapper>
-                          </div>
-                        </div>
-                      </ng-container>
-
-                      <ng-container *ngSwitchCase="'3'">
-                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                          <h3 class="PnlHeader">
-                            {{ 'labels.Documents' | safeTranslate }}
-                          </h3>
-                          <br />
-                          <div class="col-lg-12 col-md-12 col-sm-12">
-                            <app-ag-grid-wrapper
-                              [gridStyle]="{ width: '100%', height: '250px' }"
-                              [columnDefs]="workflowAuthoritiesColumnDefs"
-                              [defaultColDef]="defaultColDef"
-                              [rowData]="workflowAuthoritiesData"
-                              [pageSize]="pageSize"
-                              [totalRows]="totalDocuments"
-                              [pageSize]="selectedPageSize"
-                              gridId="documentGrid"
-                              (pageSizeChange)="onPageSizeChanged($event)"
-                              (serverQuery)="GetAllDistribution($event)"
-                            >
-                            </app-ag-grid-wrapper>
-                          </div>
-                        </div>
-                      </ng-container>
-                      <!-- DEFAULT CASE: No Columns -->
+                      </div>
                     </ng-container>
-                  </div>
+                  </ng-container>
+                </div>
+
+                <div class="row row-space">
+                  <!-- Dynamic Columns -->
+                  <ng-container [ngSwitch]="selectedAuthorityType">
+                    <!-- CASE 1: 3 Columns -->
+                    <ng-container *ngSwitchCase="'1'">
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <div class="row mb-10">
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <label>{{ 'labels.Request ID' | safeTranslate }} </label>
+                            </div>
+                            <div>
+                              <app-document-type-list
+                                valueKey="CODE"
+                                labelKey="NAME"
+                                placeholder="Select Request"
+                                [(ngModel)]="selectedDocumentType"
+                                (valueChange)="onDocumentTypeChange($event)"
+                                width="250px"
+                              >
+                              </app-document-type-list>
+                            </div>
+                          </div>
+                          <br />
+                          <div class="PnlHeading">
+                            <label> Next Review Date </label>
+                            <label>3 Years from the date of approval </label>
+                          </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <span class="d-flex">Document Content</span>
+                            <input
+                              maxlength="10"
+                              appDecimalInput
+                              name="DocumentContent"
+                              type="text"
+                              style="width: 100% !important"
+                              [ngClass]="{
+                                'form-control': true,
+                                'input-sm': true
+                              }"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <div class="PnlHeading">
+                          <h3 class="PnlHeader">Document Attributes</h3>
+                        </div>
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-3 col-md-3 col-sm-6">
+                            <span class="d-flex">DateTime</span>
+                            <nz-date-picker [nzRenderExtraFooter]="footerRender"></nz-date-picker>
+                          </div>
+                          <div class="col-lg-9 col-md-9 col-sm-6">
+                            <span class="d-flex">Vendor</span>
+                            <input
+                              maxlength="10"
+                              appDecimalInput
+                              name="DocumentContent"
+                              type="text"
+                              style="width: 100% !important"
+                              [ngClass]="{
+                                'form-control': true,
+                                'input-sm': true
+                              }"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <h3 class="PnlHeader">
+                          {{ 'labels.Workflow Authorities' | safeTranslate }}
+                        </h3>
+                        <br />
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                          <app-ag-grid-wrapper
+                            [gridStyle]="{ width: '100%', height: '250px' }"
+                            [columnDefs]="distributionListGridColumnDefs"
+                            [defaultColDef]="defaultColDef"
+                            [rowData]="distributionListData"
+                            [pageSize]="pageSize"
+                            [totalRows]="totalDistribution"
+                            [pageSize]="selectedPageSize"
+                            gridId="distributionListGrid"
+                            (pageSizeChange)="onPageSizeChanged($event)"
+                            (serverQuery)="GetAllDistribution($event)"
+                          >
+                          </app-ag-grid-wrapper>
+                        </div>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'2'">
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <h3 class="PnlHeader">
+                          {{ 'labels.Documents' | safeTranslate }}
+                        </h3>
+                        <br />
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                          <app-ag-grid-wrapper
+                            [gridStyle]="{ width: '100%', height: '250px' }"
+                            [columnDefs]="workflowAuthoritiesColumnDefs"
+                            [defaultColDef]="defaultColDef"
+                            [rowData]="workflowAuthoritiesData"
+                            [pageSize]="pageSize"
+                            [totalRows]="totalDocuments"
+                            [pageSize]="selectedPageSize"
+                            gridId="document2Grid"
+                            (pageSizeChange)="onPageSizeChanged($event)"
+                            (serverQuery)="GetAllDistribution($event)"
+                          >
+                          </app-ag-grid-wrapper>
+                        </div>
+                      </div>
+                    </ng-container>
+
+                    <ng-container *ngSwitchCase="'3'">
+                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <h3 class="PnlHeader">
+                          {{ 'labels.Documents' | safeTranslate }}
+                        </h3>
+                        <br />
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                          <app-ag-grid-wrapper
+                            [gridStyle]="{ width: '100%', height: '250px' }"
+                            [columnDefs]="workflowAuthoritiesColumnDefs"
+                            [defaultColDef]="defaultColDef"
+                            [rowData]="workflowAuthoritiesData"
+                            [pageSize]="pageSize"
+                            [totalRows]="totalDocuments"
+                            [pageSize]="selectedPageSize"
+                            gridId="documentGrid"
+                            (pageSizeChange)="onPageSizeChanged($event)"
+                            (serverQuery)="GetAllDistribution($event)"
+                          >
+                          </app-ag-grid-wrapper>
+                        </div>
+                      </div>
+                    </ng-container>
+                    <!-- DEFAULT CASE: No Columns -->
+                  </ng-container>
                 </div>
               </div>
             </div>

@@ -1,59 +1,78 @@
 <div class="container-fluid">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="card-custom">
-          <div class="clearfix">
-            <div class="pull-left">
-              <h3 class="mt-0">Request for Document Creation/Update</h3>
-              <small class="text-muted">Request for Document Creation/Update</small>
-            </div>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Request for Document Creation/Update</h3>
+            <small class="text-muted">Request for Document Creation/Update</small>
           </div>
-          <br />
-          <hr />
-          <hr />
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="main-content d-flex flex-column min-vw-0">
-              <div class="custom-tab-container">
-                <button
-                  class="tab-button"
-                  tabindex="0"
-                  [ngClass]="{ 'active-tab': selectedTab === 'NewRequest' }"
-                  (click)="selectedTab = 'NewRequest'"
-                >
-                  New Request
-                </button>
-                <button
-                  class="tab-button"
-                  tabindex="0"
-                  [ngClass]="{ 'active-tab': selectedTab === 'MyRequestPendingApproval' }"
-                  (click)="selectedTab = 'MyRequestPendingApproval'"
-                >
-                  My Request Pending Approval
-                </button>
-              </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'NewRequest' }"
+                (click)="selectedTab = 'NewRequest'"
+              >
+                New Request
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'MyRequestPendingApproval' }"
+                (click)="selectedTab = 'MyRequestPendingApproval'"
+              >
+                My Request Pending Approval
+              </button>
+            </div>
 
-              <div class="row row-space" *ngIf="selectedTab === 'NewRequest'">
-                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="status-box-leftColmd6-standard">
-                    <h3 class="PnlHeader">Document Justification</h3>
-                    <br />
-                    <div class="row">
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label>{{ 'labels.RequestType' | safeTranslate }} </label>
-                        </div>
+            <div class="row row-space" *ngIf="selectedTab === 'NewRequest'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Document Justification</h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.RequestType' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 200px"
+                          [(ngModel)]="selectedAuthorityType"
+                          nzPlaceHolder="Select RequestType"
+                          (ngModelChange)="onAuthorityTypeChange($event)"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of requestTypes"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Company' | safeTranslate }} </label>
+                      </div>
+                      <div class="Divtxtemployeeschright" style="width: 200px">
                         <div>
                           <nz-select
                             style="width: 200px"
-                            [(ngModel)]="selectedAuthorityType"
-                            nzPlaceHolder="Select RequestType"
-                            (ngModelChange)="onAuthorityTypeChange($event)"
+                            [nzPlaceHolder]="'Select Company'"
                             nzAllowClear
                             nzShowSearch
                           >
                             <nz-option
-                              *ngFor="let dep of requestTypes"
+                              *ngFor="let dep of companies"
                               [nzValue]="dep.CODE"
                               [nzLabel]="dep.NAME"
                             >
@@ -61,35 +80,15 @@
                           </nz-select>
                         </div>
                       </div>
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label>{{ 'labels.Company' | safeTranslate }} </label>
-                        </div>
-                        <div class="Divtxtemployeeschright" style="width: 200px">
-                          <div>
-                            <nz-select
-                              style="width: 200px"
-                              [nzPlaceHolder]="'Select Company'"
-                              nzAllowClear
-                              nzShowSearch
-                            >
-                              <nz-option
-                                *ngFor="let dep of companies"
-                                [nzValue]="dep.CODE"
-                                [nzLabel]="dep.NAME"
-                              >
-                              </nz-option>
-                            </nz-select>
-                          </div>
-                        </div>
-                      </div>
                     </div>
+                  </div>
 
-                    <div class="row row-space">
-                      <!-- Dynamic Columns -->
-                      <ng-container [ngSwitch]="selectedAuthorityType">
-                        <!-- CASE 1: 3 Columns -->
-                        <ng-container *ngSwitchCase="'1'">
+                  <div>
+                    <!-- Dynamic Columns -->
+                    <ng-container [ngSwitch]="selectedAuthorityType">
+                      <!-- CASE 1: 3 Columns -->
+                      <ng-container *ngSwitchCase="'1'">
+                        <div class="row-space">
                           <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                             <span class="d-flex">Document Name</span>
                             <input
@@ -118,27 +117,237 @@
                               }"
                             />
                           </div>
+                        </div>
 
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <h3 class="PnlHeader">Cabinet</h3>
+                          <br />
+                          <div class="row">
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                              </div>
+                              <div>
+                                <app-document-type-list
+                                  valueKey="CODE"
+                                  labelKey="NAME"
+                                  placeholder="Select DocumentType"
+                                  [(ngModel)]="selectedDocumentType"
+                                  (valueChange)="onDocumentTypeChange($event)"
+                                  width="250px"
+                                >
+                                </app-document-type-list>
+                              </div>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.Division' | safeTranslate }} </label>
+                              </div>
+                              <div class="Divtxtemployeeschright" style="width: 250px">
+                                <div>
+                                  <app-division-list
+                                    valueKey="CODE"
+                                    labelKey="NAME"
+                                    placeholder="Select Division"
+                                    [(ngModel)]="selectedDivisions"
+                                    (valueChange)="onDivisionChange($event)"
+                                    width="250px"
+                                  >
+                                  </app-division-list>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.Department' | safeTranslate }}</label>
+                              </div>
+                              <div>
+                                <app-department-list
+                                  valueKey="CODE"
+                                  labelKey="NAME"
+                                  placeholder="Select Department"
+                                  [division]="selectedDivisions"
+                                  [(ngModel)]="selectedDepartment"
+                                  (valueChange)="onDepartmentsChange($event)"
+                                  width="250px"
+                                >
+                                </app-department-list>
+                              </div>
+                            </div>
+
+                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                              <div class="PnlHeading">
+                                <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+                              </div>
+                              <div>
+                                <app-sub-department-list
+                                  valueKey="CODE"
+                                  labelKey="NAME"
+                                  placeholder="Select SubDepartment"
+                                  [department]="selectedDepartment"
+                                  [(ngModel)]="selectedSubDepartment"
+                                  width="250px"
+                                >
+                                </app-sub-department-list>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <br /> 
+                        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                          <h3 class="PnlHeader">Users</h3>
+                          <br />
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <app-drusers-component></app-drusers-component>
+                            <!-- <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              [columnDefs]="userGridColumnDefs"
+                              [defaultColDef]="defaultColDef"
+                              [rowData]="userData"
+                              [pageSize]="pageSize"
+                              [totalRows]="totalUsers"
+                              [pageSize]="selectedPageSize"
+                              gridId="user2Grid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
+                              (serverQuery)="GetAllUsers($event)"
+                            >
+                            </app-ag-grid-wrapper> -->
+                          </div>
+                        </div>
+
+                        <br />
+                        <hr />
+
+                        <div class="row-space">
+                          <h3 class="PnlHeader">Distribution List</h3>
+                          <br />
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <app-drdistribution-list></app-drdistribution-list>
+                            <!-- <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              [columnDefs]="distributionListGridColumnDefs"
+                              [defaultColDef]="defaultColDef"
+                              [rowData]="distributionListData"
+                              [pageSize]="pageSize"
+                              [totalRows]="totalDistributioinList"
+                              [pageSize]="selectedPageSize"
+                              gridId="distributionList2Grid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
+                              (serverQuery)="GetAllWorkflowAuthorities($event)"
+                            >
+                            </app-ag-grid-wrapper> -->
+                          </div>
+                        </div>
+                        <br />
+                        <br />
+                        <hr />
+                        <div class="row mb-4">
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <h3 class="PnlHeader">Document Content</h3>
+                            <br />
+                            <app-dmsrich-text-edit></app-dmsrich-text-edit>
+                            <!-- <input
+                              maxlength="1000"
+                              appDecimalInput
+                              name="DocumentContent"
+                              type="text"
+                              style="width: 100% !important"
+                              [ngClass]="{
+                                'form-control': true,
+                                'input-sm': true
+                              }"
+                            /> -->
+                          </div>
+                        </div>
+                        <br />
+                        <br />
+                        <hr />
+                        <div class="row mt-4">
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <h3 class="PnlHeader">Workflow Authorities</h3>
+                            <br />
+                            <app-ag-grid-wrapper
+                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              [columnDefs]="workflowAuthoritiesColumnDefs"
+                              [defaultColDef]="defaultColDef"
+                              [rowData]="workflowAuthoritiesData"
+                              [pageSize]="pageSize"
+                              [totalRows]="totalWorkflowAuthorities"
+                              [pageSize]="selectedPageSize"
+                              gridId="workflowAuthorities1Grid1Grid"
+                              (pageSizeChange)="onPageSizeChanged($event)"
+                              (serverQuery)="GetAllWorkflowAuthorities($event)"
+                            >
+                            </app-ag-grid-wrapper>
+                          </div>
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'2'">
+                        <div class="row">
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                            <span class="d-flex">Filter</span>
+                            <nz-select
+                              style="width: 200px"
+                              [nzPlaceHolder]="'Select Filter'"
+                              nzAllowClear
+                              nzShowSearch
+                            >
+                              <nz-option
+                                *ngFor="let dep of filters"
+                                [nzValue]="dep.CODE"
+                                [nzLabel]="dep.NAME"
+                              >
+                              </nz-option>
+                            </nz-select>
+                          </div>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <h3 class="PnlHeader">Documents</h3>
+                            </div>
+                            <div>
+                              <app-ag-grid-wrapper
+                                [gridStyle]="{ width: '100%', height: '250px' }"
+                                [columnDefs]="documentColumnDefs"
+                                [defaultColDef]="defaultColDef"
+                                [rowData]="workflowAuthoritiesData"
+                                [pageSize]="pageSize"
+                                [totalRows]="totalDocuments"
+                                [pageSize]="selectedPageSize"
+                                gridId="documentGrid"
+                                (pageSizeChange)="onPageSizeChanged($event)"
+                                (serverQuery)="GetAllDocuments($event)"
+                              >
+                              </app-ag-grid-wrapper>
+                            </div>
+                            <br />
+                            <br />
+                            <span class="d-flex">Justification</span>
+                            <input
+                              maxlength="10"
+                              appDecimalInput
+                              name="Justification"
+                              type="text"
+                              style="width: 100% !important"
+                              [ngClass]="{
+                                'form-control': true,
+                                'input-sm': true
+                              }"
+                            />
+                          </div>
+                        </div>
+
+                        <br />
+                        <div class="row">
                           <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                             <h3 class="PnlHeader">Cabinet</h3>
                             <br />
                             <div class="row">
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <div class="PnlHeading">
-                                  <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
-                                </div>
-                                <div>
-                                  <app-document-type-list
-                                    valueKey="CODE"
-                                    labelKey="NAME"
-                                    placeholder="Select DocumentType"
-                                    [(ngModel)]="selectedDocumentType"
-                                    (valueChange)="onDocumentTypeChange($event)"
-                                    width="250px"
-                                  >
-                                  </app-document-type-list>
-                                </div>
-                              </div>
                               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <div class="PnlHeading">
                                   <label>{{ 'labels.Division' | safeTranslate }} </label>
@@ -150,7 +359,7 @@
                                       labelKey="NAME"
                                       placeholder="Select Division"
                                       [(ngModel)]="selectedDivisions"
-                                      (valueChange)="onDivisionChange($event)"
+                                      (valueChange)="onDepartmentsChange($event)"
                                       width="250px"
                                     >
                                     </app-division-list>
@@ -167,7 +376,6 @@
                                     valueKey="CODE"
                                     labelKey="NAME"
                                     placeholder="Select Department"
-                                    [division]="selectedDivisions"
                                     [(ngModel)]="selectedDepartment"
                                     (valueChange)="onDepartmentsChange($event)"
                                     width="250px"
@@ -184,344 +392,148 @@
                                   <app-sub-department-list
                                     valueKey="CODE"
                                     labelKey="NAME"
-                                    placeholder="Select SubDepartment"
-                                    [department]="selectedDepartment"
-                                    [(ngModel)]="selectedSubDepartment"
+                                    placeholder="Select Department"
+                                    [(ngModel)]="selectedDepartment"
+                                    (valueChange)="onDepartmentsChange($event)"
                                     width="250px"
                                   >
                                   </app-sub-department-list>
                                 </div>
                               </div>
+
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                                <div class="PnlHeading">
+                                  <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                                </div>
+                                <div>
+                                  <app-document-type-list
+                                    valueKey="CODE"
+                                    labelKey="NAME"
+                                    placeholder="Select Division"
+                                    [(ngModel)]="selectedDocumentType"
+                                    (valueChange)="onDocumentTypeChange($event)"
+                                    width="250px"
+                                  >
+                                  </app-document-type-list>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">Users</h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
+                        </div>
+
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <h3 class="PnlHeader">Users</h3>
+                            </div>
+                            <div>
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
                                 [columnDefs]="userGridColumnDefs"
                                 [defaultColDef]="defaultColDef"
-                                [rowData]="userData"
+                                [rowData]="workflowAuthoritiesData"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalUsers"
                                 [pageSize]="selectedPageSize"
-                                gridId="user2Grid"
+                                gridId="usersGrid"
                                 (pageSizeChange)="onPageSizeChanged($event)"
-                                (serverQuery)="GetAllUsers($event)"
+                                (serverQuery)="GetAllUploadedDocuments($event)"
                               >
                               </app-ag-grid-wrapper>
                             </div>
                           </div>
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">Distribution List</h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
+                        </div>
+
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <h3 class="PnlHeader">Distribution List</h3>
+                            </div>
+                            <div>
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
                                 [columnDefs]="distributionListGridColumnDefs"
                                 [defaultColDef]="defaultColDef"
                                 [rowData]="distributionListData"
                                 [pageSize]="pageSize"
-                                [totalRows]="totalDistributioinList"
+                                [totalRows]="totalRows"
                                 [pageSize]="selectedPageSize"
-                                gridId="distributionList2Grid"
+                                gridId="distributionListGrid"
                                 (pageSizeChange)="onPageSizeChanged($event)"
-                                (serverQuery)="GetAllWorkflowAuthorities($event)"
+                                (serverQuery)="GetAllDistributionList($event)"
                               >
                               </app-ag-grid-wrapper>
                             </div>
                           </div>
+                        </div>
 
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">Document Content</h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                              <input
-                                maxlength="1000"
-                                appDecimalInput
-                                name="DocumentContent"
-                                type="text"
-                                style="width: 100% !important"
-                                [ngClass]="{
-                                  'form-control': true,
-                                  'input-sm': true
-                                }"
-                              />
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <h3 class="PnlHeader">Document Content</h3>
                             </div>
+                            <input
+                              maxlength="10"
+                              appDecimalInput
+                              name="Justification"
+                              type="text"
+                              style="width: 100% !important"
+                              [ngClass]="{
+                                'form-control': true,
+                                'input-sm': true
+                              }"
+                            />
                           </div>
+                        </div>
 
-                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h3 class="PnlHeader">Workflow Authorities</h3>
-                            <br />
-                            <div class="col-lg-12 col-md-12 col-sm-12">
+                        <br />
+                        <div class="row">
+                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                            <div class="PnlHeading">
+                              <h3 class="PnlHeader">Workflow Authorities</h3>
+                            </div>
+                            <div>
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
                                 [columnDefs]="workflowAuthoritiesColumnDefs"
                                 [defaultColDef]="defaultColDef"
                                 [rowData]="workflowAuthoritiesData"
                                 [pageSize]="pageSize"
-                                [totalRows]="totalWorkflowAuthorities"
+                                [totalRows]="totalRows"
                                 [pageSize]="selectedPageSize"
-                                gridId="workflowAuthorities1Grid1Grid"
+                                gridId="workflowAuthorities2Grid"
                                 (pageSizeChange)="onPageSizeChanged($event)"
-                                (serverQuery)="GetAllWorkflowAuthorities($event)"
+                                (serverQuery)="GetAllUploadedDocuments($event)"
                               >
                               </app-ag-grid-wrapper>
                             </div>
                           </div>
-                        </ng-container>
-                        <ng-container *ngSwitchCase="'2'">
-                          <div class="row">
-                            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                              <span class="d-flex">Filter</span>
-                              <nz-select
-                                style="width: 200px"
-                                [nzPlaceHolder]="'Select Filter'"
-                                nzAllowClear
-                                nzShowSearch
-                              >
-                                <nz-option
-                                  *ngFor="let dep of filters"
-                                  [nzValue]="dep.CODE"
-                                  [nzLabel]="dep.NAME"
-                                >
-                                </nz-option>
-                              </nz-select>
-                            </div>
-                          </div>
-                          <br />
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <h3 class="PnlHeader">Documents</h3>
-                              </div>
-                              <div>
-                                <app-ag-grid-wrapper
-                                  [gridStyle]="{ width: '100%', height: '250px' }"
-                                  [columnDefs]="documentColumnDefs"
-                                  [defaultColDef]="defaultColDef"
-                                  [rowData]="workflowAuthoritiesData"
-                                  [pageSize]="pageSize"
-                                  [totalRows]="totalDocuments"
-                                  [pageSize]="selectedPageSize"
-                                  gridId="documentGrid"
-                                  (pageSizeChange)="onPageSizeChanged($event)"
-                                  (serverQuery)="GetAllDocuments($event)"
-                                >
-                                </app-ag-grid-wrapper>
-                              </div>
-                              <br />
-                              <br />
-                              <span class="d-flex">Justification</span>
-                              <input
-                                maxlength="10"
-                                appDecimalInput
-                                name="Justification"
-                                type="text"
-                                style="width: 100% !important"
-                                [ngClass]="{
-                                  'form-control': true,
-                                  'input-sm': true
-                                }"
-                              />
-                            </div>
-                          </div>
-
-                          <br />
-                          <div class="row">
-                            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                              <h3 class="PnlHeader">Cabinet</h3>
-                              <br />
-                              <div class="row">
-                                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                  <div class="PnlHeading">
-                                    <label>{{ 'labels.Division' | safeTranslate }} </label>
-                                  </div>
-                                  <div class="Divtxtemployeeschright" style="width: 250px">
-                                    <div>
-                                      <app-division-list
-                                        valueKey="CODE"
-                                        labelKey="NAME"
-                                        placeholder="Select Division"
-                                        [(ngModel)]="selectedDivisions"
-                                        (valueChange)="onDepartmentsChange($event)"
-                                        width="250px"
-                                      >
-                                      </app-division-list>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                  <div class="PnlHeading">
-                                    <label>{{ 'labels.Department' | safeTranslate }}</label>
-                                  </div>
-                                  <div>
-                                    <app-department-list
-                                      valueKey="CODE"
-                                      labelKey="NAME"
-                                      placeholder="Select Department"
-                                      [(ngModel)]="selectedDepartment"
-                                      (valueChange)="onDepartmentsChange($event)"
-                                      width="250px"
-                                    >
-                                    </app-department-list>
-                                  </div>
-                                </div>
-
-                                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                  <div class="PnlHeading">
-                                    <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
-                                  </div>
-                                  <div>
-                                    <app-sub-department-list
-                                      valueKey="CODE"
-                                      labelKey="NAME"
-                                      placeholder="Select Department"
-                                      [(ngModel)]="selectedDepartment"
-                                      (valueChange)="onDepartmentsChange($event)"
-                                      width="250px"
-                                    >
-                                    </app-sub-department-list>
-                                  </div>
-                                </div>
-
-                                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                  <div class="PnlHeading">
-                                    <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
-                                  </div>
-                                  <div>
-                                    <app-document-type-list
-                                      valueKey="CODE"
-                                      labelKey="NAME"
-                                      placeholder="Select Division"
-                                      [(ngModel)]="selectedDocumentType"
-                                      (valueChange)="onDocumentTypeChange($event)"
-                                      width="250px"
-                                    >
-                                    </app-document-type-list>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <h3 class="PnlHeader">Users</h3>
-                              </div>
-                              <div>
-                                <app-ag-grid-wrapper
-                                  [gridStyle]="{ width: '100%', height: '250px' }"
-                                  [columnDefs]="userGridColumnDefs"
-                                  [defaultColDef]="defaultColDef"
-                                  [rowData]="workflowAuthoritiesData"
-                                  [pageSize]="pageSize"
-                                  [totalRows]="totalUsers"
-                                  [pageSize]="selectedPageSize"
-                                  gridId="usersGrid"
-                                  (pageSizeChange)="onPageSizeChanged($event)"
-                                  (serverQuery)="GetAllUploadedDocuments($event)"
-                                >
-                                </app-ag-grid-wrapper>
-                              </div>
-                            </div>
-                          </div>
-
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <h3 class="PnlHeader">Distribution List</h3>
-                              </div>
-                              <div>
-                                <app-ag-grid-wrapper
-                                  [gridStyle]="{ width: '100%', height: '250px' }"
-                                  [columnDefs]="distributionListGridColumnDefs"
-                                  [defaultColDef]="defaultColDef"
-                                  [rowData]="distributionListData"
-                                  [pageSize]="pageSize"
-                                  [totalRows]="totalRows"
-                                  [pageSize]="selectedPageSize"
-                                  gridId="distributionListGrid"
-                                  (pageSizeChange)="onPageSizeChanged($event)"
-                                  (serverQuery)="GetAllDistributionList($event)"
-                                >
-                                </app-ag-grid-wrapper>
-                              </div>
-                            </div>
-                          </div>
-
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <h3 class="PnlHeader">Document Content</h3>
-                              </div>
-                              <input
-                                maxlength="10"
-                                appDecimalInput
-                                name="Justification"
-                                type="text"
-                                style="width: 100% !important"
-                                [ngClass]="{
-                                  'form-control': true,
-                                  'input-sm': true
-                                }"
-                              />
-                            </div>
-                          </div>
-
-                          <br />
-                          <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                              <div class="PnlHeading">
-                                <h3 class="PnlHeader">Workflow Authorities</h3>
-                              </div>
-                              <div>
-                                <app-ag-grid-wrapper
-                                  [gridStyle]="{ width: '100%', height: '250px' }"
-                                  [columnDefs]="workflowAuthoritiesColumnDefs"
-                                  [defaultColDef]="defaultColDef"
-                                  [rowData]="workflowAuthoritiesData"
-                                  [pageSize]="pageSize"
-                                  [totalRows]="totalRows"
-                                  [pageSize]="selectedPageSize"
-                                  gridId="workflowAuthorities2Grid"
-                                  (pageSizeChange)="onPageSizeChanged($event)"
-                                  (serverQuery)="GetAllUploadedDocuments($event)"
-                                >
-                                </app-ag-grid-wrapper>
-                              </div>
-                            </div>
-                          </div>
-                        </ng-container>
-                        <!-- DEFAULT CASE: No Columns -->
+                        </div>
                       </ng-container>
-                    </div>
+                      <!-- DEFAULT CASE: No Columns -->
+                    </ng-container>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="row row-space" *ngIf="selectedTab === 'MyRequestPendingApproval'">
-                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <app-ag-grid-wrapper
-                    [gridStyle]="{ width: '100%', height: '250px' }"
-                    [columnDefs]="pendingRequestApprovalColumnDefs"
-                    [defaultColDef]="defaultColDef"
-                    [rowData]="pendingApprovalData"
-                    [totalRows]="totalPendingApprovals"
-                    [pageSize]="selectedPageSize"
-                    gridId="myRequestPendingApprovalGrid"
-                    (pageSizeChange)="onPageSizeChanged($event)"
-                    (serverQuery)="GetAllPendingApprovalRequests($event)"
-                  >
-                  </app-ag-grid-wrapper>
-                </div>
+            <div class="row row-space" *ngIf="selectedTab === 'MyRequestPendingApproval'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '350px' }"
+                  [columnDefs]="pendingRequestApprovalColumnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [rowData]="pendingApprovalData"
+                  [totalRows]="totalPendingApprovals"
+                  [pageSize]="selectedPageSize"
+                  gridId="myRequestPendingApprovalGrid"
+                  (pageSizeChange)="onPageSizeChanged($event)"
+                  (serverQuery)="GetAllPendingApprovalRequests($event)"
+                >
+                </app-ag-grid-wrapper>
               </div>
             </div>
           </div>

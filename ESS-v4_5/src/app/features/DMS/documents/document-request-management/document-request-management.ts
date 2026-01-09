@@ -14,6 +14,9 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { DRDistributionList } from './drdistribution-list/drdistribution-list';
+import { DRUsersComponent } from './drusers-component/drusers-component';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 
 @Component({
   selector: 'app-document-request-management',
@@ -31,6 +34,9 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    DRDistributionList,
+    DRUsersComponent,
+    DMSRichTextEdit
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',

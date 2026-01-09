@@ -16,6 +16,7 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 
 @Component({
   selector: 'app-approval-workflow-policy-external-users',
@@ -32,18 +33,19 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    DesignationList,
   ],
   templateUrl: './approval-workflow-policy-external-users.html',
   styleUrl: './approval-workflow-policy-external-users.css',
 })
 export class ApprovalWorkflowPolicyExternalUsers {
-  
   radioValue = '';
   showExclusionTable = false;
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
+  selectedDesignation?: string = '';
 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
@@ -97,8 +99,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
     this.selectedDocumentType = value;
   }
 
-   addExclusion() {
+  addExclusion() {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
-
 }

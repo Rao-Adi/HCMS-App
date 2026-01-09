@@ -4,12 +4,46 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { DesignationService } from '@app/shared/services/designation.service';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, debounceTime, map, switchMap } from 'rxjs/operators';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'app-designation-list',
-  imports: [CommonModule, FormsModule, NzSelectModule],
-  templateUrl: './designation-list.html',
-  styleUrl: './designation-list.css',
+  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule],
+  //templateUrl: './designation-list.html',
+  template: `<nz-select
+    nzMode="multiple"
+    nzPlaceHolder="Select users"
+    nzAllowClear
+    nzShowSearch
+    nzServerSearch
+    [style.width]="width"
+    [(ngModel)]="selectedUser"
+    (nzOnSearch)="onSearch($event)"
+  >
+  <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+    <!-- @if (!loading) { @for (o of optionList; track o) {
+    <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
+    } } @else {
+    <nz-option nzDisabled nzCustomContent>
+      <nz-icon nzType="loading" class="loading-icon" />
+      Loading Data...
+    </nz-option>
+    } -->
+  </nz-select>`,
+  styles: [
+    `
+      nz-select {
+        width: 100%;
+      }
+
+      .loading-icon {
+        margin-right: 8px;
+      }
+    `,
+  ],
+  //styleUrl: './designation-list.css',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -18,8 +52,7 @@ import { DesignationService } from '@app/shared/services/designation.service';
     },
   ],
 })
-export class DesignationList  implements ControlValueAccessor {
-  
+export class DesignationList implements ControlValueAccessor {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
@@ -33,12 +66,28 @@ export class DesignationList  implements ControlValueAccessor {
   value: any;
   disabled = false;
 
+  randomUserUrl = 'https://api.randomuser.me/?results=5';
+  searchChange$ = new BehaviorSubject('');
+  optionList: string[] = [];
+  selectedUser?: string;
+  loading = false;
+
   constructor(private _designationServices: DesignationService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
+    // this.searchChange$
+    //   .pipe(
+    //     debounceTime(500),
+    //     switchMap((name) => this.getRandomNameList(name))
+    //   )
+    //   .subscribe((data) => {
+    //     this.optionList = data;
+    //     this.loading = false;
+    //   });
+
     this.getAllDivisions();
   }
 
@@ -78,4 +127,17 @@ export class DesignationList  implements ControlValueAccessor {
       //this.cdr.detectChanges(); // force update
     });
   };
+
+  onSearch(value: string): void {
+    this.loading = true;
+    this.searchChange$.next(value);
+  }
+
+  // getRandomNameList(name: string): Observable<string[]> {
+  //   return this.http.get<{ results: MockUser[] }>(`${this.randomUserUrl}`).pipe(
+  //     map((res) => res.results),
+  //     catchError(() => of<MockUser[]>([])),
+  //     map((list) => list.map((item) => `${item.name.first} ${name}`))
+  //   );
+  // }
 }

@@ -147,6 +147,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() divisionList: any[] = [];
   @Input() departmentList: any[] = [];
   @Input() subDepartmentList: any[] = [];
+  @Input() gridStyle: any = {};
 
   @Input() rowData: any[] = [];
   @Input() pinnedTopRowData: any[] = [];
