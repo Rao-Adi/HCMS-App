@@ -43,27 +43,12 @@
                   (rowAdded)="onRowAdded($event)"
                   (rowUpdated)="onRowUpdated($event)"
                   (rowDeleted)="onRowDeleted($event)"
-                  (cellValueChanged)="onCellValueChanged($event)"
                   (selectionChanged)="onSelectionChanged($event)"
                   (gridReady)="onGridReady($event)"
                   (actionClicked)="handleGridAction($event)"
+                  (onCellValueChanged)="onCellValueChanged($event)" 
                 >
                 </app-editable-ag-grid-wrapper>
-
-                <!-- <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '550px' }"
-                  [columnDefs]="documentAttributeColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [rowData]="rowDataWithNewRow"
-                  [pageSize]="selectedPageSize"
-                  gridId="documentTypeGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)"
-                  [totalRows]="totalCount"
-                  (serverQuery)="loadBusinessDomains($event)"
-                  (rowEdited)="onRowEdited($event)"
-                  (cellClicked)="onGridCellClicked($event)"
-                >
-                </app-ag-grid-wrapper> -->
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { ApiResponse, SelectList } from '@app/shared/interfaces/interfaces';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -12,9 +12,10 @@ import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
+import { NotificationService } from '@app/shared/notification/notification.service';
 @Component({
   selector: 'app-document-attributes',
   imports: [
@@ -57,7 +58,6 @@ export class DocumentAttributes {
     },
   ]; // for dropdowns
   selectedDocumentType?: string = '';
-  documentTypes: SelectList[] = [];
 
   defaultColDef: ColDef = {
     filter: true,
@@ -66,7 +66,8 @@ export class DocumentAttributes {
 
   constructor(
     private _documentAttribute: DocumentAttributeService,
-    private modal: NzModalService
+    private modal: NzModalService,
+    private _notification: NotificationService
   ) {}
 
   ngOnInit() {
@@ -87,7 +88,6 @@ export class DocumentAttributes {
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
     };
-    //this.loadSampleData();
 
     this.getAllDocumentAttributes({
       pageNumber: 1,
@@ -106,17 +106,6 @@ export class DocumentAttributes {
       Mandatory: '',
     },
   ];
-
-  private loadSampleData(): void {
-    this.documentAttributeData = [
-      {
-        ControlLabel: 'Control Type',
-        ControlTypeId: 'Text Box',
-        ListValue: 'Car, House, Bike',
-        Mandatory: 'View Cabinet',
-      },
-    ];
-  }
 
   private getColumns(): GridColumn[] {
     return [
@@ -180,7 +169,7 @@ export class DocumentAttributes {
             DocumentTypeCode: item.DocumentTypeCode,
             ControlLabel: item.ControlLabel,
             ControlTypeId:
-              this.controlTypes.find((ct) => ct.id === String(item.ControlType))?.text ||
+              this.controlTypes.find((ct) => ct.id === String(item.ControlType))?.id ||
               item.ControlType, // ✅ matches column
             ListValue: item.ListValues, // ✅ plural in API
             Mandatory: item.IsMandatory, // ✅ boolean
@@ -223,40 +212,101 @@ export class DocumentAttributes {
 
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void {
-    //console.log('➕ Row Added:', row);
- 
+  onRowAdded(event: { rowData: any }): void {
+    if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
+      this._notification.createNotification(
+        'warning',
+        'Document Type',
+        'Document Type is required'
+      );
+      return;
+    }
     const payLoad = {
       documentTypeCode: this.selectedDocumentType,
-      controlLabel: row.ControlLabel,
-      controlType: row.ControlTypeId,
-      listvalues: row.ListValue,
+      controlLabel: event.rowData.ControlLabel,
+      ControlType: event.rowData.ControlTypeId,
+      listvalues: event.rowData.ListValue,
       isMandatory: false,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._documentAttribute.create(payLoad).subscribe(() => {
-      console.log('Created');
+    this._documentAttribute.create(payLoad).subscribe({
+      next: (res: ApiResponse<any>) => {
+        if (res.Success) {
+          this._notification.createNotification('success', 'Document template', res.Message);
+        } else {
+          this._notification.createNotification('warning', 'Document template', res.Message);
+        }
+      },
+      error: () => {
+        this._notification.createNotification(
+          'error',
+          'Document template',
+          'Server error. Please try again.'
+        );
+      },
     });
+
+    debugger;
+    this._documentAttribute.create(payLoad).subscribe(() => {
+      this._notification.createNotification(
+        'success',
+        'Document Attribute',
+        'Document Attribute created successfully!'
+      );
+    });
+
+    const rowWithId = {
+      ...event.rowData,
+      id: this.generateId(),
+      ControlLabel: event.rowData.ControlLabel,
+      ControlTypeId: event.rowData.ControlTypeId,
+      ListValue: event.rowData.ListValue,
+      isMandatory: true,
+    };
+
+    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
   }
 
   onRowUpdated(event: { rowData: any }): void {
-  
-    //console.log('✏️ Row Updated:', event.rowData);
+    debugger;
+    if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
+      this._notification.createNotification(
+        'warning',
+        'Document Type',
+        'Document Type is required'
+      );
+      return;
+    }
     const payLoad = {
       id: event.rowData.Id,
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
-      controlType: event.rowData.ControlTypeId,
+      ControlType: event.rowData.ControlTypeId,
       listValues: event.rowData.ListValue,
       isMandatory: true,
       IsActive: true,
       IsDeleted: false,
     };
     this._documentAttribute.update(payLoad).subscribe(() => {
-      console.log('Updated');
+      this._notification.createNotification(
+        'sucess',
+        'Document template',
+        'Document template updated successfully!'
+      );
     });
+
+    const rowWithId = {
+      ...event.rowData,
+      id: this.generateId(),
+      ControlLabel: event.rowData.ControlLabel,
+      ControlTypeId: event.rowData.ControlTypeId,
+      ListValue: event.rowData.ListValue,
+      isMandatory: true,
+    };
+
+    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
   }
 
   onRowDeleted(index: number): void {
@@ -265,17 +315,43 @@ export class DocumentAttributes {
     //console.log('🗑️ Row Deleted:', row);
 
     this._documentAttribute.delete(row.Code).subscribe(() => {
-      //console.log('Deleted');
+      this._notification.createNotification(
+        'sucess',
+        'Document template',
+        'Document template deleted successfully!'
+      );
     });
   }
 
-  onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
+  onCellValueChanged(event: any): void {
     //console.log('Cell value changed:', event);
+    debugger;
+    console.log('PARENT received:', event);
+    if (!event?.data) return;
+
+    event.data.ControlTypeId =
+      this.controlTypes.find((ct) => ct.text === String(event.data.ControlTypeId))?.id ??
+      event.data.ControlTypeId;
+
+    // update same row
+    event.node.setData(event.data);
+  }
+
+  onRowValueChanged(event: any): void {
+    debugger; // 🔥 WILL HIT
+
+    console.log('ROW UPDATED', event.data);
+
+    // normalize dropdown
+    event.data.ControlTypeId =
+      this.controlTypes.find((ct) => ct.text === event.data.ControlTypeId)?.id ??
+      event.data.ControlTypeId;
+
+    // send PATCH API here
   }
 
   onSelectionChanged(selectedRows: any[]): void {
-    //console.log('Selected rows:', selectedRows);
-    // Handle selection logic
+    console.log('Selected rows:', selectedRows);
   }
 
   handleGridAction(event: { action: string; rowData: any }) {
@@ -284,12 +360,40 @@ export class DocumentAttributes {
     }
   }
 
+  onRowEditingStopped(event: any): void {
+    console.log('PARENT rowEditingStopped', event);
+
+    // If cancelled, do nothing
+    if (!event?.data || event?.node?.isEditing()) return;
+
+    const row = event.data;
+
+    // normalize dropdown value
+    row.ControlTypeId =
+      this.controlTypes.find((ct) => ct.text === row.ControlTypeId)?.id ?? row.ControlTypeId;
+
+    // update row safely
+    event.node.setData(row);
+
+    // 🔥 call PATCH API here
+  }
+
+  private getDisplayName(options: any[], id: any): string {
+    const option = options.find((opt) => opt.id == id);
+    return option ? option.text : '';
+  }
+
+  private generateId(): number {
+    return Date.now();
+  }
+
   openCabinetModal(rowData: any): void {
+    debugger;
     const modalRef = this.modal.create({
       nzTitle: 'Mandatory (Cabinet Wise)',
       nzContent: MandatoryCabinetWisePopup,
       nzData: {
-        name: 'Access Level',
+        data: rowData.id,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { SelectList } from '../interfaces/interfaces';
+import { ApiResponse, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { BusinessDomain } from '../interfaces/businessdomain';
@@ -68,16 +68,24 @@ export class BusinessDomainService {
     });
   }
 
-  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
-    return this.http.post(`${environment.baseUrl}/DMSBusinessDomain/create-business-domain`, payload);
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSBusinessDomain/create-business-domain`,
+      payload
+    );
   }
 
   update(payload: any) {
-    return this.http.put(`${environment.baseUrl}/DMSBusinessDomain/update-business-domain`, payload);
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSBusinessDomain/update-business-domain`,
+      payload
+    );
   }
 
   delete(code: string) {
-    return this.http.delete(`${environment.baseUrl}/DMSBusinessDomain/delete-business-domain/${code}`);
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSBusinessDomain/delete-business-domain/${code}`
+    );
   }
  
 }

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { WorkflowStep } from '../interfaces/interfaces';
+import { ApiResponse, WorkflowStep } from '../interfaces/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -61,65 +61,23 @@ export class WorkflowStepService {
     });
   }
 
-  create(shortcut: WorkflowStep): Observable<WorkflowStep> {
-    return this.cabietStructureConfig$.pipe(
-      take(1),
-      switchMap((cabietStructureConfig) =>
-        this.http.post<WorkflowStep>('/DMSWorkflowStep/create-workflow-step', { shortcut }).pipe(
-          map((newcabietStructureConfig) => {
-            // Update the cabietStructureConfig with the new shortcut
-            this._cabietStructureConfig.next([...cabietStructureConfig, newcabietStructureConfig]);
-
-            // Return the new shortcut from observable
-            return newcabietStructureConfig;
-          })
-        )
-      )
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSWorkflowStep/create-workflow-policy`,
+      payload
     );
   }
 
-  update(shortcut: WorkflowStep): Observable<WorkflowStep> {
-    const payload = {
-      id: shortcut.id,
-      name: shortcut.approverUserId,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<WorkflowStep>(`${environment.baseUrl}/DMSWorkflowStep/update-workflow-step`, payload, {
-        headers,
-      })
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.id === updated.id);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._cabietStructureConfig.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSWorkflowStep/update-workflow-policy`,
+      payload
+    );
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSWorkflowStep/delete-workflow-step`, {
-        params: { id },
-      })
-      .pipe(
-        tap(() => {
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSWorkflowStep/delete-workflow-policy/${code}`
+    );
   }
 }

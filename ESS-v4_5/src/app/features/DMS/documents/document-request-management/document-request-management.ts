@@ -17,6 +17,8 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
 import { DRDistributionList } from './drdistribution-list/drdistribution-list';
 import { DRUsersComponent } from './drusers-component/drusers-component';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NzInputModule } from 'ng-zorro-antd/input';
 
 @Component({
   selector: 'app-document-request-management',
@@ -30,13 +32,14 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
+    NzInputModule,
     DivisionList,
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
     DRDistributionList,
     DRUsersComponent,
-    DMSRichTextEdit
+    DMSRichTextEdit,
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
@@ -48,6 +51,7 @@ export class DocumentRequestManagement {
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
+  inputJustificationValue?: string;
 
   constructor() {}
 

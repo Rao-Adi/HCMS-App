@@ -2,8 +2,9 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { DocumentAttribute } from '../interfaces/interfaces';
+import { catchError, map, Observable, ReplaySubject, switchMap, take, tap, throwError } from 'rxjs';
+import { ApiResponse, DocumentAttribute } from '../interfaces/interfaces';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +12,7 @@ import { DocumentAttribute } from '../interfaces/interfaces';
 export class DocumentAttributeService {
   private _cabietStructureConfig = new ReplaySubject<DocumentAttribute[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private _notification: NotificationService) {}
 
   get cabietStructureConfig$(): Observable<DocumentAttribute[]> {
     return this._cabietStructureConfig.asObservable();
@@ -61,16 +62,30 @@ export class DocumentAttributeService {
     });
   }
 
-   create(payload: any) {
-    return this.http.post(`${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`, payload);
+  // create(payload: any) {
+  //   return this.http.post(
+  //     `${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`,
+  //     payload
+  //   );
+  // }
+
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`,
+      payload
+    );
   }
 
   update(payload: any) {
-    return this.http.put(`${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`, payload);
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`,
+      payload
+    );
   }
 
   delete(code: string) {
-    return this.http.delete(`${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`);
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`
+    );
   }
- 
 }

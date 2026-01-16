@@ -15,6 +15,7 @@ import { DivisionService } from '@app/shared/services/division.services';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
+import { NotificationService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-manual-manage-employee',
@@ -187,7 +188,8 @@ export class ManualManageEmployee {
     private modal: NzModalService,
     private _divisionServices: DivisionService,
     private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService
+    private _subDepartmentServices: SubDepartmentCacheService,
+    private _notification: NotificationService
   ) {
     this.loadSampleData();
   }
@@ -296,7 +298,7 @@ export class ManualManageEmployee {
     };
 
     this._userService.create(payLoad).subscribe(() => {
-      console.log('Created');
+      this._notification.createNotification('success', 'Man', 'Document created successfully!');
     });
     const rowWithId = {
       ...newRow,

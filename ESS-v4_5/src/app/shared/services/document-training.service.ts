@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { DocumentTraining } from '../interfaces/interfaces';
+import { ApiResponse, DocumentTraining } from '../interfaces/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -61,74 +61,23 @@ export class DocumentTrainingService {
     });
   }
 
-  create(shortcut: DocumentTraining): Observable<DocumentTraining> {
-    return this.cabietStructureConfig$.pipe(
-      take(1),
-      switchMap((cabietStructureConfig) =>
-        this.http
-          .post<DocumentTraining>('/DMSDocumentTraining/create-document-training', { shortcut })
-          .pipe(
-            map((newcabietStructureConfig) => {
-              // Update the cabietStructureConfig with the new shortcut
-              this._cabietStructureConfig.next([
-                ...cabietStructureConfig,
-                newcabietStructureConfig,
-              ]);
-
-              // Return the new shortcut from observable
-              return newcabietStructureConfig;
-            })
-          )
-      )
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentTraining/create-document-training`,
+      payload
     );
   }
 
-  update(shortcut: DocumentTraining): Observable<DocumentTraining> {
-    const payload = {
-      id: shortcut.id,
-      documentId: shortcut.documentId,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<DocumentTraining>(
-        `${environment.baseUrl}/DMSDocumentTraining/update-document-training`,
-        payload,
-        {
-          headers,
-        }
-      )
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.id === updated.id);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._cabietStructureConfig.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentTraining/update-document-training`,
+      payload
+    );
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSDocumentTraining/delete-document-training`, {
-        params: { id },
-      })
-      .pipe(
-        tap(() => {
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentTraining/delete-document-training/${code}`
+    );
   }
 }

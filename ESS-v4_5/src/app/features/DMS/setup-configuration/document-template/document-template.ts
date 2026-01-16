@@ -20,7 +20,8 @@ import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { TemplateService } from '@app/shared/services/template.service'; 
+import { TemplateService } from '@app/shared/services/template.service';
+import { NotificationService } from '@app/shared/notification/notification.service';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 
@@ -35,11 +36,11 @@ interface MockUser {
   imports: [
     CommonModule,
     FormsModule,
-    NzFormModule, 
+    NzFormModule,
     SafeTranslatePipe,
-    NzDatePickerModule, 
+    NzDatePickerModule,
     NzSelectModule,
-    NzButtonModule, 
+    NzButtonModule,
     DivisionList,
     SubDepartmentList,
     DepartmentList,
@@ -90,7 +91,8 @@ export class DocumentTemplate {
     private datePipe: DatePipe,
     private decimalPipe: DecimalPipe,
     private iconService: NzIconService,
-    private documentTemplateService: TemplateService
+    private documentTemplateService: TemplateService,
+    private _notification: NotificationService
   ) {
     this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
@@ -139,7 +141,34 @@ export class DocumentTemplate {
   }
 
   saveTemplate(data: any) {
-   
+    debugger;
+
+    if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') { 
+      this._notification.createNotification(
+        'warning',
+        'Document Type',
+        'Document Type required'
+      ); 
+      return;
+    } else if (this.selectedDivisions === undefined || this.selectedDivisions === '') {
+     this._notification.createNotification(
+        'warning',
+        'Division',
+        'Division required'
+      ); 
+    } else if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
+      this._notification.createNotification(
+        'warning',
+        'Department',
+        'Department required'
+      ); 
+    } else if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
+      this._notification.createNotification(
+        'warning',
+        'Templeate Type',
+        'Template Type required'
+      ); 
+    }
     // if (!this.selectedDocumentType || !this.templateHtml) {
     //   alert('Required fields missing');
     //   return;

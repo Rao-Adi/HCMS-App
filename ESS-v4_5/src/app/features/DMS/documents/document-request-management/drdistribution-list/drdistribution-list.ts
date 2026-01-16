@@ -6,6 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
@@ -131,7 +132,8 @@ export class DRDistributionList {
     private _documentTypeService: DocumentTypeCacheService,
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService
+    private _subDepartmentServices: SubDepartmentCacheService,
+    private _notification: NotificationService
   ) {
     this.loadSampleData();
   }
@@ -229,7 +231,7 @@ export class DRDistributionList {
     };
 
     this._userService.create(payLoad).subscribe(() => {
-      console.log('Created');
+      this._notification.createNotification('sucess', 'Distribution List', 'Distribution list added successfully!');
     });
     const rowWithId = {
       ...newRow,

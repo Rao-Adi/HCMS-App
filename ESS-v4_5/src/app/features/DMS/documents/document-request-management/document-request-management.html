@@ -43,7 +43,7 @@
                       </div>
                       <div>
                         <nz-select
-                          style="width: 200px"
+                          style="width: 250px"
                           [(ngModel)]="selectedAuthorityType"
                           nzPlaceHolder="Select RequestType"
                           (ngModelChange)="onAuthorityTypeChange($event)"
@@ -63,10 +63,10 @@
                       <div class="PnlHeading">
                         <label>{{ 'labels.Company' | safeTranslate }} </label>
                       </div>
-                      <div class="Divtxtemployeeschright" style="width: 200px">
+                      <div class="Divtxtemployeeschright" >
                         <div>
                           <nz-select
-                            style="width: 200px"
+                            style="width: 250px"
                             [nzPlaceHolder]="'Select Company'"
                             nzAllowClear
                             nzShowSearch
@@ -83,42 +83,32 @@
                     </div>
                   </div>
 
-                  <div>
+                  <div class="mt-4">
                     <!-- Dynamic Columns -->
                     <ng-container [ngSwitch]="selectedAuthorityType">
                       <!-- CASE 1: 3 Columns -->
                       <ng-container *ngSwitchCase="'1'">
                         <div class="row-space">
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10 mt-4">
                             <span class="d-flex">Document Name</span>
                             <input
                               maxlength="10"
                               appDecimalInput
                               name="DocumentName"
                               type="text"
-                              style="width: 200px !important"
+                              style="width: 250px !important"
                               [ngClass]="{
                                 'form-control': true,
                                 'input-sm': true
                               }"
                             />
                           </div>
-                          <div class="col-lg-9 col-md-9 col-sm-6 mb-10">
+                          <div class="col-lg-9 col-md-9 col-sm-6 mb-10 mt-4">
                             <span class="d-flex">Justification</span>
-                            <input
-                              maxlength="10"
-                              appDecimalInput
-                              name="Justification"
-                              type="text"
-                              style="width: 100% !important"
-                              [ngClass]="{
-                                'form-control': true,
-                                'input-sm': true
-                              }"
-                            />
+                            <textarea rows="4" nz-input [(ngModel)]="inputJustificationValue"></textarea>                            
                           </div>
                         </div>
-
+                        <br>
                         <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                           <h3 class="PnlHeader">Cabinet</h3>
                           <br />
@@ -248,17 +238,7 @@
                             <h3 class="PnlHeader">Document Content</h3>
                             <br />
                             <app-dmsrich-text-edit></app-dmsrich-text-edit>
-                            <!-- <input
-                              maxlength="1000"
-                              appDecimalInput
-                              name="DocumentContent"
-                              type="text"
-                              style="width: 100% !important"
-                              [ngClass]="{
-                                'form-control': true,
-                                'input-sm': true
-                              }"
-                            /> -->
+                             
                           </div>
                         </div>
                         <br />
@@ -269,10 +249,11 @@
                             <h3 class="PnlHeader">Workflow Authorities</h3>
                             <br />
                             <app-ag-grid-wrapper
-                              [gridStyle]="{ width: '100%', height: '250px' }"
+                              [gridStyle]="{ width: '100%', height: '250px' }" 
                               [columnDefs]="workflowAuthoritiesColumnDefs"
                               [defaultColDef]="defaultColDef"
                               [rowData]="workflowAuthoritiesData"
+                              [isSelectionRequired]="false"
                               [pageSize]="pageSize"
                               [totalRows]="totalWorkflowAuthorities"
                               [pageSize]="selectedPageSize"
@@ -310,12 +291,13 @@
                             <div class="PnlHeading">
                               <h3 class="PnlHeader">Documents</h3>
                             </div>
-                            <div>
+                            <div class="mt-4">
                               <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
                                 [columnDefs]="documentColumnDefs"
                                 [defaultColDef]="defaultColDef"
                                 [rowData]="workflowAuthoritiesData"
+                                [isSelectionRequired]="false"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalDocuments"
                                 [pageSize]="selectedPageSize"
@@ -328,17 +310,8 @@
                             <br />
                             <br />
                             <span class="d-flex">Justification</span>
-                            <input
-                              maxlength="10"
-                              appDecimalInput
-                              name="Justification"
-                              type="text"
-                              style="width: 100% !important"
-                              [ngClass]="{
-                                'form-control': true,
-                                'input-sm': true
-                              }"
-                            />
+                            <textarea rows="4" nz-input [(ngModel)]="inputJustificationValue"></textarea>
+                             
                           </div>
                         </div>
 
@@ -403,7 +376,7 @@
 
                               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <div class="PnlHeading">
-                                  <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                                  <label>{{ 'labels.Division' | safeTranslate }} </label>
                                 </div>
                                 <div>
                                   <app-document-type-list
@@ -428,7 +401,8 @@
                               <h3 class="PnlHeader">Users</h3>
                             </div>
                             <div>
-                              <app-ag-grid-wrapper
+                              <app-drusers-component></app-drusers-component>
+                              <!-- <app-ag-grid-wrapper
                                 [gridStyle]="{ width: '100%', height: '250px' }"
                                 [columnDefs]="userGridColumnDefs"
                                 [defaultColDef]="defaultColDef"
@@ -440,7 +414,7 @@
                                 (pageSizeChange)="onPageSizeChanged($event)"
                                 (serverQuery)="GetAllUploadedDocuments($event)"
                               >
-                              </app-ag-grid-wrapper>
+                              </app-ag-grid-wrapper> -->
                             </div>
                           </div>
                         </div>
@@ -457,6 +431,7 @@
                                 [columnDefs]="distributionListGridColumnDefs"
                                 [defaultColDef]="defaultColDef"
                                 [rowData]="distributionListData"
+                                [isSelectionRequired]="false"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalRows"
                                 [pageSize]="selectedPageSize"
@@ -501,6 +476,7 @@
                                 [columnDefs]="workflowAuthoritiesColumnDefs"
                                 [defaultColDef]="defaultColDef"
                                 [rowData]="workflowAuthoritiesData"
+                                [isSelectionRequired]="false"
                                 [pageSize]="pageSize"
                                 [totalRows]="totalRows"
                                 [pageSize]="selectedPageSize"
@@ -527,6 +503,7 @@
                   [columnDefs]="pendingRequestApprovalColumnDefs"
                   [defaultColDef]="defaultColDef"
                   [rowData]="pendingApprovalData"
+                  [isSelectionRequired]="false"
                   [totalRows]="totalPendingApprovals"
                   [pageSize]="selectedPageSize"
                   gridId="myRequestPendingApprovalGrid"

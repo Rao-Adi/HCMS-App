@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { ESignature } from '../interfaces/interfaces';
+import { ApiResponse, ESignature } from '../interfaces/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -61,65 +61,23 @@ export class ESignatureService {
     });
   }
 
-  create(shortcut: ESignature): Observable<ESignature> {
-    return this.cabietStructureConfig$.pipe(
-      take(1),
-      switchMap((cabietStructureConfig) =>
-        this.http.post<ESignature>('/DMSESignature/create-esignatures', { shortcut }).pipe(
-          map((newcabietStructureConfig) => {
-            // Update the cabietStructureConfig with the new shortcut
-            this._cabietStructureConfig.next([...cabietStructureConfig, newcabietStructureConfig]);
-
-            // Return the new shortcut from observable
-            return newcabietStructureConfig;
-          })
-        )
-      )
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSESignature/create-esignatures`,
+      payload
     );
   }
 
-  update(shortcut: ESignature): Observable<ESignature> {
-    const payload = {
-      id: shortcut.id,
-      fileType: shortcut.fileType,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<ESignature>(`${environment.baseUrl}/DMSESignature/update-esignatures`, payload, {
-        headers,
-      })
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.id === updated.id);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._cabietStructureConfig.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSESignature/update-esignatures`,
+      payload
+    );
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(`${environment.baseUrl}/DMSESignature/delete-esignatures`, {
-        params: { id },
-      })
-      .pipe(
-        tap(() => {
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSESignature/delete-esignatures/${code}`
+    );
   }
 }

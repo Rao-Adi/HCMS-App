@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { Designation, SelectList } from '../interfaces/interfaces';
+import { ApiResponse, Designation, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
 // import { Customer } from './customer';
@@ -31,7 +31,6 @@ export class DesignationService {
     const uri = `${environment.baseUrl}/DMSDesignation/get-all-designation-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
-  
 
   GetAllDesignations(
     searchText: string,
@@ -56,84 +55,25 @@ export class DesignationService {
       headers: this.getHeaders(),
     });
   }
-  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
-    return this.http.post(`${environment.baseUrl}/DMSDesignation/create-designation`, payload);
+
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDesignation/create-designation`,
+      payload
+    );
   }
 
   update(payload: any) {
-    return this.http.put(`${environment.baseUrl}/DMSDesignation/update-designation`, payload);
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDesignation/update-designation`,
+      payload
+    );
   }
 
   delete(code: string) {
-    return this.http.delete(`${environment.baseUrl}/DMSDesignation/delete-designation/${code}`);
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDesignation/delete-designation/${code}`
+    );
   }
-
-  
-  // create(shortcut: Designation): Observable<Designation> {
-  //   return this.designations$.pipe(
-  //     take(1),
-  //     switchMap((designations) =>
-  //       this.http.post<Designation>('/DMSDesignation/create-designation', { shortcut }).pipe(
-  //         map((newDesignation) => {
-  //           // Update the designations with the new shortcut
-  //           this._designations.next([...designations, newDesignation]);
-
-  //           // Return the new shortcut from observable
-  //           return newDesignation;
-  //         })
-  //       )
-  //     )
-  //   );
-  // }
-
-  // update(code: string, shortcut: Designation): Observable<Designation> {
-  //   return this.designations$.pipe(
-  //     take(1),
-  //     switchMap((designations) =>
-  //       this.http
-  //         .patch<Designation>('/DMSDesignation/update-designation', {
-  //           code,
-  //           shortcut,
-  //         })
-  //         .pipe(
-  //           map((updatedDesignation: Designation) => {
-  //             // Find the index of the updated shortcut
-  //             const index = designations.findIndex((item) => item.Code === code);
-
-  //             // Update the shortcut
-  //             designations[index] = updatedDesignation;
-
-  //             // Update the designations
-  //             this._designations.next(designations);
-
-  //             // Return the updated shortcut
-  //             return updatedDesignation;
-  //           })
-  //         )
-  //     )
-  //   );
-  // }
-
-  // delete(code: string): Observable<boolean> {
-  //   return this.designations$.pipe(
-  //     take(1),
-  //     switchMap((designations) =>
-  //       this.http.delete<boolean>('/DMSDesignation/delete-designation', { params: { code } }).pipe(
-  //         map((isDeleted: boolean) => {
-  //           // Find the index of the deleted shortcut
-  //           const index = designations.findIndex((item) => item.Code === code);
-
-  //           // Delete the shortcut
-  //           designations.splice(index, 1);
-
-  //           // Update the designations
-  //           this._designations.next(designations);
-
-  //           // Return the deleted status
-  //           return isDeleted;
-  //         })
-  //       )
-  //     )
-  //   );
-  // }
+ 
 }

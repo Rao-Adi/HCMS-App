@@ -6,6 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
@@ -133,7 +134,8 @@ export class AccessLevelModalDialog {
     private _documentTypeService: DocumentTypeCacheService,
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService
+    private _subDepartmentServices: SubDepartmentCacheService,
+    private _notification: NotificationService
   ) {
     this.loadSampleData();
   }
@@ -223,23 +225,27 @@ export class AccessLevelModalDialog {
     console.log('Row added:', newRow);
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = { 
+    const payLoad = {
       divisionCode: newRow.DivisionName || newRow.divisionName,
       departmentCode: newRow.DepartmentName || newRow.departmentName,
       subDepartmentCode: newRow.SubDepartmentCode || newRow.subDepartmentName,
-      documentTypeId: newRow.documentTypeId || newRow.documentTypeId      
+      documentTypeId: newRow.documentTypeId || newRow.documentTypeId,
     };
 
     this._userService.create(payLoad).subscribe(() => {
-      console.log('Created');
+      this._notification.createNotification(
+        'success',
+        'Access Level',
+        'Access Level created successfully!'
+      );
     });
     const rowWithId = {
       ...newRow,
-      id: this.generateId(),      
+      id: this.generateId(),
       divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
       departmentName: this.getDisplayName(this.departments, newRow.departmentName),
       subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
-      documentTypeId : this.getDisplayName(this.documentTypes, newRow.documentTypeId)
+      documentTypeId: this.getDisplayName(this.documentTypes, newRow.documentTypeId),
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];

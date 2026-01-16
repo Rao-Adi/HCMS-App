@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { Division, SelectList } from '../interfaces/interfaces';
+import { ApiResponse, Division, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
 // import { Customer } from './customer';
@@ -61,16 +61,24 @@ export class DivisionService {
     });
   }
 
-  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
-    return this.http.post(`${environment.baseUrl}/DMSDivision/create-division`, payload);
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDivision/create-division`,
+      payload
+    );
   }
 
   update(payload: any) {
-    return this.http.put(`${environment.baseUrl}/DMSDivision/update-division`, payload);
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDivision/update-division`,
+      payload
+    );
   }
 
   delete(code: string) {
-    return this.http.delete(`${environment.baseUrl}/DMSDivision/delete-division/${code}`);
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDivision/delete-division/${code}`
+    );
   }
 
   // create(shortcut: Division): Observable<Division> {

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { SelectList } from '../interfaces/interfaces';
+import { ApiResponse, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
 import { DocumentType } from '../interfaces/interfaces';
@@ -34,12 +34,10 @@ export class DocumentTypeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-
   getDocumentTypeCount(): Observable<GenericResponse<Number>> {
     const uri = `${environment.baseUrl}/DMSDocumentType/get-doucment-type-count`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
-
 
   //   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
   //     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
@@ -70,16 +68,23 @@ export class DocumentTypeService {
     });
   }
 
-    create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
-      return this.http.post(`${environment.baseUrl}/DMSDocumentType/create-document-type`, payload);
-    }
-  
-    update(payload: any) {
-      return this.http.put(`${environment.baseUrl}/DMSDocumentType/update-document-type`, payload);
-    }
-  
-    delete(code: string) {
-      return this.http.delete(`${environment.baseUrl}/DMSDocumentType/delete-document-type/${code}`);
-    }
- 
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentType/create-document-type`,
+      payload
+    );
+  }
+
+  update(payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentType/update-document-type`,
+      payload
+    );
+  }
+
+  delete(code: string) {
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentType/delete-document-type/${code}`
+    );
+  }
 }

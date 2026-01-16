@@ -31,6 +31,8 @@ import { Checkboxrenderer } from '../ag-grid-renderers/checkboxrenderer/checkbox
 import { FileUploadCellRenderer } from '../ag-grid-renderers/file-upload-cell-renderer/file-upload-cell-renderer';
 import { CascadeDropdownCellRenderer } from '../ag-grid-renderers/cascade-dropdown-cell-renderer/cascade-dropdown-cell-renderer';
 import { LinkRenderer } from '../ag-grid-renderers/link-renderer/link-renderer';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 export interface GridColumn {
   field: string;
@@ -112,7 +114,7 @@ export interface GridConfig {
 @Component({
   selector: 'app-editable-ag-grid-wrapper',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular],
+  imports: [CommonModule, FormsModule, AgGridAngular, NzAlertModule, NzSpinModule],
   templateUrl: './editable-ag-grid-wrapper.html',
   styleUrl: './editable-ag-grid-wrapper.css',
 })
@@ -122,6 +124,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
+  }>();
+
+  @Output() rowAdded = new EventEmitter<{
+    rowData: any;
+    file?: File;
   }>();
 
   @Input() gridId: string = 'grid-' + Math.random().toString(36).substr(2, 9);
@@ -153,7 +160,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() pinnedTopRowData: any[] = [];
   @Input() pinnedBottomRowData: any[] = [];
 
-  @Output() rowAdded = new EventEmitter<any>();
+  // @Output() rowAdded = new EventEmitter<any>();
   @Output() rowUpdated = new EventEmitter<{ rowData: any; index: number }>();
   @Output() rowDeleted = new EventEmitter<number>();
   @Output() cellValueChanged = new EventEmitter<{
@@ -188,63 +195,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     };
   }
 
-  // Data sources for cascade dropdowns
-  // documentTypes = [
-  //   { id: 'DT1', text: 'SOP' },
-  //   { id: 'DT2', text: 'Policy' },
-  //   { id: 'DT3', text: 'Guideline' },
-  //   { id: 'DT4', text: 'Form' },
-  // ];
-
-  // divisions = [
-  //   { id: 'D1', text: 'Software Division', documentTypeId: 'DT1' },
-  //   { id: 'D2', text: 'Quality Management', documentTypeId: 'DT1' },
-  //   { id: 'D3', text: 'HR Division', documentTypeId: 'DT2' },
-  //   { id: 'D4', text: 'Finance Division', documentTypeId: 'DT3' },
-  //   { id: 'D5', text: 'IT Division', documentTypeId: 'DT4' },
-  // ];
-
-  // departments = [
-  //   { id: 'DEP1', text: 'Software Department', divisionId: 'D1' },
-  //   { id: 'DEP2', text: 'QA Department', divisionId: 'D1' },
-  //   { id: 'DEP3', text: 'Development', divisionId: 'D2' },
-  //   { id: 'DEP4', text: 'Testing', divisionId: 'D2' },
-  //   { id: 'DEP5', text: 'HR Operations', divisionId: 'D3' },
-  //   { id: 'DEP6', text: 'Recruitment', divisionId: 'D3' },
-  //   { id: 'DEP7', text: 'Accounts', divisionId: 'D4' },
-  //   { id: 'DEP8', text: 'Budget', divisionId: 'D4' },
-  //   { id: 'DEP9', text: 'Infrastructure', divisionId: 'D5' },
-  //   { id: 'DEP10', text: 'Support', divisionId: 'D5' },
-  // ];
-
-  // subDepartments = [
-  //   { id: 'SD1', text: 'Frontend Team', departmentId: 'DEP1' },
-  //   { id: 'SD2', text: 'Backend Team', departmentId: 'DEP1' },
-  //   { id: 'SD3', text: 'Mobile Team', departmentId: 'DEP1' },
-
-  //   { id: 'SD4', text: 'Manual QA', departmentId: 'DEP2' },
-  //   { id: 'SD5', text: 'Automation QA', departmentId: 'DEP2' },
-
-  //   { id: 'SD6', text: 'Angular Team', departmentId: 'DEP3' },
-  //   { id: 'SD7', text: 'React Team', departmentId: 'DEP3' },
-
-  //   { id: 'SD8', text: 'Functional Testing', departmentId: 'DEP4' },
-  //   { id: 'SD9', text: 'Performance Testing', departmentId: 'DEP4' },
-
-  //   { id: 'SD10', text: 'Payroll', departmentId: 'DEP5' },
-  //   { id: 'SD11', text: 'Benefits', departmentId: 'DEP5' },
-
-  //   { id: 'SD12', text: 'Campus Hiring', departmentId: 'DEP6' },
-  //   { id: 'SD13', text: 'Lateral Hiring', departmentId: 'DEP6' },
-  // ];
-
   ngOnInit(): void {
     //this.buildColumnDefs();
     this.gridContext = this.getContextData();
     this.buildColumnDefs();
-    console.log("DivisionList", this.divisionList);
-    console.log("DepartmentList", this.departmentList);
-    console.log("SubDepartmentList", this.subDepartmentList);
+    // console.log('DivisionList', this.divisionList);
+    // console.log('DepartmentList', this.departmentList);
+    // console.log('SubDepartmentList', this.subDepartmentList);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -353,7 +310,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     };
 
     // Set cell renderer based on column type
-    switch (column.type) {      
+    switch (column.type) {
       case 'dropdown':
         // Check if it's a cascade dropdown
         const isCascade = !!column.dependsOn;
@@ -368,10 +325,15 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
               component: column.customRenderer || rendererComponent,
               params: {
                 // 🔥 ALWAYS pass options (for root dropdown)
+                //options: column.dropdownOptions || [],
+
                 options: column.dropdownOptions || [],
+                value: params.data?.[column.field], // ← ID (1)
+                valueField: column.dropdownValueField, // 'id'
+                displayField: column.dropdownDisplayField, // 'text'
 
                 // 🔥 ALWAYS read value from rowData
-                value: params.data?.[column.field],
+                //value: params.data?.[column.field],
                 //value: params.data?.[column.dropdownValueField || column.field],
 
                 disabled: params.data?.disabled,
@@ -412,13 +374,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         };
 
         colDef.valueFormatter = (params) => {
-          if (column.dropdownDisplayField && params.data) {
-            return params.data[column.dropdownDisplayField];
-          }
-          return this.getOptionText(
-            column,
-            params.data?.[column.dropdownValueField || column.field]
-          );
+          
+          if (!params.value) return '';
+
+          const options = column.dropdownOptions || [];
+          const match = options.find((opt) => opt.id == params.value);
+
+          return match ? match.text : params.value;
+          // if (column.dropdownDisplayField && params.data) {
+          //   return params.data[column.dropdownDisplayField];
+          // }
+          // return this.getOptionText(
+          //   column,
+          //   params.data?.[column.dropdownValueField || column.field]
+          // );
         };
         break;
       case 'number':
@@ -537,8 +506,17 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 multiple: column.multiple || false,
                 maxSize: column.maxSize || 5, // MB
                 onValueChange: (value: any, data: any) => {
-                  data[column.field] = value;
-                  this.emitCellValueChanged(column.field, value, data, params.rowIndex);
+                  // data[column.field] = value;
+                  // this.emitCellValueChanged(column.field, value, data, params.rowIndex);
+
+                  if (!(value instanceof File)) {
+                    console.error('Expected File, got:', value);
+                    return;
+                  }
+
+                  // DO NOT spread or clone
+                  (params.node as any).__uploadedFile = value;
+                  data[column.field] = value; // optional, for display
                 },
                 onFilePreview: (fileInfo: any) => {
                   // Emit custom event for file preview
@@ -772,8 +750,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   onSelectionChanged(event: SelectionChangedEvent): void {
-    const selectedRows = this.gridApi.getSelectedRows();
-    this.selectionChanged.emit(selectedRows);
+    this.selectionChanged.emit(this.gridApi.getSelectedRows());
+  }
+
+  onCellValueChanged(event: any): void {
+    //console.log('Cell value changed:', event);
+    // debugger;
+    this.cellValueChanged.emit(event);
+  }
+
+  @Output() rowEditingStopped = new EventEmitter<any>();
+
+  handleRowEditingStopped(event: any): void {
+    console.log('WRAPPER rowEditingStopped', event);
+    this.rowEditingStopped.emit(event);
   }
 
   onFilterChanged(): void {
@@ -825,21 +815,47 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     const pinnedData = this.pinnedTopRowData?.[0];
     if (!pinnedData) return;
 
-    //console.log('pinnedData:', JSON.stringify(pinnedData));
-
-    // Validate required fields
     const requiredColumns = this.config.columns.filter((col) => col.required);
     const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
 
-    //console.log('Missing Fields:', missingFields);
     if (missingFields.length > 0) {
       alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
       return;
     }
 
-    const newRow = { ...pinnedData, isNewRow: false };
-    this.rowAdded.emit(newRow);
-    this.resetPinnedRow();
+    // ❌ DO NOT rely on pinnedData for file
+    const uploadedFile = (this.gridApi.getPinnedTopRow(0) as any)?.__uploadedFile;
+
+    const newRow = {
+      ...pinnedData,
+      isNewRow: false,
+    };
+
+    // ✅ EMIT FILE SEPARATELY
+    this.rowAdded.emit({
+      rowData: newRow,
+      file: uploadedFile,
+    });
+
+    //this.resetPinnedRow();
+    // const pinnedData = this.pinnedTopRowData?.[0];
+    // if (!pinnedData) return;
+
+    // //console.log('pinnedData:', JSON.stringify(pinnedData));
+
+    // // Validate required fields
+    // const requiredColumns = this.config.columns.filter((col) => col.required);
+    // const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
+
+    // //console.log('Missing Fields:', missingFields);
+    // if (missingFields.length > 0) {
+    //   alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
+    //   return;
+    // }
+
+    // const newRow = { ...pinnedData, isNewRow: false };
+    // this.rowAdded.emit(newRow);
+    // this.resetPinnedRow();
   }
 
   resetPinnedRow(): void {

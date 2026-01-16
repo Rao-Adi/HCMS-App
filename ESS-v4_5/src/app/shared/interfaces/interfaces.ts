@@ -1,12 +1,21 @@
+// export interface ApiResponse<T> {
+//   Data: {
+//     Items: T[];
+//     TotalCount: number;
+//   };
+//   Success: boolean;
+//   Message: string;
+//   Code: number;
+// }
+
 export interface ApiResponse<T> {
-  Data: {
-    Items: T[];
-    TotalCount: number;
-  };
   Success: boolean;
-  Message: string;
   Code: number;
+  Message: string;
+  Data: T;
 }
+
+
 export interface Division {
   Id: number;
   Code: string;

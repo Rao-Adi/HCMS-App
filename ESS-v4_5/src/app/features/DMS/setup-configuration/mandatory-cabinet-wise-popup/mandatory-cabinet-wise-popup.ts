@@ -6,6 +6,11 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { AttributeMandatoryScopeService } from '@app/shared/services/attribute-mandatory-scope.service';
+import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
+import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
+import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { ColDef } from 'ag-grid-community';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 
@@ -33,71 +38,25 @@ export class MandatoryCabinetWisePopup {
 
   gridConfig: GridConfig = {} as GridConfig;
 
-  employeeData: any[] = [];
+  mandatoryCabinetData: any[] = [];
 
   mandatoryOptions = [
     { id: true, text: 'Yes' },
     { id: false, text: 'No' },
   ];
 
-  documentTypes = [
-    { id: 'DT1', text: 'SOP' },
-    { id: 'DT2', text: 'Policy' },
-    { id: 'DT3', text: 'Guideline' },
-    { id: 'DT4', text: 'Form' },
-  ];
+  divisions: any[] = [];
+  departments: any[] = [];
+  subDepartments: any[] = [];
 
-  divisions = [
-    { id: 'D1', text: 'Software Division', documentTypeId: 'DT1' },
-    { id: 'D2', text: 'Quality Management', documentTypeId: 'DT1' },
-    { id: 'D3', text: 'HR Division', documentTypeId: 'DT2' },
-    { id: 'D4', text: 'Finance Division', documentTypeId: 'DT3' },
-    { id: 'D5', text: 'IT Division', documentTypeId: 'DT4' },
-  ];
-
-  departments = [
-    { id: 'DEP1', text: 'Software Department', divisionId: 'D1' },
-    { id: 'DEP2', text: 'QA Department', divisionId: 'D1' },
-    { id: 'DEP3', text: 'Development', divisionId: 'D2' },
-    { id: 'DEP4', text: 'Testing', divisionId: 'D2' },
-    { id: 'DEP5', text: 'HR Operations', divisionId: 'D3' },
-    { id: 'DEP6', text: 'Recruitment', divisionId: 'D3' },
-    { id: 'DEP7', text: 'Accounts', divisionId: 'D4' },
-    { id: 'DEP8', text: 'Budget', divisionId: 'D4' },
-    { id: 'DEP9', text: 'Infrastructure', divisionId: 'D5' },
-    { id: 'DEP10', text: 'Support', divisionId: 'D5' },
-  ];
-
-  subDepartments = [
-    { id: 'SD1', text: 'Frontend Team', departmentId: 'DEP1' },
-    { id: 'SD2', text: 'Backend Team', departmentId: 'DEP1' },
-    { id: 'SD3', text: 'Mobile Team', departmentId: 'DEP1' },
-
-    { id: 'SD4', text: 'Manual QA', departmentId: 'DEP2' },
-    { id: 'SD5', text: 'Automation QA', departmentId: 'DEP2' },
-
-    { id: 'SD6', text: 'Angular Team', departmentId: 'DEP3' },
-    { id: 'SD7', text: 'React Team', departmentId: 'DEP3' },
-
-    { id: 'SD8', text: 'Functional Testing', departmentId: 'DEP4' },
-    { id: 'SD9', text: 'Performance Testing', departmentId: 'DEP4' },
-
-    { id: 'SD10', text: 'Payroll', departmentId: 'DEP5' },
-    { id: 'SD11', text: 'Benefits', departmentId: 'DEP5' },
-
-    { id: 'SD12', text: 'Campus Hiring', departmentId: 'DEP6' },
-    { id: 'SD13', text: 'Lateral Hiring', departmentId: 'DEP6' },
-  ];
-
-  roles = [
-    { id: '0001', text: 'Developer' },
-    { id: '0002', text: 'Senior Developer' },
-    { id: '0003', text: 'Quality Assurance' },
-    { id: '0004', text: 'Data Engineer' },
-    { id: '0005', text: 'HR Specialist' },
-  ];
-
-  constructor(private modalRef: NzModalRef) {
+  constructor(
+    private modalRef: NzModalRef,
+    private _attributeMandatoryService: AttributeMandatoryScopeService,
+    private _notification: NotificationService,
+    private _divisionServices: DivisionCacheService,
+    private _departmentCacheService: DepartmentCacheService,
+    private _subDepartmentServices: SubDepartmentCacheService
+  ) {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -116,7 +75,19 @@ export class MandatoryCabinetWisePopup {
       suppressCellFocus: true,
     };
 
-    this.loadSampleData();
+    //this.loadSampleData();
+  }
+
+  ngOnInit() {
+    this.GetAllAttributeMandatoryScopes({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
+    this.getAllDivisionList();
+    this.getAllDepartmentList();
+    this.getAllSubDepartmentList();
   }
 
   pinnedTopRowDataPlanning: UploadDocumentColumns[] = [
@@ -141,6 +112,8 @@ export class MandatoryCabinetWisePopup {
         dropdownOptions: this.divisions,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        minWidth: 180,
+        required: true,
       },
 
       // ✅ DEPARTMENT
@@ -153,9 +126,9 @@ export class MandatoryCabinetWisePopup {
         filterKey: 'divisionId',
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        minWidth: 180,
         required: true,
       },
-
       // ✅ SUB DEPARTMENT
       {
         field: 'subDepartmentName',
@@ -166,6 +139,7 @@ export class MandatoryCabinetWisePopup {
         filterKey: 'departmentId',
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        minWidth: 180,
         required: true,
       },
       {
@@ -180,7 +154,7 @@ export class MandatoryCabinetWisePopup {
   }
 
   private loadSampleData(): void {
-    this.employeeData = [
+    this.mandatoryCabinetData = [
       {
         documentTypeId: 'DT1',
         documentTypeName: 'SOP',
@@ -206,21 +180,90 @@ export class MandatoryCabinetWisePopup {
     ];
   }
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+  }
+
+  private getDisplayName(options: any[], id: any): string {
+    const option = options.find((opt) => opt.id == id);
+    return option ? option.text : '';
+  }
+
+  private generateId(): number {
+    return Date.now();
+  }
+
+  private getTextById(options: any[], id: any, valueField: string, displayField: string): string {
+    if (id === null || id === undefined) return '';
+    return options.find((o) => o[valueField] === id)?.[displayField] ?? id;
+  }
+
+  onRowAdded(event: { rowData: any }): void {
     debugger;
-    // Add logic to generate IDs, validate, etc.
+    const { rowData } = event;
+
+    const payLoad = {
+      documentAttributeId: this.data.documentAttributeId,
+      DivisionCode: this.getDisplayName(this.divisions, rowData.divisionName),
+      DepartmentCode: this.getDisplayName(this.departments, rowData.departmentName),
+      SubDepartmentCode: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+      mandatory: rowData.mandatory,
+      IsActive: true,
+      IsDeleted: false,
+    };
+    debugger;
+    this._attributeMandatoryService.create(payLoad).subscribe({
+      next: () => {
+        this._notification.createNotification(
+          'success',
+          'Document Attribute',
+          'Document Attribute created successfully!'
+        );
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
+    });
+
     const rowWithId = {
-      ...newRow,
+      ...rowData,
       id: this.generateId(),
       // Map dropdown IDs to display names
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
-      mandatory: this.getDisplayName(this.mandatoryOptions, newRow.mandatory),
+      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+      mandatory: this.getDisplayName(this.mandatoryOptions, rowData.mandatory),
     };
 
-    this.employeeData = [rowWithId, ...this.employeeData];
+    this.mandatoryCabinetData = [rowWithId, ...this.mandatoryCabinetData];
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
@@ -238,23 +281,28 @@ export class MandatoryCabinetWisePopup {
     );
     event.rowData.mandatory = this.getDisplayName(this.mandatoryOptions, event.rowData.mandatory);
 
-    this.employeeData[event.index] = { ...event.rowData };
-    this.employeeData = [...this.employeeData]; // Trigger change detection
+    this.mandatoryCabinetData[event.index] = { ...event.rowData };
+    this.mandatoryCabinetData = [...this.mandatoryCabinetData]; // Trigger change detection
   }
 
   onRowDeleted(rowIndex: number): void {
     console.log('Row deleted at index:', rowIndex);
-    this.employeeData.splice(rowIndex, 1);
-    this.employeeData = [...this.employeeData];
+    this.mandatoryCabinetData.splice(rowIndex, 1);
+    this.mandatoryCabinetData = [...this.mandatoryCabinetData];
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
-    debugger;
     //console.log('Cell value changed:', JSON.stringify(event));
 
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionName);
-    event.rowData.departmentName = this.getDisplayName(this.departments, event.rowData.departmentName);
-    event.rowData.subDepartmentName = this.getDisplayName(this.subDepartments, event.rowData.subDepartmentName);
+    event.rowData.departmentName = this.getDisplayName(
+      this.departments,
+      event.rowData.departmentName
+    );
+    event.rowData.subDepartmentName = this.getDisplayName(
+      this.subDepartments,
+      event.rowData.subDepartmentName
+    );
     event.rowData.mandatory = this.getDisplayName(this.mandatoryOptions, event.rowData.mandatory);
 
     // Handle calculations if needed
@@ -264,7 +312,7 @@ export class MandatoryCabinetWisePopup {
     // event.rowData.revisedSalary = currentSalary * (1 + incrementPercentage / 100);
 
     // // Update the row
-    // this.employeeData[event.rowIndex] = { ...event.rowData };
+    // this.mandatoryCabinetData[event.rowIndex] = { ...event.rowData };
     //}
 
     if (event.field === 'file-preview') {
@@ -286,42 +334,68 @@ export class MandatoryCabinetWisePopup {
     // Store grid API if needed for external operations
   }
 
-  private getDisplayName(options: any[], id: any): string {
-    const option = options.find((opt) => opt.id == id);
-    return option ? option.text : '';
-  }
-
-  private generateId(): number {
-    return Date.now();
-  }
-
-  private getTextById(options: any[], id: any, valueField: string, displayField: string): string {
-    if (id === null || id === undefined) return '';
-    return options.find((o) => o[valueField] === id)?.[displayField] ?? id;
-  }
-
   close() {
     this.modalRef.close();
   }
 
-  GetAllDocumentTypeGrid(query: any) {}
+  GetAllAttributeMandatoryScopes(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._attributeMandatoryService
+      .GetAllAttributeMandatoryScopes(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize
+      )
+      .subscribe((res) => {
+        const items = res?.Data?.Items;
+        console.log(items);
+        if (Array.isArray(items)) {
+          this.mandatoryCabinetData = items.map((item: any) => ({
+            Id: item.Id,
+            documentTypeId: item.DocumentType,
+            documentTypeName: item.DocumentTypeCode,
+            divisionName: item.Division,
+            divisionId: item.DivisionCode,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            DocumentCode: item.DocumentCode,
+            departmentName: item.Department,
+            departmentId: item.DepartmentCode,
+            subDepartmentName: item.SubDepartment,
+            subDepartmentId: item.SubDepartmentCode,
+            EffectiveFrom: item.EffectiveFrom,
+            EffectiveTo: item.EffectiveTo,
+            DocumentURL: item.DocumentURL,
+            nextReviewDate: item.NextReviewDate,
+            CreatedAt: item.CreatedAt,
+            CreatedBy: item.CreatedBy,
+            LastModifiedAt: item.LastModifiedAt,
+            LastModifiedBy: item.LastModifiedBy,
+          }));
+        } else {
+          this.mandatoryCabinetData = [];
+        }
+
+        console.log('RowData length:', this.mandatoryCabinetData.length);
+      });
+  }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
 
-    switch (gridId) {
-      case 'documentTypeGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDocumentTypeGrid({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
-    }
+    this.divisionPageSize = pageSize;
+    this.GetAllAttributeMandatoryScopes({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
   }
 
   loadBusinessDomains(query: any): void {
@@ -346,6 +420,51 @@ export class MandatoryCabinetWisePopup {
     //     }
     //   });
   }
+
+  getAllDivisionList = () => {
+    this._divisionServices.getDivisions().subscribe((res) => {
+      if (res) {
+        this.divisions = (res ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Name,
+        }));
+      } else {
+        this.divisions = [];
+      }
+      // ✅ build grid ONLY after divisions are ready
+      this.buildGrid();
+    });
+  };
+
+  getAllDepartmentList = () => {
+    this._departmentCacheService.getDepartments().subscribe((res) => {
+      if (res) {
+        this.departments = (res ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Name,
+          divisionId: d.DivisionCode || d.divisionCode,
+          Division: d.Division || d.division,
+        }));
+      } else {
+        this.departments = [];
+      }
+    });
+  };
+
+  getAllSubDepartmentList = () => {
+    this._subDepartmentServices.getSubDepartments().subscribe((res) => {
+      if (res) {
+        this.subDepartments = (res ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Name,
+          departmentId: d.DepartmentCode || d.departmentCode,
+          department: d.Department || d.department,
+        }));
+      } else {
+        this.subDepartments = [];
+      }
+    });
+  };
 }
 
 class UploadDocumentColumns {

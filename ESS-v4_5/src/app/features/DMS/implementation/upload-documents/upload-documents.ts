@@ -1,6 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, ViewChild } from '@angular/core';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -11,79 +9,110 @@ import { DepartmentCacheService } from '@app/shared/services/CacheServices/depar
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
-import { UserService } from '@app/shared/services/user-service';
+import { DocumentService } from '@app/shared/services/document.service';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
-  selector: 'app-drusers-component',
-  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
-  templateUrl: './drusers-component.html',
-  styleUrl: './drusers-component.css',
+  selector: 'app-upload-documents',
+  imports: [EditableAgGridWrapper],
+  templateUrl: './upload-documents.html',
+  styleUrl: './upload-documents.css',
 })
-export class DRUsersComponent {
+export class UploadDocuments {
   gridConfig: GridConfig = {} as GridConfig;
 
-  manualUserData: any[] = [];
+  uploadedDocumentsData: any[] = [];
+
   divisions: any[] = [];
   departments: any[] = [];
   subDepartments: any[] = [];
   documentTypes: any[] = [];
-  users: any[] = [
-    {
-      id: '1',
-      text: 'Territory Sales Manager(TSM)',
-    },
-    { id: '2', text: 'District Sales Manager(DSM)' },
-    { id: '3', text: 'Regional Sales Manager(RSM)' },
-  ];
 
-  totalManullayManageEmployees = 0;
-  loading = false;
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  selectedPageSize = 1; // default value
 
+  // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
   };
 
-  pinnedTopRowDataPlanning: AccessLevelColumns[] = [
+  pinnedTopRowDataPlanning: UploadDocumentColumns[] = [
     {
+      documentId: '',
+      documentName: '',
+      version: '',
+      documentTypeId: null,
       divisionId: null,
       departmentId: null,
       subDepartmentId: null,
-      userId: null,
+      nextReviewDate: null,
+      uploadDocument: null,
       isNewRow: true,
     },
   ];
 
-  private loadSampleData(): void {
-    this.manualUserData = [
-      {
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        userId: '1',
-        UserName: 'Territory Sales Manager(TSM)',
-        isActive: true,
-      },
-      {
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        userId: '2',
-        documentTypeName: 'District Sales Manager(DSM)',
-        isActive: true,
-      },
-    ];
+  constructor(
+    private _documentService: DocumentService,
+    private _documentTypeService: DocumentTypeCacheService,
+    private _divisionServices: DivisionCacheService,
+    private _departmentCacheService: DepartmentCacheService,
+    private _subDepartmentServices: SubDepartmentCacheService,
+    private _notification: NotificationService
+  ) {}
+
+  ngOnInit() {
+    this.GetAllUploadedDocuments({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
+    this.getAllDocumentTypes();
+    this.getAllDivisionList();
+    this.getAllDepartmentList();
+    this.getAllSubDepartmentList();
   }
 
   private getColumns(): GridColumn[] {
     return [
+      {
+        field: 'documentId',
+        headerName: 'Document Id',
+        type: 'text',
+        minWidth: 150,
+        pinned: 'left',
+        required: true,
+      },
+      {
+        field: 'documentName',
+        headerName: 'Document Name',
+        type: 'text',
+        minWidth: 150,
+        pinned: 'left',
+        required: true,
+      },
+      {
+        field: 'version',
+        headerName: 'Version',
+        type: 'text',
+        minWidth: 150,
+        pinned: 'left',
+        required: true,
+      },
+      // DOCUMENT TYPES
+      {
+        field: 'documentTypeId',
+        headerName: 'Document Type',
+        type: 'dropdown',
+        dropdownOptions: this.documentTypes,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        minWidth: 180,
+        required: true,
+      },
+
       // ✅ DIVISION
       {
         field: 'divisionName',
@@ -122,36 +151,21 @@ export class DRUsersComponent {
         minWidth: 180,
         required: true,
       },
-      // DOCUMENT TYPES
+
       {
-        field: 'userId',
-        headerName: 'User',
-        type: 'dropdown',
-        dropdownOptions: this.users,
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
+        field: 'nextReviewDate',
+        headerName: 'Next Review Date',
+        type: 'date',
+        required: true,
+      },
+
+      {
+        field: 'uploadDocument',
+        headerName: 'Upload Document',
+        type: 'file',
         required: true,
       },
     ];
-  }
-
-  constructor(
-    private _userService: UserService,
-    private _documentTypeService: DocumentTypeCacheService,
-    private _divisionServices: DivisionCacheService,
-    private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService,
-    private _notification : NotificationService
-  ) {
-    this.loadSampleData();
-  }
-
-  ngOnInit() {
-    this.getAllDocumentTypes();
-    this.getAllDivisionList();
-    this.getAllDepartmentList();
-    this.getAllSubDepartmentList();
   }
 
   private buildGrid(): void {
@@ -174,13 +188,13 @@ export class DRUsersComponent {
     };
   }
 
-  GetAllManuallyManageEmployee(query: any) {
+  GetAllUploadedDocuments(query: any) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
     const pageSize = Number(query?.pageSize) || 10;
 
-    this._userService
-      .GetAllUser(
+    this._documentService
+      .GetAllDocument(
         query?.filterModel?.Name?.filter || '',
         sort?.sort?.toUpperCase() || 'ASC',
         sort?.colId || 'Name',
@@ -189,32 +203,36 @@ export class DRUsersComponent {
         pageSize
       )
       .subscribe((res) => {
-        if (res?.Success && res.Data?.Items) {
-          this.totalManullayManageEmployees = res.Data.TotalCount;
-          this.manualUserData = res.Data.Items.map((item: any) => ({
-            Id: item.id || item.Id,
-            EmployeeCode: item.employeeCode || item.EmployeeCode,
-            UserName: item.userName || item.UserName,
-            Grade: item.grade || item.Grade,
-            DivisionCode: item.divisionCode || item.DivisionCode,
-            DivisionName: item.divisionCode || item.DivisionCode,
-            DepartmentCode: item.departmentCode || item.DepartmentCode,
-            DepartmentName: item.departmentCode || item.DepartmentCode,
-            SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            SubDepartmentName: item.subDepartmentCode || item.SubDepartmentCode,
-            ReportingTo: item.reportingTo || item.ReportingTo,
-            DateOfJoining: item.dateOfJoining || item.DateOfJoining,
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            Description: item.description || item.Description,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: item.createdAt || item.CreatedAt || '',
+        const items = res?.Data?.Items;
+        console.log(items);
+        if (Array.isArray(items)) {
+          this.uploadedDocumentsData = items.map((item: any) => ({
+            Id: item.Id,
+            documentTypeId: item.DocumentType,
+            documentTypeName: item.DocumentTypeCode,
+            divisionName: item.Division,
+            divisionId: item.DivisionCode,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            DocumentCode: item.DocumentCode,
+            departmentName: item.Department,
+            departmentId: item.DepartmentCode,
+            subDepartmentName: item.SubDepartment,
+            subDepartmentId: item.SubDepartmentCode,
+            EffectiveFrom: item.EffectiveFrom,
+            EffectiveTo: item.EffectiveTo,
+            DocumentURL: item.DocumentURL,
+            nextReviewDate: item.NextReviewDate,
+            CreatedAt: item.CreatedAt,
+            CreatedBy: item.CreatedBy,
+            LastModifiedAt: item.LastModifiedAt,
+            LastModifiedBy: item.LastModifiedBy,
           }));
-          //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {
-          this.manualUserData = [];
+          this.uploadedDocumentsData = [];
         }
-        //this.cdr.detectChanges(); // force update
+
+        console.log('RowData length:', this.uploadedDocumentsData.length);
       });
   }
 
@@ -228,34 +246,63 @@ export class DRUsersComponent {
     // Store grid API if needed for external operations
   }
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
-    debugger;
-    // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      divisionCode: newRow.DivisionName || newRow.divisionName,
-      departmentCode: newRow.DepartmentName || newRow.departmentName,
-      subDepartmentCode: newRow.SubDepartmentCode || newRow.subDepartmentName,
-      userId: newRow.userId || newRow.userId,
-    };
+  @ViewChild('gridWrapper') gridWrapper!: EditableAgGridWrapper;
 
-    this._userService.create(payLoad).subscribe(() => {
+  onRowAdded(event: { rowData: any; file?: File }): void {
+     
+    const { rowData, file } = event;
+
+    if (!file) {
+      this._notification.createNotification(
+        'error',
+        'Document',
+        'Please select a file before saving.'
+      );
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append('DocumentNumber', rowData.documentId);
+    formData.append('DocumentName', rowData.documentName);
+    formData.append('DocumentTypeCode', rowData.documentTypeId);
+    formData.append('DivisionCode', rowData.divisionName);
+    formData.append('DepartmentCode', rowData.departmentName);
+    formData.append('SubDepartmentCode', rowData.subDepartmentName);
+    formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
+
+    // ✅ REAL FILE — GUARANTEED
+    if (!(file instanceof File)) {
+      console.error('Not a File:', file);
+      return;
+    }
+
+    formData.append('DocumentFile', file, file.name);
+
+    this._documentService.create(formData).subscribe(() => {
       this._notification.createNotification(
         'success',
-        'User',
-        'User created successfully!'
-      ); 
+        'Document',
+        'Document created successfully!'
+      );
     });
+
     const rowWithId = {
-      ...newRow,
+      ...rowData,
       id: this.generateId(),
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
-      userId: this.getDisplayName(this.documentTypes, newRow.userId),
+      documentId: rowData.documentId,
+      documentName: rowData.documentName,
+      version: rowData.version,
+      nextReviewDate: rowData.nextReviewDate,
+      uploadDocument: 'Uploaded', // ❌ DO NOT store file
+      // Map dropdown IDs to display names
+      documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
+      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
     };
 
-    this.manualUserData = [rowWithId, ...this.manualUserData];
+    this.uploadedDocumentsData = [rowWithId, ...this.uploadedDocumentsData];
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
@@ -269,14 +316,14 @@ export class DRUsersComponent {
     );
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
 
-    this.manualUserData[event.index] = { ...event.rowData };
-    this.manualUserData = [...this.manualUserData]; // Trigger change detection
+    this.uploadedDocumentsData[event.index] = { ...event.rowData };
+    this.uploadedDocumentsData = [...this.uploadedDocumentsData]; // Trigger change detection
   }
 
   onRowDeleted(rowIndex: number): void {
     console.log('Row deleted at index:', rowIndex);
-    this.manualUserData.splice(rowIndex, 1);
-    this.manualUserData = [...this.manualUserData];
+    this.uploadedDocumentsData.splice(rowIndex, 1);
+    this.uploadedDocumentsData = [...this.uploadedDocumentsData];
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
@@ -289,7 +336,7 @@ export class DRUsersComponent {
       event.rowData.revisedSalary = currentSalary * (1 + incrementPercentage / 100);
 
       // Update the row
-      this.manualUserData[event.rowIndex] = { ...event.rowData };
+      this.uploadedDocumentsData[event.rowIndex] = { ...event.rowData };
     }
 
     if (event.field === 'file-preview') {
@@ -379,13 +426,20 @@ export class DRUsersComponent {
   };
 }
 
-class AccessLevelColumns {
+class UploadDocumentColumns {
+  documentId: string = '';
+  documentName: string = '';
+  version: string = '';
+  documentTypeId: string | null = null;
+  //documentType: string = '';
+
   divisionId: string | null = null;
   //division: string | null = null;
   departmentId: string | null = null;
   //department: string | null = null;
   subDepartmentId: string | null = null;
   //subDepartment: string | null = null;
-  userId: string | null = null;
+  nextReviewDate: string | null = null;
+  uploadDocument: any = null;
   isNewRow: boolean = false;
 }

@@ -1,26 +1,31 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
+import { DocumentService } from '@app/shared/services/document.service';
 import { UserService } from '@app/shared/services/user-service';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
+import { UploadDocuments } from '../upload-documents/upload-documents';
+import { UploadedDocuments } from '../uploaded-documents/uploaded-documents';
 
 @Component({
   selector: 'app-upload-old-documents',
-  imports: [CommonModule, AgGridWrapper, EditableAgGridWrapper],
+  imports: [CommonModule, UploadDocuments, UploadedDocuments],
   templateUrl: './upload-old-documents.html',
   styleUrl: './upload-old-documents.css',
 })
 export class UploadOldDocuments {
   gridConfig: GridConfig = {} as GridConfig;
+  private fileStore = new Map<number, File>();
 
   selectedTab: string = 'Upload';
   uploadedDocumentsData: any[] = [];
@@ -128,11 +133,12 @@ export class UploadOldDocuments {
   ];
 
   constructor(
-    private _userService: UserService,
+    private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService
+    private _subDepartmentServices: SubDepartmentCacheService,
+    private _notification: NotificationService
   ) {
     this.loadSampleData();
   }
@@ -331,40 +337,60 @@ export class UploadOldDocuments {
     // Store grid API if needed for external operations
   }
 
-  handleGridAction(event: { action: string; rowData: any }) {}
+  @ViewChild('gridWrapper') gridWrapper!: EditableAgGridWrapper;
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
+  onRowAdded(event: { rowData: any; file?: File }): void {
     debugger;
-    // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      documentId: newRow.DocumentId || newRow.documentId,
-      documentName: newRow.DocumentName || newRow.documentName,
-      version: newRow.Version || newRow.version,
-      documentTypeId : newRow.DocumentTypeId || newRow.documentTypeId,
-      divisionCode: newRow.DivisionName || newRow.divisionName,
-      departmentCode: newRow.DepartmentName || newRow.departmentName,
-      subDepartmentCode: newRow.SubDepartmentName || newRow.subDepartmentName,
-      nextReviewDate: newRow.NextReviewDate || newRow.nextReviewDate,
-      uploadDocument: newRow.UploadDocument || newRow.uploadDocument
-    };
+    const { rowData, file } = event;
 
-    this._userService.create(payLoad).subscribe(() => {
-      console.log('Created');
+    if (!file) {
+      this._notification.createNotification(
+        'error',
+        'Document',
+        'Please select a file before saving.'
+      );
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append('DocumentNumber', rowData.documentId);
+    formData.append('DocumentName', rowData.documentName);
+    formData.append('DocumentTypeCode', rowData.documentTypeId);
+    formData.append('DivisionCode', rowData.divisionName);
+    formData.append('DepartmentCode', rowData.departmentName);
+    formData.append('SubDepartmentCode', rowData.subDepartmentName);
+    formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
+
+    // ✅ REAL FILE — GUARANTEED
+    if (!(file instanceof File)) {
+      console.error('Not a File:', file);
+      return;
+    }
+
+    formData.append('DocumentFile', file, file.name);
+
+    this._documentService.create(formData).subscribe(() => {
+      this._notification.createNotification(
+        'success',
+        'Document',
+        'Document created successfully!'
+      );
     });
+
     const rowWithId = {
-      ...newRow,
+      ...rowData,
       id: this.generateId(),
-      documentId: newRow.documentId,
-      documentName: newRow.documentName,
-      version: newRow.version, 
-      nextReviewDate: newRow.nextReviewDate,
-      uploadDocument: newRow.uploadDocument,
+      documentId: rowData.documentId,
+      documentName: rowData.documentName,
+      version: rowData.version,
+      nextReviewDate: rowData.nextReviewDate,
+      uploadDocument: 'Uploaded', // ❌ DO NOT store file
       // Map dropdown IDs to display names
-      documentTypeId: this.getDisplayName(this.documentTypes, newRow.documentTypeId),
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
+      documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
+      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
     };
 
     this.uploadedDocumentsData = [rowWithId, ...this.uploadedDocumentsData];

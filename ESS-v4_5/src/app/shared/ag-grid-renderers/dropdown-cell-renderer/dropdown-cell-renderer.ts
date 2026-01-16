@@ -45,28 +45,62 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     onValueChange?: (value: number, data: any) => void;
   };
 
-  agInit(params: any): void { 
+  agInit(params: any): void {
+
     this.params = params;
 
-    // 🔥 FIX 1: always read value from rowData
     const field = params.colDef.field as string;
-    this.selectedValue = params.data?.[field] ?? null;
+    const rawValue = params.data?.[field];
 
-    // 🔥 FIX 2: accept string/number IDs
     this.options = params.options || [];
 
-    // console.log('DOCUMENT TYPE INIT', {
-    //   value: this.selectedValue,
-    //   options: this.options,
-    // });
+    // 🔥 FORCE type match (number ↔ number)
+    if (rawValue !== null && rawValue !== undefined) {
+      const matched = this.options.find((o) => o.id == rawValue);
+      this.selectedValue = matched ? matched.id : null;
+    } else {
+      this.selectedValue = null;
+    }
   }
+
+  // agInit(params: any): void {
+  //   this.params = params;
+
+  //   // 🔥 FIX 1: always read value from rowData
+  //   const field = params.colDef.field as string;
+  //   this.selectedValue = params.data?.[field] ?? null;
+
+  //   // 🔥 FIX 2: accept string/number IDs
+  //   this.options = params.options || [];
+
+  //   // console.log('DOCUMENT TYPE INIT', {
+  //   //   value: this.selectedValue,
+  //   //   options: this.options,
+  //   // });
+  // }
 
   refresh(params: any): boolean {
     const field = params.colDef.field as string;
-    this.selectedValue = params.data?.[field] ?? null;
+    const rawValue = params.data?.[field];
+
     this.options = params.options || [];
+
+    if (rawValue !== null && rawValue !== undefined) {
+      const matched = this.options.find((o) => o.id == rawValue);
+      this.selectedValue = matched ? matched.id : null;
+    } else {
+      this.selectedValue = null;
+    }
+
     return true;
   }
+
+  // refresh(params: any): boolean {
+  //   const field = params.colDef.field as string;
+  //   this.selectedValue = params.data?.[field] ?? null;
+  //   this.options = params.options || [];
+  //   return true;
+  // }
 
   onSelectionChange(value: any): void {
     const field = this.params.colDef?.field as string;

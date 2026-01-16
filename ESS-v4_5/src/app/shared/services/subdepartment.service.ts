@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
-import { SubDepartment } from '../interfaces/interfaces';
+import { ApiResponse, SubDepartment } from '../interfaces/interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class SubDepartmentService {
@@ -64,16 +64,23 @@ export class SubDepartmentService {
     });
   }
 
-  create(payload: { Code: string; Name: string; IsActive: boolean; IsDeleted: boolean }) {
-    return this.http.post(`${environment.baseUrl}/DMSSubDepartment/create-subdepartment`, payload);
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSSubDepartment/create-subdepartment`,
+      payload
+    );
   }
 
   update(payload: any) {
-    return this.http.put(`${environment.baseUrl}/DMSSubDepartment/update-subdepartment`, payload);
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSSubDepartment/update-subdepartment`,
+      payload
+    );
   }
 
   delete(code: string) {
-    return this.http.delete(`${environment.baseUrl}/DMSSubDepartment/delete-subdepartment/${code}`);
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSSubDepartment/delete-subdepartment/${code}`
+    );
   }
- 
 }

@@ -10,7 +10,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-//import { ColDef, GridReadyEvent } from 'ag-grid-community';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 import {
   ClientSideRowModelModule,
   ColDef,
@@ -23,11 +24,12 @@ import {
   ModuleRegistry,
   ValidationModule,
 } from 'ag-grid-community';
+import { GridConfig } from '../editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 
 @Component({
   selector: 'app-ag-grid-wrapper',
   standalone: true,
-  imports: [CommonModule, AgGridAngular],
+  imports: [CommonModule, AgGridAngular, NzAlertModule, NzSpinModule],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
 })
@@ -39,7 +41,8 @@ export class AgGridWrapper implements OnInit {
   @Input() totalRows = 0;
   @Input() gridStyle: any = {};
   @Input() gridId!: string;
-
+  @Input() isSelectionRequired: boolean = true;
+  @Output() rowEdited = new EventEmitter<any>();
   @Input() pageSizeOptions = [10, 20, 30, 50];
   // @Input() pageSizeOptions = [1, 2, 3, 50];
   @Input() defaultPageSize = 10;
@@ -54,9 +57,27 @@ export class AgGridWrapper implements OnInit {
     filterModel: any;
   }>();
 
-  @Output() rowEdited = new EventEmitter<any>();
-
+  finalColumnDefs: ColDef[] = [];
+  gridContext: any;
   gridApi!: GridApi;
+
+  @Input() config: GridConfig = {
+    columns: [],
+    enablePagination: true,
+    pageSize: 10,
+    pageSizeOptions: [10, 20, 50, 100],
+    enableSorting: true,
+    enableFiltering: true,
+    enableSelection: true,
+    enableInlineAdd: false,
+    enableInlineEdit: false,
+    enableInlineDelete: false,
+    rowHeight: 47,
+    headerHeight: 40,
+    domLayout: 'autoHeight',
+    theme: 'ag-theme-alpine',
+    suppressCellFocus: true,
+  };
 
   private isGridInitialized = false;
 
@@ -67,13 +88,48 @@ export class AgGridWrapper implements OnInit {
   constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    //this.pageSize = this.defaultPageSize;
+    this.buildFinalColumnDefs();
+  }
+
+  private buildFinalColumnDefs(): void {
+    const cols: ColDef[] = [];
+
+    // ✅ Inject selection column if enabled
+    if (this.isSelectionRequired) {
+      cols.push(this.createSelectionColumn());
+    }
+
+    // ✅ Append parent columns AS-IS
+    cols.push(...this.columnDefs);
+
+    this.finalColumnDefs = cols;
+  }
+
+  private createSelectionColumn(): ColDef {
+    return {
+      headerName: '',
+      width: 50,
+      pinned: 'left',
+      lockPosition: true,
+      sortable: false,
+      filter: false,
+      resizable: false,
+
+      checkboxSelection: true, // row checkbox
+      headerCheckboxSelection: true, // header select-all checkbox
+      headerCheckboxSelectionFilteredOnly: true, // select only filtered rows (recommended)
+
+      cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+    };
   }
 
   gridOptions: GridOptions = {
-    context: {
-      componentParent: this,
-    },
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
   };
 
   ngOnChanges(changes: SimpleChanges) {
@@ -86,6 +142,11 @@ export class AgGridWrapper implements OnInit {
       //console.log('Updated totalPages:', this.totalPages, 'pageNumber:', this.pageNumber);
       this.cdr.detectChanges();
     }
+  }
+
+  onSelectionChanged() {
+    const selectedRows = this.gridApi.getSelectedRows();
+    console.log('Selected rows:', selectedRows);
   }
 
   goToPage(page: number) {

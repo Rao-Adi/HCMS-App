@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { AttributeMandatoryScope } from '../interfaces/interfaces';
+import { ApiResponse, AttributeMandatoryScope } from '../interfaces/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -27,7 +27,7 @@ export class AttributeMandatoryScopeService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAttributeMandatoryList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
@@ -37,7 +37,7 @@ export class AttributeMandatoryScopeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllAttributeMandatoryScopes(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
@@ -61,80 +61,23 @@ export class AttributeMandatoryScopeService {
     });
   }
 
-  create(shortcut: AttributeMandatoryScope): Observable<AttributeMandatoryScope> {
-    return this.cabietStructureConfig$.pipe(
-      take(1),
-      switchMap((cabietStructureConfig) =>
-        this.http
-          .post<AttributeMandatoryScope>(
-            '/DMSAttributeMandatoryScope/create-attribute-mandatory-scopes',
-            { shortcut }
-          )
-          .pipe(
-            map((newcabietStructureConfig) => {
-              // Update the cabietStructureConfig with the new shortcut
-              this._cabietStructureConfig.next([
-                ...cabietStructureConfig,
-                newcabietStructureConfig,
-              ]);
-
-              // Return the new shortcut from observable
-              return newcabietStructureConfig;
-            })
-          )
-      )
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSAttributeMandatoryScope/create-attribute-mandatory-scopes`,
+      payload
     );
   }
 
-  update(shortcut: AttributeMandatoryScope): Observable<AttributeMandatoryScope> {
-    const payload = {
-      id: shortcut.id,
-      name: shortcut.departmentCode,
-      isActive: true,
-    };
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json-patch+json',
-      accept: '*/*',
-    });
-
-    return this.http
-      .put<AttributeMandatoryScope>(
-        `${environment.baseUrl}/DMSAttributeMandatoryScope/update-attribute-mandatory-scopes`,
-        payload,
-        {
-          headers,
-        }
-      )
-      .pipe(
-        tap((updated) => {
-          // 🔹 Update cached state AFTER API success
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            const index = list.findIndex((i) => i.id === updated.id);
-            if (index !== -1) {
-              const newList = [...list];
-              newList[index] = updated;
-              this._cabietStructureConfig.next(newList);
-            }
-          });
-        })
-      );
+  update(payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSAttributeMandatoryScope/update-attribute-mandatory-scopes`,
+      payload
+    );
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http
-      .delete<boolean>(
-        `${environment.baseUrl}/DMSAttributeMandatoryScope/delete-attribute-mandatory-scopes`,
-        {
-          params: { id },
-        }
-      )
-      .pipe(
-        tap(() => {
-          this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-            this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-          });
-        })
-      );
+  delete(code: string) {
+    return this.http.delete<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSAttributeMandatoryScope/delete-attribute-mandatory-scopes/${code}`
+    );
   }
 }

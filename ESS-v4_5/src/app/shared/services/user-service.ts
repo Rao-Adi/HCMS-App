@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
-import { User } from '../interfaces/interfaces';
+import { ApiResponse, User } from '../interfaces/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -61,78 +61,15 @@ export class UserService {
     });
   }
 
-   create(payload: any) {
-    return this.http.post(`${environment.baseUrl}/DMSUser/create-user`, payload);
+  create(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/create-user`, payload);
   }
 
   update(payload: any) {
-    return this.http.put(`${environment.baseUrl}/DMSUser/update-user`, payload);
+    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/update-user`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete(`${environment.baseUrl}/DMSUser/delete-user/${code}`);
+    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/delete-user/${code}`);
   }
-
-  // create(shortcut: User): Observable<User> {
-  //   return this.cabietStructureConfig$.pipe(
-  //     take(1),
-  //     switchMap((cabietStructureConfig) =>
-  //       this.http.post<User>('/DMSUser/create-user', { shortcut }).pipe(
-  //         map((newcabietStructureConfig) => {
-  //           // Update the cabietStructureConfig with the new shortcut
-  //           this._cabietStructureConfig.next([...cabietStructureConfig, newcabietStructureConfig]);
-
-  //           // Return the new shortcut from observable
-  //           return newcabietStructureConfig;
-  //         })
-  //       )
-  //     )
-  //   );
-  // }
-
-  // update(shortcut: User): Observable<User> {
-  //   const payload = {
-  //     id: shortcut.id,
-  //     departmentCode: shortcut.departmentCode,
-  //     isActive: true,
-  //   };
-
-  //   const headers = new HttpHeaders({
-  //     'Content-Type': 'application/json-patch+json',
-  //     'x-api-version': '1.0',
-  //     accept: '*/*',
-  //   });
-
-  //   return this.http
-  //     .put<User>(`${environment.baseUrl}/DMSUser/update-user`, payload, {
-  //       headers,
-  //     })
-  //     .pipe(
-  //       tap((updated) => {
-  //         // 🔹 Update cached state AFTER API success
-  //         this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-  //           const index = list.findIndex((i) => i.id === updated.id);
-  //           if (index !== -1) {
-  //             const newList = [...list];
-  //             newList[index] = updated;
-  //             this._cabietStructureConfig.next(newList);
-  //           }
-  //         });
-  //       })
-  //     );
-  // }
-
-  // delete(id: string): Observable<boolean> {
-  //   return this.http
-  //     .delete<boolean>(`${environment.baseUrl}/DMSUser/delete-user`, {
-  //       params: { id },
-  //     })
-  //     .pipe(
-  //       tap(() => {
-  //         this.cabietStructureConfig$.pipe(take(1)).subscribe((list) => {
-  //           this._cabietStructureConfig.next(list.filter((item) => item.id !== id));
-  //         });
-  //       })
-  //     );
-  // }
 }

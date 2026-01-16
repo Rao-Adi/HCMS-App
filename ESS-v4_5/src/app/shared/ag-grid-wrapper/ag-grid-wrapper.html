@@ -15,20 +15,39 @@
   class="ag-theme-alpine"
   [ngStyle]="gridStyle"
   [rowData]="rowData"
-  [columnDefs]="columnDefs"
+  [gridOptions]="gridOptions"
+  [columnDefs]="finalColumnDefs"
   [defaultColDef]="defaultColDef"
   [context]="{ componentParent: this }"
-  [pagination]="false"
+  [pagination]="true"
+  [rowHeight]="config.rowHeight"
+  [headerHeight]="config.headerHeight"
+  [pagination]="config.enablePagination"
+  [context]="gridContext"
+
+  
+  [paginationPageSize]="config.pageSize"
+  [paginationPageSizeSelector]="config.pageSizeOptions"
+  [suppressCellFocus]="config.suppressCellFocus"
   (gridReady)="onGridReady($event)"
   (sortChanged)="onSortChanged()"
   (filterChanged)="onFilterChanged()"
   (cellValueChanged)="onCellValueChanged($event)"
   (cellClicked)="onCellClicked($event)"
+  (selectionChanged)="onSelectionChanged()"
 >
 </ag-grid-angular>
+<!-- 
+<nz-spin nzTip="Loading...">
+      <nz-alert
+        nzType="info"
+        nzMessage="Alert message title"
+        nzDescription="Further details about the context of this alert."
+      ></nz-alert>
+    </nz-spin> -->
 
 <!-- Pagination Footer -->
-<div class="ag-paging-panel">
+<!-- <div class="ag-paging-panel">
   <div class="ag-paging-row-summary">
     Page {{ pageNumber }} of {{ totalPages }} ({{ totalRows }} rows)
   </div>
@@ -68,7 +87,7 @@
       </select>
     </span>
   </div>
-</div>
+</div> -->
 
 <!-- <ag-grid-angular
   class="ag-theme-alpine"
