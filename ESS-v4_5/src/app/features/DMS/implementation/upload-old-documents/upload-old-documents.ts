@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { Component, ViewChild } from '@angular/core'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -11,9 +10,8 @@ import { DepartmentCacheService } from '@app/shared/services/CacheServices/depar
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
-import { DocumentService } from '@app/shared/services/document.service';
-import { UserService } from '@app/shared/services/user-service';
-import { ColDef, ValueFormatterParams } from 'ag-grid-community';
+import { DocumentService } from '@app/shared/services/document.service'; 
+import { ColDef } from 'ag-grid-community';
 import { UploadDocuments } from '../upload-documents/upload-documents';
 import { UploadedDocuments } from '../uploaded-documents/uploaded-documents';
 

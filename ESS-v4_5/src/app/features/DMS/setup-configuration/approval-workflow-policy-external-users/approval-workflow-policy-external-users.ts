@@ -1,10 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { FormsModule } from '@angular/forms'; 
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -17,6 +14,7 @@ import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
+import { UserService } from '@app/shared/services/user-service';
 
 @Component({
   selector: 'app-approval-workflow-policy-external-users',
@@ -56,11 +54,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
     { CODE: '6', NAME: 'Head of Department' },
     { CODE: '7', NAME: 'Head of Sub-Department' },
   ];
-  employees: SelectList[] = [
-    { CODE: '1', NAME: 'John Doe' },
-    { CODE: '2', NAME: 'Jane Smith' },
-    { CODE: '3', NAME: 'Alice Johnson' },
-  ];
+  employees: any[] = [];
 
   workflowExclude: SelectList[] = [
     { CODE: '1', NAME: 'Designation' },
@@ -70,10 +64,11 @@ export class ApprovalWorkflowPolicyExternalUsers {
 
   selectedAuthorityType: number | null = null;
 
-  constructor() {}
+  constructor(private _userService: UserService) {}
 
   ngOnInit() {
     //this.loadData(this.pageSize);
+    this.getAllUsersList();
   }
 
   onAuthorityTypeChange(value: number | null): void {
@@ -102,4 +97,17 @@ export class ApprovalWorkflowPolicyExternalUsers {
   addExclusion() {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
+
+  getAllUsersList = () => {
+    this._userService.getUserList().subscribe((res) => {
+      if (res?.Data) {
+        this.employees = (res.Data ?? []).map((d: any) => ({
+          CODE: d.Code,
+          NAME: d.Value,
+        }));
+      } else {
+        this.employees = [];
+      }
+    });
+  };
 }

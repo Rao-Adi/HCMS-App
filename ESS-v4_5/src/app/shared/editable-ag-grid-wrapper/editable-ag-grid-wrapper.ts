@@ -7,6 +7,7 @@ import {
   OnChanges,
   ViewChild,
   OnInit,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +34,9 @@ import { CascadeDropdownCellRenderer } from '../ag-grid-renderers/cascade-dropdo
 import { LinkRenderer } from '../ag-grid-renderers/link-renderer/link-renderer';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
 
 export interface GridColumn {
   field: string;
@@ -43,6 +47,7 @@ export interface GridColumn {
     | 'dropdown'
     | 'date'
     | 'checkbox'
+    | 'switch'
     | 'file'
     | 'action'
     | 'readonly'
@@ -114,13 +119,21 @@ export interface GridConfig {
 @Component({
   selector: 'app-editable-ag-grid-wrapper',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular, NzAlertModule, NzSpinModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AgGridAngular,
+    NzAlertModule,
+    NzSpinModule,
+    NzInputModule,
+    NzIconModule,
+  ],
   templateUrl: './editable-ag-grid-wrapper.html',
   styleUrl: './editable-ag-grid-wrapper.css',
 })
 export class EditableAgGridWrapper implements OnInit, OnChanges {
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
-
+  @Input() isSelectionRequired: boolean = true;
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -217,7 +230,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
     // Add action column if inline edit/delete is enabled
     if (this.config.enableInlineEdit || this.config.enableInlineDelete) {
-      this.columnDefs.push(this.createActionColumn());
+      if (this.isSelectionRequired) {
+        this.columnDefs.push(this.createActionColumn());
+      }
     }
 
     // Build columns from config
@@ -374,7 +389,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         };
 
         colDef.valueFormatter = (params) => {
-          
           if (!params.value) return '';
 
           const options = column.dropdownOptions || [];
@@ -590,7 +604,29 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       case 'action':
         // Already handled by action column
         break;
+      case 'switch':
+        colDef.cellRendererSelector = (params: any) => {
+          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+            return {
+              component: column.customRenderer || SwitchRenderer,
+              params: {
+                value: params.data?.[column.field],
+                onValueChange: (value: any, data: any) => {
+                  debugger;
+                  data[column.field] = value;
+                  this.emitCellValueChanged(column.field, value, data, params.rowIndex);
+                },
+                ...column.customRendererParams,
+              },
+            };
+          }
+          return { component: HighlightCellRenderer };
+        };
 
+        colDef.valueFormatter = (params) => {
+          return params.value ? 'Yes' : 'No';
+        };
+        break;
       default:
         // Use HighlightCellRenderer for non-editable columns
         colDef.cellRenderer = HighlightCellRenderer;
@@ -598,7 +634,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
     return colDef;
   }
-
   private getContextData(): any {
     // Return data that can be accessed by renderers via context
     return {
@@ -667,8 +702,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       params.valueFormatted != null
         ? String(params.valueFormatted)
         : params.value == null
-        ? ''
-        : String(params.value);
+          ? ''
+          : String(params.value);
 
     const span = document.createElement('span');
     const escapeHtml = (s: string) =>
@@ -717,6 +752,18 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
     span.innerHTML = escapeHtml(text).replace(re, '<mark class="ag-hl">$1</mark>');
     return span;
+  }
+
+  onFilterTextBoxChanged() {
+    this.gridApi.setGridOption(
+      'quickFilterText',
+      (document.getElementById('filter-text-box') as HTMLInputElement).value,
+    );
+  }
+
+  readonly value = signal('');
+  onSearch(event: any): void {
+    console.log(event);
   }
 
   onGridReady(event: GridReadyEvent): void {

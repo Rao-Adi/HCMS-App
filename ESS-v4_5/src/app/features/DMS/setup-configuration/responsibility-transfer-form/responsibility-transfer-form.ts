@@ -10,17 +10,15 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
-import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
-import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { UserService } from '@app/shared/services/user-service';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzUploadChangeParam, NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
+import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
 
 @Component({
-  selector: 'app-approval-workflow-policy-management',
+  selector: 'app-responsibility-transfer-form',
   imports: [
     CommonModule,
     FormsModule,
@@ -30,49 +28,51 @@ import { UserService } from '@app/shared/services/user-service';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
-    DocumentTypeList,
-    DesignationList,
-    RoleList,
+    AgGridWrapper,
+    NzDatePickerModule,
+    NzUploadModule,
   ],
-  templateUrl: './approval-workflow-policy-management.html',
-  styleUrl: './approval-workflow-policy-management.css',
-  styles: [
-    `
-      [nz-button] {
-        margin-right: 8px;
-        margin-bottom: 12px;
-      }
-    `,
-  ],
+  templateUrl: './responsibility-transfer-form.html',
+  styleUrl: './responsibility-transfer-form.css',
 })
-export class ApprovalWorkflowPolicyManagement {
+export class ResponsibilityTransferForm {
   public noRowsOverlay: string = '';
+  footerRender = (): string => 'extra footer';
 
-  selectedTab: string = 'RequestForDocumentCreation';
+  selectedTab: string = 'Request';
   switchValue1 = false;
   switchValue2 = false;
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
-  selectedUser?: string;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedDocumentType?: string = '';
-  selectedDesignation?: string = '';
-  selectedRole?: string = '';
-  radioValue = '';
+
+  attachment: File | null = null;
+  fileList: NzUploadFile[] = [];
+
+  selectedEmployeeFrom?: any = '';
+  selectedEmployeeTo?: any = '';
+  selectedReasonForTransfer?: any = '';
+  selectedEffectiveDateFrom: Date | null = null;
+  selectedEffectiveDateTo: Date | null = null;
+  remarks?: any;
   // single state
   activeMode: 'manual' | 'integration' | null = null;
 
+  totalPendingApprovals = 0;
+  selectedPageSize = 10;
+
   pageSize = 10;
   rowData: any[] = [];
+  employees: any[] = [];
   totalRows = 0;
 
+  uploading = false;
+  statues: any[] = [
+    { id: '1', text: 'Pending' },
+    { id: '2', text: 'Approved' },
+    { id: '3', text: 'Rejected' },
+  ];
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
     { CODE: '2', NAME: 'Employee' },
@@ -82,26 +82,12 @@ export class ApprovalWorkflowPolicyManagement {
     { CODE: '6', NAME: 'Head of Department' },
     { CODE: '7', NAME: 'Head of Sub-Department' },
   ];
-  employees: any[] = [];
 
   workflowExclude: SelectList[] = [
     { CODE: '1', NAME: 'Designation' },
     { CODE: '2', NAME: 'Role' },
     { CODE: '3', NAME: 'Specific Employee' },
   ];
-
-  // Default Column Definitions: Apply configuration across all columns
-  defaultColDef: ColDef = {
-    filter: true,
-    cellDataType: false,
-  };
-
-  constructor(private _userService: UserService) {}
-
-  ngOnInit() {
-    this.loadData(this.pageSize);
-    this.getAllUsersList();
-  }
 
   UploadColumnDefs = [
     { field: 'documentId', headerName: 'Document ID' },
@@ -167,6 +153,61 @@ export class ApprovalWorkflowPolicyManagement {
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
 
+  pendingRequestApprovalColumnDefs = [
+    { field: 'requestor', headerName: 'Requestor', flex: 1 },
+    { field: 'from', headerName: 'From', flex: 1 },
+    { field: 'To', headerName: 'To', flex: 1 },
+    { field: 'reason', headerName: 'Reason', flex: 1 },
+    { field: 'status', headerName: 'Status', flex: 1 },
+  ];
+
+  pendingApprovalData: any[] = [
+    {
+      requestor: 'REQ-001',
+      from: 'Marketing Division',
+      To: 'Marketing',
+      reason: 'Digital Marketing',
+      status: 'Policy',
+    },
+    {
+      requestor: 'REQ-002',
+      from: 'Software Division',
+      To: 'IT',
+      reason: 'Software Marketing',
+      status: 'SOP',
+    },
+  ];
+
+  // Default Column Definitions: Apply configuration across all columns
+  defaultColDef: ColDef = {
+    filter: true,
+    cellDataType: false,
+  };
+
+  constructor(
+    private _userService: UserService,
+    private _notification: NotificationService,
+    private _responsibilityTransfer: ResponsibilityTransferService,
+  ) {}
+
+  ngOnInit() {
+    this.loadData(this.pageSize);
+    this.getAllUsersList();
+  }
+
+  onFileSelected(event: Event): void {
+    debugger;
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      this.attachment = null;
+      return;
+    }
+
+    this.attachment = input.files[0];
+    console.log('Selected file:', this.attachment);
+  }
+
   onSearch(value: string): void {
     this.loading = true;
     this.searchChange$.next(value);
@@ -177,29 +218,12 @@ export class ApprovalWorkflowPolicyManagement {
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;
     //reset preselected values
-    this.selectedUser = '';
-    this.selectedDivisions = '';
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-    this.selectedDocumentType = '';
-    this.selectedDesignation = '';
-    this.selectedRole = '';
     this.selectedWorkflowExclude = 0;
   }
 
   selectedWorkflowExclude: number | null = null;
   onWorkflowExcludeChange(value: number | null): void {
     this.selectedWorkflowExclude = value;
-  }
-
-  onDivisionChange(value: string): void {
-    this.selectedDivisions = value;
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-  }
-  onDepartmentsChange(value: string): void {
-    this.selectedDepartment = value;
-    this.selectedSubDepartment = '';
   }
 
   clickSwitch(mode: 'manual' | 'integration'): void {
@@ -257,11 +281,6 @@ export class ApprovalWorkflowPolicyManagement {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
 
-  onDocumentTypeChange(value: string): void {
-    // this.loading = true;
-    this.selectedDocumentType = value;
-  }
-
   getAllUsersList = () => {
     this._userService.getUserList().subscribe((res) => {
       if (res?.Data) {
@@ -274,4 +293,90 @@ export class ApprovalWorkflowPolicyManagement {
       }
     });
   };
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    const { gridId, pageSize } = event;
+
+    // this.divisionPageSize = pageSize;
+    // this.GetAllDistributionList({
+    //   pageNumber: 1,
+    //   pageSize: this.selectedPageSize,
+    //   sortModel: [], // or your current sort/filter model
+    //   filterModel: {},
+    // });
+  }
+
+  GetAllPendingApprovalRequests(query: any) {}
+
+  saveTemplate(data: any) {
+    debugger;
+
+    if (this.selectedEmployeeFrom === undefined || this.selectedEmployeeFrom === '') {
+      this._notification.createNotification(
+        'warning',
+        'Responsibity Transfer',
+        'Employee From required',
+      );
+      return;
+    } else if (this.selectedEmployeeTo === undefined || this.selectedEmployeeTo === '') {
+      this._notification.createNotification(
+        'warning',
+        'Responsibity Transfer',
+        'Employee To required',
+      );
+    } else if (
+      this.selectedReasonForTransfer === undefined ||
+      this.selectedReasonForTransfer === ''
+    ) {
+      this._notification.createNotification(
+        'warning',
+        'Responsibity Transfer',
+        'Reason For Transfer required',
+      );
+    }
+    if (!this.selectedEffectiveDateFrom) {
+      this._notification.createNotification(
+        'warning',
+        'Responsibity Transfer',
+        'Effective Date From required',
+      );
+      return;
+    } else if (this.remarks === undefined || this.remarks === '') {
+      this._notification.createNotification('warning', 'Responsibity Transfer', 'Remarks required');
+    }
+
+    const formData = new FormData();
+
+    formData.append('employeeFrom', this.selectedEmployeeFrom);
+    formData.append('employeeTo', this.selectedEmployeeTo);
+    formData.append('reasonForTransfer', this.selectedReasonForTransfer);
+    formData.append(
+      'effectiveDateFrom',
+      this.selectedEffectiveDateFrom ? new Date(this.selectedEffectiveDateFrom).toISOString() : '',
+    );
+
+    formData.append(
+      'effectiveDateTo',
+      this.selectedEffectiveDateTo ? new Date(this.selectedEffectiveDateTo).toISOString() : '',
+    );
+    formData.append('remarks', this.remarks);
+    //formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
+
+    // ✅ FILE
+    formData.append('Attachment', this.attachment!, this.attachment!.name);
+
+    this._responsibilityTransfer.create(formData).subscribe(() => {
+      this._notification.createNotification(
+        'success',
+        'Document',
+        'Document created successfully!',
+      );
+    });
+  }
+
+  private appendDate(formData: FormData, key: string, value: Date | null) {
+    if (value) {
+      formData.append(key, value.toISOString());
+    }
+  }
 }

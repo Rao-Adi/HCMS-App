@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Inject, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -12,7 +12,7 @@ import { DepartmentCacheService } from '@app/shared/services/CacheServices/depar
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { ColDef } from 'ag-grid-community';
-import { NzModalRef } from 'ng-zorro-antd/modal';
+import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-mandatory-cabinet-wise-popup',
@@ -22,6 +22,8 @@ import { NzModalRef } from 'ng-zorro-antd/modal';
 })
 export class MandatoryCabinetWisePopup {
   @Input() data: any;
+
+  cabinetId!: number;
 
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -51,12 +53,16 @@ export class MandatoryCabinetWisePopup {
 
   constructor(
     private modalRef: NzModalRef,
+    @Inject(NZ_MODAL_DATA) public modalData: any,
     private _attributeMandatoryService: AttributeMandatoryScopeService,
     private _notification: NotificationService,
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService
   ) {
+    this.cabinetId = modalData.data;
+    //console.log('Received cabinet id:', this.cabinetId);
+
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -73,9 +79,8 @@ export class MandatoryCabinetWisePopup {
       domLayout: 'autoHeight',
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
-    };
+    }; 
 
-    //this.loadSampleData();
   }
 
   ngOnInit() {
@@ -98,6 +103,7 @@ export class MandatoryCabinetWisePopup {
       departmentName: null,
       subDepartmentId: null,
       subDepartmentName: null,
+      mandatory: true,
       isNewRow: true,
     },
   ];
@@ -152,33 +158,7 @@ export class MandatoryCabinetWisePopup {
       },
     ];
   }
-
-  private loadSampleData(): void {
-    this.mandatoryCabinetData = [
-      {
-        documentTypeId: 'DT1',
-        documentTypeName: 'SOP',
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        mandatory: true,
-      },
-      {
-        documentTypeId: 'DT1',
-        documentTypeName: 'SOP',
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        mandatory: true,
-      },
-    ];
-  }
+ 
 
   private buildGrid(): void {
     this.gridConfig = {
@@ -215,19 +195,17 @@ export class MandatoryCabinetWisePopup {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    debugger;
     const { rowData } = event;
 
     const payLoad = {
-      documentAttributeId: this.data.documentAttributeId,
-      DivisionCode: this.getDisplayName(this.divisions, rowData.divisionName),
-      DepartmentCode: this.getDisplayName(this.departments, rowData.departmentName),
-      SubDepartmentCode: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
-      mandatory: rowData.mandatory,
+      documentAttributeId: this.cabinetId,
+      DivisionCode: rowData.divisionName,
+      DepartmentCode: rowData.departmentName,
+      SubDepartmentCode: rowData.subDepartmentName,
+      isMandatory: rowData.mandatory,
       IsActive: true,
       IsDeleted: false,
     };
-    debugger;
     this._attributeMandatoryService.create(payLoad).subscribe({
       next: () => {
         this._notification.createNotification(
@@ -235,6 +213,18 @@ export class MandatoryCabinetWisePopup {
           'Document Attribute',
           'Document Attribute created successfully!'
         );
+
+        const rowWithId = {
+          ...rowData,
+          id: this.generateId(),
+          // Map dropdown IDs to display names
+          divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+          departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+          subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+          mandatory: this.getDisplayName(this.mandatoryOptions, rowData.mandatory),
+        };
+
+        this.mandatoryCabinetData = [rowWithId, ...this.mandatoryCabinetData];
       },
       error: (err) => {
         console.error('Create Document Attribute failed:', err);
@@ -252,37 +242,58 @@ export class MandatoryCabinetWisePopup {
         this._notification.createNotification('error', 'Document Attribute', message);
       },
     });
-
-    const rowWithId = {
-      ...rowData,
-      id: this.generateId(),
-      // Map dropdown IDs to display names
-      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
-      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
-      mandatory: this.getDisplayName(this.mandatoryOptions, rowData.mandatory),
-    };
-
-    this.mandatoryCabinetData = [rowWithId, ...this.mandatoryCabinetData];
   }
 
-  onRowUpdated(event: { rowData: any; index: number }): void {
-    debugger;
+  onRowUpdated(event: { rowData: any }): void {
+    const { rowData } = event;
+    
     console.log('Row updated:', event);
     // Update display names
-    event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    event.rowData.departmentName = this.getDisplayName(
-      this.departments,
-      event.rowData.departmentId
-    );
-    event.rowData.subDepartmentName = this.getDisplayName(
-      this.subDepartments,
-      event.rowData.subDepartmentId
-    );
-    event.rowData.mandatory = this.getDisplayName(this.mandatoryOptions, event.rowData.mandatory);
+    const payLoad = {
+      documentAttributeId: this.cabinetId,
+      DivisionCode: rowData.divisionName,
+      DepartmentCode: rowData.departmentName,
+      SubDepartmentCode: rowData.subDepartmentName,
+      mandatory: rowData.mandatory,
+      IsActive: true,
+      IsDeleted: false,
+    }; 
+    this._attributeMandatoryService.update(payLoad).subscribe({
+      next: () => {
+        this._notification.createNotification(
+          'success',
+          'Document Attribute',
+          'Document Attribute created successfully!'
+        );
 
-    this.mandatoryCabinetData[event.index] = { ...event.rowData };
-    this.mandatoryCabinetData = [...this.mandatoryCabinetData]; // Trigger change detection
+        const rowWithId = {
+          ...rowData,
+          id: this.generateId(),
+          // Map dropdown IDs to display names
+          divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+          departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+          subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+          mandatory: this.getDisplayName(this.mandatoryOptions, rowData.mandatory),
+        };
+
+        this.mandatoryCabinetData = [rowWithId, ...this.mandatoryCabinetData];
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
+    });
   }
 
   onRowDeleted(rowIndex: number): void {
@@ -344,35 +355,20 @@ export class MandatoryCabinetWisePopup {
     const pageSize = Number(query?.pageSize) || 10;
 
     this._attributeMandatoryService
-      .GetAllAttributeMandatoryScopes(
-        query?.filterModel?.Name?.filter || '',
-        sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
-        true,
-        pageNumber,
-        pageSize
-      )
+      .getAttributeMandatoryScopesById(this.cabinetId)
       .subscribe((res) => {
         const items = res?.Data?.Items;
-        console.log(items);
+        //console.log(items);
         if (Array.isArray(items)) {
           this.mandatoryCabinetData = items.map((item: any) => ({
             Id: item.Id,
-            documentTypeId: item.DocumentType,
-            documentTypeName: item.DocumentTypeCode,
             divisionName: item.Division,
             divisionId: item.DivisionCode,
-            documentId: item.DocumentNumber,
-            documentName: item.DocumentName,
-            DocumentCode: item.DocumentCode,
             departmentName: item.Department,
             departmentId: item.DepartmentCode,
             subDepartmentName: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
-            EffectiveFrom: item.EffectiveFrom,
-            EffectiveTo: item.EffectiveTo,
-            DocumentURL: item.DocumentURL,
-            nextReviewDate: item.NextReviewDate,
+            mandatory: item.IsMandatory,
             CreatedAt: item.CreatedAt,
             CreatedBy: item.CreatedBy,
             LastModifiedAt: item.LastModifiedAt,
@@ -474,5 +470,6 @@ class UploadDocumentColumns {
   departmentName: string | null = null;
   subDepartmentId: string | null = null;
   subDepartmentName: string | null = null;
+  mandatory: boolean = false;
   isNewRow: boolean = false;
 }

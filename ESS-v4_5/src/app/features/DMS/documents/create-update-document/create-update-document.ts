@@ -58,6 +58,7 @@ export class CreateUpdateDocument {
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
+  selectedTrainingMode?: string ='';
 
   constructor(
     private _divisionServices: DivisionService,

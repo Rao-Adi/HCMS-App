@@ -161,6 +161,18 @@ export class MenuComponent implements OnDestroy {
             NavigateUrl: '/setups-configurations/esignature',
             Class: 'menu-l2',
           },
+          {
+            Text: 'Responsibility Transfer Form',
+            Value: 'responsibility-transfer-form',
+            NavigateUrl: '/setups-configurations/responsibility-transfer-form',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Responsibility Transfer Workflow',
+            Value: 'responsibility-transfer-workflow',
+            NavigateUrl: '/setups-configurations/responsibility-transfer-workflow',
+            Class: 'menu-l2',
+          },
         ],
       },
       {

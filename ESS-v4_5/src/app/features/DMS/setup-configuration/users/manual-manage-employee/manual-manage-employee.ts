@@ -40,6 +40,8 @@ export class ManualManageEmployee {
   totalManullayManageEmployees = 0;
   loading = false;
 
+  selectedPageSize = 1; // default value
+
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
@@ -52,45 +54,12 @@ export class ManualManageEmployee {
       divisionId: null,
       departmentId: null,
       subDepartmentId: null,
-      grade: '',
+      email: '',
       reportingTo: null,
       dateOfJoining: null,
       isNewRow: true,
     },
   ];
-
-  private loadSampleData(): void {
-    this.manualUserData = [
-      {
-        employeeCode: '0001',
-        employeeName: 'Mustafa',
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        grade: 'A',
-        reportingTo: 'Ahmed Ali Khan',
-        dateOfJoining: '2023-01-15',
-        accessLevel: true,
-      },
-      {
-        employeeCode: '0002',
-        employeeName: 'Hyder Ali',
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        grade: 'A',
-        reportingTo: 'Nadir Ali',
-        dateOfJoining: '2026-01-15',
-        accessLevel: true,
-      },
-    ];
-  }
 
   private getColumns(): GridColumn[] {
     return [
@@ -149,8 +118,8 @@ export class ManualManageEmployee {
         required: true,
       },
       {
-        field: 'grade',
-        headerName: 'Grade',
+        field: 'email',
+        headerName: 'Email',
         type: 'text',
         minWidth: 150,
         pinned: 'left',
@@ -189,15 +158,19 @@ export class ManualManageEmployee {
     private _divisionServices: DivisionService,
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
-    private _notification: NotificationService
-  ) {
-    this.loadSampleData();
-  }
+    private _notification: NotificationService,
+  ) {}
 
   ngOnInit() {
     this.getAllDivisionList();
     this.getAllDepartmentList();
     this.getAllSubDepartmentList();
+    this.GetAllManuallyManageEmployee({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
   }
 
   private buildGrid(): void {
@@ -232,27 +205,26 @@ export class ManualManageEmployee {
         sort?.colId || 'Name',
         true,
         pageNumber,
-        pageSize
+        pageSize,
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
           this.totalManullayManageEmployees = res.Data.TotalCount;
           this.manualUserData = res.Data.Items.map((item: any) => ({
             Id: item.id || item.Id,
-            EmployeeCode: item.employeeCode || item.EmployeeCode,
-            UserName: item.userName || item.UserName,
-            Grade: item.grade || item.Grade,
-            DivisionCode: item.divisionCode || item.DivisionCode,
-            DivisionName: item.divisionCode || item.DivisionCode,
-            DepartmentCode: item.departmentCode || item.DepartmentCode,
-            DepartmentName: item.departmentCode || item.DepartmentCode,
-            SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            SubDepartmentName: item.subDepartmentCode || item.SubDepartmentCode,
-            ReportingTo: item.reportingTo || item.ReportingTo,
-            DateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            employeeCode: item.employeeCode || item.EmployeeCode,
+            employeeName: item.employeeName || item.EmployeeName,
+            email: item.email || item.Email,
+            divisionCode: item.divisionCode || item.DivisionCode,
+            divisionName: item.divisionName || item.DivisionName,
+            departmentCode: item.departmentCode || item.DepartmentCode,
+            departmentName: item.departmentName || item.DepartmentName,
+            subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
+            subDepartmentName: item.subDepartmentName || item.SubDepartmentName,
+            reportingTo: item.reportingTo || item.ReportingTo,
+            dateOfJoining: item.dateOfJoining || item.DateOfJoining,
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
-            Description: item.description || item.Description,
             CreatedBy: item.createdBy || item.CreatedBy || '',
             CreatedAt: item.createdAt || item.CreatedAt || '',
           }));
@@ -280,56 +252,114 @@ export class ManualManageEmployee {
     }
   }
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      employeeCode: newRow.EmployeeCode || newRow.employeeCode,
-      employeeName: newRow.EmployeeName || newRow.employeeName,
-      divisionCode: newRow.DivisionCode || newRow.divisionName,
-      departmentCode: newRow.DepartmentCode || newRow.departmentName,
-      subDepartmentCode: newRow.SubDepartmentCode || newRow.subDepartmentName,
-      grade: newRow.Grade || newRow.grade,
-      reportingTo: newRow.ReportingTo || newRow.reportingTo,
-      dateOfJoining: newRow.DateOfJoining || newRow.dateOfJoining,
+      employeeCode: rowData.EmployeeCode || rowData.employeeCode,
+      employeeName: rowData.EmployeeName || rowData.employeeName,
+      divisionCode: rowData.DivisionCode || rowData.divisionName,
+      departmentCode: rowData.DepartmentCode || rowData.departmentName,
+      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      email: rowData.Email || rowData.email,
+      reportingTo: rowData.ReportingTo || rowData.reportingTo,
+      dateOfJoining: rowData.DateOfJoining || rowData.dateOfJoining,
+      IsActive: true,
+      IsDeleted: false,
+    };
+    this._userService.create(payLoad).subscribe({
+      next: () => {
+        this._notification.createNotification('success', 'User', 'User created successfully!');
+
+        const rowWithId = {
+          ...rowData,
+          id: this.generateId(),
+          employeeCode: rowData.employeeCode,
+          employeeName: rowData.employeeName,
+          email: rowData.email,
+          reportingTo: rowData.reportingTo,
+          dateOfJoining: rowData.dateOfJoining,
+          // Map dropdown IDs to display names
+          divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+          departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+          subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+        };
+
+        this.manualUserData = [rowWithId, ...this.manualUserData];
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
+    });
+  }
+
+  onRowUpdated(event: { rowData: any }): void {
+    const { rowData } = event;
+    debugger;
+    // Update display names
+    const payLoad = {
+      employeeCode: rowData.EmployeeCode || rowData.employeeCode,
+      employeeName: rowData.EmployeeName || rowData.employeeName,
+      divisionCode: rowData.DivisionCode || rowData.divisionName,
+      departmentCode: rowData.DepartmentCode || rowData.departmentName,
+      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      email: rowData.Email || rowData.email,
+      reportingTo: rowData.ReportingTo || rowData.reportingTo,
+      dateOfJoining: rowData.DateOfJoining || rowData.dateOfJoining,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._userService.create(payLoad).subscribe(() => {
-      this._notification.createNotification('success', 'Man', 'Document created successfully!');
+    this._userService.update(payLoad).subscribe({
+      next: () => {
+        this._notification.createNotification('success', 'User', 'User Updated successfully!');
+        debugger;
+        const rowWithId = {
+          ...rowData,
+          id: this.generateId(),
+          employeeCode: rowData.employeeCode,
+          employeeName: rowData.employeeName,
+          email: rowData.email,
+          reportingTo: rowData.reportingTo,
+          dateOfJoining: rowData.dateOfJoining,
+          // Map dropdown IDs to display names
+          divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+          departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+          subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+        };
+
+        this.manualUserData = [rowWithId, ...this.manualUserData];
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
-    const rowWithId = {
-      ...newRow,
-      id: this.generateId(),
-      employeeCode: newRow.employeeCode,
-      employeeName: newRow.employeeName,
-      grade: newRow.grade,
-      reportingTo: newRow.reportingTo,
-      dateOfJoining: newRow.dateOfJoining,
-      // Map dropdown IDs to display names
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
-    };
-
-    this.manualUserData = [rowWithId, ...this.manualUserData];
-  }
-
-  onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
-    debugger;
-    // Update display names
-    event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    event.rowData.departmentName = this.getDisplayName(
-      this.departments,
-      event.rowData.departmentId
-    );
-    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
-
-    this.manualUserData[event.index] = { ...event.rowData };
-    this.manualUserData = [...this.manualUserData]; // Trigger change detection
+ 
   }
 
   onRowDeleted(rowIndex: number): void {
@@ -451,7 +481,7 @@ class UploadDocumentColumns {
   //department: string | null = null;
   subDepartmentId: string | null = null;
   //subDepartment: string | null = null;
-  grade: string = '';
+  email: string = '';
   reportingTo: any = null;
   dateOfJoining: string | null = null;
   isNewRow: boolean = false;

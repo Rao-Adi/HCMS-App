@@ -4,6 +4,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import { QuillModule } from 'ngx-quill';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
+import { NgxEditorModule } from 'ngx-editor';
 
 @NgModule({
   declarations: [],
@@ -13,7 +14,7 @@ import { NzUploadModule } from 'ng-zorro-antd/upload';
     QuillModule.forRoot(),
     NzCheckboxModule,
     NzUploadModule,
-    QuillModule
+    NgxEditorModule
   ],
   exports: []
 })

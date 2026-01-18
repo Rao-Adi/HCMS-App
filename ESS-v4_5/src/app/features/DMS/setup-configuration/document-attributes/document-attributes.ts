@@ -359,25 +359,7 @@ export class DocumentAttributes {
       this.openCabinetModal(event.rowData);
     }
   }
-
-  onRowEditingStopped(event: any): void {
-    console.log('PARENT rowEditingStopped', event);
-
-    // If cancelled, do nothing
-    if (!event?.data || event?.node?.isEditing()) return;
-
-    const row = event.data;
-
-    // normalize dropdown value
-    row.ControlTypeId =
-      this.controlTypes.find((ct) => ct.text === row.ControlTypeId)?.id ?? row.ControlTypeId;
-
-    // update row safely
-    event.node.setData(row);
-
-    // 🔥 call PATCH API here
-  }
-
+ 
   private getDisplayName(options: any[], id: any): string {
     const option = options.find((opt) => opt.id == id);
     return option ? option.text : '';
@@ -388,12 +370,11 @@ export class DocumentAttributes {
   }
 
   openCabinetModal(rowData: any): void {
-    debugger;
     const modalRef = this.modal.create({
       nzTitle: 'Mandatory (Cabinet Wise)',
       nzContent: MandatoryCabinetWisePopup,
       nzData: {
-        data: rowData.id,
+        data: rowData.Id, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,

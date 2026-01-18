@@ -1,6 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import {
+  EditableAgGridWrapper,
+  GridColumn,
+  GridConfig,
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -9,16 +16,44 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 
 @Component({
   selector: 'app-misc-policies',
-  imports: [CommonModule, NzIconModule, NzSwitchModule, AgGridWrapper, NzModalModule],
+  imports: [
+    CommonModule,
+    NzIconModule,
+    NzSwitchModule,
+    AgGridWrapper,
+    NzModalModule,
+    EditableAgGridWrapper,
+  ],
   templateUrl: './misc-policies.html',
   styleUrl: './misc-policies.css',
 })
 export class MiscPolicies {
+  gridConfig: GridConfig = {} as GridConfig;
   selectedTab: string = 'TrainingPoliciy';
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
   value!: boolean;
+  pageSize = 10;
+  trainingPolicesData: any[] = [];
+  documentAttributeData: any[] = [];
+
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 10; // default value
+
+  totalDocumentReview = 0;
+  totalTrainingPolicies = 0;
+  public noRowsOverlay: string = '';
+  // Default Column Definitions: Apply configuration across all columns
+  defaultColDef: ColDef = {
+    filter: false,
+    cellDataType: false,
+    editable: true,
+  };
+
   UploadColumnDefs = [
     { field: 'documentType', headerName: 'Document Types', flex: 1 },
     {
@@ -48,24 +83,7 @@ export class MiscPolicies {
     { field: 'documentType', headerName: 'Document Types', flex: 1 },
     { field: 'reviewAfter', headerName: 'Review After (in years)', flex: 1 },
   ];
-  pageSize = 10;
-  rowData: any[] = [
-    {
-      documentType: 'SOP',
-      traningRequired: false,
-      minimumscoreforpassing: 0,
-    },
-    {
-      documentType: 'Playbooks',
-      traningRequired: false,
-      minimumscoreforpassing: 0,
-    },
-    {
-      documentType: 'Policies',
-      traningRequired: false,
-      minimumscoreforpassing: 0,
-    },
-  ];
+
   documentReviewRowData: any[] = [
     {
       documentType: 'SOP',
@@ -81,30 +99,177 @@ export class MiscPolicies {
     },
   ];
 
-  totalDocumentReview = 0;
-  totalTrainingPolicies = 0;
-  public noRowsOverlay: string = '';
-  // Default Column Definitions: Apply configuration across all columns
-  defaultColDef: ColDef = {
-    filter: false,
-    cellDataType: false,
-    editable: true,
-  };
+  pinnedTopRowDataPlanning: DocumentAttributeColumns[] = [
+    {
+      documentType: '',
+      traningRequired: false,
+      minimumscoreforpassing: '',
+    },
+  ];
 
-  constructor() {}
+  constructor(
+    private _trainingPolicyService: TrainingPolicyService,
+    private _documentTypes: DocumentTypeService,
+  ) {}
 
   ngOnInit() {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
     //this.loadData(this.pageSize);
+    // this.GetAllTrainingPolicy({
+    //   pageNumber: 1,
+    //   pageSize: this.selectedPageSize,
+    //   sortModel: [], // or your current sort/filter model
+    //   filterModel: {},
+    // });
+    this.GetAllDocumentTypes({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
   }
+
+  private getColumns(): GridColumn[] {
+    return [
+      {
+        field: 'documentType',
+        headerName: 'Document Type',
+        type: 'text',
+        required: true,
+        minWidth: 150,
+        pinned: 'left',
+      },
+
+      {
+        field: 'traningRequired',
+        headerName: 'traningRequired',
+        type: 'switch',
+        required: false,
+        minWidth: 150,
+        pinned: 'left',
+      },
+      {
+        field: 'minimumscoreforpassing',
+        headerName: 'minimumscoreforpassing',
+        type: 'number',
+        minWidth: 150,
+        pinned: 'left',
+        required: false,
+      },
+    ];
+  }
+
   GetAllDocumentReview(query: any) {}
 
-  GetAllTrainingPolicy(query: any) {}
+  GetAllTrainingPolicy(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
+    this._trainingPolicyService
+      .GetAllTrainingPolicies(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        if (res?.Success && res.Data?.Items) {
+          debugger;
+          this.trainingPolicesData = res.Data.Items.map((item: any) => ({
+            Id: item.id || item.Id,
+            employeeCode: item.employeeCode || item.EmployeeCode,
+            employeeName: item.employeeName || item.EmployeeName,
+            email: item.email || item.Email,
+            divisionCode: item.divisionCode || item.DivisionCode,
+            divisionName: item.divisionName || item.DivisionName,
+            departmentCode: item.departmentCode || item.DepartmentCode,
+            departmentName: item.departmentName || item.DepartmentName,
+            subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
+            subDepartmentName: item.subDepartmentName || item.SubDepartmentName,
+            reportingTo: item.reportingTo || item.ReportingTo,
+            dateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            IsActive: item.isActive || item.IsActive,
+            IsDeleted: item.isDeleted || item.IsDeleted,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: item.createdAt || item.CreatedAt || '',
+          }));
+          //console.log('Mapped documentTypeData:', this.documentTypeData);
+        } else {
+          this.trainingPolicesData = [];
+        }
+        //this.cdr.detectChanges(); // force update
+      });
+  }
+
+  GetAllDocumentTypes(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._documentTypes
+      .GetAllDocumentTypes(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        if (res?.Success && res.Data?.Items) {
+          this.trainingPolicesData = res.Data.Items.map((item: any) => ({
+            Id: item.id || item.Id,
+            documentType: item.Name || item.Name,
+            traningRequired: false,
+            minimumscoreforpassing: 0,
+          }));
+          //console.log('Mapped documentTypeData:', this.documentTypeData);
+        } else {
+          this.trainingPolicesData = [];
+        }
+        //this.cdr.detectChanges(); // force update
+      });
+  }
+
+  onGridReady(gridApi: any): void {
+    //console.log('Grid ready:', gridApi);
+    // Store grid API if needed for external operations
+  }
+
+  onCellValueChanged(event: any): void {
+    //console.log('Cell value changed:', event);
+    debugger;
+    console.log('PARENT received:', event);
+    if (!event?.data) return;
+  }
+
+  onSelectionChanged(selectedRows: any[]): void {
+    console.log('Selected rows:', selectedRows);
+  }
+
+  handleGridAction(event: { action: string; rowData: any }) {
+    if (event.action === 'VIEW_CABINET') {
+    }
+  }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
@@ -133,4 +298,10 @@ export class MiscPolicies {
         break;
     }
   }
+}
+
+class DocumentAttributeColumns {
+  documentType: string = '';
+  traningRequired: boolean = false;
+  minimumscoreforpassing: string = '';
 }

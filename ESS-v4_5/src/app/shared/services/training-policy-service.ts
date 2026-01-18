@@ -27,17 +27,17 @@ export class TrainingPolicyService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  GetTrainingPolicyList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSTrainingPolicies/get-all-training-policy-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  GetTrainingPolicyById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSTrainingPolicies/get-training-policy-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllTrainingPolicies(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

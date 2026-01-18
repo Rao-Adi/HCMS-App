@@ -46,6 +46,7 @@ interface MockUser {
     DepartmentList,
     DocumentTypeList,
     DMSRichTextEdit,
+    NzCheckboxModule,
   ],
   providers: [
     MedicalReimbursementService,
@@ -57,13 +58,14 @@ interface MockUser {
   styleUrl: './document-template.css',
 })
 export class DocumentTemplate {
-  randomUserUrl = 'https://api.randomuser.me/?results=5';
+  randomUserUrl = '';
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
   selectedUser?: string;
   loading = false;
-  templateHtml: string = '';
   templateName: string = '';
+  isDefaultTemplate = false;
+  templateHtml: string = '';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -92,7 +94,7 @@ export class DocumentTemplate {
     private decimalPipe: DecimalPipe,
     private iconService: NzIconService,
     private documentTemplateService: TemplateService,
-    private _notification: NotificationService
+    private _notification: NotificationService,
   ) {
     this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
@@ -102,7 +104,7 @@ export class DocumentTemplate {
     this.searchChange$
       .pipe(
         debounceTime(500),
-        switchMap((name) => this.getRandomNameList(name))
+        switchMap((name) => this.getRandomNameList(name)),
       )
       .subscribe((data) => {
         this.optionList = data;
@@ -121,7 +123,7 @@ export class DocumentTemplate {
     return this.http.get<{ results: MockUser[] }>(`${this.randomUserUrl}`).pipe(
       map((res) => res.results),
       catchError(() => of<MockUser[]>([])),
-      map((list) => list.map((item) => `${item.name.first} ${name}`))
+      map((list) => list.map((item) => `${item.name.first} ${name}`)),
     );
   }
 
@@ -142,37 +144,25 @@ export class DocumentTemplate {
 
   saveTemplate(data: any) {
     debugger;
+    console.log(this.templateHtml);
 
-    if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') { 
-      this._notification.createNotification(
-        'warning',
-        'Document Type',
-        'Document Type required'
-      ); 
+    if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
+      this._notification.createNotification('warning', 'Document Type', 'Document Type required');
       return;
-    } else if (this.selectedDivisions === undefined || this.selectedDivisions === '') {
-     this._notification.createNotification(
-        'warning',
-        'Division',
-        'Division required'
-      ); 
-    } else if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
-      this._notification.createNotification(
-        'warning',
-        'Department',
-        'Department required'
-      ); 
-    } else if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
-      this._notification.createNotification(
-        'warning',
-        'Templeate Type',
-        'Template Type required'
-      ); 
     }
-    // if (!this.selectedDocumentType || !this.templateHtml) {
-    //   alert('Required fields missing');
-    //   return;
-    // }
+    if (!this.isDefaultTemplate) {
+      if (this.selectedDivisions === undefined || this.selectedDivisions === '') {
+        this._notification.createNotification('warning', 'Division', 'Division required');
+      } else if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
+        this._notification.createNotification('warning', 'Department', 'Department required');
+      } else if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
+        this._notification.createNotification(
+          'warning',
+          'Templeate Type',
+          'Template Type required',
+        );
+      }
+    }
 
     const payload = {
       id: '', // or generate if needed; usually backend handles this
@@ -183,7 +173,8 @@ export class DocumentTemplate {
       divisionCode: this.selectedDivisions || null,
       departmentCode: this.selectedDepartment || null,
       subDepartmentCode: this.selectedSubDepartment || null,
-      isDefault: true, // add this field since it's in interface
+      isDefault: this.isDefaultTemplate,
+      templateContent: this.templateHtml,
       // Plus fields from AuditableEntity if required or optional
     };
 

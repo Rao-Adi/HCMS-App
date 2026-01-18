@@ -32,8 +32,8 @@ export class AttributeMandatoryScopeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-attribute-mandatory-scopes-by-id/id=${Id}`;
+  getAttributeMandatoryScopesById(Id: any): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-attribute-mandatory-scopes-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

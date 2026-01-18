@@ -4,9 +4,9 @@
       <div class="card-custom">
         <div class="clearfix">
           <div class="pull-left">
-            <h3 class="mt-0">Approval Workflow Policy - Document Creation/Revision/Obsoletion</h3>
+            <h3 class="mt-0">Responsibility Transfer Form</h3>
             <small class="text-muted"
-              >Approval Workflow Policy - Document Creation/Revision/Obsoletion</small
+              >Responsibility Transfer Form</small
             >
           </div>
         </div>
@@ -18,28 +18,19 @@
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'RequestForDocumentCreation' }"
-                (click)="selectedTab = 'RequestForDocumentCreation'"
+                [ngClass]="{ 'active-tab': selectedTab === 'Request' }"
+                (click)="selectedTab = 'Request'"
               >
-                Request For Document Creation
+                Request
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'DocumentCreation' }"
-                (click)="selectedTab = 'DocumentCreation'"
+                [ngClass]="{ 'active-tab': selectedTab === 'Approvals' }"
+                (click)="selectedTab = 'Approvals'"
               >
-                Document Creation
-              </button>
-
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === ' DocumentRevisionObsoletion' }"
-                (click)="selectedTab = 'DocumentRevisionObsoletion'"
-              >
-                Document Revision/Obsoletion
-              </button>
+                Approvals
+              </button> 
             </div>
 
             <div class="row row-space">

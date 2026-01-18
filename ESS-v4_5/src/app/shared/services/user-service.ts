@@ -28,7 +28,7 @@ export class UserService {
   }
 
   getUserList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSUser/get-all-user-list`;
+    const uri = `${environment.baseUrl}/DMSUser/get-all-users-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

@@ -124,6 +124,12 @@
                   </nz-option>
                 </nz-select>
               </div>
+              <div class="col-lg-3 col-md-3 col-sm-3">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Default Template' | safeTranslate }} </label>
+                </div>
+                <label nz-checkbox [(ngModel)]="isDefaultTemplate"></label>
+              </div>
             </div>
             <br />
             <div class="row">
@@ -133,7 +139,9 @@
                 </div>
                 <div>
                   <div class="editor-wrapper mb-4">
-                    <app-dmsrich-text-edit></app-dmsrich-text-edit>
+                    <app-dmsrich-text-edit
+                      (contentHtmlChange)="templateHtml = $event"
+                    ></app-dmsrich-text-edit>
                   </div>
                 </div>
                 <br />

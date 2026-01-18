@@ -16,11 +16,10 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { UserService } from '@app/shared/services/user-service';
 
 @Component({
-  selector: 'app-approval-workflow-policy-management',
+  selector: 'app-responsibility-transfer-workflow',
   imports: [
     CommonModule,
     FormsModule,
@@ -35,23 +34,15 @@ import { UserService } from '@app/shared/services/user-service';
     DepartmentList,
     DocumentTypeList,
     DesignationList,
-    RoleList,
+    RoleList
   ],
-  templateUrl: './approval-workflow-policy-management.html',
-  styleUrl: './approval-workflow-policy-management.css',
-  styles: [
-    `
-      [nz-button] {
-        margin-right: 8px;
-        margin-bottom: 12px;
-      }
-    `,
-  ],
+  templateUrl: './responsibility-transfer-workflow.html',
+  styleUrl: './responsibility-transfer-workflow.css',
 })
-export class ApprovalWorkflowPolicyManagement {
+export class ResponsibilityTransferWorkflow {
   public noRowsOverlay: string = '';
 
-  selectedTab: string = 'RequestForDocumentCreation';
+  selectedTab: string = 'Request';
   switchValue1 = false;
   switchValue2 = false;
   loading = false;

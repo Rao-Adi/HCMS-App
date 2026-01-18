@@ -21,3 +21,8 @@ table td:first-child {
 table td:last-child {
     border-right: none;
 }
+
+.display-flex-direction{
+    display: flex !important;
+    flex-direction: column !important;
+}

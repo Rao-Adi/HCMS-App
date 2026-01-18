@@ -1,14 +1,25 @@
-<quill-editor
-  style="height: 10vh; display: block"
-  class="quill-10-percent"
+<!-- <quill-editor
+  name="templateEditor"
+  [ngStyle]="quillStyle"
   [(ngModel)]="htmlText"
-  placeholder="Enter Text"
+  (ngModelChange)="onModelChange($event)"
   [modules]="quillConfig"
-  (onSelectionChanged)="onSelectionChanged($event)"
-  (onContentChanged)="onContentChanged($event)"
 ></quill-editor>
 
-<input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" />
+<input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" /> -->
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <form [formGroup]="form">
+        <div class="editor" style="height: 450px;">
+          <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"> </ngx-editor-menu>
+          <ngx-editor [editor]="editor" formControlName="editorContent"> </ngx-editor>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- <div
   class="ql-attachment"

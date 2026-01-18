@@ -7,6 +7,8 @@ import { ApprovalWorkflowPolicyManagement } from './approval-workflow-policy-man
 import { ApprovalWorkflowPolicyExternalUsers } from './approval-workflow-policy-external-users/approval-workflow-policy-external-users';
 import { MiscPolicies } from './misc-policies/misc-policies';
 import { ESignature } from './esignature/esignature';
+import { ResponsibilityTransferForm } from './responsibility-transfer-form/responsibility-transfer-form';
+import { ResponsibilityTransferWorkflow } from './responsibility-transfer-workflow/responsibility-transfer-workflow';
 // const routes: Routes = [
 //   {
 //     path: '',
@@ -44,5 +46,13 @@ const routes: Routes = [
   {
     path: 'esignature',
     component: ESignature,
+  },
+   {
+    path: 'responsibility-transfer-form',
+    component: ResponsibilityTransferForm,
+  },
+   {
+    path: 'responsibility-transfer-workflow',
+    component: ResponsibilityTransferWorkflow,
   },
 ];

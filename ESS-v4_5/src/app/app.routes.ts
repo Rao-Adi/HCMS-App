@@ -202,6 +202,20 @@ export const routes: Routes = [
                 (m) => m.ESignature
               ),
           },
+          {
+            path: 'responsibility-transfer-form',
+            loadComponent: () =>
+              import('@app/features/DMS/setup-configuration/responsibility-transfer-form/responsibility-transfer-form').then(
+                (m) => m.ResponsibilityTransferForm
+              ),
+          },
+          {
+            path: 'responsibility-transfer-workflow',
+            loadComponent: () =>
+              import('@app/features/DMS/setup-configuration/responsibility-transfer-workflow/responsibility-transfer-workflow').then(
+                (m) => m.ResponsibilityTransferWorkflow
+              ),
+          },
         ],
       },
 

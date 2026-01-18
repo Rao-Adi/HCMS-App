@@ -4,6 +4,7 @@
   [gridId]="'employee-planning-grid'"
   [config]="gridConfig"
   [rowData]="integrationUserData"
+  [isSelectionRequired]="true"
   [pinnedTopRowData]="pinnedTopRowDataPlanning"
   (selectionChanged)="onSelectionChanged($event)"
   (gridReady)="onGridReady($event)"
