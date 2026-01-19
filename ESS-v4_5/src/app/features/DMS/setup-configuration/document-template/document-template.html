@@ -136,14 +136,12 @@
               <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                 <div class="PnlHeading">
                   <label>{{ 'labels.Template' | safeTranslate }} </label>
-                </div>
-                <div>
+                </div> 
                   <div class="editor-wrapper mb-4">
                     <app-dmsrich-text-edit
                       (contentHtmlChange)="templateHtml = $event"
                     ></app-dmsrich-text-edit>
-                  </div>
-                </div>
+                  </div> 
                 <br />
                 <div class="justify-content-center">
                   <button nz-button nzType="primary" (click)="saveTemplate($event)">Save</button>

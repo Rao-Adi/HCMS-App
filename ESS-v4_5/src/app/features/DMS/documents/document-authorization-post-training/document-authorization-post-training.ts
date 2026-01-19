@@ -14,6 +14,11 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
+import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
+import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
+import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -27,7 +32,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    SafeTranslatePipe,
+    NzModalModule, 
     AgGridWrapper,
     DivisionList,
     SubDepartmentList,
@@ -49,10 +54,17 @@ export class DocumentAuthorizationPostTraining {
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
   pageSize = 10;
-  rowData: any[] = [];
+  pendingAuthorizationData: any[] = [];
   totalRows = 0;
+  authorizationStatues: any[] = [
+    {
+      id: '1',
+      text: 'SOP',
+    },
+    { id: '2', text: 'Other Documents' },
+  ];
 
-  constructor() {}
+  constructor(private modal: NzModalService) {}
 
   ngOnInit() {
     this.loadData(this.pageSize);
@@ -65,16 +77,30 @@ export class DocumentAuthorizationPostTraining {
   };
   public noRowsOverlay: string = '';
 
-  UploadColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version' },
+  pendingAuthorizationColumnDefs: ColDef[] = [
+    { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
+    { field: 'documentName', headerName: 'Document Name', pinned: 'left' },
+    { field: 'version', headerName: 'Version', pinned: 'left' },
     {
-      field: 'documentType',
-      headerName: 'Document Type',
+      field: 'trainingMode',
+      headerName: 'Training Mode',
       cellEditorParams: {
         values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
       },
+    },
+    { field: 'userAssinged', headerName: 'User Assinged' },
+    {
+      field: 'averageDocumentScore',
+      headerName: 'Average Document Score',
+      cellRendererSelector: (params) => ({
+        component: LinkRenderer,
+        params: {
+          label: params.value ?? 'View',
+          onClick: (rowData: any) => {
+            this.openAverageScoreModal(rowData);
+          },
+        },
+      }),
     },
     {
       field: 'division',
@@ -97,25 +123,38 @@ export class DocumentAuthorizationPostTraining {
         values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
       },
     },
+    { field: 'url', headerName: 'URL' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created  By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+
     {
-      field: 'nextReviewDate',
-      headerName: 'Next Review Date',
-      cellEditor: 'agDateCellEditor',
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
+      field: 'approvalHistory',
+      headerName: 'Approval History',
+      cellRendererSelector: () => ({
+        component: LinkRenderer,
+        params: {
+          label: 'View',
+          onClick: (rowData: any) => {
+            this.openApprovalHistoryModal(rowData);
+          },
+        },
+      }),
     },
-    { field: 'uploadDocument', headerName: 'Upload Document' },
+    {
+      field: 'revisionHistory',
+      headerName: 'Revision History',
+      cellRendererSelector: () => ({
+        component: LinkRenderer,
+        params: {
+          label: 'View',
+          onClick: (rowData: any) => {
+            this.openRevisionHistoryModal(rowData);
+          },
+        },
+      }),
+    },
   ];
 
   UploadedDocColumnDefs = [
@@ -142,7 +181,7 @@ export class DocumentAuthorizationPostTraining {
     const start = (pageNumber - 1) * this.pageSize;
     const end = start + this.pageSize;
 
-    this.rowData = allData.slice(start, end);
+    this.pendingAuthorizationData = allData.slice(start, end);
     this.totalRows = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready
@@ -154,8 +193,10 @@ export class DocumentAuthorizationPostTraining {
       documentId: `DOC-${i + 1}`,
       documentName: `Policy Document ${i + 1}`,
       version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
+      trainingMode: ['Online', 'Class room'][i % 3],
+      userAssinged: ['1', '2', '3', '4', '5'][i % 3],
+      averageDocumentScore: ['11', '12', '13', '14', '15'][i % 3],
+      division: ['Marketing Division', 'Software Division'][i % 4],
       department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
       subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
       nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
@@ -170,6 +211,7 @@ export class DocumentAuthorizationPostTraining {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
   }
+
   onDepartmentsChange(value: string): void {
     this.selectedDepartment = value;
     this.selectedSubDepartment = '';
@@ -214,5 +256,48 @@ export class DocumentAuthorizationPostTraining {
       default:
         break;
     }
+  }
+
+  openAverageScoreModal(row: any): void { 
+    this.modal.create({
+      nzTitle: 'Average Document Score',
+      nzContent: AverageDocumentScoreModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+  }
+
+  openApprovalHistoryModal(row: any): void { 
+    this.modal.create({
+      // nzTitle: 'Approval History',
+      // nzContent: ApprovalHistoryModalComponent,
+      // nzComponentParams: {
+      //   data: row,
+      // },
+      // nzWidth: 800,
+      nzTitle: 'Approval History',
+      nzContent: ApprovalHistoryModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+  }
+
+  openRevisionHistoryModal(row: any): void {
+ 
+    this.modal.create({
+      nzTitle: 'Revision History',
+      nzContent: RevisionHistoryModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
   }
 }
