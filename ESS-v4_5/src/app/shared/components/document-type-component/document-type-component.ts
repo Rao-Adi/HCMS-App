@@ -8,6 +8,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -42,7 +43,8 @@ export class DocumentTypeComponent {
   constructor(
     private _documentTypeService: DocumentTypeService,
     private cdr: ChangeDetectorRef,
-    private _masterCacheService: Mastercacheservice
+    private _masterCacheService: Mastercacheservice,
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -182,25 +184,47 @@ export class DocumentTypeComponent {
 
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void {
-    console.log('➕ Row Added:', row);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
 
     const payLoad = {
-      Code: row.Code,
-      Name: row.Name,
-      Description: row.Description,
+      Code: rowData.Code,
+      Name: rowData.Name,
+      Description: rowData.Description,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._documentTypeService.create(payLoad).subscribe(() => {
-      this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
-      this.loadDocumentTypes();
+    this._documentTypeService.create(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
+        this._notification.createNotification(
+          'success',
+          'Document Type',
+          'Document Type created successfully!',
+        );
+        this.loadDocumentTypes();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    console.log('✏️ Row Updated:', event.rowData);
+    //console.log('✏️ Row Updated:', event.rowData);
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
@@ -208,21 +232,64 @@ export class DocumentTypeComponent {
       IsActive: true,
       IsDeleted: false,
     };
-    this._documentTypeService.update(payLoad).subscribe(() => {
-      this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
-      this.loadDocumentTypes();
+    this._documentTypeService.update(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
+        this._notification.createNotification(
+          'success',
+          'Document Type',
+          'Document Type updated successfully!',
+        );
+        this.loadDocumentTypes();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onRowDeleted(index: number): void {
     const row = this.documentTypeData[index];
 
-    console.log('🗑️ Row Deleted:', row);
+    this._documentTypeService.delete(row.Code).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
+        this._notification.createNotification(
+          'success',
+          'Document Type',
+          'Document Type deleted successfully!',
+        );
+        this.loadDocumentTypes();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
 
-    this._documentTypeService.delete(row.Code).subscribe(() => {
-      this._masterCacheService.clear(MASTER_CACHE_KEYS.DOCUMENT_TYPES);
-      this.loadDocumentTypes();
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
+ 
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {

@@ -27,14 +27,14 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Online' }"
                 (click)="selectedTab = 'Online'"
               >
-                Uploaded Documents
+                Online
               </button>
             </div>
 
             <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
               <div class="status-box-leftColmd6-standard">
                 <h3 class="PnlHeader">
-                  {{ 'labels.Cabinet' | safeTranslate }}
+                  {{ 'labels.Filter' | safeTranslate }}
                 </h3>
                 <br />
                 <div class="row">
@@ -113,37 +113,41 @@
 
             <div class="row row-space" *ngIf="selectedTab === 'Class Room'">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
+                <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                <!-- <app-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '450px' }"
                   [columnDefs]="classRoomColumnDefs"
                   [defaultColDef]="defaultColDef"
                   [rowData]="rowData"
                   [pageSize]="selectedPageSize"
                   [isSelectionRequired]="false"
+                  [showDisplayOption]="false"
                   gridId="classroomGrid"
                   (pageSizeChange)="onPageSizeChanged($event)"
                   [totalRows]="totalClassRoom"
                   (serverQuery)="GetAllClassRooms($event)"
                 >
-                </app-ag-grid-wrapper>
+                </app-ag-grid-wrapper> -->
               </div>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'Online'">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
+                <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                <!-- <app-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '450px' }"
                   [columnDefs]="onlineColumnDefs"
                   [defaultColDef]="defaultColDef"
                   [rowData]="rowData"
                   [pageSize]="selectedPageSize"
                   [isSelectionRequired]="false"
+                  [showDisplayOption]="false"
                   gridId="onlineGrid"
                   (pageSizeChange)="onPageSizeChanged($event)"
                   [totalRows]="totalOnline"
                   (serverQuery)="GetAllOnline($event)"
                 >
-                </app-ag-grid-wrapper>
+                </app-ag-grid-wrapper> -->
               </div>
             </div>
           </div>

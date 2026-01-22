@@ -6,7 +6,9 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
@@ -78,7 +80,8 @@ export class SubDepartmentComponent {
   constructor(
     private _subDepartmentServices: SubDepartmentService,
     private _masterCacheService: Mastercacheservice,
-    private _departmentService: DepartmentService
+    private _departmentService: DepartmentService,
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -100,7 +103,7 @@ export class SubDepartmentComponent {
       suppressCellFocus: true,
     };
 
-    this.getAllDepartments({
+    this.getAllSubDepartments({
       pageNumber: 1,
       pageSize: this.pageSize,
       sortModel: [],
@@ -113,8 +116,8 @@ export class SubDepartmentComponent {
       {
         field: 'Code',
         headerName: 'Sub-Department Code',
-        type: 'text',
-        required: true,
+        type: 'readonly',
+        required: false,
         minWidth: 150,
         pinned: 'left',
       },
@@ -154,10 +157,10 @@ export class SubDepartmentComponent {
     ];
   }
 
-  loadDepartments(): void {
+  loadSubDepartments(): void {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'SUBDEPARTMENTS',
+        cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
         getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
         getData$: () =>
           this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
@@ -179,34 +182,6 @@ export class SubDepartmentComponent {
       });
   }
 
-  getAllDepartments = (query: any) => {
-    this._masterCacheService
-      .getMasterData({
-        cacheKey: 'SUBDEPARTMENTS',
-        getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
-
-        // ✅ RETURN RAW API RESPONSE
-        getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
-        mapFn: (item) => ({
-          Id: item.Id || item.id,
-          Code: item.Code || item.code,
-          Name: item.Name || item.name,
-          Department: item.Department || item.Department || '',
-          DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
-          CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedAt: item.CreatedAt || item.createdAt || '',
-          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-          LastModifiedAt: item.LastModifiedAt || item.lastModifiedAt || '',
-        }),
-      })
-      .subscribe((data) => {
-        // 'data' here is now the mapped array from mapFn
-        this.subDepartmentData = data;
-        this.totalSubDepartments = data ? data.length : 0;
-      });
-  };
-
   getAllDepartmeList = () => {
     this._departmentService.getDepartmentList().subscribe((res) => {
       if (res?.Data) {
@@ -225,7 +200,7 @@ export class SubDepartmentComponent {
   };
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    this.getAllDepartments({
+    this.getAllSubDepartments({
       pageNumber: 1,
       pageSize: this.selectedPageSize,
       sortModel: [], // or your current sort/filter model
@@ -241,7 +216,7 @@ export class SubDepartmentComponent {
   getAllSubDepartments = (query: any) => {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'SUBDEPARTMENTS',
+        cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
         getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
 
         // ✅ RETURN RAW API RESPONSE
@@ -269,25 +244,46 @@ export class SubDepartmentComponent {
 
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void { 
-    console.log('➕ Row Added:', row);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
 
     const payLoad = {
-      Code: row.Code,
-      Name: row.Name,
-      DepartmentCode: row.Department,
+      Name: rowData.Name,
+      DepartmentCode: rowData.Department,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._subDepartmentServices.create(payLoad).subscribe(() => {
-      this._masterCacheService.clear('SUBDEPARTMENTS');
-      this.loadDepartments();
+    this._subDepartmentServices.create(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._notification.createNotification(
+          'success',
+          'Sub-Department',
+          'Sub-Department created successfully!',
+        );
+        this.loadSubDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
-  onRowUpdated(event: { rowData: any }): void { 
-    console.log('✏️ Row Updated:', event.rowData);
+  onRowUpdated(event: { rowData: any }): void {
+    //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
       Code: event.rowData.Code,
@@ -297,20 +293,62 @@ export class SubDepartmentComponent {
       // IsDeleted: false,
     };
 
-    this._subDepartmentServices.update(payLoad).subscribe(() => {
-      this._masterCacheService.clear('SUBDEPARTMENTS');
-      this.loadDepartments();
+    this._subDepartmentServices.update(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._notification.createNotification(
+          'success',
+          'Sub-Department',
+          'Sub-Department updated successfully!',
+        );
+        this.loadSubDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
-  onRowDeleted(index: number): void { 
+  onRowDeleted(index: number): void {
     const row = this.subDepartmentData[index];
 
-    console.log('🗑️ Row Deleted:', row);
+    this._subDepartmentServices.delete(row.Code).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._notification.createNotification(
+          'success',
+          'Sub-Department',
+          'Sub-Department updated successfully!',
+        );
+        this.loadSubDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
 
-    this._subDepartmentServices.delete(row.Code).subscribe(() => {
-      this._masterCacheService.clear('SUBDEPARTMENTS');
-      this.loadDepartments();
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 

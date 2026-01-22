@@ -50,3 +50,36 @@
 .save-btn:hover {
   background-color: #40a9ff;
 }
+
+/* columns show/hide display */
+.display-options {
+  background: #f7f7f7;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+}
+
+.display-options-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.display-options-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.option-item input {
+  cursor: pointer;
+}

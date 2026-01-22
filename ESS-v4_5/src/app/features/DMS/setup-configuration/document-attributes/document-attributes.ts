@@ -67,7 +67,7 @@ export class DocumentAttributes {
   constructor(
     private _documentAttribute: DocumentAttributeService,
     private modal: NzModalService,
-    private _notification: NotificationService
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -158,7 +158,7 @@ export class DocumentAttributes {
         sort?.colId || 'Name',
         true,
         pageNumber,
-        pageSize
+        pageSize,
       )
       .subscribe((res) => {
         const items = res?.Data?.Items;
@@ -217,7 +217,7 @@ export class DocumentAttributes {
       this._notification.createNotification(
         'warning',
         'Document Type',
-        'Document Type is required'
+        'Document Type is required',
       );
       return;
     }
@@ -238,35 +238,26 @@ export class DocumentAttributes {
         } else {
           this._notification.createNotification('warning', 'Document template', res.Message);
         }
+
+        const rowWithId = {
+          ...event.rowData,
+          id: this.generateId(),
+          ControlLabel: event.rowData.ControlLabel,
+          ControlTypeId: event.rowData.ControlTypeId,
+          ListValue: event.rowData.ListValue,
+          isMandatory: true,
+        };
+
+        this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
       },
       error: () => {
         this._notification.createNotification(
           'error',
           'Document template',
-          'Server error. Please try again.'
+          'Server error. Please try again.',
         );
       },
     });
-
-    debugger;
-    this._documentAttribute.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
-        'success',
-        'Document Attribute',
-        'Document Attribute created successfully!'
-      );
-    });
-
-    const rowWithId = {
-      ...event.rowData,
-      id: this.generateId(),
-      ControlLabel: event.rowData.ControlLabel,
-      ControlTypeId: event.rowData.ControlTypeId,
-      ListValue: event.rowData.ListValue,
-      isMandatory: true,
-    };
-
-    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
   }
 
   onRowUpdated(event: { rowData: any }): void {
@@ -275,7 +266,7 @@ export class DocumentAttributes {
       this._notification.createNotification(
         'warning',
         'Document Type',
-        'Document Type is required'
+        'Document Type is required',
       );
       return;
     }
@@ -293,7 +284,7 @@ export class DocumentAttributes {
       this._notification.createNotification(
         'sucess',
         'Document template',
-        'Document template updated successfully!'
+        'Document template updated successfully!',
       );
     });
 
@@ -318,7 +309,7 @@ export class DocumentAttributes {
       this._notification.createNotification(
         'sucess',
         'Document template',
-        'Document template deleted successfully!'
+        'Document template deleted successfully!',
       );
     });
   }
@@ -359,7 +350,7 @@ export class DocumentAttributes {
       this.openCabinetModal(event.rowData);
     }
   }
- 
+
   private getDisplayName(options: any[], id: any): string {
     const option = options.find((opt) => opt.id == id);
     return option ? option.text : '';

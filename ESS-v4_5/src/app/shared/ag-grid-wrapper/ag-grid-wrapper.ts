@@ -25,11 +25,24 @@ import {
   ValidationModule,
 } from 'ag-grid-community';
 import { GridConfig } from '../editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { ColumnDisplayOptionsComponent } from './column-display-options-component/column-display-options-component';
+
+interface ColumnToggle {
+  field: string;
+  label: string;
+  visible: boolean;
+}
 
 @Component({
   selector: 'app-ag-grid-wrapper',
   standalone: true,
-  imports: [CommonModule, AgGridAngular, NzAlertModule, NzSpinModule],
+  imports: [
+    CommonModule,
+    AgGridAngular,
+    NzAlertModule,
+    NzSpinModule,
+    ColumnDisplayOptionsComponent,
+  ],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
 })
@@ -42,24 +55,10 @@ export class AgGridWrapper implements OnInit {
   @Input() gridStyle: any = {};
   @Input() gridId!: string;
   @Input() isSelectionRequired: boolean = true;
-  @Output() rowEdited = new EventEmitter<any>();
+  @Input() showDisplayOption: boolean = false;
   @Input() pageSizeOptions = [10, 20, 30, 50];
-  // @Input() pageSizeOptions = [1, 2, 3, 50];
   @Input() defaultPageSize = 10;
-
-  @Output() pageSizeChange = new EventEmitter<{ gridId: string; pageSize: number }>();
-  @Output() cellClicked = new EventEmitter<any>();
-
-  @Output() serverQuery = new EventEmitter<{
-    pageNumber: number;
-    pageSize: number;
-    sortModel: any;
-    filterModel: any;
-  }>();
-
-  finalColumnDefs: ColDef[] = [];
-  gridContext: any;
-  gridApi!: GridApi;
+  @Input() columnToggles?: ColumnToggle[];
 
   @Input() config: GridConfig = {
     columns: [],
@@ -78,6 +77,25 @@ export class AgGridWrapper implements OnInit {
     theme: 'ag-theme-alpine',
     suppressCellFocus: true,
   };
+
+  @Output() rowEdited = new EventEmitter<any>();
+  // @Input() pageSizeOptions = [1, 2, 3, 50];
+
+  @Output() pageSizeChange = new EventEmitter<{ gridId: string; pageSize: number }>();
+  @Output() cellClicked = new EventEmitter<any>();
+
+  @Output() serverQuery = new EventEmitter<{
+    pageNumber: number;
+    pageSize: number;
+    sortModel: any;
+    filterModel: any;
+  }>();
+
+  @Output() gridReady = new EventEmitter<GridReadyEvent>();
+
+  finalColumnDefs: ColDef[] = [];
+  gridContext: any;
+  gridApi!: GridApi;
 
   private isGridInitialized = false;
 
@@ -165,15 +183,49 @@ export class AgGridWrapper implements OnInit {
     this.emitQuery();
   }
 
-  onGridReady(params: GridReadyEvent) {
-    this.gridApi = params.api;
-    this.isGridInitialized = true;
-
+  onGridReady(event: GridReadyEvent) {
+    this.gridApi = event.api;
+    this.gridReady.emit(event);
+    this.syncColumnState();
     // Delay first emit to allow grid to stabilize
     // setTimeout(() => {
     //   this.isGridInitialized = true;
     //   this.emitQuery();
     // });
+  }
+
+  saveColumnPrefs() {
+    localStorage.setItem('documentGridColumns', JSON.stringify(this.columnToggles));
+  }
+
+  toggleColumn(col: ColumnToggle) {
+    if (!this.gridApi) return;
+
+    col.visible = !col.visible;
+    this.gridApi.setColumnsVisible([col.field], col.visible);
+  }
+
+  syncColumnState() {
+    if (!this.gridApi || !this.columnToggles) return;
+
+    this.columnToggles.forEach((c) => {
+      const column = this.gridApi.getColumn(c.field);
+      c.visible = !!column?.isVisible();
+    });
+  }
+
+  toggleAllColumns(event: any) {
+    const visible = event.target.checked;
+
+    this.columnToggles?.forEach((c) => {
+      c.visible = visible;
+    });
+  }
+
+  onToggleColumn(col: ColumnToggle) {
+    if (!this.gridApi) return;
+
+    this.gridApi.setColumnsVisible([col.field], col.visible);
   }
 
   onSortChanged() {

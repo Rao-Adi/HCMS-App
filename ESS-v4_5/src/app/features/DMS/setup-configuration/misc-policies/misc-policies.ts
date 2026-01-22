@@ -6,6 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -37,6 +38,7 @@ export class MiscPolicies {
   pageSize = 10;
   trainingPolicesData: any[] = [];
   documentAttributeData: any[] = [];
+  documentTypesList: any[] = [];
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -53,31 +55,6 @@ export class MiscPolicies {
     cellDataType: false,
     editable: true,
   };
-
-  UploadColumnDefs = [
-    { field: 'documentType', headerName: 'Document Types', flex: 1 },
-    {
-      field: 'traningRequired',
-      headerName: 'TraningRequired',
-      flex: 1,
-      cellEditor: 'agCheckboxCellEditor',
-      cellRenderer: (params: any) => {
-        return `
-          <nz-switch [(ngModel)]="switchValue1"></nz-switch>
-      `;
-      },
-    },
-    {
-      field: 'minimumscoreforpassing',
-      headerName: '	Minimum score for passing',
-      flex: 1,
-      cellDataType: 'number',
-      cellEditorParams: {
-        min: 0,
-        max: 300,
-      },
-    },
-  ];
 
   documentReviewColumnDef = [
     { field: 'documentType', headerName: 'Document Types', flex: 1 },
@@ -101,18 +78,23 @@ export class MiscPolicies {
 
   pinnedTopRowDataPlanning: DocumentAttributeColumns[] = [
     {
-      documentType: '',
+      documentTypeCode: '',
       traningRequired: false,
-      minimumscoreforpassing: '',
+      minimumscoreforpassing: 0,
     },
   ];
 
   constructor(
     private _trainingPolicyService: TrainingPolicyService,
     private _documentTypes: DocumentTypeService,
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
+    this.getDocumentTypeList();
+  }
+
+  private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -130,17 +112,11 @@ export class MiscPolicies {
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
     };
-    //this.loadData(this.pageSize);
-    // this.GetAllTrainingPolicy({
-    //   pageNumber: 1,
-    //   pageSize: this.selectedPageSize,
-    //   sortModel: [], // or your current sort/filter model
-    //   filterModel: {},
-    // });
-    this.GetAllDocumentTypes({
+
+    this.GetAllTrainingPolicy({
       pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
+      pageSize: this.pageSize,
+      sortModel: [],
       filterModel: {},
     });
   }
@@ -148,14 +124,14 @@ export class MiscPolicies {
   private getColumns(): GridColumn[] {
     return [
       {
-        field: 'documentType',
+        field: 'documentTypeCode',
         headerName: 'Document Type',
-        type: 'text',
+        type: 'dropdown',
+        dropdownOptions: this.documentTypesList,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
         required: true,
-        minWidth: 150,
-        pinned: 'left',
       },
-
       {
         field: 'traningRequired',
         headerName: 'traningRequired',
@@ -173,6 +149,15 @@ export class MiscPolicies {
         required: false,
       },
     ];
+  }
+
+  private generateId(): number {
+    return Date.now();
+  }
+
+  private getDisplayName(options: any[], id: any): string {
+    const option = options.find((opt) => opt.id == id);
+    return option ? option.text : '';
   }
 
   GetAllDocumentReview(query: any) {}
@@ -193,20 +178,11 @@ export class MiscPolicies {
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
-          debugger;
           this.trainingPolicesData = res.Data.Items.map((item: any) => ({
             Id: item.id || item.Id,
-            employeeCode: item.employeeCode || item.EmployeeCode,
-            employeeName: item.employeeName || item.EmployeeName,
-            email: item.email || item.Email,
-            divisionCode: item.divisionCode || item.DivisionCode,
-            divisionName: item.divisionName || item.DivisionName,
-            departmentCode: item.departmentCode || item.DepartmentCode,
-            departmentName: item.departmentName || item.DepartmentName,
-            subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            subDepartmentName: item.subDepartmentName || item.SubDepartmentName,
-            reportingTo: item.reportingTo || item.ReportingTo,
-            dateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode, 
+            traningRequired: item.trainingRequired || item.TrainingRequired, 
+            minimumscoreforpassing :item.minimumScore ||item.MinimumScore,
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             CreatedBy: item.createdBy || item.CreatedBy || '',
@@ -220,44 +196,81 @@ export class MiscPolicies {
       });
   }
 
-  GetAllDocumentTypes(query: any) {
-    const sort = query.sortModel?.[0];
-    const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
+   
 
-    this._documentTypes
-      .GetAllDocumentTypes(
-        query?.filterModel?.Name?.filter || '',
-        sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
-        true,
-        pageNumber,
-        pageSize,
-      )
-      .subscribe((res) => {
-        if (res?.Success && res.Data?.Items) {
-          this.trainingPolicesData = res.Data.Items.map((item: any) => ({
-            Id: item.id || item.Id,
-            documentType: item.Name || item.Name,
-            traningRequired: false,
-            minimumscoreforpassing: 0,
-          }));
-          //console.log('Mapped documentTypeData:', this.documentTypeData);
-        } else {
-          this.trainingPolicesData = [];
-        }
-        //this.cdr.detectChanges(); // force update
-      });
-  }
+  getDocumentTypeList = () => {
+    this._documentTypes.getDocumentTypeList().subscribe((res) => {
+      if (res?.Data) {
+        this.documentTypesList = res.Data.map((d: any) => ({
+          id: d.Code,
+          text: d.Value,
+        }));
+      } else {
+        this.documentTypesList = [];
+      }
+
+      // ✅ build grid AFTER dropdown data is ready
+      this.buildGrid();
+    });
+  };
 
   onGridReady(gridApi: any): void {
     //console.log('Grid ready:', gridApi);
     // Store grid API if needed for external operations
   }
 
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event; 
+    debugger;
+    // Add logic to generate IDs, validate, etc.
+    const payLoad = {
+      documentTypeCode: rowData.documentType || rowData.documentType,
+      trainingRequired: rowData.traningRequired || rowData.traningRequired,
+      minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
+    };
+
+    this._trainingPolicyService.create(payLoad).subscribe(() => {
+      this._notification.createNotification(
+        'sucess',
+        'Distribution List',
+        'Distribution list added successfully!',
+      );
+    });
+    const rowWithId = {
+      ...rowData,
+      id: this.generateId(),
+      documentType: rowData.documentType,
+      traningRequired: rowData.traningRequired,
+      minimumscoreforpassing: rowData.minimumscoreforpassing,
+    };
+
+    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
+  }
+
+  onRowUpdated(event: { rowData: any; index: number }): void {
+    console.log('Row updated:', event);
+    debugger;
+    // Update display names
+    // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
+    // event.rowData.departmentName = this.getDisplayName(
+    //   this.departments,
+    //   event.rowData.departmentId,
+    // );
+    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
+
+    this.documentAttributeData[event.index] = { ...event.rowData };
+    this.documentAttributeData = [...this.documentAttributeData]; // Trigger change detection
+  }
+
+  onRowDeleted(rowIndex: number): void {
+    console.log('Row deleted at index:', rowIndex);
+    this.documentAttributeData.splice(rowIndex, 1);
+    this.documentAttributeData = [...this.documentAttributeData];
+  }
+
   onCellValueChanged(event: any): void {
     //console.log('Cell value changed:', event);
-    debugger;
+
     console.log('PARENT received:', event);
     if (!event?.data) return;
   }
@@ -301,7 +314,7 @@ export class MiscPolicies {
 }
 
 class DocumentAttributeColumns {
-  documentType: string = '';
+  documentTypeCode: string = '';
   traningRequired: boolean = false;
-  minimumscoreforpassing: string = '';
+  minimumscoreforpassing: number = 0;
 }

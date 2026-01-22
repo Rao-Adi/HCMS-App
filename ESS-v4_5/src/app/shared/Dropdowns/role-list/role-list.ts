@@ -5,7 +5,6 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 import { SelectList2 } from '@app/shared/interfaces/interfaces';
 import { RoleService } from '@app/shared/services/role.service';
 
-
 @Component({
   selector: 'app-role-list',
   imports: [CommonModule, FormsModule, NzSelectModule],
@@ -19,8 +18,8 @@ import { RoleService } from '@app/shared/services/role.service';
     },
   ],
 })
-export class RoleList  implements ControlValueAccessor {
- @Input() valueKey!: string;
+export class RoleList implements ControlValueAccessor {
+  @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
   @Input() width = '200px';

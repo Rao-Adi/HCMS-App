@@ -46,7 +46,7 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
   };
 
   agInit(params: any): void {
-
+    
     this.params = params;
 
     const field = params.colDef.field as string;

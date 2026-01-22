@@ -69,7 +69,7 @@ export class WorkflowPolicyService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSWorkflowPolicy/update-workflow-policy`,
       payload
     );

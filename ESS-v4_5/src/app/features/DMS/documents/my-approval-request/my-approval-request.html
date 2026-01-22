@@ -128,19 +128,21 @@
                     <br />
                     <div class="row">
                       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <app-ag-grid-wrapper
+                         <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                        <!-- <app-ag-grid-wrapper
                           [gridStyle]="{ width: '100%', height: '250px' }"
                           [columnDefs]="pendingDocumentsGridColumnDefs"
                           [defaultColDef]="defaultColDef"
                           [rowData]="pendingDocumentData"
                           [isSelectionRequired]="false"
+                          [showDisplayOption]="false"
                           [pageSize]="selectedPageSize"
                           gridId="pendingGrid"
                           (pageSizeChange)="onPageSizeChanged($event)"
                           [totalRows]="totalPendingDocuments"
                           (serverQuery)="GetAllPendingDocuments($event)"
                         >
-                        </app-ag-grid-wrapper>
+                        </app-ag-grid-wrapper> -->
                       </div>
                     </div>
                   </div>
@@ -152,19 +154,21 @@
                   <div class="status-box-leftColmd6-standard">
                     <h3 class="PnlHeader">Documents</h3>
                     <br />
-                    <app-ag-grid-wrapper
+                     <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                    <!-- <app-ag-grid-wrapper
                       [gridStyle]="{ width: '100%', height: '250px' }"
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
                       [rowData]="pendingDocumentData"
                       [isSelectionRequired]="false"
+                      [showDisplayOption]="false"
                       [pageSize]="selectedPageSize"
                       gridId="approvedGrid"
                       (pageSizeChange)="onPageSizeChanged($event)"
                       [totalRows]="totalApprovedDocuments"
                       (serverQuery)="GetAllApprovedDocuments($event)"
                     >
-                    </app-ag-grid-wrapper>
+                    </app-ag-grid-wrapper> -->
                   </div>
                 </div>
               </div>
@@ -174,19 +178,21 @@
                   <div class="status-box-leftColmd6-standard">
                     <h3 class="PnlHeader">Documents</h3>
                     <br />
-                    <app-ag-grid-wrapper
+                     <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                    <!-- <app-ag-grid-wrapper
                       [gridStyle]="{ width: '100%', height: '250px' }"
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
                       [rowData]="pendingDocumentData"
                       [pageSize]="selectedPageSize"
                       [isSelectionRequired]="false"
+                      [showDisplayOption]="false"
                       gridId="disapprovedGrid"
                       (pageSizeChange)="onPageSizeChanged($event)"
                       [totalRows]="totalDisApprovedDocuments"
                       (serverQuery)="GetAllDisApprovedDocuments($event)"
                     >
-                    </app-ag-grid-wrapper>
+                    </app-ag-grid-wrapper> -->
                   </div>
                 </div>
               </div>

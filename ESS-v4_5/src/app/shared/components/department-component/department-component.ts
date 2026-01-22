@@ -6,7 +6,9 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { DivisionService } from '@app/shared/services/division.services';
 import { ColDef } from 'ag-grid-community';
@@ -46,7 +48,8 @@ export class DepartmentComponent {
     private cdr: ChangeDetectorRef,
     private _departmentServices: DepartmentService,
     private _masterCacheService: Mastercacheservice,
-    private _divisionServices: DivisionService
+    private _divisionServices: DivisionService,
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -80,15 +83,15 @@ export class DepartmentComponent {
     return [
       {
         field: 'Code',
-        headerName: 'Division Code',
-        type: 'text',
-        required: true,
+        headerName: 'Department Code',
+        type: 'readonly',
+        required: false,
         minWidth: 150,
         pinned: 'left',
       },
       {
         field: 'Name',
-        headerName: 'Division Name',
+        headerName: 'Department',
         type: 'text',
         required: true,
         minWidth: 200,
@@ -125,7 +128,7 @@ export class DepartmentComponent {
   loadDepartments(): void {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'DEPARTMENTS',
+        cacheKey: MASTER_CACHE_KEYS.DEPARTMENTS,
         getCount$: () => this._departmentServices.getDepartmentCount(),
         getData$: () =>
           this._departmentServices.GetAllDepartments('', 'ASC', 'Name', true, 1, 1000),
@@ -150,7 +153,7 @@ export class DepartmentComponent {
   getAllDepartments = (query: any) => {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'DEPARTMENTS',
+        cacheKey: MASTER_CACHE_KEYS.DEPARTMENTS,
         getCount$: () => this._departmentServices.getDepartmentCount(),
 
         // ✅ RETURN RAW API RESPONSE
@@ -215,58 +218,118 @@ export class DepartmentComponent {
 
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void {
-    debugger;
-    console.log('➕ Row Added:', row);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
 
     const payLoad = {
-      Code: row.Code,
-      Name: row.Name,
-      DivisionCode: row.Division,
+      Name: rowData.Name,
+      DivisionCode: rowData.Division,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._departmentServices.create(payLoad).subscribe(() => {
-      this._masterCacheService.clear('DIVISIONS');
-      this.loadDepartments();
+    this._departmentServices.create(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._notification.createNotification(
+          'success',
+          'Department',
+          'Department updated successfully!',
+        );
+        this.loadDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    debugger;
-    console.log('✏️ Row Updated:', event.rowData);
+    //console.log('✏️ Row Updated:', event.rowData);
     const payLoad = {
-      Code: event.rowData.Code,
       Name: event.rowData.Name,
       DivisionCode: event.rowData.DivisionCode,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._departmentServices.update(payLoad).subscribe(() => {
-      this._masterCacheService.clear('DIVISIONS');
-      this.loadDepartments();
+    this._departmentServices.update(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._notification.createNotification(
+          'success',
+          'Department',
+          'Department updated successfully!',
+        );
+        this.loadDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onRowDeleted(index: number): void {
     const row = this.departmentData[index];
 
-    console.log('🗑️ Row Deleted:', row);
+    this._departmentServices.delete(row.Code).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._notification.createNotification(
+          'success',
+          'Department',
+          'Department deleted successfully!',
+        );
+        this.loadDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
 
-    this._departmentServices.delete(row.Code).subscribe(() => {
-      this._masterCacheService.clear('DIVISIONS');
-      this.loadDepartments();
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
-    console.log('Cell value changed:', event);
+    //console.log('Cell value changed:', event);
   }
 
   onSelectionChanged(selectedRows: any[]): void {
-    console.log('Selected rows:', selectedRows);
+    //console.log('Selected rows:', selectedRows);
     // Handle selection logic
   }
 }

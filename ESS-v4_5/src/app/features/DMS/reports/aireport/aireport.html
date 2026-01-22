@@ -16,7 +16,7 @@
               <div class="title">ChatGPT</div>
             </header>
 
-            <main class="chat-body">
+            <main class="chat-body" style="min-height: 600px;height: 100%;">
               <div *ngFor="let msg of messages" class="message" [ngClass]="msg.role">
                 <div class="bubble">
                   {{ msg.content }}

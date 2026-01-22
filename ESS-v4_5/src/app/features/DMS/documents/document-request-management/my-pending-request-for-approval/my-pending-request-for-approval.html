@@ -1,0 +1,16 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '450px' }"
+  [columnToggles]="columnToggles"
+  [columnDefs]="documentColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [isSelectionRequired]="true"
+  [showDisplayOption]="true"
+  [rowData]="workflowAuthoritiesData"
+  [pageSize]="pageSize"
+  [totalRows]="totalRows"
+  [pageSize]="selectedPageSize"
+  gridId="documentGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="GetAllDocuments($event)"
+>
+</app-ag-grid-wrapper>

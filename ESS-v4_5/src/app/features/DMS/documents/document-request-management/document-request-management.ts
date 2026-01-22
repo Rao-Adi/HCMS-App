@@ -8,7 +8,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
@@ -19,6 +19,12 @@ import { DRUsersComponent } from './drusers-component/drusers-component';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
+import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
+import { DocumentsComponent } from './documents-component/documents-component';
+import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-document-request-management',
@@ -33,6 +39,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
     NzRadioModule,
     NzButtonModule,
     NzInputModule,
+    NzModalModule,
     DivisionList,
     SubDepartmentList,
     DepartmentList,
@@ -40,6 +47,8 @@ import { NzInputModule } from 'ng-zorro-antd/input';
     DRDistributionList,
     DRUsersComponent,
     DMSRichTextEdit,
+    DocumentsComponent,
+    MyPendingRequestForApproval
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
@@ -52,10 +61,6 @@ export class DocumentRequestManagement {
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
   inputJustificationValue?: string;
-
-  constructor() {}
-
-  ngOnInit() {}
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -76,49 +81,6 @@ export class DocumentRequestManagement {
   public noRowsOverlay: string = '';
 
   userGridColumnDefs = [
-    {
-      field: 'division',
-      headerName: 'Division',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing Division', 'Software Division', 'Finance Division', 'HR Division'],
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing', 'IT', 'Finance', 'HR'],
-      },
-    },
-    {
-      field: 'subDepartment',
-      headerName: 'Sub-Department',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Digital Marketing', 'Software Marketing'],
-      },
-    },
-    {
-      field: 'users',
-      headerName: 'Users',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: [
-          'Territory Sales Manager(TSM)',
-          'District Sales Manager(DSM)',
-          'Regional Sales Manager(RSM)',
-        ],
-      },
-    },
-  ];
-
-  documentColumnDefs = [
     {
       field: 'division',
       headerName: 'Division',
@@ -361,10 +323,26 @@ export class DocumentRequestManagement {
     { CODE: '2', NAME: 'Less than 30 days' },
   ];
 
-  selectedAuthorityType: string | null = null;
+  constructor(private modal: NzModalService) {}
 
+  ngOnInit() {}
+
+  selectedAuthorityType: string | null = null;
+  showDocumentDiv: boolean = false;
+  showOtherDiv: boolean = false;
   onAuthorityTypeChange(value: string | null): void {
+    debugger;
     this.selectedAuthorityType = value;
+    if (this.selectedAuthorityType == '1') {
+      this.showOtherDiv = true;
+      this.showDocumentDiv = false;
+    } else if (this.selectedAuthorityType == '2') {
+      this.showDocumentDiv = true;
+      this.showOtherDiv = true;
+    } else {
+      this.showDocumentDiv = false;
+      this.showOtherDiv = true;
+    }
   }
 
   selectedWorkflowExclude: string | null = null;

@@ -14,6 +14,8 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -31,6 +33,8 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    MyPendingRequestForApproval,
+    DMSRichTextEdit
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',

@@ -32,6 +32,27 @@
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'TrainingPoliciy'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Document requiring Training before Authorization</h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                      <div class="d-flex">
+                        <label
+                          >Approval Authorities can only give their observations, but not edit the
+                          document</label
+                        >
+
+                        <label
+                          >Users will be required to go through training if any document is
+                          created/updated w.r.t following Document Types</label
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-editable-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '500px' }"
@@ -39,28 +60,17 @@
                   [gridId]="'employee-planning-grid'"
                   [config]="gridConfig"
                   [isSelectionRequired]="true"
-                  [rowData]="documentAttributeData"
+                  [rowData]="trainingPolicesData"
                   [pinnedTopRowData]="pinnedTopRowDataPlanning"
+                  (rowAdded)="onRowAdded($event)"
+                  (rowUpdated)="onRowUpdated($event)"
+                  (rowDeleted)="onRowDeleted($event)"
+                  (cellValueChanged)="onCellValueChanged($event)"
                   (selectionChanged)="onSelectionChanged($event)"
                   (gridReady)="onGridReady($event)"
-                  (cellValueChanged)="onCellValueChanged($event)"
                   (actionClicked)="handleGridAction($event)"
-                  (onCellValueChanged)="onCellValueChanged($event)"
                 >
                 </app-editable-ag-grid-wrapper>
-                <!-- <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  [columnDefs]="UploadColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [rowData]="trainingPolicesData"
-                  [pageSize]="selectedPageSize"
-                  [isSelectionRequired]="false"
-                  gridId="TrainingPoliciyGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)"
-                  [totalRows]="totalTrainingPolicies"
-                  (serverQuery)="GetAllTrainingPolicy($event)"
-                >
-                </app-ag-grid-wrapper> -->
               </div>
             </div>
 
@@ -73,6 +83,7 @@
                   [rowData]="documentReviewRowData"
                   [pageSize]="selectedPageSize"
                   [isSelectionRequired]="false"
+                  [showDisplayOption]="false"
                   gridId="DocumentReview"
                   (pageSizeChange)="onPageSizeChanged($event)"
                   [totalRows]="totalDocumentReview"

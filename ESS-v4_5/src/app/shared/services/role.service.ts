@@ -43,7 +43,7 @@ export class RoleService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -66,7 +66,7 @@ export class RoleService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSRole/update-role`, payload);
+    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSRole/update-role`, payload);
   }
 
   delete(code: string) {

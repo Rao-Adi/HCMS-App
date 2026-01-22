@@ -11,6 +11,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
 
 @Component({
   selector: 'app-people-partners-employee',
@@ -39,7 +40,7 @@ export class PeoplePartnersEmployee {
   };
 
   integrateWithPoeplePartnerColumnDefs = [
-    { field: 'EmployeeCode', headerName: 'Employee Code' },
+    { field: 'employeeCode', headerName: 'Employee Code' },
     { field: 'UserName', headerName: 'Employee Name' },
     {
       field: 'DivisionName',
@@ -132,8 +133,8 @@ export class PeoplePartnersEmployee {
   private loadSampleData(): void {
     this.employeeData = [
       {
-        documentId: 'DOC001',
-        documentName: 'Employee Handbook',
+        employeeCode: 'DOC001',
+        employeeName: 'Employee Handbook',
         version: '3.1',
         divisionId: 'D1',
         divisionName: 'Corporate',
@@ -145,8 +146,8 @@ export class PeoplePartnersEmployee {
         isActive: true,
       },
       {
-        documentId: 'DOC001',
-        documentName: 'Employee Handbook',
+        employeeCode: 'DOC001',
+        employeeName: 'Employee Handbook',
         version: '3.1',
         divisionId: 'D1',
         divisionName: 'Corporate',
@@ -160,7 +161,7 @@ export class PeoplePartnersEmployee {
     ];
   }
 
-   private getColumns(): GridColumn[] {
+  private getColumns(): GridColumn[] {
     return [
       {
         field: 'employeeCode',
@@ -182,7 +183,7 @@ export class PeoplePartnersEmployee {
       {
         field: 'divisionName',
         headerName: 'Division',
-        type:'text',
+        type: 'text',
         // type: 'dropdown',
         // dropdownOptions: this.divisions,
         // dropdownValueField: 'id',
@@ -194,7 +195,7 @@ export class PeoplePartnersEmployee {
       {
         field: 'departmentName',
         headerName: 'Department',
-        type:'text',
+        type: 'text',
         // type: 'dropdown',
         // dependsOn: 'divisionId',
         // dataSourceKey: 'departments',
@@ -207,7 +208,7 @@ export class PeoplePartnersEmployee {
       {
         field: 'subDepartmentName',
         headerName: 'Sub Department',
-        type:'text',
+        type: 'text',
         // type: 'dropdown',
         // dependsOn: 'departmentId',
         // dataSourceKey: 'subDepartments',
@@ -251,7 +252,10 @@ export class PeoplePartnersEmployee {
     ];
   }
 
-  constructor(private _userService: UserService, private modal: NzModalService) {
+  constructor(
+    private _userService: UserService,
+    private modal: NzModalService,
+  ) {
     this.loadSampleData();
   }
 
@@ -296,7 +300,7 @@ export class PeoplePartnersEmployee {
         sort?.colId || 'Name',
         true,
         pageNumber,
-        pageSize
+        pageSize,
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
@@ -338,6 +342,30 @@ export class PeoplePartnersEmployee {
   onGridReady(gridApi: any): void {
     //console.log('Grid ready:', gridApi);
     // Store grid API if needed for external operations
+  }
+
+  handleGridAction(event: { action: string; rowData: any }) {
+    if (event.action === 'VIEW_CABINET') {
+      this.openMandatoryCabinetModal(event.rowData);
+    }
+  }
+
+  openMandatoryCabinetModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Mandatory (Cabinet Wise)',
+      nzContent: AccessLevelModalDialog,
+      nzData: {
+        name: 'Access Level',
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
+    });
   }
 }
 

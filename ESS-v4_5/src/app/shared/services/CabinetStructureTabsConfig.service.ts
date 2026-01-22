@@ -70,7 +70,7 @@ export class CabinetStructureTabsConfigService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSCabinetStructureTabsConfig/update-cabinet-tab`,
       payload
     );

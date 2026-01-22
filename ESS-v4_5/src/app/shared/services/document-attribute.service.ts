@@ -77,7 +77,7 @@ export class DocumentAttributeService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`,
       payload
     );

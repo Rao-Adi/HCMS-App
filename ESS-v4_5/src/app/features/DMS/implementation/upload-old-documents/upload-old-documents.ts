@@ -338,7 +338,7 @@ export class UploadOldDocuments {
   @ViewChild('gridWrapper') gridWrapper!: EditableAgGridWrapper;
 
   onRowAdded(event: { rowData: any; file?: File }): void {
-    debugger;
+   
     const { rowData, file } = event;
 
     if (!file) {

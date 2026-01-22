@@ -27,13 +27,8 @@ export class TransferScopePolicyService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSTransferScopePolicy/get-all-training-scope-policy-list`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
-
   getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSTransferScopePolicy/get-training-scope-policy-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSTransferScopePolicy/get-transfer-scope-policies-by-code/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -43,7 +38,7 @@ export class TransferScopePolicyService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -54,7 +49,7 @@ export class TransferScopePolicyService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSTransferScopePolicy/get-all-training-scope-policy`;
+    const uri = `${environment.baseUrl}/DMSTransferScopePolicy/get-all-transfer-scope-policies`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,21 +58,21 @@ export class TransferScopePolicyService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTransferScopePolicy/create-training-scope-policy`,
-      payload
+      `${environment.baseUrl}/DMSTransferScopePolicy/create-transfer-scope-policy`,
+      payload,
     );
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTransferScopePolicy/update-training-scope-policy`,
-      payload
+    return this.http.put<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSTransferScopePolicy/update-transfer-scope-policy`,
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTransferScopePolicy/delete-training-scope-policy/${code}`
+      `${environment.baseUrl}/DMSTransferScopePolicy/delete-transfer-scope-policy/${code}`,
     );
   }
 }

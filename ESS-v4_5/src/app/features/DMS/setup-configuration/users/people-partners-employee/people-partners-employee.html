@@ -6,7 +6,9 @@
   [rowData]="integrationUserData"
   [isSelectionRequired]="true"
   [pinnedTopRowData]="pinnedTopRowDataPlanning"
+  (selectionChanged)="onSelectionChanged($event)" 
   (selectionChanged)="onSelectionChanged($event)"
   (gridReady)="onGridReady($event)"
+  (actionClicked)="handleGridAction($event)"
 >
 </app-editable-ag-grid-wrapper>

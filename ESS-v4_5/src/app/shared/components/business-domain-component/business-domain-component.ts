@@ -1,11 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EditableAgGridWrapper, GridColumn, GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import {
+  EditableAgGridWrapper,
+  GridColumn,
+  GridConfig,
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
-import { ColDef } from 'ag-grid-community'; 
+import { ColDef } from 'ag-grid-community';
 
 @Component({
   selector: 'app-business-domain-component',
@@ -78,12 +84,12 @@ export class BusinessDomainComponent {
     },
   ];
 
-
   constructor(
     private cdr: ChangeDetectorRef,
     private _businessDomainService: BusinessDomainService,
     private _masterCacheService: Mastercacheservice,
-    private _subDepartmentServices: SubDepartmentService
+    private _subDepartmentServices: SubDepartmentService,
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -118,8 +124,8 @@ export class BusinessDomainComponent {
       {
         field: 'Code',
         headerName: 'Sub Code',
-        type: 'text',
-        required: true,
+        type: 'readonly',
+        required: false,
         minWidth: 150,
         pinned: 'left',
       },
@@ -162,7 +168,7 @@ export class BusinessDomainComponent {
   getAllBusinessDomains = (query: any) => {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'BUSINESSDOMAINS',
+        cacheKey: MASTER_CACHE_KEYS.BUSINESS_DOMAIN,
         getCount$: () => this._businessDomainService.getBusinessDomainCount(),
 
         // ✅ RETURN RAW API RESPONSE
@@ -192,7 +198,7 @@ export class BusinessDomainComponent {
   loadDepartments(): void {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'BUSINESSDOMAINS',
+        cacheKey: MASTER_CACHE_KEYS.BUSINESS_DOMAIN,
         getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
         getData$: () =>
           this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
@@ -214,7 +220,7 @@ export class BusinessDomainComponent {
       });
   }
 
-    getAllDepartmeList = () => {
+  getAllDepartmeList = () => {
     this._subDepartmentServices.getSubDepartmentList().subscribe((res) => {
       if (res?.Data) {
         this.subdepartments = (res.Data ?? []).map((d: any) => ({
@@ -245,29 +251,49 @@ export class BusinessDomainComponent {
     // Store grid API if needed for external operations
   }
 
-
-
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void { 
-    console.log('➕ Row Added:', row);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
 
     const payLoad = {
-      Code: row.Code,
-      Name: row.Name,
-      DepartmentCode: row.SubDepartment,
+      Code: rowData.Code,
+      Name: rowData.Name,
+      DepartmentCode: rowData.SubDepartment,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._businessDomainService.create(payLoad).subscribe(() => {
-      this._masterCacheService.clear('BUSINESSDOMAINS');
-      this.loadDepartments();
+    this._businessDomainService.create(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
+        this._notification.createNotification(
+          'success',
+          'Business Domain',
+          'Business Domain updated successfully!',
+        );
+        this.loadDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
-  onRowUpdated(event: { rowData: any }): void { 
-    console.log('✏️ Row Updated:', event.rowData);
+  onRowUpdated(event: { rowData: any }): void {
+    //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
       Code: event.rowData.Code,
@@ -277,20 +303,64 @@ export class BusinessDomainComponent {
       // IsDeleted: false,
     };
 
-    this._businessDomainService.update(payLoad).subscribe(() => {
-      this._masterCacheService.clear('BUSINESSDOMAINS');
-      this.loadDepartments();
+    this._businessDomainService.update(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
+        this._notification.createNotification(
+          'success',
+          'Business Domain',
+          'Business Domain updated successfully!',
+        );
+        this.loadDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
-  onRowDeleted(index: number): void { 
+  onRowDeleted(index: number): void {
     const row = this.businessDomainData[index];
 
-    console.log('🗑️ Row Deleted:', row);
+    //console.log('🗑️ Row Deleted:', row);
 
-    this._businessDomainService.delete(row.Code).subscribe(() => {
-      this._masterCacheService.clear('BUSINESSDOMAINS');
-      this.loadDepartments();
+    this._businessDomainService.delete(row.Code).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
+        this._notification.createNotification(
+          'success',
+          'Business Domain',
+          'Business Domain deleted successfully!',
+        );
+        this.loadDepartments();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
@@ -299,11 +369,10 @@ export class BusinessDomainComponent {
   }
 
   onSelectionChanged(selectedRows: any[]): void {
-    console.log('Selected rows:', selectedRows);
+    //console.log('Selected rows:', selectedRows);
     // Handle selection logic
   }
 }
-
 
 class BusinessDomainColumns {
   Code: string = '';

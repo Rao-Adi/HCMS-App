@@ -69,7 +69,7 @@ export class ResponsibilityTransferService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSResponsibilityTransfer/update-responsibility-transfer`,
       payload
     );

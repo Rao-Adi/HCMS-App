@@ -8,6 +8,12 @@
 //   Code: number;
 // }
 
+export interface ColumnToggle {
+  field: string;
+  label: string;
+  visible: boolean;
+}
+
 export interface ApiResponse<T> {
   Success: boolean;
   Code: number;
@@ -296,6 +302,18 @@ export interface Role extends AuditableEntity {
   description: string;
   userRoles: UserRole[];
 }
+
+export interface Company extends AuditableEntity {
+  id: number;
+  name: string; 
+}
+
+
+export interface DistributionType extends AuditableEntity {
+  id: number;
+  name: string; 
+}
+
 
 export interface Template extends AuditableEntity {
   id: string;

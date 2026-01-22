@@ -237,16 +237,16 @@ export class EditableUploadDocument {
     ];
   }
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
     // Add logic to generate IDs, validate, etc.
     const rowWithId = {
-      ...newRow,
+      ...rowData,
       id: this.generateId(),
       // Map dropdown IDs to display names
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionId),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentId),
-      roleName: this.getDisplayName(this.roles, newRow.roleId),
+      divisionName: this.getDisplayName(this.divisions, rowData.divisionId),
+      departmentName: this.getDisplayName(this.departments, rowData.departmentId),
+      roleName: this.getDisplayName(this.roles, rowData.roleId),
     };
 
     this.employeeData = [rowWithId, ...this.employeeData];

@@ -17,6 +17,9 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { CompanyList } from '@app/shared/Dropdowns/company-list/company-list';
+import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 @Component({
   selector: 'app-create-update-document',
   imports: [
@@ -34,6 +37,10 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    DivisionList,
+    CompanyList,
+    DMSRichTextEdit,
+    MyPendingRequestForApproval
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -58,11 +65,13 @@ export class CreateUpdateDocument {
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
-  selectedTrainingMode?: string ='';
+  selectedTrainingMode?: string = '';
+  selectedCompany?: string = '';
+  selectedRequestId: string = '';
 
   constructor(
     private _divisionServices: DivisionService,
-    private _departmentServices: DepartmentService
+    private _departmentServices: DepartmentService,
   ) {}
 
   ngOnInit() {
@@ -80,8 +89,8 @@ export class CreateUpdateDocument {
   totalRows = 0;
   rowData: any[] = [];
   totalWorkflowAuthorities = 0;
-  totalDistribution=0;
-  totalDocuments =0;
+  totalDistribution = 0;
+  totalDocuments = 0;
 
   public noRowsOverlay: string = '';
 
@@ -351,15 +360,29 @@ export class CreateUpdateDocument {
     this.selectedSubDepartment = '';
   }
 
+  onCompanyChange(value: string): void {
+    this.selectedCompany = value;
+  }
+
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
+  }
+
+  onRequestIdChange(value: string): void {
+    // this.loading = true;
+    this.selectedRequestId = value;
+  }
+
+  onTrainingModeChange(value: string): void {
+    // this.loading = true;
+    this.selectedTrainingMode = value;
   }
   GetAllWorkflowAuthorities(query: any) {}
 
   GetAllDistribution(query: any) {}
 
-   // Store page sizes for each grid separately
+  // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
@@ -377,7 +400,7 @@ export class CreateUpdateDocument {
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
-        break; 
+        break;
       case 'document2Grid':
         this.employeePageSize = pageSize;
         this.GetAllDistribution({
@@ -411,5 +434,4 @@ export class CreateUpdateDocument {
         break;
     }
   }
-
 }

@@ -210,6 +210,7 @@ export class UploadDocuments {
             Id: item.Id,
             documentTypeId: item.DocumentType,
             documentTypeName: item.DocumentTypeCode,
+            version: item.status,
             divisionName: item.Division,
             divisionId: item.DivisionCode,
             documentId: item.DocumentNumber,

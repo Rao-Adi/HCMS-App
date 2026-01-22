@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -19,6 +19,9 @@ import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-r
 import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
 import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
+import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
+import { ColumnDisplayOptionsComponent } from '@app/shared/ag-grid-wrapper/column-display-options-component/column-display-options-component';
+import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -32,23 +35,32 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    NzModalModule, 
+    NzModalModule,
     AgGridWrapper,
     DivisionList,
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    ColumnDisplayOptionsComponent,
+    MyPendingRequestForApproval
   ],
   templateUrl: './document-authorization-post-training.html',
   styleUrl: './document-authorization-post-training.css',
 })
 export class DocumentAuthorizationPostTraining {
+  gridApi!: GridApi;
   selectedTab: string = 'Pending Authorization';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
   selectedDocumentType?: string = '';
+
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
 
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
@@ -64,11 +76,17 @@ export class DocumentAuthorizationPostTraining {
     { id: '2', text: 'Other Documents' },
   ];
 
-  constructor(private modal: NzModalService) {}
-
-  ngOnInit() {
-    this.loadData(this.pageSize);
-  }
+  columnToggles?: ColumnToggle[] = [
+    { field: 'trainingMode', label: 'Training Mode', visible: true },
+    { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
+    { field: 'userAssinged', label: 'User Assigned', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'department', label: 'Department', visible: true },
+    { field: 'subDepartment', label: 'Sub-Department', visible: true },
+    { field: 'url', label: 'URL', visible: true },
+    { field: 'approvalHistory', label: 'Approval History', visible: true },
+    { field: 'revisionHistory', label: 'Revision History', visible: true },
+  ];
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -173,6 +191,26 @@ export class DocumentAuthorizationPostTraining {
     { CODE: '2', NAME: 'Softronic' },
   ];
 
+  constructor(private modal: NzModalService) {}
+
+  ngOnInit() {
+    this.loadData(this.pageSize);
+  }
+
+  onGridReady(event: GridReadyEvent) {
+    this.gridApi = event.api;
+    this.applyColumnToggles();
+  }
+
+  
+  applyColumnToggles() {
+    if (!this.gridApi || !this.columnToggles) return;
+
+    this.columnToggles.forEach((c) => {
+      this.gridApi.setColumnsVisible([c.field], c.visible);
+    });
+  }
+
   loadData(pageNumber: number) {
     // 🔹 TEMP: Dummy data mode
     const allData = this.getDummyData();
@@ -225,12 +263,6 @@ export class DocumentAuthorizationPostTraining {
 
   GetAllUploadedDocuments(query: any) {}
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
-
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
 
@@ -258,7 +290,7 @@ export class DocumentAuthorizationPostTraining {
     }
   }
 
-  openAverageScoreModal(row: any): void { 
+  openAverageScoreModal(row: any): void {
     this.modal.create({
       nzTitle: 'Average Document Score',
       nzContent: AverageDocumentScoreModal,
@@ -270,7 +302,7 @@ export class DocumentAuthorizationPostTraining {
     });
   }
 
-  openApprovalHistoryModal(row: any): void { 
+  openApprovalHistoryModal(row: any): void {
     this.modal.create({
       // nzTitle: 'Approval History',
       // nzContent: ApprovalHistoryModalComponent,
@@ -289,7 +321,6 @@ export class DocumentAuthorizationPostTraining {
   }
 
   openRevisionHistoryModal(row: any): void {
- 
     this.modal.create({
       nzTitle: 'Revision History',
       nzContent: RevisionHistoryModal,

@@ -11,6 +11,34 @@
   (cellValueChanged)="onCellValueChanged($event)">
 </ag-grid-angular> -->
 
+<div *ngIf="showDisplayOption" class="display-options">
+  <div class="display-options-header">
+    Display Options
+  </div>
+
+  <div class="display-options-body">
+    <label
+      class="option-item"
+      *ngFor="let col of columnToggles"
+    >
+      <input
+        type="checkbox"
+        [checked]="col.visible"
+        (change)="toggleColumn(col)"
+        [disabled]="!gridApi"
+      />
+      <span>{{ col.label }}</span>
+    </label>
+  </div>
+</div>
+
+<!-- Only show display options if provided -->
+<!-- <app-column-display-options-component
+  [columnToggles]="columnToggles"
+  (toggle)="onToggleColumn($event)"
+>
+</app-column-display-options-component> -->
+
 <ag-grid-angular
   class="ag-theme-alpine"
   [ngStyle]="gridStyle"
@@ -24,8 +52,6 @@
   [headerHeight]="config.headerHeight"
   [pagination]="config.enablePagination"
   [context]="gridContext"
-
-  
   [paginationPageSize]="config.pageSize"
   [paginationPageSizeSelector]="config.pageSizeOptions"
   [suppressCellFocus]="config.suppressCellFocus"

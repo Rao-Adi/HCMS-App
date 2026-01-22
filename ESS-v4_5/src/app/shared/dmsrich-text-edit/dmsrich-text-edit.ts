@@ -39,7 +39,7 @@ import { QuillModule } from 'ngx-quill';
 })
 export class DMSRichTextEdit implements OnInit, OnDestroy {
   @Output() contentHtmlChange = new EventEmitter<string>();
-
+  @Input() editorStyle: any = {};
   editordoc = 'jsonDoc';
   jsonDoc: string = '';
   editor: Editor = new Editor();

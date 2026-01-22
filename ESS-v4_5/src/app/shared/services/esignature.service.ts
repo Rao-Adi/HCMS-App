@@ -69,7 +69,7 @@ export class ESignatureService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSESignature/update-esignatures`,
       payload
     );

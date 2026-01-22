@@ -200,11 +200,11 @@
                   [defaultColDef]="defaultColDef"
                   [rowData]="pendingApprovalData"
                   [isSelectionRequired]="true"
+                  [showDisplayOption]="false"
                   [totalRows]="totalPendingApprovals"
                   [pageSize]="selectedPageSize"
                   gridId="myRequestPendingApprovalGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)"
-                  (serverQuery)="GetAllPendingApprovalRequests($event)"
+                  (pageSizeChange)="onPageSizeChanged($event)" 
                 >
                 </app-ag-grid-wrapper>
               </div>

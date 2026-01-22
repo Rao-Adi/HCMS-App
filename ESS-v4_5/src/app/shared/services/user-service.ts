@@ -43,7 +43,7 @@ export class UserService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -66,7 +66,7 @@ export class UserService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/update-user`, payload);
+    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/update-user`, payload);
   }
 
   delete(code: string) {

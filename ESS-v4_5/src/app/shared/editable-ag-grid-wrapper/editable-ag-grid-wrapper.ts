@@ -167,6 +167,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() divisionList: any[] = [];
   @Input() departmentList: any[] = [];
   @Input() subDepartmentList: any[] = [];
+  @Input() roleList:any[]=[];
   @Input() gridStyle: any = {};
 
   @Input() rowData: any[] = [];
@@ -641,6 +642,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       divisions: this.divisionList,
       departments: this.departmentList,
       subDepartments: this.subDepartmentList,
+      roles: this.roleList,
       // Add any other data sources needed
     };
   }

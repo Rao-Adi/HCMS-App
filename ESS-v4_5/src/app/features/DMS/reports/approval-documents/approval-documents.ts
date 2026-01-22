@@ -16,6 +16,7 @@ import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list'
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { MyPendingRequestForApproval } from '../../documents/document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-approval-documents',
@@ -34,6 +35,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
+    MyPendingRequestForApproval
   ],
   templateUrl: './approval-documents.html',
   styleUrl: './approval-documents.css',

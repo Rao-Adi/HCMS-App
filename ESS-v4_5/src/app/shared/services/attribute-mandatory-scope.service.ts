@@ -69,7 +69,7 @@ export class AttributeMandatoryScopeService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSAttributeMandatoryScope/update-attribute-mandatory-scopes`,
       payload
     );

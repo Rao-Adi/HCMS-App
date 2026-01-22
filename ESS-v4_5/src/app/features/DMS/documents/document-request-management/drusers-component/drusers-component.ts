@@ -228,15 +228,15 @@ export class DRUsersComponent {
     // Store grid API if needed for external operations
   }
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      divisionCode: newRow.DivisionName || newRow.divisionName,
-      departmentCode: newRow.DepartmentName || newRow.departmentName,
-      subDepartmentCode: newRow.SubDepartmentCode || newRow.subDepartmentName,
-      userId: newRow.userId || newRow.userId,
+      divisionCode: rowData.DivisionName || rowData.divisionName,
+      departmentCode: rowData.DepartmentName || rowData.departmentName,
+      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      userId: rowData.userId || rowData.userId,
     };
 
     this._userService.create(payLoad).subscribe(() => {
@@ -247,12 +247,12 @@ export class DRUsersComponent {
       ); 
     });
     const rowWithId = {
-      ...newRow,
+      ...rowData,
       id: this.generateId(),
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
-      userId: this.getDisplayName(this.documentTypes, newRow.userId),
+      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+      userId: this.getDisplayName(this.documentTypes, rowData.userId),
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];

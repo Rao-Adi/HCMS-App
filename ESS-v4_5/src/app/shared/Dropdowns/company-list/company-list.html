@@ -1,1 +1,11 @@
-<p>company-list works!</p>
+<nz-select
+  [style.width]="width"
+  [(ngModel)]="value"
+  [nzPlaceHolder]="placeholder"
+  [nzAllowClear]="allowClear"
+  [nzShowSearch]="showSearch"
+  [nzDisabled]="disabled"
+  (ngModelChange)="onSelectionChange($event)"
+>
+  <nz-option *ngFor="let item of data" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
+</nz-select>

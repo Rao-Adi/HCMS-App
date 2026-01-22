@@ -76,7 +76,7 @@ export class DepartmentService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDepartment/update-department`,
       payload
     );

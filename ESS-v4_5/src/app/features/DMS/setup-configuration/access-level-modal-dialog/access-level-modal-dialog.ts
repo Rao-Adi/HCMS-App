@@ -117,7 +117,7 @@ export class AccessLevelModalDialog {
       },
       // DOCUMENT TYPES
       {
-        field: 'documentTypeId',
+        field: 'documentTypeName',
         headerName: 'Document Type',
         type: 'dropdown',
         dropdownOptions: this.documentTypes,
@@ -221,15 +221,15 @@ export class AccessLevelModalDialog {
     // Store grid API if needed for external operations
   }
 
-  onRowAdded(newRow: any): void {
-    console.log('Row added:', newRow);
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      divisionCode: newRow.DivisionName || newRow.divisionName,
-      departmentCode: newRow.DepartmentName || newRow.departmentName,
-      subDepartmentCode: newRow.SubDepartmentCode || newRow.subDepartmentName,
-      documentTypeId: newRow.documentTypeId || newRow.documentTypeId,
+      divisionCode: rowData.DivisionName || rowData.divisionName,
+      departmentCode: rowData.DepartmentName || rowData.departmentName,
+      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      documentTypeId: rowData.documentTypeId || rowData.documentTypeId,
     };
 
     this._userService.create(payLoad).subscribe(() => {
@@ -240,12 +240,12 @@ export class AccessLevelModalDialog {
       );
     });
     const rowWithId = {
-      ...newRow,
+      ...rowData,
       id: this.generateId(),
-      divisionName: this.getDisplayName(this.divisions, newRow.divisionName),
-      departmentName: this.getDisplayName(this.departments, newRow.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, newRow.subDepartmentName),
-      documentTypeId: this.getDisplayName(this.documentTypes, newRow.documentTypeId),
+      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
+      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
+      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+      documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];

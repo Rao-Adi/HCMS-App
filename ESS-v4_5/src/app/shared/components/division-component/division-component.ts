@@ -6,7 +6,9 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { NotificationService } from '@app/shared/notification/notification.service';
 import { DivisionService } from '@app/shared/services/division.services';
 import { ColDef } from 'ag-grid-community';
 import { filter, map, tap } from 'rxjs';
@@ -45,7 +47,8 @@ export class DivisionComponent {
   constructor(
     private cdr: ChangeDetectorRef,
     private _divisionServices: DivisionService,
-    private _masterCacheService: Mastercacheservice
+    private _masterCacheService: Mastercacheservice,
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -80,8 +83,8 @@ export class DivisionComponent {
       {
         field: 'Code',
         headerName: 'Division Code',
-        type: 'text',
-        required: true,
+        type: 'readonly',
+        required: false,
         minWidth: 150,
         pinned: 'left',
       },
@@ -114,7 +117,7 @@ export class DivisionComponent {
   loadDivisions(): void {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'DIVISIONS',
+        cacheKey: MASTER_CACHE_KEYS.DIVISIONS,
         getCount$: () => this._divisionServices.getDivisionCount(),
         getData$: () => this._divisionServices.GetAllDivisions('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (item) => ({
@@ -136,7 +139,7 @@ export class DivisionComponent {
   getAllDivisions = (query: any) => {
     this._masterCacheService
       .getMasterData({
-        cacheKey: 'DIVISIONS',
+        cacheKey: MASTER_CACHE_KEYS.DIVISIONS,
 
         getCount$: () => this._divisionServices.getDivisionCount(),
 
@@ -183,54 +186,117 @@ export class DivisionComponent {
 
   /* ================= Inline Events ================= */
 
-  onRowAdded(row: any): void { 
-    console.log('➕ Row Added:', row);
-
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
+    debugger;
     const payLoad = {
-      Code: row.Code,
-      Name: row.Name,
+      Name: rowData.Name,
       IsActive: true,
       IsDeleted: false,
     };
 
-    this._divisionServices.create(payLoad).subscribe(() => {
-      this._masterCacheService.clear('DIVISIONS');
-      this.loadDivisions();
+    this._divisionServices.create(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
+        this._notification.createNotification(
+          'success',
+          'Division',
+          'Division created successfully!',
+        );
+        this.loadDivisions();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    console.log('✏️ Row Updated:', event.rowData);
+    const { rowData } = event;
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       IsActive: true,
       IsDeleted: false,
     };
-    this._divisionServices.update(payLoad).subscribe(() => {
-      this._masterCacheService.clear('DIVISIONS');
-      this.loadDivisions();
+
+    this._divisionServices.update(payLoad).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
+        this._notification.createNotification(
+          'success',
+          'Division',
+          'Division updated successfully!',
+        );
+        this.loadDivisions();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onRowDeleted(index: number): void {
- 
     const row = this.divisionData[index];
 
-    console.log('🗑️ Row Deleted:', row);
+    this._divisionServices.delete(row.Code).subscribe({
+      next: () => {
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
+        this._notification.createNotification(
+          'success',
+          'Division',
+          'Division deleted successfully!',
+        );
+        this.loadDivisions();
+      },
+      error: (err) => {
+        console.error('Create Document Attribute failed:', err);
 
-    this._divisionServices.delete(row.Code).subscribe(() => {
-      this._masterCacheService.clear('DIVISIONS');
-      this.loadDivisions();
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Attribute', message);
+      },
     });
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
-    console.log('Cell value changed:', event);
+    //console.log('Cell value changed:', event);
   }
 
   onSelectionChanged(selectedRows: any[]): void {
-    console.log('Selected rows:', selectedRows);
+    //console.log('Selected rows:', selectedRows);
     // Handle selection logic
   }
 }

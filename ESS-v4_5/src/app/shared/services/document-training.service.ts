@@ -69,7 +69,7 @@ export class DocumentTrainingService {
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocumentTraining/update-document-training`,
       payload
     );
