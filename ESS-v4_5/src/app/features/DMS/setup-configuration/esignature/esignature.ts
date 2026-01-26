@@ -45,7 +45,10 @@ export class ESignature implements AfterViewInit {
   private undoStack: string[] = [];
   private redoStack: string[] = [];
 
-  constructor(private http: HttpClient, private messageService: NzMessageService) {}
+  constructor(
+    private http: HttpClient,
+    private messageService: NzMessageService,
+  ) {}
 
   ngAfterViewInit(): void {
     this.initSignaturePad();
@@ -144,6 +147,44 @@ export class ESignature implements AfterViewInit {
 
   ngOnInit() {
     //this.sig = new SignaturePad(this.canvas.nativeElement);
+  }
+
+  loadSignatureFromFile(file: File): void {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+
+      // Clear existing drawing
+      this.sig.clear();
+
+      // Load image into SignaturePad
+      this.sig.fromDataURL(dataUrl, {
+        ratio: Math.max(window.devicePixelRatio || 1, 1),
+        width: this.canvas.nativeElement.offsetWidth,
+        height: this.canvas.nativeElement.offsetHeight,
+      });
+
+      // Save state for undo
+      this.saveState();
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  onSignatureUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files.length) return;
+
+    const file = input.files[0];
+
+    if (file.type !== 'image/png') {
+      this.messageService.error('Only PNG files allowed');
+      return;
+    }
+
+    this.loadSignatureFromFile(file);
+    input.value = '';
   }
 
   previewImage: string | undefined = '';

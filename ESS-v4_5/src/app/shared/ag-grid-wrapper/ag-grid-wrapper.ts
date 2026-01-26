@@ -7,6 +7,7 @@ import {
   Input,
   OnInit,
   Output,
+  signal,
   SimpleChanges,
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -26,6 +27,9 @@ import {
 } from 'ag-grid-community';
 import { GridConfig } from '../editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { ColumnDisplayOptionsComponent } from './column-display-options-component/column-display-options-component';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { FormsModule } from '@angular/forms';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 interface ColumnToggle {
   field: string;
@@ -38,10 +42,13 @@ interface ColumnToggle {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     AgGridAngular,
     NzAlertModule,
     NzSpinModule,
     ColumnDisplayOptionsComponent,
+    NzSwitchModule,
+    NzIconModule,
   ],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
@@ -198,10 +205,10 @@ export class AgGridWrapper implements OnInit {
     localStorage.setItem('documentGridColumns', JSON.stringify(this.columnToggles));
   }
 
-  toggleColumn(col: ColumnToggle) {
-    if (!this.gridApi) return;
+  toggleColumn(col: any, checked: boolean): void {
+    //if (!this.gridApi) return;
 
-    col.visible = !col.visible;
+    col.visible = checked;
     this.gridApi.setColumnsVisible([col.field], col.visible);
   }
 
@@ -214,19 +221,13 @@ export class AgGridWrapper implements OnInit {
     });
   }
 
-  toggleAllColumns(event: any) {
-    const visible = event.target.checked;
+  // toggleAllColumns(event: any) {
+  //   const visible = event.target.checked;
 
-    this.columnToggles?.forEach((c) => {
-      c.visible = visible;
-    });
-  }
-
-  onToggleColumn(col: ColumnToggle) {
-    if (!this.gridApi) return;
-
-    this.gridApi.setColumnsVisible([col.field], col.visible);
-  }
+  //   this.columnToggles?.forEach((c) => {
+  //     c.visible = visible;
+  //   });
+  // }
 
   onSortChanged() {
     if (!this.isGridInitialized) return;
@@ -274,5 +275,40 @@ export class AgGridWrapper implements OnInit {
 
   onCellClicked(event: any) {
     this.cellClicked.emit(event);
+  }
+
+  toggleShow = false;
+
+  toggleDisplayOptions(): void {
+    this.toggleShow = !this.toggleShow;
+  }
+
+  areAllColumnsVisible() {
+    this.columnToggles?.every((c) => c.visible);
+  }
+  isAllSelected = true;
+
+  toggleAllColumns(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+
+    if (!this.gridApi || !this.columnToggles?.length) {
+      return;
+    }
+
+    const fields = this.columnToggles.map((c) => c.field);
+
+    this.columnToggles.forEach((col) => {
+      col.visible = checked;
+    });
+
+    this.gridApi.setColumnsVisible(fields, checked);
+  }
+
+  readonly searchValue = signal('');
+  onFilterTextBoxChanged() {
+    this.gridApi.setGridOption(
+      'quickFilterText',
+      (document.getElementById('filter-text-box') as HTMLInputElement).value,
+    );
   }
 }

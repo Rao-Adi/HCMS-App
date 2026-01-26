@@ -63,9 +63,9 @@ export class DocumentType {
   Code: string = '';
   Name: string = '';
   CreatedBy: string = '';
-  CreatedAt: string = '';
+  CreatedAt: any = '';
   LastModifiedBy: string = '';
-  LastModifiedAt: string = '';
+  LastModifiedAt: any = '';
 }
 
 export interface SubDepartment {
@@ -73,9 +73,9 @@ export interface SubDepartment {
   Code: string;
   Name: string;
   CreatedBy: string;
-  CreatedAt: string;
+  CreatedAt: any;
   LastModifiedBy: string;
-  LastModifiedAt: string;
+  LastModifiedAt: any;
 }
 
 export interface Department {
@@ -85,9 +85,9 @@ export interface Department {
   Division: string;
   DivisionCode: string;
   CreatedBy: string;
-  CreatedAt: string;
+  CreatedAt: any;
   LastModifiedBy: string;
-  LastModifiedAt: string;
+  LastModifiedAt: any;
 }
 
 export interface AuditableEntity {

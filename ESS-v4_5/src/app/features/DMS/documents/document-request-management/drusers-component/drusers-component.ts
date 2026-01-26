@@ -7,6 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
@@ -142,7 +143,7 @@ export class DRUsersComponent {
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
-    private _notification : NotificationService
+    private _notification: NotificationService,
   ) {
     this.loadSampleData();
   }
@@ -186,7 +187,7 @@ export class DRUsersComponent {
         sort?.colId || 'Name',
         true,
         pageNumber,
-        pageSize
+        pageSize,
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
@@ -203,12 +204,14 @@ export class DRUsersComponent {
             SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
             SubDepartmentName: item.subDepartmentCode || item.SubDepartmentCode,
             ReportingTo: item.reportingTo || item.ReportingTo,
-            DateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            DateOfJoining: new CustomDateFormatPipe().transform(
+              item.dateOfJoining || item.DateOfJoining || '',
+            ),
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             Description: item.description || item.Description,
             CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: item.createdAt || item.CreatedAt || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           }));
           //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {
@@ -240,11 +243,7 @@ export class DRUsersComponent {
     };
 
     this._userService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
-        'success',
-        'User',
-        'User created successfully!'
-      ); 
+      this._notification.createNotification('success', 'User', 'User created successfully!');
     });
     const rowWithId = {
       ...rowData,
@@ -265,7 +264,7 @@ export class DRUsersComponent {
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     event.rowData.departmentName = this.getDisplayName(
       this.departments,
-      event.rowData.departmentId
+      event.rowData.departmentId,
     );
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
 

@@ -7,6 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AttributeMandatoryScopeService } from '@app/shared/services/attribute-mandatory-scope.service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
@@ -58,7 +59,7 @@ export class MandatoryCabinetWisePopup {
     private _notification: NotificationService,
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService
+    private _subDepartmentServices: SubDepartmentCacheService,
   ) {
     this.cabinetId = modalData.data;
     //console.log('Received cabinet id:', this.cabinetId);
@@ -79,8 +80,7 @@ export class MandatoryCabinetWisePopup {
       domLayout: 'autoHeight',
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
-    }; 
-
+    };
   }
 
   ngOnInit() {
@@ -158,7 +158,6 @@ export class MandatoryCabinetWisePopup {
       },
     ];
   }
- 
 
   private buildGrid(): void {
     this.gridConfig = {
@@ -211,7 +210,7 @@ export class MandatoryCabinetWisePopup {
         this._notification.createNotification(
           'success',
           'Document Attribute',
-          'Document Attribute created successfully!'
+          'Document Attribute created successfully!',
         );
 
         const rowWithId = {
@@ -246,7 +245,7 @@ export class MandatoryCabinetWisePopup {
 
   onRowUpdated(event: { rowData: any }): void {
     const { rowData } = event;
-    
+
     console.log('Row updated:', event);
     // Update display names
     const payLoad = {
@@ -257,13 +256,13 @@ export class MandatoryCabinetWisePopup {
       mandatory: rowData.mandatory,
       IsActive: true,
       IsDeleted: false,
-    }; 
+    };
     this._attributeMandatoryService.update(payLoad).subscribe({
       next: () => {
         this._notification.createNotification(
           'success',
           'Document Attribute',
-          'Document Attribute created successfully!'
+          'Document Attribute created successfully!',
         );
 
         const rowWithId = {
@@ -308,11 +307,11 @@ export class MandatoryCabinetWisePopup {
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionName);
     event.rowData.departmentName = this.getDisplayName(
       this.departments,
-      event.rowData.departmentName
+      event.rowData.departmentName,
     );
     event.rowData.subDepartmentName = this.getDisplayName(
       this.subDepartments,
-      event.rowData.subDepartmentName
+      event.rowData.subDepartmentName,
     );
     event.rowData.mandatory = this.getDisplayName(this.mandatoryOptions, event.rowData.mandatory);
 
@@ -369,9 +368,9 @@ export class MandatoryCabinetWisePopup {
             subDepartmentName: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
             mandatory: item.IsMandatory,
-            CreatedAt: item.CreatedAt,
+            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
             CreatedBy: item.CreatedBy,
-            LastModifiedAt: item.LastModifiedAt,
+            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
             LastModifiedBy: item.LastModifiedBy,
           }));
         } else {

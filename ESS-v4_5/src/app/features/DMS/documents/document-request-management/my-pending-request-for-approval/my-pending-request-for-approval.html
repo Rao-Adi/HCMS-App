@@ -13,4 +13,21 @@
   (pageSizeChange)="onPageSizeChanged($event)"
   (serverQuery)="GetAllDocuments($event)"
 >
+  <div grid-actions class="grid-action-icons">
+    <button class="grid-icon-btn" title="Approve" (click)="approve()">
+      <i class="bi bi-check2-square"></i>
+    </button>
+
+    <button class="grid-icon-btn" title="Disapprove" (click)="disapprove()">
+      <i class="bi bi-x-square"></i>
+    </button>
+
+    <button class="grid-icon-btn" title="Revert" (click)="revert()">
+      <i class="bi bi-arrow-left-square"></i>
+    </button>
+
+    <button class="grid-icon-btn" title="Export" (click)="revert()">
+      <i class="bi bi-filetype-xls"></i>
+    </button>
+  </div>
 </app-ag-grid-wrapper>

@@ -1,132 +1,86 @@
-<!-- <ag-grid-angular
-  class="ag-theme-alpine"
-  [ngStyle]="gridStyle"
-  [rowData]="rowData"
-  [columnDefs]="columnDefs"
-  [defaultColDef]="defaultColDef"
-  [pagination]="true"
-  (gridReady)="onGridReady($event)"
-  (sortChanged)="onSortChanged()"
-  (filterChanged)="onFilterChanged()"
-  (cellValueChanged)="onCellValueChanged($event)">
-</ag-grid-angular> -->
-
-<div *ngIf="showDisplayOption" class="display-options">
-  <div class="display-options-header">
-    Display Options
+<div class="row">
+  <div class="col-lg-2 col-md-2 col-sm-2">
+    <div class="row mb-2">
+      <div class="col-sm-3">
+        <div class="example-header">
+          <span>Search</span>
+          <input
+            class="form-control"
+            style="width: 250px"
+            nz-input
+            placeholder=" "
+            [(ngModel)]="searchValue"
+            (input)="onFilterTextBoxChanged()"
+          />
+        </div>
+      </div>
+    </div>
   </div>
+  <div class="col-lg-2 col-md-2 col-sm-2 mt-3">
+    <!-- 🔹 ACTIONS FROM PARENT -->
+    <ng-content select="[grid-actions]"></ng-content>
+  </div>
+  <div class="col-lg-8 col-md-8 col-sm-8">
+    <div class="grid-toolbar">
+      <button class="display-options-btn" (click)="toggleDisplayOptions()">
+        <i nz-icon nzType="setting"></i>
+        Display Options
+      </button>
+    </div>
 
-  <div class="display-options-body">
-    <label
-      class="option-item"
-      *ngFor="let col of columnToggles"
-    >
-      <input
-        type="checkbox"
-        [checked]="col.visible"
-        (change)="toggleColumn(col)"
-        [disabled]="!gridApi"
-      />
-      <span>{{ col.label }}</span>
-    </label>
+    <div class="display-options-panel" [class.open]="showDisplayOption && toggleShow">
+      <div class="panel-header">
+        <span>Visible Columns</span>
+
+        <div class="toggle-all">
+          <label class="switch">
+            <input type="checkbox" [checked]="isAllSelected" (change)="toggleAllColumns($event)" />
+            <span class="slider round"></span>
+          </label>
+          <span class="span mt-1">All</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <label class="column-chip" *ngFor="let col of columnToggles">
+          <nz-switch
+            nzSize="small"
+            [(ngModel)]="col.visible"
+            (ngModelChange)="toggleColumn(col, $event)"
+            [nzDisabled]="!gridApi"
+          ></nz-switch>
+          <span>{{ col.label }}</span>
+        </label>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Only show display options if provided -->
-<!-- <app-column-display-options-component
-  [columnToggles]="columnToggles"
-  (toggle)="onToggleColumn($event)"
->
-</app-column-display-options-component> -->
-
-<ag-grid-angular
-  class="ag-theme-alpine"
-  [ngStyle]="gridStyle"
-  [rowData]="rowData"
-  [gridOptions]="gridOptions"
-  [columnDefs]="finalColumnDefs"
-  [defaultColDef]="defaultColDef"
-  [context]="{ componentParent: this }"
-  [pagination]="true"
-  [rowHeight]="config.rowHeight"
-  [headerHeight]="config.headerHeight"
-  [pagination]="config.enablePagination"
-  [context]="gridContext"
-  [paginationPageSize]="config.pageSize"
-  [paginationPageSizeSelector]="config.pageSizeOptions"
-  [suppressCellFocus]="config.suppressCellFocus"
-  (gridReady)="onGridReady($event)"
-  (sortChanged)="onSortChanged()"
-  (filterChanged)="onFilterChanged()"
-  (cellValueChanged)="onCellValueChanged($event)"
-  (cellClicked)="onCellClicked($event)"
-  (selectionChanged)="onSelectionChanged()"
->
-</ag-grid-angular>
-<!-- 
-<nz-spin nzTip="Loading...">
-      <nz-alert
-        nzType="info"
-        nzMessage="Alert message title"
-        nzDescription="Further details about the context of this alert."
-      ></nz-alert>
-    </nz-spin> -->
-
-<!-- Pagination Footer -->
-<!-- <div class="ag-paging-panel">
-  <div class="ag-paging-row-summary">
-    Page {{ pageNumber }} of {{ totalPages }} ({{ totalRows }} rows)
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12">
+    <ag-grid-angular
+      class="ag-theme-alpine"
+      [ngStyle]="gridStyle"
+      [rowData]="rowData"
+      [gridOptions]="gridOptions"
+      [columnDefs]="finalColumnDefs"
+      [defaultColDef]="defaultColDef"
+      [context]="{ componentParent: this }"
+      [pagination]="true"
+      [rowHeight]="config.rowHeight"
+      [headerHeight]="config.headerHeight"
+      [pagination]="config.enablePagination"
+      [context]="gridContext"
+      [paginationPageSize]="config.pageSize"
+      [paginationPageSizeSelector]="config.pageSizeOptions"
+      [suppressCellFocus]="config.suppressCellFocus"
+      (gridReady)="onGridReady($event)"
+      (sortChanged)="onSortChanged()"
+      (filterChanged)="onFilterChanged()"
+      (cellValueChanged)="onCellValueChanged($event)"
+      (cellClicked)="onCellClicked($event)"
+      (selectionChanged)="onSelectionChanged()"
+    >
+    </ag-grid-angular>
   </div>
-
-  <div class="ag-paging-controls">
-    <button class="ag-paging-button" (click)="goToPage(1)" [disabled]="pageNumber === 1">«</button>
-
-    <button
-      class="ag-paging-button"
-      (click)="goToPage(pageNumber - 1)"
-      [disabled]="pageNumber === 1"
-    >
-      ‹
-    </button>
-
-    <button
-      class="ag-paging-button"
-      (click)="goToPage(pageNumber + 1)"
-      [disabled]="pageNumber === totalPages"
-    >
-      ›
-    </button>
-
-    <button
-      class="ag-paging-button"
-      (click)="goToPage(totalPages)"
-      [disabled]="pageNumber === totalPages"
-    >
-      »
-    </button>
-
-    <span class="ag-paging-page-size">
-      <select [value]="pageSize" (change)="onPageSizeChange($any($event.target).value)">
-        <option *ngFor="let s of pageSizeOptions" [value]="s">
-          {{ s }}
-        </option>
-      </select>
-    </span>
-  </div>
-</div> -->
-
-<!-- <ag-grid-angular
-  class="ag-theme-alpine"
-  [ngStyle]="gridStyle"
-  [rowData]="rowData"
-  [columnDefs]="columnDefs"
-  [defaultColDef]="defaultColDef"
-  [pagination]="pagination"
-  [paginationPageSize]="pageSize"
-  [rowModelType]="'rowModelType'"
-  (gridReady)="onGridReady($event)"
-  (cellValueChanged)="onCellValueChanged($event)"
-  (filterChanged)="onFilterChanged()"
-  (sortChanged)="onSortChanged()"
->
-</ag-grid-angular> -->
+</div>

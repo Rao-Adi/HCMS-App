@@ -4,14 +4,15 @@ import { DepartmentService } from '../department.service';
 import { Department } from '@app/shared/interfaces/interfaces';
 import { Observable } from 'rxjs';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentCacheService {
-  private readonly CACHE_KEY = MASTER_CACHE_KEYS.DEPARTMENTS;;
+  private readonly CACHE_KEY = MASTER_CACHE_KEYS.DEPARTMENTS;
 
   constructor(
     private masterCache: Mastercacheservice,
-    private departmentService: DepartmentService
+    private departmentService: DepartmentService,
   ) {}
 
   getDepartments(): Observable<Department[]> {
@@ -26,9 +27,11 @@ export class DepartmentCacheService {
         Division: item.Division ?? item.division ?? '',
         DivisionCode: item.DivisionCode ?? item.divisionCode ?? '',
         CreatedBy: item.CreatedBy ?? item.createdBy ?? '',
-        CreatedAt: item.CreatedAt ?? item.createdAt ?? '',
+        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
         LastModifiedBy: item.LastModifiedBy ?? item.lastModifiedBy ?? '',
-        LastModifiedAt: item.LastModifiedAt ?? item.lastModifiedAt ?? '',
+        LastModifiedAt: new CustomDateFormatPipe().transform(
+          item.LastModifiedAt || item.lastModifiedAt || '',
+        ),
       }),
     });
   }

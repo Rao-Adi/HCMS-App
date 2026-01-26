@@ -11,12 +11,11 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { CabinetStructureTabsConfigService } from '@app/shared/services/CabinetStructureTabsConfig.service';
 
-
 @Component({
   selector: 'app-cabinet-structure',
   imports: [
     CommonModule,
-    FormsModule, 
+    FormsModule,
     SafeTranslatePipe,
     CustomDateFormatPipe,
     DivisionComponent,
@@ -42,7 +41,7 @@ export class CabinetStructure {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private _cabietTabConfigService: CabinetStructureTabsConfigService
+    private _cabietTabConfigService: CabinetStructureTabsConfigService,
   ) {}
 
   ngOnInit() {
@@ -58,9 +57,9 @@ export class CabinetStructure {
             Id: Number(d.Id), // 🔥 FIX
             Name: d.Name,
             CreatedBy: d.CreatedBy,
-            CreatedAt: d.CreatedAt,
+            CreatedAt: new CustomDateFormatPipe().transform(d.CreatedAt || ''),
             LastModifiedBy: d.LastModifiedBy,
-            LastModifiedAt: d.LastModifiedAt,
+            LastModifiedAt: new CustomDateFormatPipe().transform(d.LastModifiedAt || ''),
           }));
           //console.log('Mapped tabs:', this.tabs);
         } else {
@@ -101,7 +100,7 @@ export class CabinetStructure {
                 LastModifiedBy: updated.Data.LastModifiedBy,
                 LastModifiedAt: updated.Data.LastModifiedAt,
               }
-            : tab
+            : tab,
         );
 
         // Update selected tab reference too (for UI refresh)

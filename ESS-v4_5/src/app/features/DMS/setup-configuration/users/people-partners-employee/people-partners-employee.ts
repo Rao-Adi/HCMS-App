@@ -12,6 +12,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-people-partners-employee',
@@ -317,12 +318,12 @@ export class PeoplePartnersEmployee {
             SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
             SubDepartmentName: item.subDepartmentCode || item.SubDepartmentCode,
             ReportingTo: item.reportingTo || item.ReportingTo,
-            DateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            DateOfJoining: new CustomDateFormatPipe().transform(item.dateOfJoining || item.DateOfJoining ||''),
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             Description: item.description || item.Description,
             CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: item.createdAt || item.CreatedAt || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           }));
           //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {

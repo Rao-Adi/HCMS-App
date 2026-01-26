@@ -35,7 +35,7 @@ import { MyPendingRequestForApproval } from '../../documents/document-request-ma
     SubDepartmentList,
     DepartmentList,
     DocumentTypeList,
-    MyPendingRequestForApproval
+    MyPendingRequestForApproval,
   ],
   templateUrl: './approval-documents.html',
   styleUrl: './approval-documents.css',
@@ -51,7 +51,7 @@ import { MyPendingRequestForApproval } from '../../documents/document-request-ma
 export class ApprovalDocuments {
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
-
+  dateFormat = 'dd/MMM/yyyy';
   pageSize = 10;
   rowData: any[] = [];
   totalDocuments = 0;
@@ -177,7 +177,7 @@ export class ApprovalDocuments {
       uploadDocument: 'Upload',
     }));
   }
-  
+
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
     this.selectedDepartment = '';

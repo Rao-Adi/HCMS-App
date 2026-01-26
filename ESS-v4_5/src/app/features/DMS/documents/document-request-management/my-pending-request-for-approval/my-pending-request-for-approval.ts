@@ -65,7 +65,7 @@ export class MyPendingRequestForApproval {
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestId', label: 'Document Type', visible: true },
+    { field: 'requestId', label: 'Request Id', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
@@ -113,9 +113,13 @@ export class MyPendingRequestForApproval {
       subdepartment: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
       justification: ['test'][i % 1],
       documentType: ['SOP', 'Procedure'][i % 2],
-      createdOn: ['13 Aug 2024', '09 Aug 2024'][i % 2],
-      pendingWith: ['13 Aug 2024', '09 Aug 2024'][i % 2],
+      createdOn: ['13/Aug/2025', '09/Aug/2026'][i % 2],
+      pendingWith: ['Finance Controller', 'Director Ops'][i % 2],
       documentTitle: ['Vechile Usage SOP', 'Vendor Payment Procedure'][i % 1],
     }));
   }
+
+  approve() {}
+  disapprove() {}
+  revert() {}
 }

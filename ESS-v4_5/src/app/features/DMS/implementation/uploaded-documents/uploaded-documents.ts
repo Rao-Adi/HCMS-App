@@ -5,6 +5,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentService } from '@app/shared/services/document.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -18,7 +19,7 @@ export class UploadedDocuments {
   gridConfig: GridConfig = {} as GridConfig;
 
   uploadedDocumentsData: any[] = [];
-  totalUplodedDocument = 0; 
+  totalUplodedDocument = 0;
 
   pageSize = 10;
   divisionPageSize = 10;
@@ -39,7 +40,7 @@ export class UploadedDocuments {
     { field: 'divisionName', headerName: 'divisionName', flex: 1 },
     { field: 'departmentName', headerName: 'departmentName', flex: 1 },
     { field: 'subDepartmentName', headerName: 'subDepartmentName', flex: 1 },
-    { field: 'nextReviewDate', headerName: 'nextReviewDate', flex: 1 }
+    { field: 'nextReviewDate', headerName: 'nextReviewDate', flex: 1 },
   ];
 
   constructor(private _documentService: DocumentService) {}
@@ -52,7 +53,6 @@ export class UploadedDocuments {
       filterModel: {},
     });
   }
-  
 
   GetAllUploadedDocuments(query: any) {
     const sort = query.sortModel?.[0];
@@ -66,7 +66,7 @@ export class UploadedDocuments {
         sort?.colId || 'Name',
         true,
         pageNumber,
-        pageSize
+        pageSize,
       )
       .subscribe((res) => {
         const items = res?.Data?.Items;
@@ -85,18 +85,18 @@ export class UploadedDocuments {
             departmentId: item.DepartmentCode,
             subDepartmentName: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
-            EffectiveFrom: item.EffectiveFrom,
-            EffectiveTo: item.EffectiveTo,
+            EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
+            EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
             DocumentURL: item.DocumentURL,
             nextReviewDate: item.NextReviewDate,
-            CreatedAt: item.CreatedAt,
+            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
             CreatedBy: item.CreatedBy,
-            LastModifiedAt: item.LastModifiedAt,
+            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
             LastModifiedBy: item.LastModifiedBy,
           }));
         } else {
           this.uploadedDocumentsData = [];
-        } 
+        }
       });
   }
 

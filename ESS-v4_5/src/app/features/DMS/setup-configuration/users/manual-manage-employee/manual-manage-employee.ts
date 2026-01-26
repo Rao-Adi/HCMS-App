@@ -16,6 +16,7 @@ import { DepartmentCacheService } from '@app/shared/services/CacheServices/depar
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-manual-manage-employee',
@@ -222,11 +223,11 @@ export class ManualManageEmployee {
             subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
             subDepartmentName: item.subDepartmentName || item.SubDepartmentName,
             reportingTo: item.reportingTo || item.ReportingTo,
-            dateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            dateOfJoining: new CustomDateFormatPipe().transform(item.dateOfJoining || item.DateOfJoining),
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: item.createdAt || item.CreatedAt || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           }));
           //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {

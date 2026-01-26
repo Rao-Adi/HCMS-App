@@ -1,21 +1,16 @@
 <div class="row mb-2">
   <div class="col-sm-3">
-<div class="example-header">
-  <span>Search</span>
-  <input nz-input placeholder="Basic usage" [(ngModel)]="value" (input)="onFilterTextBoxChanged()"/>
-
-  <!-- <input
-    class="form-control small"
-    type="text"
-    id="filter-text-box"
-    placeholder="Filter..."
-    (input)="onFilterTextBoxChanged()"
-  /> -->
-</div>
-
+    <div class="example-header">
+      <span>Search</span>
+      <input
+        nz-input
+        placeholder="Basic usage"
+        [(ngModel)]="value"
+        (input)="onFilterTextBoxChanged()"
+      />
+    </div>
   </div>
 </div>
-
 
 <ag-grid-angular
   [gridId]="gridId"

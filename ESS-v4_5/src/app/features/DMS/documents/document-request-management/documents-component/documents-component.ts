@@ -31,11 +31,12 @@ export class DocumentsComponent {
     editable: true,
   };
 
-  documentColumnDefs = [
+  documentColumnDefs: ColDef[] = [
     {
       field: 'documentType',
       headerName: 'Document Type',
       cellEditor: 'agSelectCellEditor',
+      pinned: 'left', // ✅ now correctly typed
       cellEditorParams: {
         values: ['Marketing Division', 'Software Division', 'Finance Division', 'HR Division'],
       },
@@ -44,6 +45,7 @@ export class DocumentsComponent {
       field: 'documentName',
       headerName: 'Document Name',
       cellEditor: 'agSelectCellEditor',
+      pinned: 'left', // ✅ now correctly typed
       cellEditorParams: {
         values: ['Marketing', 'IT', 'Finance', 'HR'],
       },
@@ -51,6 +53,7 @@ export class DocumentsComponent {
     {
       field: 'version',
       headerName: 'Version',
+      pinned: 'left', // ✅ now correctly typed
     },
     {
       field: 'division',
@@ -188,7 +191,7 @@ export class DocumentsComponent {
       division: ['Marketing', 'IT', 'HR', 'Admin'][i % 2],
       department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
       subdepartment: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      nextReviewDate:['10-10-2022','11-12-2025','10-10-2026'][i%2],
+      nextReviewDate: ['10-10-2022', '11-12-2025', '10-10-2026'][i % 2],
       designation: ['Trainee Software Engineer', 'Solution Architect'][i % 2],
       requestCreatedOn: ['13 Aug 2024', '09 Aug 2024'][i % 2],
       previousVersionCreatedOn: ['13 Aug 2024', '09 Aug 2024'][i % 2],
@@ -196,4 +199,9 @@ export class DocumentsComponent {
       url: ['https://abc.com'][i % 1],
     }));
   }
+
+  export() {}
+  print() {}
+  openHistory() {}
+  submit() {}
 }

@@ -15,7 +15,7 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
       [(ngModel)]="dateValue"
       style="width: 100%;"
       [nzDisabled]="disabled"
-      [nzFormat]="'dd-MMM-yyyy'"
+      [nzFormat]="'dd/MMM/yyyy'"
       (ngModelChange)="onDateChange($event)">
     </nz-date-picker>
   `,

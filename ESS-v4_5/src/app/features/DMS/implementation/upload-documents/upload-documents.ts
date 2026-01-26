@@ -5,6 +5,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
@@ -59,7 +60,7 @@ export class UploadDocuments {
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
-    private _notification: NotificationService
+    private _notification: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -200,7 +201,7 @@ export class UploadDocuments {
         sort?.colId || 'Name',
         true,
         pageNumber,
-        pageSize
+        pageSize,
       )
       .subscribe((res) => {
         const items = res?.Data?.Items;
@@ -220,13 +221,13 @@ export class UploadDocuments {
             departmentId: item.DepartmentCode,
             subDepartmentName: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
-            EffectiveFrom: item.EffectiveFrom,
-            EffectiveTo: item.EffectiveTo,
+            EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
+            EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
             DocumentURL: item.DocumentURL,
             nextReviewDate: item.NextReviewDate,
-            CreatedAt: item.CreatedAt,
+            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
             CreatedBy: item.CreatedBy,
-            LastModifiedAt: item.LastModifiedAt,
+            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
             LastModifiedBy: item.LastModifiedBy,
           }));
         } else {
@@ -250,14 +251,13 @@ export class UploadDocuments {
   @ViewChild('gridWrapper') gridWrapper!: EditableAgGridWrapper;
 
   onRowAdded(event: { rowData: any; file?: File }): void {
-     
     const { rowData, file } = event;
 
     if (!file) {
       this._notification.createNotification(
         'error',
         'Document',
-        'Please select a file before saving.'
+        'Please select a file before saving.',
       );
       return;
     }
@@ -284,7 +284,7 @@ export class UploadDocuments {
       this._notification.createNotification(
         'success',
         'Document',
-        'Document created successfully!'
+        'Document created successfully!',
       );
     });
 
@@ -313,7 +313,7 @@ export class UploadDocuments {
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     event.rowData.departmentName = this.getDisplayName(
       this.departments,
-      event.rowData.departmentId
+      event.rowData.departmentId,
     );
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
 

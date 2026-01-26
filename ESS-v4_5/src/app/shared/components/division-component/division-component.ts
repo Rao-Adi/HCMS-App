@@ -9,6 +9,7 @@ import {
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DivisionService } from '@app/shared/services/division.services';
 import { ColDef } from 'ag-grid-community';
 import { filter, map, tap } from 'rxjs';
@@ -125,9 +126,11 @@ export class DivisionComponent {
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {
@@ -150,9 +153,11 @@ export class DivisionComponent {
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {

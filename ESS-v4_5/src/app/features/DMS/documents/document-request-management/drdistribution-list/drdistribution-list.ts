@@ -7,6 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
@@ -197,12 +198,12 @@ export class DRDistributionList {
             SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
             SubDepartmentName: item.subDepartmentCode || item.SubDepartmentCode,
             ReportingTo: item.reportingTo || item.ReportingTo,
-            DateOfJoining: item.dateOfJoining || item.DateOfJoining,
+            DateOfJoining: new CustomDateFormatPipe().transform(item.dateOfJoining || item.DateOfJoining),
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             Description: item.description || item.Description,
             CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: item.createdAt || item.CreatedAt || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || '') 
           }));
           //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {

@@ -5,6 +5,7 @@ import { DocumentType } from '@app/shared/interfaces/interfaces';
 import { Observable } from 'rxjs'; 
 import { DocumentTypeService } from '../documentType.service';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentTypeCacheService {
@@ -22,9 +23,9 @@ export class DocumentTypeCacheService {
         Code: item.Code || item.code,
         Name: item.Name || item.name,
         CreatedBy: item.CreatedBy || item.createdBy || '',
-        CreatedAt: item.CreatedAt || item.createdAt || '',
+        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
         LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-        LastModifiedAt: item.LastModifiedAt || item.lastModifiedAt || '',
+        LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || item.lastModifiedAt || ''),
       }),
     });
   }

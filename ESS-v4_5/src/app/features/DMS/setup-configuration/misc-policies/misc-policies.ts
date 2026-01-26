@@ -7,6 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -186,7 +187,7 @@ export class MiscPolicies {
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: item.createdAt || item.CreatedAt || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           }));
           //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {

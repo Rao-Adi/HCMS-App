@@ -38,7 +38,7 @@ import { ResponsibilityTransferService } from '@app/shared/services/responsibili
 export class ResponsibilityTransferForm {
   public noRowsOverlay: string = '';
   footerRender = (): string => 'extra footer';
-
+dateFormat = 'dd/MMM/yyyy';
   selectedTab: string = 'Request';
   switchValue1 = false;
   switchValue2 = false;

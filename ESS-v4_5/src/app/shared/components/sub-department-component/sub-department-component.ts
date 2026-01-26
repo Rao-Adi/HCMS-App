@@ -9,6 +9,7 @@ import {
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
@@ -171,9 +172,11 @@ export class SubDepartmentComponent {
           Department: item.Department || item.Department || '',
           DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
           CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {
@@ -230,9 +233,9 @@ export class SubDepartmentComponent {
           Department: item.Department || item.department || '',
           DepartmentCode: item.DepartmentCode || item.departmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedAt: item.CreatedAt || item.createdAt || '',
-          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-          LastModifiedAt: item.LastModifiedAt || item.lastModifiedAt || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(item.lastModifiedAt || item.LastModifiedAt || '')
         }),
       })
       .subscribe((data) => {

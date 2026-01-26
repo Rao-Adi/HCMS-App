@@ -9,6 +9,7 @@ import {
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -79,8 +80,8 @@ export class DocumentTypeComponent {
       {
         field: 'Code',
         headerName: 'Code',
-        type: 'text',
-        required: true,
+        type: 'readonly',
+        required: false,
         minWidth: 150,
         pinned: 'left',
       },
@@ -130,9 +131,9 @@ export class DocumentTypeComponent {
           Name: item.name || item.Name,
           Description: item.description || item.Description,
           CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(item.lastModifiedAt || item.LastModifiedAt || '')
         }),
       })
       .subscribe((data) => {
@@ -157,9 +158,11 @@ export class DocumentTypeComponent {
           Name: item.name || item.Name,
           Description: item.description || item.Description,
           CreatedBy: item.createdBy || item.CreatedBy || '',
-          CreatedAt: item.createdAt || item.CreatedAt || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: item.lastModifiedAt || item.LastModifiedAt || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {
@@ -188,7 +191,6 @@ export class DocumentTypeComponent {
     const { rowData } = event;
 
     const payLoad = {
-      Code: rowData.Code,
       Name: rowData.Name,
       Description: rowData.Description,
       IsActive: true,
@@ -289,7 +291,6 @@ export class DocumentTypeComponent {
         this._notification.createNotification('error', 'Document Attribute', message);
       },
     });
- 
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {

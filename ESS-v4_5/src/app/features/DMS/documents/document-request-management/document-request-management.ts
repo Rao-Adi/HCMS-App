@@ -331,7 +331,7 @@ export class DocumentRequestManagement {
   showDocumentDiv: boolean = false;
   showOtherDiv: boolean = false;
   onAuthorityTypeChange(value: string | null): void {
-    debugger;
+   
     this.selectedAuthorityType = value;
     if (this.selectedAuthorityType == '1') {
       this.showOtherDiv = true;
@@ -465,4 +465,6 @@ export class DocumentRequestManagement {
         break;
     }
   }
+
+  
 }
