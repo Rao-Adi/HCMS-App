@@ -191,6 +191,7 @@ export class DocumentTypeComponent {
     const { rowData } = event;
 
     const payLoad = {
+      CompanyId: 1,
       Name: rowData.Name,
       Description: rowData.Description,
       IsActive: true,
@@ -228,6 +229,7 @@ export class DocumentTypeComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
     const payLoad = {
+      CompanyId: 1,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       Description: event.rowData.Description,

@@ -10,9 +10,6 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
@@ -20,8 +17,8 @@ import { AverageDocumentScoreModal } from '../average-document-score-modal/avera
 import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
-import { ColumnDisplayOptionsComponent } from '@app/shared/ag-grid-wrapper/column-display-options-component/column-display-options-component';
 import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -36,13 +33,9 @@ import { MyPendingRequestForApproval } from '../document-request-management/my-p
     NzRadioModule,
     NzButtonModule,
     NzModalModule,
-    AgGridWrapper,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
     DocumentTypeList,
-    ColumnDisplayOptionsComponent,
-    MyPendingRequestForApproval
+    MyPendingRequestForApproval,
+    CabinetStructureList,
   ],
   templateUrl: './document-authorization-post-training.html',
   styleUrl: './document-authorization-post-training.css',
@@ -202,7 +195,6 @@ export class DocumentAuthorizationPostTraining {
     this.applyColumnToggles();
   }
 
-  
   applyColumnToggles() {
     if (!this.gridApi || !this.columnToggles) return;
 

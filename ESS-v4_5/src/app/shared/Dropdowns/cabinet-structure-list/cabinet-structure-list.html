@@ -1,0 +1,103 @@
+<div class="row">
+  <ng-container *ngIf="hierarchyLevels$ | async as levels">
+    <div class="col-lg-4 col-md-4 col-sm-4 mb-10" *ngFor="let level of levels; let idx = index">
+      <!-- Dynamic Label -->
+      <div class="PnlHeading">
+        <label>{{ level.title }}</label>
+      </div>
+
+      <!-- LEVEL 1 -->
+      <app-division-list
+        *ngIf="level.level === 1"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'Select ' + level.title"
+        [(ngModel)]="selectedValues[1]"
+        (valueChange)="onValueChange(1, $event)"
+        width="250px"
+      >
+      </app-division-list>
+
+      <!-- LEVEL 2 -->
+      <app-department-list
+        *ngIf="level.level === 2"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'Select ' + level.title"
+        [division]="selectedValues[1]"
+        [(ngModel)]="selectedValues[2]"
+        (valueChange)="onValueChange(2, $event)"
+        width="250px"
+      >
+      </app-department-list>
+
+      <!-- LEVEL 3 -->
+      <app-sub-department-list
+        *ngIf="level.level === 3"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'Select ' + level.title"
+        [department]="selectedValues[2]"
+        [(ngModel)]="selectedValues[3]"
+        (valueChange)="onValueChange(3, $event)"
+        width="250px"
+      >
+      </app-sub-department-list>
+
+      <!-- Add LEVEL 4 here when needed -->
+      <!-- <app-business-domain-list *ngIf="level.level === 4" ... > -->
+    </div>
+  </ng-container>
+
+  <!-- Optional: loading / empty state -->
+  <div class="col-12 text-center" *ngIf="!(hierarchyLevels$ | async)">Loading hierarchy...</div>
+</div>
+
+<!-- <div class="row">
+
+  <ng-container *ngFor="let level of dropdownLevels; let idx = index">
+
+    <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+ 
+      <div class="PnlHeading">
+        <label>{{ level.title }}</label>
+      </div>
+ 
+      <app-division-list
+        *ngIf="level.level === 1"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'Select ' + level.title"
+        [(ngModel)]="selectedValues[1]"
+        (valueChange)="onValueChange(1, $event)"
+        width="250px">
+      </app-division-list>
+ 
+      <app-department-list
+        *ngIf="level.level === 2"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'Select ' + level.title"
+        [division]="selectedValues[1]"
+        [(ngModel)]="selectedValues[2]"
+        (valueChange)="onValueChange(2, $event)"
+        width="250px">
+      </app-department-list>
+ 
+      <app-sub-department-list
+        *ngIf="level.level === 3"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'Select ' + level.title"
+        [department]="selectedValues[2]"
+        [(ngModel)]="selectedValues[3]"
+        (valueChange)="onValueChange(3, $event)"
+        width="250px">
+      </app-sub-department-list>
+
+ 
+    </div>
+
+  </ng-container>
+
+</div> -->

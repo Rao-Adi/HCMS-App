@@ -46,7 +46,6 @@ export class DivisionComponent {
   ];
 
   constructor(
-    private cdr: ChangeDetectorRef,
     private _divisionServices: DivisionService,
     private _masterCacheService: Mastercacheservice,
     private _notification: NotificationService,
@@ -195,6 +194,7 @@ export class DivisionComponent {
     const { rowData } = event;
     debugger;
     const payLoad = {
+      CompanyId: 1,
       Name: rowData.Name,
       IsActive: true,
       IsDeleted: false,
@@ -231,6 +231,7 @@ export class DivisionComponent {
   onRowUpdated(event: { rowData: any }): void {
     const { rowData } = event;
     const payLoad = {
+      CompanyId: 1,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       IsActive: true,

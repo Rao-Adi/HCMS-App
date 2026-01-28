@@ -15,6 +15,7 @@ import { DepartmentList } from '@app/shared/Dropdowns/department-list/department
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 import { UserService } from '@app/shared/services/user-service';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-approval-workflow-policy-external-users',
@@ -32,6 +33,7 @@ import { UserService } from '@app/shared/services/user-service';
     DepartmentList,
     DocumentTypeList,
     DesignationList,
+    CabinetStructureList
   ],
   templateUrl: './approval-workflow-policy-external-users.html',
   styleUrl: './approval-workflow-policy-external-users.css',

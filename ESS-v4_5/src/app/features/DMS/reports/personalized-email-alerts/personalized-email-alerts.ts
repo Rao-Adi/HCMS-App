@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -11,10 +10,8 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-personalized-email-alerts',
@@ -28,9 +25,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
     NzRadioModule,
     NzButtonModule,
     NzCheckboxModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
+    CabinetStructureList,
     DocumentTypeList,
   ],
   templateUrl: './personalized-email-alerts.html',

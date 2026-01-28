@@ -1,135 +1,139 @@
 <div class="container-fluid">
   <div class="row">
-    <div class="col-lg-12 col-md-12 col-sm-12"> 
-        <div class="card-custom">
-          <div class="clearfix">
-            <div class="pull-left">
-              <h3 class="mt-0">My Approvals – Request for Document Creation/Update</h3>
-              <small class="text-muted">My Approvals – Request for Document Creation/Update</small>
-            </div>
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">My Approvals – Request for Document Creation/Update</h3>
+            <small class="text-muted">My Approvals – Request for Document Creation/Update</small>
           </div>
+        </div>
+        <br />
+        <hr />
+
+        <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+          <h3 class="PnlHeader">
+            {{ 'labels.Filters' | safeTranslate }}
+          </h3>
           <br />
-          <hr />
-
-          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <h3 class="PnlHeader">
-              {{ 'labels.Filters' | safeTranslate }}
-            </h3>
-            <br />
-            <div class="row">
-              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.Division' | safeTranslate }} </label>
-                    </div>
-                    <div class="Divtxtemployeeschright" style="width: 250px">
-                      <div>
-                        <app-division-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select Division"
-                          [(ngModel)]="selectedDivisions"
-                          (valueChange)="onDivisionChange($event)"
-                          width="250px"
-                        >
-                        </app-division-list>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.Department' | safeTranslate }}</label>
-                    </div>
-                    <div>
-                      <app-department-list
-                        valueKey="CODE"
-                        labelKey="NAME"
-                        placeholder="Select Department"
-                        [division]="selectedDivisions"
-                        [(ngModel)]="selectedDepartment"
-                        (valueChange)="onDepartmentsChange($event)"
-                        width="250px"
-                      >
-                      </app-department-list>
-                    </div>
-                  </div>
-
-                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
-                    </div>
-                    <div>
-                      <app-sub-department-list
-                        valueKey="CODE"
-                        labelKey="NAME"
-                        placeholder="Select SubDepartment"
-                        [department]="selectedDepartment"
-                        [(ngModel)]="selectedSubDepartment"
-                        width="250px"
-                      >
-                      </app-sub-department-list>
-                    </div>
-                  </div>
-
-              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                <div class="PnlHeading">
-                  <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
-                </div>
+          <div class="row">
+            <!-- <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+              <div class="PnlHeading">
+                <label>{{ 'labels.Division' | safeTranslate }} </label>
+              </div>
+              <div class="Divtxtemployeeschright" style="width: 250px">
                 <div>
-                  <app-document-type-list
+                  <app-division-list
                     valueKey="CODE"
                     labelKey="NAME"
-                    placeholder="Select DocumentType"
-                    [(ngModel)]="selectedDocumentType"
-                    (valueChange)="onDocumentTypeChange($event)"
+                    placeholder="Select Division"
+                    [(ngModel)]="selectedDivisions"
+                    (valueChange)="onDivisionChange($event)"
                     width="250px"
                   >
-                  </app-document-type-list>
+                  </app-division-list>
                 </div>
               </div>
             </div>
-          </div>
-          <br />
-          <hr />
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="main-content d-flex flex-column min-vw-0">
-              <div class="custom-tab-container">
-                <button
-                  class="tab-button"
-                  tabindex="0"
-                  [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
-                  (click)="selectedTab = 'Pending'"
-                >
-                  Pending
-                </button>
-                <button
-                  class="tab-button"
-                  tabindex="0"
-                  [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
-                  (click)="selectedTab = 'Approved'"
-                >
-                  Approved
-                </button>
 
-                <button
-                  class="tab-button"
-                  tabindex="0"
-                  [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
-                  (click)="selectedTab = 'Disapproved'"
-                >
-                  Disapproved
-                </button>
+            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+              <div class="PnlHeading">
+                <label>{{ 'labels.Department' | safeTranslate }}</label>
               </div>
+              <div>
+                <app-department-list
+                  valueKey="CODE"
+                  labelKey="NAME"
+                  placeholder="Select Department"
+                  [division]="selectedDivisions"
+                  [(ngModel)]="selectedDepartment"
+                  (valueChange)="onDepartmentsChange($event)"
+                  width="250px"
+                >
+                </app-department-list>
+              </div>
+            </div>
 
-              <div class="row row-space" *ngIf="selectedTab === 'Pending'">
-                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="status-box-leftColmd6-standard">
-                    <h3 class="PnlHeader">Documents</h3>
-                    <br />
-                    <div class="row">
-                      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                         <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                        <!-- <app-ag-grid-wrapper
+            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+              <div class="PnlHeading">
+                <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
+              </div>
+              <div>
+                <app-sub-department-list
+                  valueKey="CODE"
+                  labelKey="NAME"
+                  placeholder="Select SubDepartment"
+                  [department]="selectedDepartment"
+                  [(ngModel)]="selectedSubDepartment"
+                  width="250px"
+                >
+                </app-sub-department-list>
+              </div>
+            </div> -->
+
+             <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                      <app-cabinet-structure-list></app-cabinet-structure-list>
+                    </div>
+                    
+            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+              <div class="PnlHeading">
+                <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+              </div>
+              <div>
+                <app-document-type-list
+                  valueKey="CODE"
+                  labelKey="NAME"
+                  placeholder="Select DocumentType"
+                  [(ngModel)]="selectedDocumentType"
+                  (valueChange)="onDocumentTypeChange($event)"
+                  width="250px"
+                >
+                </app-document-type-list>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
+                (click)="selectedTab = 'Pending'"
+              >
+                Pending
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
+                (click)="selectedTab = 'Approved'"
+              >
+                Approved
+              </button>
+
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
+                (click)="selectedTab = 'Disapproved'"
+              >
+                Disapproved
+              </button>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'Pending'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Documents</h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                      <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                      <!-- <app-ag-grid-wrapper
                           [gridStyle]="{ width: '100%', height: '250px' }"
                           [columnDefs]="pendingDocumentsGridColumnDefs"
                           [defaultColDef]="defaultColDef"
@@ -143,19 +147,19 @@
                           (serverQuery)="GetAllPendingDocuments($event)"
                         >
                         </app-ag-grid-wrapper> -->
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="row row-space" *ngIf="selectedTab === 'Approved'">
-                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="status-box-leftColmd6-standard">
-                    <h3 class="PnlHeader">Documents</h3>
-                    <br />
-                     <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                    <!-- <app-ag-grid-wrapper
+            <div class="row row-space" *ngIf="selectedTab === 'Approved'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Documents</h3>
+                  <br />
+                  <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                  <!-- <app-ag-grid-wrapper
                       [gridStyle]="{ width: '100%', height: '250px' }"
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
@@ -169,17 +173,17 @@
                       (serverQuery)="GetAllApprovedDocuments($event)"
                     >
                     </app-ag-grid-wrapper> -->
-                  </div>
                 </div>
               </div>
+            </div>
 
-              <div class="row row-space" *ngIf="selectedTab === 'Disapproved'">
-                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="status-box-leftColmd6-standard">
-                    <h3 class="PnlHeader">Documents</h3>
-                    <br />
-                     <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                    <!-- <app-ag-grid-wrapper
+            <div class="row row-space" *ngIf="selectedTab === 'Disapproved'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Documents</h3>
+                  <br />
+                  <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
+                  <!-- <app-ag-grid-wrapper
                       [gridStyle]="{ width: '100%', height: '250px' }"
                       [columnDefs]="pendingDocumentsGridColumnDefs"
                       [defaultColDef]="defaultColDef"
@@ -193,12 +197,12 @@
                       (serverQuery)="GetAllDisApprovedDocuments($event)"
                     >
                     </app-ag-grid-wrapper> -->
-                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div> 
+        </div>
+      </div>
     </div>
   </div>
 </div>

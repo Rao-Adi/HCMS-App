@@ -7,24 +7,18 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
-import { NzButtonModule } from 'ng-zorro-antd/button';
-import { ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
-import { FormsModule } from '@angular/forms';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { NzButtonModule } from 'ng-zorro-antd/button'; 
+import { FormsModule } from '@angular/forms'; 
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DRDistributionList } from './drdistribution-list/drdistribution-list';
 import { DRUsersComponent } from './drusers-component/drusers-component';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { NzInputModule } from 'ng-zorro-antd/input';
-import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
-import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit'; 
+import { NzInputModule } from 'ng-zorro-antd/input'; 
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal'; 
 import { DocumentsComponent } from './documents-component/documents-component';
 import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { SelectList } from '@app/shared/interfaces/interfaces';
 
 @Component({
   selector: 'app-document-request-management',
@@ -39,16 +33,14 @@ import { MyPendingRequestForApproval } from './my-pending-request-for-approval/m
     NzRadioModule,
     NzButtonModule,
     NzInputModule,
-    NzModalModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
+    NzModalModule, 
     DocumentTypeList,
     DRDistributionList,
     DRUsersComponent,
     DMSRichTextEdit,
     DocumentsComponent,
-    MyPendingRequestForApproval
+    MyPendingRequestForApproval,
+    CabinetStructureList
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',

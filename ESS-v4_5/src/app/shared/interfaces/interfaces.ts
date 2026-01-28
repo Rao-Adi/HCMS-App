@@ -21,6 +21,20 @@ export interface ApiResponse<T> {
   Data: T;
 }
 
+export interface CabinetTabVM {
+  level: number;
+  title: string;
+  createdBy: string | null;
+  createdAt: string | null;
+  lastModifiedBy: string | null;
+  lastModifiedAt: string | null;
+}
+
+export interface CabinetLevel {
+  level: number;
+  title: string;
+}
+
 
 export interface Division {
   Id: number;

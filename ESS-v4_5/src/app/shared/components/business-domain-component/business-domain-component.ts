@@ -262,6 +262,7 @@ export class BusinessDomainComponent {
     const { rowData } = event;
 
     const payLoad = {
+      CompanyId: 1,
       Code: rowData.Code,
       Name: rowData.Name,
       DepartmentCode: rowData.SubDepartment,
@@ -301,6 +302,7 @@ export class BusinessDomainComponent {
     //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
+      CompanyId: 1,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.SubDepartment,

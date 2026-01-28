@@ -12,11 +12,9 @@ import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { MyPendingRequestForApproval } from '../../documents/document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -31,9 +29,7 @@ import { MyPendingRequestForApproval } from '../../documents/document-request-ma
     NzRadioModule,
     NzButtonModule,
     NzDatePickerModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
+    CabinetStructureList,
     DocumentTypeList,
     MyPendingRequestForApproval
   ],

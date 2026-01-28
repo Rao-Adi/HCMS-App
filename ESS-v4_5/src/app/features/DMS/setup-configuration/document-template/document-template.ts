@@ -7,14 +7,12 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NZ_ICONS, NzIconModule } from 'ng-zorro-antd/icon';
-import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzSelectModule } from 'ng-zorro-antd/select'; 
 import { NzIconService } from 'ng-zorro-antd/icon';
 import { DownloadOutline } from '@ant-design/icons-angular/icons';
 import { BehaviorSubject, catchError, debounceTime, map, Observable, of, switchMap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { NzFormModule } from 'ng-zorro-antd/form';
-import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzFormModule } from 'ng-zorro-antd/form'; 
 import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
 import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
@@ -22,6 +20,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { TemplateService } from '@app/shared/services/template.service';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 
@@ -47,6 +46,7 @@ interface MockUser {
     DocumentTypeList,
     DMSRichTextEdit,
     NzCheckboxModule,
+    CabinetStructureList
   ],
   providers: [
     MedicalReimbursementService,

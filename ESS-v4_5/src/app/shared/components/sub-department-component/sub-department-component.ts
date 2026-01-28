@@ -251,6 +251,7 @@ export class SubDepartmentComponent {
     const { rowData } = event;
 
     const payLoad = {
+      CompanyId: 1,
       Name: rowData.Name,
       DepartmentCode: rowData.Department,
       IsActive: true,
@@ -289,6 +290,7 @@ export class SubDepartmentComponent {
     //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
+      CompanyId: 1,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.Department,

@@ -17,6 +17,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { UserService } from '@app/shared/services/user-service';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
@@ -34,7 +35,8 @@ import { UserService } from '@app/shared/services/user-service';
     DepartmentList,
     DocumentTypeList,
     DesignationList,
-    RoleList
+    RoleList,
+    CabinetStructureList
   ],
   templateUrl: './responsibility-transfer-workflow.html',
   styleUrl: './responsibility-transfer-workflow.css',

@@ -8,6 +8,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
@@ -83,6 +84,48 @@ export class DRUsersComponent {
     ];
   }
 
+  
+
+  constructor(
+    private _userService: UserService,
+    private _documentTypeService: DocumentTypeCacheService,
+    private _divisionServices: DivisionCacheService,
+    private _departmentCacheService: DepartmentCacheService,
+    private _subDepartmentServices: SubDepartmentCacheService,
+    private _notification: NotificationService,
+    private _cabinetHirarchyService: CabinetHierarchyService
+  ) {
+    this.loadSampleData();
+  }
+
+  ngOnInit() {
+    this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    this.getAllDocumentTypes();
+    this.getAllDivisionList();
+    this.getAllDepartmentList();
+    this.getAllSubDepartmentList();
+  }
+
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+  }
+
   private getColumns(): GridColumn[] {
     return [
       // ✅ DIVISION
@@ -135,44 +178,6 @@ export class DRUsersComponent {
         required: true,
       },
     ];
-  }
-
-  constructor(
-    private _userService: UserService,
-    private _documentTypeService: DocumentTypeCacheService,
-    private _divisionServices: DivisionCacheService,
-    private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService,
-    private _notification: NotificationService,
-  ) {
-    this.loadSampleData();
-  }
-
-  ngOnInit() {
-    this.getAllDocumentTypes();
-    this.getAllDivisionList();
-    this.getAllDepartmentList();
-    this.getAllSubDepartmentList();
-  }
-
-  private buildGrid(): void {
-    this.gridConfig = {
-      columns: this.getColumns(),
-      enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
-      enableSorting: true,
-      enableFiltering: true,
-      enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
-      rowHeight: 47,
-      headerHeight: 40,
-      domLayout: 'autoHeight',
-      theme: 'ag-theme-alpine',
-      suppressCellFocus: true,
-    };
   }
 
   GetAllManuallyManageEmployee(query: any) {

@@ -66,8 +66,10 @@
                         </app-document-type-list>
                       </div>
                     </div>
-
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                    <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                      <app-cabinet-structure-list></app-cabinet-structure-list>
+                    </div>
+                    <!-- <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                       <div class="PnlHeading">
                         <label>{{ 'labels.Division' | safeTranslate }} </label>
                       </div>
@@ -119,7 +121,7 @@
                         >
                         </app-sub-department-list>
                       </div>
-                    </div>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -176,7 +178,7 @@
                             style="width: 250px !important"
                             [ngClass]="{
                               'form-control': true,
-                              'input-sm': true
+                              'input-sm': true,
                             }"
                           />
                         </div>
@@ -374,34 +376,33 @@
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'DocumentCreation'">
-   
-                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="main-content d-flex flex-column min-vw-0">
-                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <div class="status-box-leftColmd6-standard">
-                        <h3 class="PnlHeader">Approval Authorities for cross-functional users</h3>
-                        <br />
-                        <div class="row">
-                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                            <nz-switch
-                              [(ngModel)]="switchValue1"
-                              [nzControl]="true"
-                              (click)="clickSwitch('manual')"
-                              [nzLoading]="loading"
-                            >
-                            </nz-switch>
-                            <span class="d-flex"
-                              >If a document has cross-functional users, then their respective Heads
-                              of Division will approve the document first (in parallel). After each
-                              Head approves, the document will then go to the next approval
-                              authority as per the sequence configured above.</span
-                            >
-                          </div>
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="main-content d-flex flex-column min-vw-0">
+                  <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="status-box-leftColmd6-standard">
+                      <h3 class="PnlHeader">Approval Authorities for cross-functional users</h3>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                          <nz-switch
+                            [(ngModel)]="switchValue1"
+                            [nzControl]="true"
+                            (click)="clickSwitch('manual')"
+                            [nzLoading]="loading"
+                          >
+                          </nz-switch>
+                          <span class="d-flex"
+                            >If a document has cross-functional users, then their respective Heads
+                            of Division will approve the document first (in parallel). After each
+                            Head approves, the document will then go to the next approval authority
+                            as per the sequence configured above.</span
+                          >
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
             </div>
           </div>
         </div>

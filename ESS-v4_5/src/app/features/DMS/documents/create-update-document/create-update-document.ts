@@ -12,14 +12,14 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DivisionService } from '@app/shared/services/division.services';
 import { DepartmentService } from '@app/shared/services/department.service';
-import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker'; 
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { CompanyList } from '@app/shared/Dropdowns/company-list/company-list';
 import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+
+
 @Component({
   selector: 'app-create-update-document',
   imports: [
@@ -32,15 +32,12 @@ import { MyPendingRequestForApproval } from '../document-request-management/my-p
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    NzDatePickerModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
-    DocumentTypeList,
-    DivisionList,
+    NzDatePickerModule, 
+    DocumentTypeList, 
     CompanyList,
     DMSRichTextEdit,
-    MyPendingRequestForApproval
+    MyPendingRequestForApproval,
+    CabinetStructureList
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',

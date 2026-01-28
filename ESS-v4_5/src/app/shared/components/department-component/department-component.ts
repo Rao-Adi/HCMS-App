@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -20,6 +20,11 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './department-component.css',
 })
 export class DepartmentComponent {
+  @Input() level!: number;
+  @Input() levelTitles!: Record<number, string>;
+  currentTitle = '';
+  parentTitle = '';
+
   gridConfig: GridConfig = {} as GridConfig;
 
   selectedPageSize = 10; // default value
@@ -53,7 +58,10 @@ export class DepartmentComponent {
     private _notification: NotificationService,
   ) {}
 
-  ngOnInit() {
+  ngOnInit() { 
+    this.currentTitle = this.levelTitles[this.level]; // Department
+    this.parentTitle = this.levelTitles[this.level - 1]; // Division
+
     this.getAllDivisionList();
   }
 
@@ -100,7 +108,7 @@ export class DepartmentComponent {
       // ✅ DIVISION
       {
         field: 'Division',
-        headerName: 'Division',
+        headerName: `${this.parentTitle}`,
         type: 'dropdown',
         dropdownOptions: this.divisions,
         dropdownValueField: 'id',
@@ -227,6 +235,7 @@ export class DepartmentComponent {
     const { rowData } = event;
 
     const payLoad = {
+      CompanyId: 1,
       Name: rowData.Name,
       DivisionCode: rowData.Division,
       IsActive: true,
@@ -264,6 +273,7 @@ export class DepartmentComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
     const payLoad = {
+      CompanyId: 1,
       Name: event.rowData.Name,
       DivisionCode: event.rowData.DivisionCode,
       IsActive: true,

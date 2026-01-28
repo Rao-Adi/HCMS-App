@@ -18,6 +18,7 @@ import { DesignationList } from '@app/shared/Dropdowns/designation-list/designat
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { UserService } from '@app/shared/services/user-service';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-approval-workflow-policy-management',
@@ -36,6 +37,7 @@ import { UserService } from '@app/shared/services/user-service';
     DocumentTypeList,
     DesignationList,
     RoleList,
+    CabinetStructureList
   ],
   templateUrl: './approval-workflow-policy-management.html',
   styleUrl: './approval-workflow-policy-management.css',

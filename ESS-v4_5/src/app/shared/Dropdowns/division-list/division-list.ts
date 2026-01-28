@@ -4,6 +4,9 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DivisionService } from '@app/shared/services/division.services';
 import { SelectList } from '@app/shared/interfaces/interfaces';
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-division-list',
@@ -31,14 +34,25 @@ export class DivisionList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
+  totalDivisions = 0;
+  divisionData: SelectList[] = [];
+  divisions: any[] = []; // for dropdowns
 
-  constructor(private _divisionServices: DivisionService) {}
+  constructor(
+    private _divisionServices: DivisionService,
+    private _masterCacheService: Mastercacheservice,
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
-    this.getAllDivisions();
+    this.getAllDivisions({
+      pageNumber: 1,
+      pageSize: 1000,
+      sortModel: [],
+      filterModel: {},
+    });
   }
 
   writeValue(value: any): void {
@@ -64,17 +78,34 @@ export class DivisionList implements ControlValueAccessor {
     this.valueChange.emit(value);
   }
 
-  getAllDivisions = () => {
-    this._divisionServices.getDivisionList().subscribe((res) => {
-      if (res?.Data) {
-        this.data = (res.Data ?? []).map((d: any) => ({
+  getAllDivisions = (query: any) => {
+    this._masterCacheService
+      .getMasterData({
+        cacheKey: MASTER_CACHE_KEYS.DIVISIONS,
+
+        getCount$: () => this._divisionServices.getDivisionCount(),
+
+        // ✅ RETURN RAW API RESPONSE
+        getData$: () => this._divisionServices.GetAllDivisions('', 'ASC', 'Name', true, 1, 1000),
+        mapFn: (item) => ({
+          Id: item.Id || item.id,
+          Code: item.code || item.Code,
+          Name: item.name || item.Name,
+          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
+        }),
+      })
+      .subscribe((data) => {
+ 
+        this.divisionData = (data ?? []).map((d: any) => ({
           CODE: d.Code,
-          NAME: d.Value,
+          NAME: d.Name,
         }));
-      } else {
-        this.data = [];
-      }
-      //this.cdr.detectChanges(); // force update
-    });
+        this.totalDivisions = data.length;
+      });
   };
 }

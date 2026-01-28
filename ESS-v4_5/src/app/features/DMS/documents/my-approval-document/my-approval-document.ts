@@ -9,13 +9,11 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { FormsModule } from '@angular/forms';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
+import { FormsModule } from '@angular/forms'; 
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -28,13 +26,11 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
-    NzButtonModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
+    NzButtonModule, 
     DocumentTypeList,
     MyPendingRequestForApproval,
-    DMSRichTextEdit
+    DMSRichTextEdit,
+    CabinetStructureList
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',

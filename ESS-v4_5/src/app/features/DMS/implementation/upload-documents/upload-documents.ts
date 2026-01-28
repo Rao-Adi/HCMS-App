@@ -4,14 +4,17 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { DocumentService } from '@app/shared/services/document.service';
 import { ColDef } from 'ag-grid-community';
+import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 
 @Component({
   selector: 'app-upload-documents',
@@ -54,6 +57,10 @@ export class UploadDocuments {
     },
   ];
 
+  dropdownDataSources: Record<number, any[]> = {};
+  cabinetHierarchy: CabinetLevel[] = [];
+  levelTitles: Record<number, string> = {};
+
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
@@ -61,23 +68,39 @@ export class UploadDocuments {
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
     private _notification: NotificationService,
+    private readonly hierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
+    this.getAllDocumentTypes();
+    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+       
+      this.cabinetHierarchy = levels;
+      this.levelTitles = this.hierarchyService.getLevelTitles();
+
+      this.loadCabinetDropdownData(levels);
+      //this.buildGrid(); // 🔥 only after hierarchy is ready
+    });
+
     this.GetAllUploadedDocuments({
       pageNumber: 1,
       pageSize: this.selectedPageSize,
       sortModel: [], // or your current sort/filter model
       filterModel: {},
     });
-    this.getAllDocumentTypes();
-    this.getAllDivisionList();
-    this.getAllDepartmentList();
-    this.getAllSubDepartmentList();
+    
+    // this.getAllDivisionList();
+    // this.getAllDepartmentList();
+    // this.getAllSubDepartmentList();
   }
 
   private getColumns(): GridColumn[] {
-    return [
+    const columns: GridColumn[] = [];
+
+    // ─────────────────────────────────────────────
+    // 1️⃣ FIXED (NON-CABINET) COLUMNS
+    // ─────────────────────────────────────────────
+    columns.push(
       {
         field: 'documentId',
         headerName: 'Document Id',
@@ -98,11 +121,10 @@ export class UploadDocuments {
         field: 'version',
         headerName: 'Version',
         type: 'text',
-        minWidth: 150,
+        minWidth: 120,
         pinned: 'left',
         required: true,
       },
-      // DOCUMENT TYPES
       {
         field: 'documentTypeId',
         headerName: 'Document Type',
@@ -113,61 +135,149 @@ export class UploadDocuments {
         minWidth: 180,
         required: true,
       },
+    );
 
-      // ✅ DIVISION
-      {
-        field: 'divisionName',
-        headerName: 'Division',
+    // ─────────────────────────────────────────────
+    // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
+    // ─────────────────────────────────────────────
+    this.cabinetHierarchy.forEach((level, index) => {
+      const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
+
+      columns.push({
+        field: `level${level.level}Id`,
+        headerName: level.title,
         type: 'dropdown',
-        dropdownOptions: this.divisions,
+
+        // 🔥 level-based data source
+        dropdownOptions: this.dropdownDataSources[level.level],
+
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
 
-      // ✅ DEPARTMENT
-      {
-        field: 'departmentName',
-        headerName: 'Department',
-        type: 'dropdown',
-        dependsOn: 'divisionName',
-        dataSourceKey: 'departments',
-        filterKey: 'divisionId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-      // ✅ SUB DEPARTMENT
-      {
-        field: 'subDepartmentName',
-        headerName: 'Sub Department',
-        type: 'dropdown',
-        dependsOn: 'departmentName',
-        dataSourceKey: 'subDepartments',
-        filterKey: 'departmentId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
+        // 🔥 dynamic parent dependency
+        dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
+        filterKey: parentLevel ? 'parentId' : undefined,
 
+        minWidth: 180,
+        required: true,
+      });
+    });
+
+    // ─────────────────────────────────────────────
+    // 3️⃣ REMAINING FIXED COLUMNS
+    // ─────────────────────────────────────────────
+    columns.push(
       {
         field: 'nextReviewDate',
         headerName: 'Next Review Date',
         type: 'date',
         required: true,
       },
-
       {
         field: 'uploadDocument',
         headerName: 'Upload Document',
         type: 'file',
         required: true,
       },
-    ];
+    );
+    console.log(JSON.stringify(columns));
+
+    return columns;
   }
+
+  // private getColumns(): GridColumn[] {
+
+  //   return [
+  //     {
+  //       field: 'documentId',
+  //       headerName: 'Document Id',
+  //       type: 'text',
+  //       minWidth: 150,
+  //       pinned: 'left',
+  //       required: true,
+  //     },
+  //     {
+  //       field: 'documentName',
+  //       headerName: 'Document Name',
+  //       type: 'text',
+  //       minWidth: 150,
+  //       pinned: 'left',
+  //       required: true,
+  //     },
+  //     {
+  //       field: 'version',
+  //       headerName: 'Version',
+  //       type: 'text',
+  //       minWidth: 150,
+  //       pinned: 'left',
+  //       required: true,
+  //     },
+  //     // DOCUMENT TYPES
+  //     {
+  //       field: 'documentTypeId',
+  //       headerName: 'Document Type',
+  //       type: 'dropdown',
+  //       dropdownOptions: this.documentTypes,
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+
+  //     // ✅ DIVISION
+  //     {
+  //       field: 'divisionName',
+  //       headerName: 'Division',
+  //       type: 'dropdown',
+  //       dropdownOptions: this.divisions,
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+
+  //     // ✅ DEPARTMENT
+  //     {
+  //       field: 'departmentName',
+  //       headerName: 'Department',
+  //       type: 'dropdown',
+  //       dependsOn: 'divisionName',
+  //       dataSourceKey: 'departments',
+  //       filterKey: 'divisionId',
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+  //     // ✅ SUB DEPARTMENT
+  //     {
+  //       field: 'subDepartmentName',
+  //       headerName: 'Sub Department',
+  //       type: 'dropdown',
+  //       dependsOn: 'departmentName',
+  //       dataSourceKey: 'subDepartments',
+  //       filterKey: 'departmentId',
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+
+  //     {
+  //       field: 'nextReviewDate',
+  //       headerName: 'Next Review Date',
+  //       type: 'date',
+  //       required: true,
+  //     },
+
+  //     {
+  //       field: 'uploadDocument',
+  //       headerName: 'Upload Document',
+  //       type: 'file',
+  //       required: true,
+  //     },
+  //   ];
+  // }
 
   private buildGrid(): void {
     this.gridConfig = {
@@ -205,7 +315,7 @@ export class UploadDocuments {
       )
       .subscribe((res) => {
         const items = res?.Data?.Items;
-        console.log(items);
+        //console.log(items);
         if (Array.isArray(items)) {
           this.uploadedDocumentsData = items.map((item: any) => ({
             Id: item.Id,
@@ -366,50 +476,86 @@ export class UploadDocuments {
     }
   }
 
-  getAllDivisionList = () => {
-    this._divisionServices.getDivisions().subscribe((res) => {
-      if (res) {
-        this.divisions = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
-    });
-  };
+ getAllDivisionList(): Observable<any[]> {
+  return this._divisionServices.getDivisions().pipe(
+    map(res => (res ?? []).map(d => ({
+      id: d.Code,
+      text: d.Name,
+    })))
+  );
+}
 
-  getAllDepartmentList = () => {
-    this._departmentCacheService.getDepartments().subscribe((res) => {
-      if (res) {
-        this.departments = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          divisionId: d.DivisionCode || d.divisionCode,
-          Division: d.Division || d.division,
-        }));
-      } else {
-        this.departments = [];
-      }
-    });
-  };
 
-  getAllSubDepartmentList = () => {
-    this._subDepartmentServices.getSubDepartments().subscribe((res) => {
-      if (res) {
-        this.subDepartments = (res ?? []).map((d: any) => ({
+  // getAllDivisionList:() = () => {
+  //   this._divisionServices.getDivisions().subscribe((res) => {
+  //     if (res) {
+  //       this.divisions = (res ?? []).map((d: any) => ({
+  //         id: d.Code,
+  //         text: d.Name,
+  //       }));
+  //     } else {
+  //       this.divisions = [];
+  //     }
+  //     // ✅ build grid ONLY after divisions are ready
+  //     this.buildGrid();
+  //   });
+  // };
+
+  getAllDepartmentList(): Observable<any[]> {
+  return this._departmentCacheService.getDepartments().pipe(
+    map(res =>
+      (res ?? []).map(d => ({
+        id: d.Code,
+        text: d.Name,
+        parentId: d.DivisionCode  // 🔥 REQUIRED
+      }))
+    )
+  );
+}
+
+
+  // getAllDepartmentList = () => {
+  //   this._departmentCacheService.getDepartments().subscribe((res) => {
+  //     if (res) {
+  //       this.departments = (res ?? []).map((d: any) => ({
+  //         id: d.Code,
+  //         text: d.Name,
+  //         divisionId: d.DivisionCode || d.divisionCode,
+  //         Division: d.Division || d.division,
+  //       }));
+  //     } else {
+  //       this.departments = [];
+  //     }
+  //   });
+  // };
+
+  getAllSubDepartmentList(): Observable<any[]> {
+    return this._subDepartmentServices.getSubDepartments().pipe(
+      map((res) =>
+        (res ?? []).map((d: any) => ({
           id: d.Code,
           text: d.Name,
-          departmentId: d.DepartmentCode || d.departmentCode,
-          department: d.Department || d.department,
-        }));
-      } else {
-        this.subDepartments = [];
-      }
-    });
-  };
+          parentId: d.DepartmentCode || d.departmentCode
+        })),
+      ),
+      catchError(() => of([])),
+    );
+  }
+
+  // getAllSubDepartmentList = () => {
+  //   this._subDepartmentServices.getSubDepartments().subscribe((res) => {
+  //     if (res) {
+  //       this.subDepartments = (res ?? []).map((d: any) => ({
+  //         id: d.Code,
+  //         text: d.Name,
+  //         departmentId: d.DepartmentCode || d.departmentCode,
+  //         department: d.Department || d.department,
+  //       }));
+  //     } else {
+  //       this.subDepartments = [];
+  //     }
+  //   });
+  // };
 
   getAllDocumentTypes = () => {
     this._documentTypeService.getDocumentTypes().subscribe((res) => {
@@ -422,9 +568,41 @@ export class UploadDocuments {
         this.documentTypes = [];
       }
       // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
+      //this.buildGrid();
     });
   };
+
+  loadCabinetDropdownData(levels: CabinetLevel[]) {
+    const loaders: Observable<any>[] = [];
+
+    levels.forEach((l) => {
+      switch (l.level) {
+        case 1:
+          loaders.push(
+            this.getAllDivisionList().pipe(tap((data) => (this.dropdownDataSources[1] = data))),
+          );
+          break;
+
+        case 2:
+          loaders.push(
+            this.getAllDepartmentList().pipe(tap((data) => (this.dropdownDataSources[2] = data))),
+          );
+          break;
+
+        case 3:
+          loaders.push(
+            this.getAllSubDepartmentList().pipe(
+              tap((data) => (this.dropdownDataSources[3] = data)),
+            ),
+          );
+          break;
+      }
+    });
+
+    forkJoin(loaders).subscribe(() => {
+      this.buildGrid(); // 🔥 NOW it is safe
+    });
+  }
 }
 
 class UploadDocumentColumns {

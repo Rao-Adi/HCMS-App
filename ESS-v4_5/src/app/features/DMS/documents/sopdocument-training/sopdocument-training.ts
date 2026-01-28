@@ -15,6 +15,7 @@ import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub
 import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -29,12 +30,9 @@ import { MyPendingRequestForApproval } from '../document-request-management/my-p
     NzRadioModule,
     NzButtonModule,
     SafeTranslatePipe,
-    AgGridWrapper,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
+    CabinetStructureList,
     DocumentTypeList,
-    MyPendingRequestForApproval
+    MyPendingRequestForApproval,
   ],
   templateUrl: './sopdocument-training.html',
   styleUrl: './sopdocument-training.css',
