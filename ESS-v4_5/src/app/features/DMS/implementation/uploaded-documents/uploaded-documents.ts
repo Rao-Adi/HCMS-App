@@ -33,14 +33,14 @@ export class UploadedDocuments {
   };
 
   workflowAuthoritiesColumnDefs = [
-    { field: 'documentId', headerName: 'documentId', flex: 1 },
-    { field: 'documentName', headerName: 'documentName', flex: 1 },
-    { field: 'version', headerName: 'Version', flex: 1 },
-    { field: 'documentTypeId', headerName: 'documentTypeId', flex: 1 },
-    { field: 'divisionName', headerName: 'divisionName', flex: 1 },
-    { field: 'departmentName', headerName: 'departmentName', flex: 1 },
-    { field: 'subDepartmentName', headerName: 'subDepartmentName', flex: 1 },
-    { field: 'nextReviewDate', headerName: 'nextReviewDate', flex: 1 },
+    { field: 'documentId', headerName: 'Document Id', flex: 1 },
+    { field: 'documentName', headerName: 'Document Name', flex: 1 },
+    { field: 'version', headerName: 'Version Number', flex: 1 },
+    { field: 'documentTypeId', headerName: 'Document Type', flex: 1 },
+    { field: 'divisionName', headerName: 'Division', flex: 1 },
+    { field: 'departmentName', headerName: 'Department', flex: 1 },
+    { field: 'subDepartmentName', headerName: 'Sub-Department', flex: 1 },
+    { field: 'nextReviewDate', headerName: 'Next Review Date', flex: 1 },
   ];
 
   constructor(private _documentService: DocumentService) {}
@@ -76,6 +76,7 @@ export class UploadedDocuments {
             Id: item.Id,
             documentTypeId: item.DocumentType,
             documentTypeName: item.DocumentTypeCode,
+            version: item.Status,
             divisionName: item.Division,
             divisionId: item.DivisionCode,
             documentId: item.DocumentNumber,

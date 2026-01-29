@@ -6,6 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
@@ -241,6 +242,7 @@ export class DRUsersComponent {
     debugger;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       divisionCode: rowData.DivisionName || rowData.divisionName,
       departmentCode: rowData.DepartmentName || rowData.departmentName,
       subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,

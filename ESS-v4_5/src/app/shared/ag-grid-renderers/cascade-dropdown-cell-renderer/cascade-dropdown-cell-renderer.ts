@@ -38,56 +38,90 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
   agInit(params: any): void {
     this.params = params;
 
-    // console.group('🔽 CASCADE DROPDOWN INIT');
-    // console.log('FIELD:', params.colDef.field);
-    // console.log('DEPENDS ON:', params.dependsOn);
-    // console.log('FILTER KEY:', params.filterKey);
-    // console.log('ROW DATA:', params.data);
-
-    // ✅ ALWAYS read value from rowData (important for pinned rows)
+    // ALWAYS read value from rowData
     this.value = params.data?.[params.colDef.field] ?? null;
-    //console.log('SELECTED VALUE:', this.value);
 
-    // 🔹 CASE 1: ROOT DROPDOWN (Document Type)
+    // ROOT DROPDOWN
     if (!params.dependsOn) {
-      //console.log('ROOT DROPDOWN');
-
       this.options = params.options || [];
       this.disabled = false;
-
-      //console.log('OPTIONS:', this.options);
-      //console.groupEnd();
       return;
     }
 
-    // 🔹 CASE 2: CASCADE DROPDOWN
+    // CASCADE DROPDOWN
     const parentField = params.dependsOn;
     const parentValue = params.data?.[parentField];
 
-    // console.log('PARENT FIELD:', parentField);
-    // console.log('PARENT VALUE:', parentValue);
-
     if (!parentValue) {
-      //console.log('⛔ Parent not selected → disabling dropdown');
       this.disabled = true;
       this.options = [];
-      //console.groupEnd();
       return;
     }
 
-    const source = params.context?.[params.dataSourceKey] || [];
-    //console.log('SOURCE DATA:', source);
+    // 🔥 FIX: USE params.options (NOT context)
+    const source = params.options || [];
 
     this.options = source.filter(
-      (item: any) => String(item[params.filterKey]) === String(parentValue)
+      (item: any) => String(item[params.filterKey]) === String(parentValue),
     );
 
-    //console.log('FILTERED OPTIONS:', this.options);
-
     this.disabled = this.options.length === 0;
-
-    //console.groupEnd();
   }
+
+  // agInit(params: any): void {
+  //   debugger;
+  //   this.params = params;
+
+  //   // console.group('🔽 CASCADE DROPDOWN INIT');
+  //   // console.log('FIELD:', params.colDef.field);
+  //   // console.log('DEPENDS ON:', params.dependsOn);
+  //   // console.log('FILTER KEY:', params.filterKey);
+  //   // console.log('ROW DATA:', params.data);
+
+  //   // ✅ ALWAYS read value from rowData (important for pinned rows)
+  //   this.value = params.data?.[params.colDef.field] ?? null;
+  //   //console.log('SELECTED VALUE:', this.value);
+
+  //   // 🔹 CASE 1: ROOT DROPDOWN (Document Type)
+  //   if (!params.dependsOn) {
+  //     //console.log('ROOT DROPDOWN');
+
+  //     this.options = params.options || [];
+  //     this.disabled = false;
+
+  //     //console.log('OPTIONS:', this.options);
+  //     //console.groupEnd();
+  //     return;
+  //   }
+
+  //   // 🔹 CASE 2: CASCADE DROPDOWN
+  //   const parentField = params.dependsOn;
+  //   const parentValue = params.data?.[parentField];
+
+  //   // console.log('PARENT FIELD:', parentField);
+  //   // console.log('PARENT VALUE:', parentValue);
+
+  //   if (!parentValue) {
+  //     //console.log('⛔ Parent not selected → disabling dropdown');
+  //     this.disabled = true;
+  //     this.options = [];
+  //     //console.groupEnd();
+  //     return;
+  //   }
+
+  //   const source = params.context?.[params.dataSourceKey] || [];
+  //   //console.log('SOURCE DATA:', source);
+
+  //   this.options = source.filter(
+  //     (item: any) => String(item[params.filterKey]) === String(parentValue)
+  //   );
+
+  //   //console.log('FILTERED OPTIONS:', this.options);
+
+  //   this.disabled = this.options.length === 0;
+
+  //   //console.groupEnd();
+  // }
 
   onChange(value: any): void {
     //console.log('✅ DROPDOWN CHANGE', {

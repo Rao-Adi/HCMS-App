@@ -5,3 +5,8 @@ export const MASTER_CACHE_KEYS = {
   SUB_DEPARTMENTS: 'SUB_DEPARTMENTS',
   BUSINESS_DOMAIN: 'BUSINESSDOMAINS'
 } as const;
+
+
+export const MASTER_DEFAULT_KEYS = {
+  COMPANYID: '1'
+} as const;

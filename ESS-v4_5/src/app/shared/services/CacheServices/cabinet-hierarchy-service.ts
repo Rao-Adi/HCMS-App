@@ -4,7 +4,6 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { CabinetStructureTabsConfigService } from '../CabinetStructureTabsConfig.service';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 
-
 @Injectable({
   providedIn: 'root', // or provide in module if you prefer scoped instance
 })
@@ -43,10 +42,14 @@ export class CabinetHierarchyService {
     const dbLevels: CabinetLevel[] = dbItems.map((d) => ({
       level: Number(d.Id),
       title: d.Name?.trim() || `Level ${d.Id}`,
+      createdBy: d.CreatedBy,
+      createdAt: d.CreatedAt,
+      lastModifiedAt: d.LastModifiedAt,
+      lastModifiedBy: d.LastModifiedBy,
     }));
 
     dbLevels.forEach((l) => (levelTitles[l.level] = l.title));
-
+ 
     const derived: CabinetLevel[] = [];
     dbLevels.forEach((l) => {
       derived.push(l);
@@ -54,6 +57,10 @@ export class CabinetHierarchyService {
         derived.push({
           level: l.level + 1,
           title: this.getDefaultChildTitle(l.level + 1),
+          createdBy: null,
+          createdAt: null,
+          lastModifiedBy: null,
+          lastModifiedAt: null,
         });
       }
     });
@@ -68,6 +75,7 @@ export class CabinetHierarchyService {
    * You can subscribe to this in any component that needs the levels
    */
   public loadDropdownHierarchy(): Observable<CabinetLevel[]> {
+ 
     return this._cabinetTabConfigService
       .GetAllCabietStructureTabs('', 'ASC', 'Id', true, 1, 10)
       .pipe(

@@ -6,7 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -191,7 +191,7 @@ export class DocumentTypeComponent {
     const { rowData } = event;
 
     const payLoad = {
-      CompanyId: 1,
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Name: rowData.Name,
       Description: rowData.Description,
       IsActive: true,
@@ -229,7 +229,7 @@ export class DocumentTypeComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
     const payLoad = {
-      CompanyId: 1,
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       Description: event.rowData.Description,

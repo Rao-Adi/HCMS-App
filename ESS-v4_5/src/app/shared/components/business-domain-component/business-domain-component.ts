@@ -6,7 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -34,46 +34,7 @@ export class BusinessDomainComponent {
     cellDataType: false,
   };
 
-  businessdomainColumnDefs = [
-    { field: 'Code', headerName: 'Code', flex: 1, editable: true },
-    { field: 'Name', headerName: 'Business Domain', flex: 1, editable: true },
-    {
-      field: 'SubDepartment',
-      headerName: 'Sub-SubDepartment',
-      flex: 1,
-      editable: true,
-      // cellEditorParams: {
-      //   values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      // },
-    },
-
-    {
-      field: 'CreatedBy',
-      headerName: 'Last Saved By',
-      cellEditor: 'agDateCellEditor',
-      flex: 1,
-    },
-    {
-      field: 'CreatedAt',
-      headerName: 'Last Saved On',
-      cellEditor: 'agDateCellEditor',
-      flex: 1,
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
-    },
-  ];
-
+ 
   pinnedTopRowDataPlanning: BusinessDomainColumns[] = [
     {
       Code: '',
@@ -140,7 +101,7 @@ export class BusinessDomainComponent {
       // ✅ SubDepartment
       {
         field: 'SubDepartment',
-        headerName: 'SubDepartment',
+        headerName: 'Sub-Department',
         type: 'dropdown',
         dropdownOptions: this.subdepartments,
         dropdownValueField: 'id',
@@ -198,19 +159,19 @@ export class BusinessDomainComponent {
       });
   };
 
-  loadDepartments(): void {
+  loadBusinessDomains(): void {
     this._masterCacheService
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.BUSINESS_DOMAIN,
-        getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
+        getCount$: () => this._businessDomainService.getBusinessDomainCount(),
         getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+          this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           SubDepartment: item.SubDepartment || item.SubDepartment || '',
-          DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
+          SubDepartmentCode: item.SubDepartmentCode || item.SubDepartmentCode || '',
           CreatedBy: item.createdBy || item.CreatedBy || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
@@ -260,12 +221,12 @@ export class BusinessDomainComponent {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-
+    debugger;
     const payLoad = {
-      CompanyId: 1,
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: rowData.Code,
       Name: rowData.Name,
-      DepartmentCode: rowData.SubDepartment,
+      SubDepartmentCode: rowData.SubDepartment,
       IsActive: true,
       IsDeleted: false,
     };
@@ -278,7 +239,7 @@ export class BusinessDomainComponent {
           'Business Domain',
           'Business Domain updated successfully!',
         );
-        this.loadDepartments();
+        this.loadBusinessDomains();
       },
       error: (err) => {
         console.error('Create Document Attribute failed:', err);
@@ -302,7 +263,7 @@ export class BusinessDomainComponent {
     //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
-      CompanyId: 1,
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.SubDepartment,
@@ -318,7 +279,7 @@ export class BusinessDomainComponent {
           'Business Domain',
           'Business Domain updated successfully!',
         );
-        this.loadDepartments();
+        this.loadBusinessDomains();
       },
       error: (err) => {
         console.error('Create Document Attribute failed:', err);
@@ -351,7 +312,7 @@ export class BusinessDomainComponent {
           'Business Domain',
           'Business Domain deleted successfully!',
         );
-        this.loadDepartments();
+        this.loadBusinessDomains();
       },
       error: (err) => {
         console.error('Create Document Attribute failed:', err);

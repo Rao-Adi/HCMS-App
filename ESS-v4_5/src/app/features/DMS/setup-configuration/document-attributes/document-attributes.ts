@@ -16,6 +16,7 @@ import {
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 @Component({
   selector: 'app-document-attributes',
   imports: [
@@ -222,6 +223,7 @@ export class DocumentAttributes {
       return;
     }
     const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
       ControlType: event.rowData.ControlTypeId,

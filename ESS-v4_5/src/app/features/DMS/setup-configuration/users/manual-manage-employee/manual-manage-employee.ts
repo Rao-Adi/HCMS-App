@@ -17,6 +17,7 @@ import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/su
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 
 @Component({
   selector: 'app-manual-manage-employee',
@@ -258,6 +259,7 @@ export class ManualManageEmployee {
     debugger;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
       employeeName: rowData.EmployeeName || rowData.employeeName,
       divisionCode: rowData.DivisionCode || rowData.divisionName,

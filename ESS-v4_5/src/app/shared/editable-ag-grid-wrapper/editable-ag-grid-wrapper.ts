@@ -167,7 +167,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() divisionList: any[] = [];
   @Input() departmentList: any[] = [];
   @Input() subDepartmentList: any[] = [];
-  @Input() roleList:any[]=[];
+  @Input() roleList: any[] = [];
   @Input() gridStyle: any = {};
 
   @Input() rowData: any[] = [];
@@ -371,15 +371,21 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
                   // 2️⃣ Clear children
                   this.clearDependentFields(data, column.field);
-                  //console.log('After clearing dependents:', JSON.stringify(data));
-                  // 3️⃣ IMPORTANT: refresh pinned row manually
+
+                  // 3️⃣ FORCE REFRESH ROW (🔥 REQUIRED)
+                  params.api.refreshCells({
+                    rowNodes: [params.node],
+                    force: true,
+                  });
+
+                  // 4️⃣ Pinned row handling
                   if (params.node.rowPinned === 'top') {
                     // this.pinnedTopRowData[0][column.field] = value;
                     this.pinnedTopRowData = [{ ...data }];
                     this.gridApi.setGridOption('pinnedTopRowData', this.pinnedTopRowData);
                   }
 
-                  // 4️⃣ Emit change
+                  // 5️⃣ Emit change
                   this.emitCellValueChanged(column.field, value, data, params.rowIndex);
                 },
                 ...column.customRendererParams,
@@ -665,13 +671,23 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     return String(value);
   }
 
-  private clearDependentFields(data: any, parentField: string) {
-    this.config.columns.forEach((col) => {
-      if (col.dependsOn === parentField) {
-        data[col.field] = null;
-        this.clearDependentFields(data, col.field);
+  private clearDependentFields(data: any, field: string) {
+    const fieldLevel = Number(field.replace('level', '').replace('Id', ''));
+
+    Object.keys(data).forEach((key) => {
+      if (key.startsWith('level')) {
+        const level = Number(key.replace('level', '').replace('Id', ''));
+        if (level > fieldLevel) {
+          data[key] = null;
+        }
       }
     });
+    // this.config.columns.forEach((col) => {
+    //   if (col.dependsOn === parentField) {
+    //     data[col.field] = null;
+    //     this.clearDependentFields(data, col.field);
+    //   }
+    // });
   }
 
   // private clearDependentFields(data: any, field: string): void {

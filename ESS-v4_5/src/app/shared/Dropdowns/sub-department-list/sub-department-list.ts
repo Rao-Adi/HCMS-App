@@ -48,8 +48,7 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
   disabled = false;
   isLoading = false;
 
-  constructor(
-    private _subDeparmentServices: SubDepartmentService,
+  constructor( 
     private _subDepartmentServices: SubDepartmentService,
     private _masterCacheService: Mastercacheservice,
   ) {}
@@ -127,8 +126,8 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
           Id: item.Id || item.id,
           Code: item.Code || item.code,
           Name: item.Name || item.name,
-          Division: item.Division || item.division || '',
-          DivisionCode: item.DivisionCode || item.divisionCode || '',
+          Department: item.Department || item.department || '',
+          DepartmentCode: item.DepartmentCode || item.departmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
@@ -139,11 +138,11 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
       })
       .subscribe({
         next: (mappedData) => {
-          debugger;
+        
           // Filter only the departments that match the requested divisionCode
           // (in case the backend returns more than expected or cache is shared)
           const filtered = (mappedData ?? []).filter(
-            (d) => d.DivisionCode?.toUpperCase() === divisionCode.toUpperCase(),
+            (d) => d.DepartmentCode?.toUpperCase() === divisionCode.toUpperCase(),
           );
 
           this.subDepartmentData = filtered.map((d) => ({

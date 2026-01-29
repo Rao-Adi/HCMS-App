@@ -33,6 +33,10 @@ export interface CabinetTabVM {
 export interface CabinetLevel {
   level: number;
   title: string;
+  createdBy: string | null;
+  createdAt: string | null;
+  lastModifiedBy: string | null;
+  lastModifiedAt: string | null;
 }
 
 

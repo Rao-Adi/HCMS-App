@@ -4,6 +4,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -31,9 +32,7 @@ export class UploadDocuments {
   departments: any[] = [];
   subDepartments: any[] = [];
   documentTypes: any[] = [];
-
-  divisionPageSize = 10;
-  employeePageSize = 10;
+  
   selectedPageSize = 1; // default value
 
   // Default Column Definitions: Apply configuration across all columns
@@ -74,12 +73,10 @@ export class UploadDocuments {
   ngOnInit() {
     this.getAllDocumentTypes();
     this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-       
       this.cabinetHierarchy = levels;
       this.levelTitles = this.hierarchyService.getLevelTitles();
 
       this.loadCabinetDropdownData(levels);
-      //this.buildGrid(); // 🔥 only after hierarchy is ready
     });
 
     this.GetAllUploadedDocuments({
@@ -88,10 +85,6 @@ export class UploadDocuments {
       sortModel: [], // or your current sort/filter model
       filterModel: {},
     });
-    
-    // this.getAllDivisionList();
-    // this.getAllDepartmentList();
-    // this.getAllSubDepartmentList();
   }
 
   private getColumns(): GridColumn[] {
@@ -104,10 +97,10 @@ export class UploadDocuments {
       {
         field: 'documentId',
         headerName: 'Document Id',
-        type: 'text',
+        type: 'readonly',
         minWidth: 150,
         pinned: 'left',
-        required: true,
+        required: false,
       },
       {
         field: 'documentName',
@@ -180,7 +173,7 @@ export class UploadDocuments {
         required: true,
       },
     );
-    console.log(JSON.stringify(columns));
+    //console.log(JSON.stringify(columns));
 
     return columns;
   }
@@ -289,7 +282,7 @@ export class UploadDocuments {
       enableFiltering: true,
       enableSelection: true,
       enableInlineAdd: true,
-      enableInlineEdit: true,
+      enableInlineEdit: false,
       enableInlineDelete: true,
       rowHeight: 47,
       headerHeight: 40,
@@ -321,15 +314,15 @@ export class UploadDocuments {
             Id: item.Id,
             documentTypeId: item.DocumentType,
             documentTypeName: item.DocumentTypeCode,
-            version: item.status,
+            version: item.Status,
             divisionName: item.Division,
-            divisionId: item.DivisionCode,
+            level1Id: item.DivisionCode,
             documentId: item.DocumentNumber,
             documentName: item.DocumentName,
             DocumentCode: item.DocumentCode,
-            departmentName: item.Department,
+            level2Id: item.Department,
             departmentId: item.DepartmentCode,
-            subDepartmentName: item.SubDepartment,
+            level3Id: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
             EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
             EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
@@ -344,7 +337,7 @@ export class UploadDocuments {
           this.uploadedDocumentsData = [];
         }
 
-        console.log('RowData length:', this.uploadedDocumentsData.length);
+        //console.log('RowData length:', this.uploadedDocumentsData.length);
       });
   }
 
@@ -362,7 +355,7 @@ export class UploadDocuments {
 
   onRowAdded(event: { rowData: any; file?: File }): void {
     const { rowData, file } = event;
-
+    debugger;
     if (!file) {
       this._notification.createNotification(
         'error',
@@ -374,12 +367,13 @@ export class UploadDocuments {
 
     const formData = new FormData();
 
-    formData.append('DocumentNumber', rowData.documentId);
+    formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID);
     formData.append('DocumentName', rowData.documentName);
     formData.append('DocumentTypeCode', rowData.documentTypeId);
-    formData.append('DivisionCode', rowData.divisionName);
-    formData.append('DepartmentCode', rowData.departmentName);
-    formData.append('SubDepartmentCode', rowData.subDepartmentName);
+    formData.append('Status', rowData.version);
+    formData.append('DivisionCode', rowData.level1Id);
+    formData.append('DepartmentCode', rowData.level2Id);
+    formData.append('SubDepartmentCode', rowData.level3Id);
     formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
 
     // ✅ REAL FILE — GUARANTEED
@@ -396,35 +390,32 @@ export class UploadDocuments {
         'Document',
         'Document created successfully!',
       );
+
+      const rowWithId = {
+        ...rowData,
+        id: this.generateId(),
+        documentId: rowData.documentId,
+        documentName: rowData.documentName,
+        version: rowData.version,
+        nextReviewDate: rowData.nextReviewDate,
+        uploadDocument: 'Uploaded', // ❌ DO NOT store file
+        // Map dropdown IDs to display names
+        documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
+        divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+        departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+        subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
+      };
+
+      this.uploadedDocumentsData = [rowWithId, ...this.uploadedDocumentsData];
     });
-
-    const rowWithId = {
-      ...rowData,
-      id: this.generateId(),
-      documentId: rowData.documentId,
-      documentName: rowData.documentName,
-      version: rowData.version,
-      nextReviewDate: rowData.nextReviewDate,
-      uploadDocument: 'Uploaded', // ❌ DO NOT store file
-      // Map dropdown IDs to display names
-      documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
-      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
-      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
-      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
-    };
-
-    this.uploadedDocumentsData = [rowWithId, ...this.uploadedDocumentsData];
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     console.log('Row updated:', event);
     debugger;
     // Update display names
-    event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    event.rowData.departmentName = this.getDisplayName(
-      this.departments,
-      event.rowData.departmentId,
-    );
+    event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.level1Id);
+    event.rowData.departmentName = this.getDisplayName(this.departments, event.rowData.level2Id);
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
 
     this.uploadedDocumentsData[event.index] = { ...event.rowData };
@@ -476,15 +467,16 @@ export class UploadDocuments {
     }
   }
 
- getAllDivisionList(): Observable<any[]> {
-  return this._divisionServices.getDivisions().pipe(
-    map(res => (res ?? []).map(d => ({
-      id: d.Code,
-      text: d.Name,
-    })))
-  );
-}
-
+  getAllDivisionList(): Observable<any[]> {
+    return this._divisionServices.getDivisions().pipe(
+      map((res) =>
+        (res ?? []).map((d) => ({
+          id: d.Code,
+          text: d.Name,
+        })),
+      ),
+    );
+  }
 
   // getAllDivisionList:() = () => {
   //   this._divisionServices.getDivisions().subscribe((res) => {
@@ -502,17 +494,16 @@ export class UploadDocuments {
   // };
 
   getAllDepartmentList(): Observable<any[]> {
-  return this._departmentCacheService.getDepartments().pipe(
-    map(res =>
-      (res ?? []).map(d => ({
-        id: d.Code,
-        text: d.Name,
-        parentId: d.DivisionCode  // 🔥 REQUIRED
-      }))
-    )
-  );
-}
-
+    return this._departmentCacheService.getDepartments().pipe(
+      map((res) =>
+        (res ?? []).map((d) => ({
+          id: d.Code,
+          text: d.Name,
+          parentId: d.DivisionCode, // 🔥 REQUIRED
+        })),
+      ),
+    );
+  }
 
   // getAllDepartmentList = () => {
   //   this._departmentCacheService.getDepartments().subscribe((res) => {
@@ -535,7 +526,7 @@ export class UploadDocuments {
         (res ?? []).map((d: any) => ({
           id: d.Code,
           text: d.Name,
-          parentId: d.DepartmentCode || d.departmentCode
+          parentId: d.DepartmentCode || d.departmentCode,
         })),
       ),
       catchError(() => of([])),

@@ -6,6 +6,7 @@ import { DepartmentComponent } from '@app/shared/components/department-component
 import { DivisionComponent } from '@app/shared/components/division-component/division-component';
 import { DocumentTypeComponent } from '@app/shared/components/document-type-component/document-type-component';
 import { SubDepartmentComponent } from '@app/shared/components/sub-department-component/sub-department-component';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetStructureTabsConfig, CabinetTabVM } from '@app/shared/interfaces/interfaces';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
@@ -57,12 +58,21 @@ export class CabinetStructure {
       this.tabs = levels.map((l) => ({
         level: l.level,
         title: l.title,
-        createdBy: null,
-        createdAt: null,
-        lastModifiedBy: null,
-        lastModifiedAt: null,
+        createdBy: l.createdBy,
+        createdAt: l.createdAt,
+        lastModifiedBy: l.lastModifiedBy,
+        lastModifiedAt: l.lastModifiedAt,
       }));
+ 
+      if (this.tabs?.length) {
+        this.activateFirstTab();
+      }
     });
+  }
+
+  activateFirstTab(): void {
+    const firstTab = this.tabs[0];
+    this.onTabChange(firstTab);
   }
 
   getDefaultChildTitle(level: number): string {
@@ -179,9 +189,12 @@ export class CabinetStructure {
   }
 
   saveTabTitle(): void {
+
     const payload = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Id: this.selectedTabLevel,
       Name: this.selectedTabTitle,
+      IsActive : true
     };
 
     this._cabietTabConfigService.update(payload).subscribe({

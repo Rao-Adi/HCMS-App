@@ -47,12 +47,12 @@ export class CabinetStructureList {
     private _cabinetHirarchyService: CabinetHierarchyService,
   ) {}
 
-  ngOnInit() {
-    //this.hierarchyLevels$ = this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe(levels => {
-      this.dropdownLevels = levels;
-      this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
-    });
+  ngOnInit() { 
+    this.hierarchyLevels$ = this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    // this._cabinetHirarchyService.loadDropdownHierarchy().subscribe(levels => {
+    //   this.dropdownLevels = levels;
+    //   this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
+    // });
   }
 
   onValueChange(level: number, value: any) {
