@@ -39,7 +39,6 @@ export interface CabinetLevel {
   lastModifiedAt: string | null;
 }
 
-
 export interface Division {
   Id: number;
   Code: string;
@@ -90,6 +89,8 @@ export interface SubDepartment {
   Id: number;
   Code: string;
   Name: string;
+  Department: string;
+  DepartmentCode: string;
   CreatedBy: string;
   CreatedAt: any;
   LastModifiedBy: string;
@@ -102,6 +103,18 @@ export interface Department {
   Name: string;
   Division: string;
   DivisionCode: string;
+  CreatedBy: string;
+  CreatedAt: any;
+  LastModifiedBy: string;
+  LastModifiedAt: any;
+}
+
+export interface BusinessDomain {
+  Id: number;
+  Code: string;
+  Name: string;
+  SubDepartment: string;
+  SubDepartmentCode: string;
   CreatedBy: string;
   CreatedAt: any;
   LastModifiedBy: string;
@@ -323,15 +336,13 @@ export interface Role extends AuditableEntity {
 
 export interface Company extends AuditableEntity {
   id: number;
-  name: string; 
+  name: string;
 }
-
 
 export interface DistributionType extends AuditableEntity {
   id: number;
-  name: string; 
+  name: string;
 }
-
 
 export interface Template extends AuditableEntity {
   id: string;

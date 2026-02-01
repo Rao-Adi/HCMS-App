@@ -49,7 +49,7 @@
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === ' Document Type' }"
+                [ngClass]="{ 'active-tab': selectedTab === 'Document Type' }"
                 (click)="selectedTab = 'Document Type'"
               >
                 Document Type
@@ -59,25 +59,26 @@
               <button
                 *ngFor="let tab of tabs; trackBy: trackByTabId"
                 class="tab-button"
-                [ngClass]="{ 'active-tab': selectedTabId === tab.level }"
+                [ngClass]="{ 'active-tab': activeTab === tab.level }"
                 (click)="onTabChange(tab)"
               >
                 Level {{ tab.level }}
               </button>
+
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === ' Document Type' }"
-                (click)="selectedTab = 'Document Type'"
+                [ngClass]="{ 'active-tab': activeTab === 'DOCUMENT_TYPE' }"
+                (click)="onDocumentTypeClick()"
               >
                 Document Type
               </button>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTabLevel === 1">
+            <div class="row row-space" *ngIf="activeTab === 1">
               <div class="row mb-4">
                 <div class="col-lg-4 col-md-4 col-sm-4">
-                  <span class="d-flex">Level Title</span>
+                  <span class="d-flex">Title Level</span>
                   <div class="d-inline-flex">
                     <input
                       maxlength="50"
@@ -123,10 +124,10 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTabLevel === 2">
+            <div class="row row-space" *ngIf="activeTab === 2">
               <div class="row mb-4">
                 <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
-                  <span class="d-flex">Level Title</span>
+                  <span class="d-flex">Title Level</span>
                   <div class="d-inline-flex">
                     <input
                       maxlength="50"
@@ -173,16 +174,16 @@
               <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                   <app-department-component
-                    [level]="selectedTabLevel"
+                    [level]="activeTab"
                     [levelTitles]="levelTitles"
                   ></app-department-component>
                 </div>
               </div>
             </div>
-            <div class="row row-space" *ngIf="selectedTabLevel === 3">
+            <div class="row row-space" *ngIf="activeTab === 3">
               <div class="row mb-4">
                 <div class="col-lg-4 col-md-4 col-sm-4">
-                  <span class="d-flex">Level Title</span>
+                  <span class="d-flex">Title Level</span>
                   <div class="d-inline-flex">
                     <input
                       maxlength="50"
@@ -233,10 +234,10 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTabLevel === 4">
+            <div class="row row-space" *ngIf="activeTab === 4">
               <div class="row mb-4">
                 <div class="col-lg-4 col-md-4 col-sm-4">
-                  <span class="d-flex">Level Title</span>
+                  <span class="d-flex">Title Level</span>
                   <div class="d-inline-flex">
                     <input
                       maxlength="50"
@@ -287,7 +288,7 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Document Type'">
+            <div class="row row-space" *ngIf="activeTab === 'DOCUMENT_TYPE'">
               <br />
               <div class="row mt-3">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">

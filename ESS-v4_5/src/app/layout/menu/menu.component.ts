@@ -187,7 +187,7 @@ export class MenuComponent implements OnDestroy {
             Class: 'menu-l2',
           },
           {
-            Text: 'My Approvals-Reuest for Document Creation/Update',
+            Text: 'My Approvals-Documents',
             Value: 'My-Approvals-Reuest-for-Document-Creation-Update',
             NavigateUrl: '/documents/my-approvals-request',
             Class: 'menu-l2',

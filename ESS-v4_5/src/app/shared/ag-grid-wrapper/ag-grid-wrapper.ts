@@ -26,7 +26,6 @@ import {
   ValidationModule,
 } from 'ag-grid-community';
 import { GridConfig } from '../editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { ColumnDisplayOptionsComponent } from './column-display-options-component/column-display-options-component';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { FormsModule } from '@angular/forms';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -46,7 +45,6 @@ interface ColumnToggle {
     AgGridAngular,
     NzAlertModule,
     NzSpinModule,
-    ColumnDisplayOptionsComponent,
     NzSwitchModule,
     NzIconModule,
   ],

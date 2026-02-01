@@ -104,70 +104,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.loadData(this.pageSize);
     this.getAllUsersList();
   }
-
-  UploadColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version' },
-    {
-      field: 'documentType',
-      headerName: 'Document Type',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'division',
-      headerName: 'Division',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'subDepartment',
-      headerName: 'Sub-Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'nextReviewDate',
-      headerName: 'Next Review Date',
-      cellEditor: 'agDateCellEditor',
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
-    },
-    { field: 'uploadDocument', headerName: 'Upload Document' },
-  ];
-
-  UploadedDocColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version Number' },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'nextReviewDate', headerName: 'Next Review Date' },
-  ];
+ 
 
   onSearch(value: string): void {
     this.loading = true;

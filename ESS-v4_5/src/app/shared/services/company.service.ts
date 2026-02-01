@@ -28,12 +28,12 @@ export class CompanyService {
   }
 
   getCompanyList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCompany/get-all-role-list`;
+    const uri = `${environment.baseUrl}/DMSCompany/get-all-company-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getCompanyById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSCompany/get-role-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSCompany/get-company-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +54,7 @@ export class CompanyService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSCompany/get-all-role`;
+    const uri = `${environment.baseUrl}/DMSCompany/get-all-company`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -62,14 +62,14 @@ export class CompanyService {
   }
 
   create(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSCompany/create-role`, payload);
+    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSCompany/create-company`, payload);
   }
 
   update(payload: any) {
-    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSCompany/update-role`, payload);
+    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSCompany/update-company`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSCompany/delete-role/${code}`);
+    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSCompany/delete-company/${code}`);
   }
 }

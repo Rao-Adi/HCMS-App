@@ -8,14 +8,11 @@ import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
-import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { DocumentService } from '@app/shared/services/document.service';
 import { ColDef } from 'ag-grid-community';
-import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 
 @Component({
   selector: 'app-upload-documents',
@@ -32,7 +29,7 @@ export class UploadDocuments {
   departments: any[] = [];
   subDepartments: any[] = [];
   documentTypes: any[] = [];
-  
+
   selectedPageSize = 1; // default value
 
   // Default Column Definitions: Apply configuration across all columns
@@ -50,6 +47,7 @@ export class UploadDocuments {
       divisionId: null,
       departmentId: null,
       subDepartmentId: null,
+      businessDomainId: null,
       nextReviewDate: null,
       uploadDocument: null,
       isNewRow: true,
@@ -63,20 +61,24 @@ export class UploadDocuments {
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
-    private _divisionServices: DivisionCacheService,
-    private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService,
     private _notification: NotificationService,
     private readonly hierarchyService: CabinetHierarchyService,
+    private cabinetGridService: CabinetGridService,
   ) {}
 
   ngOnInit() {
     this.getAllDocumentTypes();
+    // this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+    //   this.cabinetHierarchy = levels;
+    //   this.levelTitles = this.hierarchyService.getLevelTitles();
+
+    //   this.loadCabinetDropdownData(levels);
+    // });
+
     this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
       this.cabinetHierarchy = levels;
-      this.levelTitles = this.hierarchyService.getLevelTitles();
 
-      this.loadCabinetDropdownData(levels);
+      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
     });
 
     this.GetAllUploadedDocuments({
@@ -87,13 +89,8 @@ export class UploadDocuments {
     });
   }
 
-  private getColumns(): GridColumn[] {
-    const columns: GridColumn[] = [];
-
-    // ─────────────────────────────────────────────
-    // 1️⃣ FIXED (NON-CABINET) COLUMNS
-    // ─────────────────────────────────────────────
-    columns.push(
+  private getFixedColumns(): GridColumn[] {
+    return [
       {
         field: 'documentId',
         headerName: 'Document Id',
@@ -128,38 +125,11 @@ export class UploadDocuments {
         minWidth: 180,
         required: true,
       },
-    );
+    ];
+  }
 
-    // ─────────────────────────────────────────────
-    // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
-    // ─────────────────────────────────────────────
-    this.cabinetHierarchy.forEach((level, index) => {
-      const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
-
-      columns.push({
-        field: `level${level.level}Id`,
-        headerName: level.title,
-        type: 'dropdown',
-
-        // 🔥 level-based data source
-        dropdownOptions: this.dropdownDataSources[level.level],
-
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-
-        // 🔥 dynamic parent dependency
-        dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
-        filterKey: parentLevel ? 'parentId' : undefined,
-
-        minWidth: 180,
-        required: true,
-      });
-    });
-
-    // ─────────────────────────────────────────────
-    // 3️⃣ REMAINING FIXED COLUMNS
-    // ─────────────────────────────────────────────
-    columns.push(
+  private getRemainingColumns(): GridColumn[] {
+    return [
       {
         field: 'nextReviewDate',
         headerName: 'Next Review Date',
@@ -172,11 +142,119 @@ export class UploadDocuments {
         type: 'file',
         required: true,
       },
-    );
-    //console.log(JSON.stringify(columns));
-
-    return columns;
+    ];
   }
+
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: false,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+  }
+
+  // private getColumns(): GridColumn[] {
+  //   const columns: GridColumn[] = [];
+
+  //   // ─────────────────────────────────────────────
+  //   // 1️⃣ FIXED (NON-CABINET) COLUMNS
+  //   // ─────────────────────────────────────────────
+  //   columns.push(
+  //     {
+  //       field: 'documentId',
+  //       headerName: 'Document Id',
+  //       type: 'readonly',
+  //       minWidth: 150,
+  //       pinned: 'left',
+  //       required: false,
+  //     },
+  //     {
+  //       field: 'documentName',
+  //       headerName: 'Document Name',
+  //       type: 'text',
+  //       minWidth: 150,
+  //       pinned: 'left',
+  //       required: true,
+  //     },
+  //     {
+  //       field: 'version',
+  //       headerName: 'Version',
+  //       type: 'text',
+  //       minWidth: 120,
+  //       pinned: 'left',
+  //       required: true,
+  //     },
+  //     {
+  //       field: 'documentTypeId',
+  //       headerName: 'Document Type',
+  //       type: 'dropdown',
+  //       dropdownOptions: this.documentTypes,
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+  //   );
+
+  //   // ─────────────────────────────────────────────
+  //   // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
+  //   // ─────────────────────────────────────────────
+  //   this.cabinetHierarchy.forEach((level, index) => {
+  //     const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
+
+  //     columns.push({
+  //       field: `level${level.level}Id`,
+  //       headerName: level.title,
+  //       type: 'dropdown',
+
+  //       // 🔥 level-based data source
+  //       dropdownOptions: this.dropdownDataSources[level.level],
+
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+
+  //       // 🔥 dynamic parent dependency
+  //       dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
+  //       filterKey: parentLevel ? 'parentId' : undefined,
+
+  //       minWidth: 180,
+  //       required: true,
+  //     });
+  //   });
+
+  //   // ─────────────────────────────────────────────
+  //   // 3️⃣ REMAINING FIXED COLUMNS
+  //   // ─────────────────────────────────────────────
+  //   columns.push(
+  //     {
+  //       field: 'nextReviewDate',
+  //       headerName: 'Next Review Date',
+  //       type: 'date',
+  //       required: true,
+  //     },
+  //     {
+  //       field: 'uploadDocument',
+  //       headerName: 'Upload Document',
+  //       type: 'file',
+  //       required: true,
+  //     },
+  //   );
+  //   //console.log(JSON.stringify(columns));
+
+  //   return columns;
+  // }
 
   // private getColumns(): GridColumn[] {
 
@@ -272,24 +350,12 @@ export class UploadDocuments {
   //   ];
   // }
 
-  private buildGrid(): void {
-    this.gridConfig = {
-      columns: this.getColumns(),
-      enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
-      enableSorting: true,
-      enableFiltering: true,
-      enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: false,
-      enableInlineDelete: true,
-      rowHeight: 47,
-      headerHeight: 40,
-      domLayout: 'autoHeight',
-      theme: 'ag-theme-alpine',
-      suppressCellFocus: true,
-    };
+  private getColumns(): GridColumn[] {
+    return [
+      ...this.getFixedColumns(),
+      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...this.getRemainingColumns(),
+    ];
   }
 
   GetAllUploadedDocuments(query: any) {
@@ -312,9 +378,9 @@ export class UploadDocuments {
         if (Array.isArray(items)) {
           this.uploadedDocumentsData = items.map((item: any) => ({
             Id: item.Id,
-            documentTypeId: item.DocumentType,
+            documentTypeId: item.DocumentTypeCode,
             documentTypeName: item.DocumentTypeCode,
-            version: item.Status,
+            version: item.Version,
             divisionName: item.Division,
             level1Id: item.DivisionCode,
             documentId: item.DocumentNumber,
@@ -324,6 +390,8 @@ export class UploadDocuments {
             departmentId: item.DepartmentCode,
             level3Id: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
+            level4Id: item.BusinessDomain,
+            businessDomainId: item.BusinessDomainCode,
             EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
             EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
             DocumentURL: item.DocumentURL,
@@ -374,6 +442,7 @@ export class UploadDocuments {
     formData.append('DivisionCode', rowData.level1Id);
     formData.append('DepartmentCode', rowData.level2Id);
     formData.append('SubDepartmentCode', rowData.level3Id);
+    formData.append('BusinessDomainCode', rowData.level4Id);
     formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
 
     // ✅ REAL FILE — GUARANTEED
@@ -404,6 +473,7 @@ export class UploadDocuments {
         divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
         departmentName: this.getDisplayName(this.departments, rowData.level2Id),
         subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
+        businessDomainname: this.getDisplayName(this.subDepartments, rowData.level4Id),
       };
 
       this.uploadedDocumentsData = [rowWithId, ...this.uploadedDocumentsData];
@@ -416,6 +486,14 @@ export class UploadDocuments {
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.level1Id);
     event.rowData.departmentName = this.getDisplayName(this.departments, event.rowData.level2Id);
+    event.rowData.subDepartmentName = this.getDisplayName(
+      this.subDepartments,
+      event.rowData.level3Id,
+    );
+    event.rowData.businessDomainname = this.getDisplayName(
+      this.subDepartments,
+      event.rowData.level4Id,
+    );
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
 
     this.uploadedDocumentsData[event.index] = { ...event.rowData };
@@ -467,87 +545,6 @@ export class UploadDocuments {
     }
   }
 
-  getAllDivisionList(): Observable<any[]> {
-    return this._divisionServices.getDivisions().pipe(
-      map((res) =>
-        (res ?? []).map((d) => ({
-          id: d.Code,
-          text: d.Name,
-        })),
-      ),
-    );
-  }
-
-  // getAllDivisionList:() = () => {
-  //   this._divisionServices.getDivisions().subscribe((res) => {
-  //     if (res) {
-  //       this.divisions = (res ?? []).map((d: any) => ({
-  //         id: d.Code,
-  //         text: d.Name,
-  //       }));
-  //     } else {
-  //       this.divisions = [];
-  //     }
-  //     // ✅ build grid ONLY after divisions are ready
-  //     this.buildGrid();
-  //   });
-  // };
-
-  getAllDepartmentList(): Observable<any[]> {
-    return this._departmentCacheService.getDepartments().pipe(
-      map((res) =>
-        (res ?? []).map((d) => ({
-          id: d.Code,
-          text: d.Name,
-          parentId: d.DivisionCode, // 🔥 REQUIRED
-        })),
-      ),
-    );
-  }
-
-  // getAllDepartmentList = () => {
-  //   this._departmentCacheService.getDepartments().subscribe((res) => {
-  //     if (res) {
-  //       this.departments = (res ?? []).map((d: any) => ({
-  //         id: d.Code,
-  //         text: d.Name,
-  //         divisionId: d.DivisionCode || d.divisionCode,
-  //         Division: d.Division || d.division,
-  //       }));
-  //     } else {
-  //       this.departments = [];
-  //     }
-  //   });
-  // };
-
-  getAllSubDepartmentList(): Observable<any[]> {
-    return this._subDepartmentServices.getSubDepartments().pipe(
-      map((res) =>
-        (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          parentId: d.DepartmentCode || d.departmentCode,
-        })),
-      ),
-      catchError(() => of([])),
-    );
-  }
-
-  // getAllSubDepartmentList = () => {
-  //   this._subDepartmentServices.getSubDepartments().subscribe((res) => {
-  //     if (res) {
-  //       this.subDepartments = (res ?? []).map((d: any) => ({
-  //         id: d.Code,
-  //         text: d.Name,
-  //         departmentId: d.DepartmentCode || d.departmentCode,
-  //         department: d.Department || d.department,
-  //       }));
-  //     } else {
-  //       this.subDepartments = [];
-  //     }
-  //   });
-  // };
-
   getAllDocumentTypes = () => {
     this._documentTypeService.getDocumentTypes().subscribe((res) => {
       if (res) {
@@ -562,38 +559,6 @@ export class UploadDocuments {
       //this.buildGrid();
     });
   };
-
-  loadCabinetDropdownData(levels: CabinetLevel[]) {
-    const loaders: Observable<any>[] = [];
-
-    levels.forEach((l) => {
-      switch (l.level) {
-        case 1:
-          loaders.push(
-            this.getAllDivisionList().pipe(tap((data) => (this.dropdownDataSources[1] = data))),
-          );
-          break;
-
-        case 2:
-          loaders.push(
-            this.getAllDepartmentList().pipe(tap((data) => (this.dropdownDataSources[2] = data))),
-          );
-          break;
-
-        case 3:
-          loaders.push(
-            this.getAllSubDepartmentList().pipe(
-              tap((data) => (this.dropdownDataSources[3] = data)),
-            ),
-          );
-          break;
-      }
-    });
-
-    forkJoin(loaders).subscribe(() => {
-      this.buildGrid(); // 🔥 NOW it is safe
-    });
-  }
 }
 
 class UploadDocumentColumns {
@@ -608,6 +573,7 @@ class UploadDocumentColumns {
   departmentId: string | null = null;
   //department: string | null = null;
   subDepartmentId: string | null = null;
+  businessDomainId: string | null = null;
   //subDepartment: string | null = null;
   nextReviewDate: string | null = null;
   uploadDocument: any = null;

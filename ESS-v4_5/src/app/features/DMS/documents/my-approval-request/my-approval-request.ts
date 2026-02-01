@@ -11,8 +11,8 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms'; 
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-my-approval-request',

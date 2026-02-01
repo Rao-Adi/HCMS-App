@@ -17,8 +17,8 @@ import { AverageDocumentScoreModal } from '../average-document-score-modal/avera
 import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
-import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -26,8 +26,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
     CommonModule,
     FormsModule,
     SafeTranslatePipe,
-    NzSelectModule,
-    AgGridWrapper,
+    NzSelectModule, 
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,

@@ -27,17 +27,17 @@ export class DistributionListService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getDistributionTypeList(): Observable<any> {
     const uri = `${environment.baseUrl}/DMSDistributionList/get-all-distribution-list-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getDistributionTypeById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDistributionList/get-distribution-list-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllDistributionTypes(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

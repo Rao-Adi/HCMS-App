@@ -12,13 +12,12 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DivisionService } from '@app/shared/services/division.services';
 import { DepartmentService } from '@app/shared/services/department.service';
-import { NzDatePickerModule } from 'ng-zorro-antd/date-picker'; 
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { CompanyList } from '@app/shared/Dropdowns/company-list/company-list';
-import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-
+import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-create-update-document',
@@ -32,12 +31,12 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    NzDatePickerModule, 
-    DocumentTypeList, 
+    NzDatePickerModule,
+    DocumentTypeList,
     CompanyList,
     DMSRichTextEdit,
     MyPendingRequestForApproval,
-    CabinetStructureList
+    CabinetStructureList,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',

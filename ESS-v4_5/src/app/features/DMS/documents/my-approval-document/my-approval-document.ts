@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { Component } from '@angular/core'; 
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -9,11 +8,11 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { MyPendingRequestForApproval } from '../document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -21,16 +20,15 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
     CommonModule,
     FormsModule,
     SafeTranslatePipe,
-    NzSelectModule,
-    AgGridWrapper,
+    NzSelectModule, 
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
-    NzButtonModule, 
+    NzButtonModule,
     DocumentTypeList,
     MyPendingRequestForApproval,
     DMSRichTextEdit,
-    CabinetStructureList
+    CabinetStructureList,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',

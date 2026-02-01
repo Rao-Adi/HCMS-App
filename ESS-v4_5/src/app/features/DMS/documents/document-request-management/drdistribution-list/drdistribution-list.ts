@@ -7,16 +7,23 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
-import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DistributionListService } from '@app/shared/services/distribution-list.service';
 import { DistributionTypeService } from '@app/shared/services/distribution-type.service';
 import { RoleService } from '@app/shared/services/role.service';
-import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { forkJoin } from 'rxjs';
+import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
+
+export interface DropdownOption {
+  id: string | number;
+  text: string;
+}
 
 @Component({
   selector: 'app-drdistribution-list',
@@ -25,14 +32,15 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './drdistribution-list.css',
 })
 export class DRDistributionList {
+  @Input() DocumentRequestType: string | null = null;
   gridConfig: GridConfig = {} as GridConfig;
 
-  manualUserData: any[] = [];
+  distributionListData: any[] = [];
   divisions: any[] = [];
   departments: any[] = [];
-  roles: any[] = [];
-  documentTypes: any[] = [];
-  distributionTypeList: any[] = [];
+  roles: { id: any; text: string }[] = [];
+  distributionTypeList: { id: any; text: string }[] = [];
+  selectedPageSize = 1; // default value
   totalManullayManageEmployees = 0;
   loading = false;
 
@@ -41,71 +49,36 @@ export class DRDistributionList {
     cellDataType: false,
   };
 
-  pinnedTopRowDataPlanning: AccessLevelColumns[] = [
+  dropdownDataSources: Record<number, any[]> = {};
+  cabinetHierarchy: CabinetLevel[] = [];
+  levelTitles: Record<number, string> = {};
+
+  pinnedTopRowDataPlanning: DistributionColumns[] = [
     {
       divisionId: null,
       departmentId: null,
+      subdepartmentId: null,
+      businessdomainId: null,
       roleId: null,
       distributiontypeId: null,
       isNewRow: true,
     },
   ];
 
-  private loadSampleData(): void {
-    this.manualUserData = [
-      {
-        distributiontypeId: 'DT1',
-        documentTypeName: 'SOP',
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        roleId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        isActive: true,
-      },
-      {
-        documentTypeId: 'DT1',
-        documentTypeName: 'SOP',
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        roleId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        isActive: true,
-      },
-    ];
+  constructor(
+    private _distributionList: DistributionListService,
+    private _distributionTypeService: DistributionTypeService,
+    private modal: NzModalService,
+    private _roleServices: RoleService,
+    private _notification: NotificationService,
+    private _cabinetHirarchyService: CabinetHierarchyService,
+    private cabinetGridService: CabinetGridService,
+  ) {
+    //this.loadSampleData();
   }
 
-  private getColumns(): GridColumn[] {
+  private getRemainingColumns(): GridColumn[] {
     return [
-      // ✅ DIVISION
-      {
-        field: 'divisionName',
-        headerName: 'Division',
-        type: 'dropdown',
-        dropdownOptions: this.divisions,
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-
-      // ✅ DEPARTMENT
-      {
-        field: 'departmentName',
-        headerName: 'Department',
-        type: 'dropdown',
-        dependsOn: 'divisionName',
-        dataSourceKey: 'departments',
-        filterKey: 'divisionId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-      // ✅ SUB DEPARTMENT
       {
         field: 'roleId',
         headerName: 'Role',
@@ -114,40 +87,22 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        required: true,
+        required: true,        
+        clickable: true,
+        clickAction: '', // optional but VERY powerful
       },
       // DOCUMENT TYPES
       {
         field: 'distributiontypeId',
-        headerName: 'Document Type',
+        headerName: 'Distribution Type',
         type: 'dropdown',
         dropdownOptions: this.distributionTypeList,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        required: true,
+        required: true
       },
     ];
-  }
-
-  constructor(
-    private _userService: UserService,
-    private _distributionList: DistributionListService,
-    private _documentTypeService: DocumentTypeCacheService,
-    private _divisionServices: DivisionCacheService,
-    private _departmentCacheService: DepartmentCacheService,
-    private _roleServices: RoleService,
-    private _notification: NotificationService,
-    private _distributionType: DistributionTypeService,
-  ) {
-    //this.loadSampleData();
-  }
-
-  ngOnInit() {
-    this.getAllDivisionList();
-    this.getAllDocumentTypes();
-    this.getAllDepartmentList();
-  
   }
 
   private buildGrid(): void {
@@ -170,13 +125,36 @@ export class DRDistributionList {
     };
   }
 
-  GetAllManuallyManageEmployee(query: any) {
+  private getColumns(): GridColumn[] {
+    return [
+      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...this.getRemainingColumns(),
+    ];
+  }
+
+  ngOnInit() {
+    this.loadDropdownsAndGrid();
+    this.GetAllDistributionList({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
+    //console.log(this.loadDropdownsAndGrid());
+    // this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+    //   this.cabinetHierarchy = levels;
+
+    //   this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    // });
+  }
+
+  GetAllDistributionList(query: any) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
     const pageSize = Number(query?.pageSize) || 10;
 
-    this._userService
-      .GetAllUser(
+    this._distributionList
+      .GetAllDistributionTypes(
         query?.filterModel?.Name?.filter || '',
         sort?.sort?.toUpperCase() || 'ASC',
         sort?.colId || 'Name',
@@ -187,28 +165,29 @@ export class DRDistributionList {
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
           this.totalManullayManageEmployees = res.Data.TotalCount;
-          this.manualUserData = res.Data.Items.map((item: any) => ({
+          this.distributionListData = res.Data.Items.map((item: any) => ({
             Id: item.id || item.Id,
-            EmployeeCode: item.employeeCode || item.EmployeeCode,
-            UserName: item.userName || item.UserName,
-            Grade: item.grade || item.Grade,
-            DivisionCode: item.divisionCode || item.DivisionCode,
-            DivisionName: item.divisionCode || item.DivisionCode,
-            DepartmentCode: item.departmentCode || item.DepartmentCode,
-            DepartmentName: item.departmentCode || item.DepartmentCode,
-            SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            SubDepartmentName: item.subDepartmentCode || item.SubDepartmentCode,
-            ReportingTo: item.reportingTo || item.ReportingTo,
-            DateOfJoining: new CustomDateFormatPipe().transform(item.dateOfJoining || item.DateOfJoining),
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            Description: item.description || item.Description,
+            distributiontypeId: item.Distribution || item.distribution,
+            distributiontype: item.DistributionType || item.DistributionType,
+            roleId: item.RoleId || item.roleId,
+            role: item.Role || item.role,
+            divisionName: item.Division,
+            level1Id: item.DivisionCode,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            DocumentCode: item.DocumentCode,
+            level2Id: item.Department,
+            departmentId: item.DepartmentCode,
+            level3Id: item.SubDepartment,
+            subDepartmentId: item.SubDepartmentCode,
+            level4Id: item.BusinessDomain,
+            businessdomainId: item.BusinessDomainCode,
             CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || '') 
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           }));
           //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {
-          this.manualUserData = [];
+          this.distributionListData = [];
         }
         //this.cdr.detectChanges(); // force update
       });
@@ -231,11 +210,13 @@ export class DRDistributionList {
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      documentRequestId: rowData.DocumentRequestId || rowData.documentRequestId,
-      divisionCode: rowData.DivisionName || rowData.divisionName,
-      departmentCode: rowData.DepartmentName || rowData.departmentName,
+      distributionType: rowData.DistributiontypeId || rowData.distributiontypeId,
+      divisionCode: rowData.level1Id || rowData.level1Id,
+      departmentCode: rowData.level2Id || rowData.level2Id,
+      subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      businessDomainCode: rowData.level4Id || rowData.level4Id,
       roleId: rowData.RoleId || rowData.roleId,
-      distributiontype: rowData.distributiontypeId || rowData.distributiontypeId,
+      DocumentRequestTypeCode: this.DocumentRequestType,
     };
 
     this._distributionList.create(payLoad).subscribe(() => {
@@ -244,17 +225,22 @@ export class DRDistributionList {
         'Distribution List',
         'Distribution list added successfully!',
       );
-    });
-    const rowWithId = {
-      ...rowData,
-      id: this.generateId(),
-      divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
-      departmentName: this.getDisplayName(this.departments, rowData.departmentName),
-      subDepartmentName: this.getDisplayName(this.roles, rowData.subDepartmentName),
-      distributiontypeId: this.getDisplayName(this.documentTypes, rowData.distributiontypeId),
-    };
 
-    this.manualUserData = [rowWithId, ...this.manualUserData];
+      const rowWithId = {
+        ...rowData,
+        id: this.generateId(),
+        divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+        departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+        subDepartmentName: this.getDisplayName(this.roles, rowData.level3Id),
+        businessDomainName: this.getDisplayName(this.roles, rowData.level4Id),
+        distributiontypeId: this.getDisplayName(
+          this.distributionTypeList,
+          rowData.distributiontypeId,
+        ),
+      };
+
+      this.distributionListData = [rowWithId, ...this.distributionListData];
+    });
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
@@ -268,19 +254,19 @@ export class DRDistributionList {
     );
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
 
-    this.manualUserData[event.index] = { ...event.rowData };
-    this.manualUserData = [...this.manualUserData]; // Trigger change detection
+    this.distributionListData[event.index] = { ...event.rowData };
+    this.distributionListData = [...this.distributionListData]; // Trigger change detection
   }
 
   onRowDeleted(rowIndex: number): void {
     console.log('Row deleted at index:', rowIndex);
-    this.manualUserData.splice(rowIndex, 1);
-    this.manualUserData = [...this.manualUserData];
+    this.distributionListData.splice(rowIndex, 1);
+    this.distributionListData = [...this.distributionListData];
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
     //console.log('Cell value changed:', JSON.stringify(event));
-
+    debugger;
     // Handle calculations if needed
     if (event.field === 'currentSalary' || event.field === 'incrementPercentage') {
       const currentSalary = event.rowData.currentSalary || 0;
@@ -288,7 +274,7 @@ export class DRDistributionList {
       event.rowData.revisedSalary = currentSalary * (1 + incrementPercentage / 100);
 
       // Update the row
-      this.manualUserData[event.rowIndex] = { ...event.rowData };
+      this.distributionListData[event.rowIndex] = { ...event.rowData };
     }
 
     if (event.field === 'file-preview') {
@@ -298,6 +284,27 @@ export class DRDistributionList {
       // Handle regular value changes
       //console.log('Cell value changed:', event);
     }
+  }
+
+  handleGridAction(event: { action: string; rowData: any }) {
+    if (event.action === 'roleId') {
+      this.openCabinetModal(event.rowData);
+    }
+  }
+
+  openCabinetModal(rowData: any): void {
+    const modalRef = this.modal.create({
+      nzTitle: 'Rivision History',
+      nzContent: RivisionHistoryPopup,
+      nzData: {
+        data: rowData.Id, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+    modalRef.afterClose.subscribe((result) => {
+      //console.log('Modal closed with:', result);
+    });
   }
 
   private generateId(): number {
@@ -317,81 +324,41 @@ export class DRDistributionList {
     }
   }
 
-  getAllDivisionList = () => {
-    this._divisionServices.getDivisions().subscribe((res) => {
-      if (res) {
-        this.divisions = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
-    });
-  };
-
-  getAllDepartmentList = () => {
-    this._departmentCacheService.getDepartments().subscribe((res) => {
-      if (res) {
-        this.departments = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          divisionId: d.DivisionCode || d.divisionCode,
-          Division: d.Division || d.division,
-        }));
-      } else {
-        this.departments = [];
-      }
-        this.getAllRoleList();
-    });
-  };
-
-  getAllRoleList = () => {
-    this._roleServices.getRoleList().subscribe((res) => {
-      if (res?.Data) {
-        this.roles = (res.Data ?? []).map((d: any) => ({
+  private loadDropdownsAndGrid(): void {
+    forkJoin({
+      roles: this._roleServices.getRoleList(),
+      distributionTypes: this._distributionTypeService.getDistributionTypeList(),
+      hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
+    }).subscribe(({ roles, distributionTypes, hierarchy }) => {
+      // ✅ Normalize Roles
+      this.roles =
+        roles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
-        }));
-      } else {
-        this.roles = [];
-      }
-    });
-  };
+        })) ?? [];
 
-  getAllDocumentTypes = () => {
-    this._documentTypeService.getDocumentTypes().subscribe((res) => {
-      if (res) {
-        this.documentTypes = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-        }));
-      } else {
-        this.documentTypes = [];
-      } 
-    });
-  };
-
-  getAllDistributionTypes = () => {
-    this._distributionType.getDistributionTypeList().subscribe((res) => {
-      if (res?.Data) {
-        this.distributionTypeList = (res.Data ?? []).map((d: any) => ({
+      // ✅ Normalize Document Types
+      this.distributionTypeList =
+        distributionTypes?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
-        }));
-      } else {
-        this.distributionTypeList = [];
-      } 
+        })) ?? [];
+
+      // ✅ Cabinet hierarchy
+      this.cabinetHierarchy = hierarchy;
+
+      // ✅ Load hierarchy dropdown data
+      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => this.buildGrid());
     });
-  };
+  }
 }
 
-class AccessLevelColumns {
-  divisionId: string | null = null; 
-  departmentId: string | null = null;  
-  roleId: string | null = null; 
+class DistributionColumns {
+  divisionId: string | null = null;
+  departmentId: string | null = null;
+  subdepartmentId: string | null = null;
+  businessdomainId: string | null = null;
+  roleId: string | null = null;
   distributiontypeId: string | null = null;
   isNewRow: boolean = false;
 }

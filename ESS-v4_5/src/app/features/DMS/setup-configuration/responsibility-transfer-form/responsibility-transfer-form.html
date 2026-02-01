@@ -94,7 +94,7 @@
                             nzShowSearch
                           >
                             <nz-option
-                              *ngFor="let dep of employees"
+                              *ngFor="let dep of reasonForTransfer"
                               [nzValue]="dep.CODE"
                               [nzLabel]="dep.NAME"
                             >
@@ -138,25 +138,17 @@
                         <button mat-raised-button color="primary" (click)="fileInput.click()">
                           Choose File
                         </button>
-                         
-
-                        <!-- <nz-upload
-                          [nzFileList]="fileList"
-                          [nzBeforeUpload]="beforeUpload"
-                          [nzShowUploadList]="true"
-                          (nzChange)="handleChange($event)"
-                        >
-                          <button nz-button>
-                            <nz-icon nzType="upload"></nz-icon>
-                            Click to Upload
-                          </button>
-                        </nz-upload> -->
                       </div>
                     </div>
                     <div class="row pt-4">
                       <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                         <span class="d-flex">Remarks</span>
-                        <textarea style="width:50%" rows="4" nz-input [(ngModel)]="remarks"></textarea>
+                        <textarea
+                          style="width: 50%"
+                          rows="4"
+                          nz-input
+                          [(ngModel)]="remarks"
+                        ></textarea>
                       </div>
                     </div>
                   </div>
@@ -164,7 +156,9 @@
               </div>
               <br />
               <div class="justify-content-center pt-4">
-                <button class="" nz-button nzType="primary" (click)="saveTemplate($event)">Save</button>
+                <button class="" nz-button nzType="primary" (click)="saveTemplate($event)">
+                  Save
+                </button>
               </div>
             </div>
 
@@ -177,9 +171,9 @@
                   <div>
                     <nz-select
                       style="width: 250px"
-                      [(ngModel)]="selectedAuthorityType"
+                      [(ngModel)]="selectedStatus"
                       nzPlaceHolder="Select Status"
-                      (ngModelChange)="onAuthorityTypeChange($event)"
+                      (ngModelChange)="selectStatus($event)"
                       nzAllowClear
                       nzShowSearch
                     >
@@ -204,8 +198,13 @@
                   [totalRows]="totalPendingApprovals"
                   [pageSize]="selectedPageSize"
                   gridId="myRequestPendingApprovalGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)" 
+                  (pageSizeChange)="onPageSizeChanged($event)"
                 >
+                <div grid-actions class="grid-action-icons">
+                  <button class="grid-icon-btn" title="Share with other Employees" (click)="export()">
+                    <i class="bi bi-reply"></i>
+                  </button> 
+                </div>
                 </app-ag-grid-wrapper>
               </div>
             </div>

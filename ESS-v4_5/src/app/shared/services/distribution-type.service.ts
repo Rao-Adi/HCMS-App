@@ -27,7 +27,7 @@ export class DistributionTypeService {
     return headers;
   }
 
-  getDistributionTypeList(): Observable<GenericResponse<any>> {
+  getDistributionTypeList(): Observable<any> {
     const uri = `${environment.baseUrl}/DMSDistributionType/get-all-distribution-type-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }

@@ -38,6 +38,7 @@ export class CabinetStructure {
   level5Title: string = 'Document Type';
   //cabinetConfigStructure!: CabinetStructureTabsConfig;
   selectedTab: string = 'Level 1';
+  activeTab!: number | 'DOCUMENT_TYPE';
   //tabs: CabinetStructureTabsConfig[] = [];
   selectedTabId!: number;
   selectedTabTitle = ''; // for textbox editing
@@ -63,11 +64,17 @@ export class CabinetStructure {
         lastModifiedBy: l.lastModifiedBy,
         lastModifiedAt: l.lastModifiedAt,
       }));
- 
+
       if (this.tabs?.length) {
         this.activateFirstTab();
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.tabs?.length) {
+      this.onTabChange(this.tabs[0]); // first level active
+    }
   }
 
   activateFirstTab(): void {
@@ -183,18 +190,23 @@ export class CabinetStructure {
   cabinetConfigStructure!: CabinetTabVM;
 
   onTabChange(tab: CabinetTabVM): void {
+    this.activeTab = tab.level;
     this.cabinetConfigStructure = tab;
     this.selectedTabLevel = tab.level;
     this.selectedTabTitle = tab.title;
   }
 
-  saveTabTitle(): void {
+  onDocumentTypeClick(): void {
+    this.activeTab = 'DOCUMENT_TYPE';
+    this.cabinetConfigStructure = null!;
+  }
 
+  saveTabTitle(): void {
     const payload = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Id: this.selectedTabLevel,
       Name: this.selectedTabTitle,
-      IsActive : true
+      IsActive: true,
     };
 
     this._cabietTabConfigService.update(payload).subscribe({

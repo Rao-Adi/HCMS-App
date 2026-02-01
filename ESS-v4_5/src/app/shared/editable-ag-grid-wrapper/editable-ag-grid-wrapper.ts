@@ -38,7 +38,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
 
-export interface GridColumn {
+export interface GridColumn<T = any> {
   field: string;
   headerName: string;
   type:
@@ -59,11 +59,17 @@ export interface GridColumn {
   editable?: boolean;
   sortable?: boolean;
   filter?: boolean;
+  clickable?: boolean;
+  clickAction?: string; // optional but VERY powerful
 
   // For dropdowns
-  dropdownOptions?: Array<{ id: any; text: string }>;
-  dropdownValueField?: string;
-  dropdownDisplayField?: string;
+  // dropdownOptions?: Array<{ id: any; text: string }>;
+  // dropdownValueField?: string;
+  // dropdownDisplayField?: string;
+
+  dropdownOptions?: T[];
+  dropdownValueField?: keyof T;
+  dropdownDisplayField?: keyof T;
 
   // For cascade functionality
   dependsOn?: string; // Field name this dropdown depends on
@@ -332,6 +338,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         const isCascade = !!column.dependsOn;
 
         colDef.cellRendererSelector = (params: any) => {
+    
           if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
             const rendererComponent = isCascade
               ? CascadeDropdownCellRenderer
@@ -392,7 +399,21 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
               },
             };
           }
-          return { component: HighlightCellRenderer };
+          return column.clickable
+            ? {
+                component: LinkRenderer, // you already have this!
+                params: {
+                  label: this.getOptionText2(column, params.data?.[column.field]),
+
+                  onClick: () => {
+                    this.actionClicked.emit({
+                      action: column.clickAction || column.field,
+                      rowData: params.data,
+                    });
+                  },
+                },
+              }
+            : { component: HighlightCellRenderer };
         };
 
         colDef.valueFormatter = (params) => {
@@ -641,6 +662,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
     return colDef;
   }
+
   private getContextData(): any {
     // Return data that can be accessed by renderers via context
     return {
@@ -669,6 +691,16 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     }
 
     return String(value);
+  }
+
+  private getOptionText2(column: GridColumn, value: any): string {
+    if (!value) return '';
+
+    const options = column.dropdownOptions || [];
+
+    const match = options.find((opt: any) => opt[column.dropdownValueField || 'id'] == value);
+
+    return match ? match[column.dropdownDisplayField || 'text'] : value;
   }
 
   private clearDependentFields(data: any, field: string) {

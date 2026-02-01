@@ -7,9 +7,12 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AttributeMandatoryScopeService } from '@app/shared/services/attribute-mandatory-scope.service';
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
@@ -53,6 +56,10 @@ export class MandatoryCabinetWisePopup {
   departments: any[] = [];
   subDepartments: any[] = [];
 
+  dropdownDataSources: Record<number, any[]> = {};
+  cabinetHierarchy: CabinetLevel[] = [];
+  levelTitles: Record<number, string> = {};
+
   constructor(
     private modalRef: NzModalRef,
     @Inject(NZ_MODAL_DATA) public modalData: any,
@@ -61,6 +68,8 @@ export class MandatoryCabinetWisePopup {
     private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
+    private readonly hierarchyService: CabinetHierarchyService,
+    private cabinetGridService: CabinetGridService,
   ) {
     this.cabinetId = modalData.data;
     //console.log('Received cabinet id:', this.cabinetId);
@@ -85,15 +94,41 @@ export class MandatoryCabinetWisePopup {
   }
 
   ngOnInit() {
+    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      this.cabinetHierarchy = levels;
+
+      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    });
+
     this.GetAllAttributeMandatoryScopes({
       pageNumber: 1,
       pageSize: this.selectedPageSize,
       sortModel: [], // or your current sort/filter model
       filterModel: {},
     });
-    this.getAllDivisionList();
-    this.getAllDepartmentList();
-    this.getAllSubDepartmentList();
+    // this.getAllDivisionList();
+    // this.getAllDepartmentList();
+    // this.getAllSubDepartmentList();
+  }
+
+  private getColumns(): GridColumn[] {
+    return [
+      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...this.getRemainingColumns(),
+    ];
+  }
+
+  private getRemainingColumns(): GridColumn[] {
+    return [
+      {
+        field: 'mandatory',
+        headerName: 'Mandatory',
+        type: 'dropdown',
+        dropdownOptions: this.mandatoryOptions,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+      },
+    ];
   }
 
   pinnedTopRowDataPlanning: UploadDocumentColumns[] = [
@@ -108,57 +143,6 @@ export class MandatoryCabinetWisePopup {
       isNewRow: true,
     },
   ];
-
-  private getColumns(): GridColumn[] {
-    return [
-      // ✅ DIVISION
-      {
-        field: 'divisionName',
-        headerName: 'Division',
-        type: 'dropdown',
-        dropdownOptions: this.divisions,
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-
-      // ✅ DEPARTMENT
-      {
-        field: 'departmentName',
-        headerName: 'Department',
-        type: 'dropdown',
-        dependsOn: 'divisionName',
-        dataSourceKey: 'departments',
-        filterKey: 'divisionId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-      // ✅ SUB DEPARTMENT
-      {
-        field: 'subDepartmentName',
-        headerName: 'Sub Department',
-        type: 'dropdown',
-        dependsOn: 'departmentName',
-        dataSourceKey: 'subDepartments',
-        filterKey: 'departmentId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-      {
-        field: 'mandatory',
-        headerName: 'Mandatory',
-        type: 'dropdown',
-        dropdownOptions: this.mandatoryOptions,
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-      },
-    ];
-  }
 
   private buildGrid(): void {
     this.gridConfig = {
@@ -196,13 +180,14 @@ export class MandatoryCabinetWisePopup {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-
+    debugger;
     const payLoad = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       documentAttributeId: this.cabinetId,
-      DivisionCode: rowData.divisionName,
-      DepartmentCode: rowData.departmentName,
-      SubDepartmentCode: rowData.subDepartmentName,
+      divisionCode: rowData.level1Id || rowData.level1Id,
+      departmentCode: rowData.level2Id || rowData.level2Id,
+      subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      businessDomainCode: rowData.level4Id || rowData.level4Id,
       isMandatory: rowData.mandatory,
       IsActive: true,
       IsDeleted: false,
@@ -360,15 +345,21 @@ export class MandatoryCabinetWisePopup {
       .subscribe((res) => {
         const items = res?.Data?.Items;
         //console.log(items);
+        debugger;
         if (Array.isArray(items)) {
           this.mandatoryCabinetData = items.map((item: any) => ({
             Id: item.Id,
-            divisionName: item.Division,
-            divisionId: item.DivisionCode,
-            departmentName: item.Department,
+            divisionName: item.Division, 
+            level1Id: item.DivisionCode,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            DocumentCode: item.DocumentCode,
+            level2Id: item.Department,
             departmentId: item.DepartmentCode,
-            subDepartmentName: item.SubDepartment,
+            level3Id: item.SubDepartment,
             subDepartmentId: item.SubDepartmentCode,
+            level4Id: item.BusinessDomain,
+            businessDomainId: item.BusinessDomainCode,
             mandatory: item.IsMandatory,
             CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
             CreatedBy: item.CreatedBy,
@@ -417,51 +408,7 @@ export class MandatoryCabinetWisePopup {
     //     }
     //   });
   }
-
-  getAllDivisionList = () => {
-    this._divisionServices.getDivisions().subscribe((res) => {
-      if (res) {
-        this.divisions = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
-    });
-  };
-
-  getAllDepartmentList = () => {
-    this._departmentCacheService.getDepartments().subscribe((res) => {
-      if (res) {
-        this.departments = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          divisionId: d.DivisionCode || d.divisionCode,
-          Division: d.Division || d.division,
-        }));
-      } else {
-        this.departments = [];
-      }
-    });
-  };
-
-  getAllSubDepartmentList = () => {
-    this._subDepartmentServices.getSubDepartments().subscribe((res) => {
-      if (res) {
-        this.subDepartments = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          departmentId: d.DepartmentCode || d.departmentCode,
-          department: d.Department || d.department,
-        }));
-      } else {
-        this.subDepartments = [];
-      }
-    });
-  };
+ 
 }
 
 class UploadDocumentColumns {

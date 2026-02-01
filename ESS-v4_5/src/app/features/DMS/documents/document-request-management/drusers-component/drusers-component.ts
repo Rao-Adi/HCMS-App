@@ -7,8 +7,10 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
@@ -48,6 +50,10 @@ export class DRUsersComponent {
     cellDataType: false,
   };
 
+  dropdownDataSources: Record<number, any[]> = {};
+  cabinetHierarchy: CabinetLevel[] = [];
+  levelTitles: Record<number, string> = {};
+
   pinnedTopRowDataPlanning: AccessLevelColumns[] = [
     {
       divisionId: null,
@@ -85,8 +91,6 @@ export class DRUsersComponent {
     ];
   }
 
-  
-
   constructor(
     private _userService: UserService,
     private _documentTypeService: DocumentTypeCacheService,
@@ -94,80 +98,14 @@ export class DRUsersComponent {
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
     private _notification: NotificationService,
-    private _cabinetHirarchyService: CabinetHierarchyService
+    private _cabinetHirarchyService: CabinetHierarchyService,
+    private cabinetGridService: CabinetGridService,
   ) {
-    this.loadSampleData();
+    //this.loadSampleData();
   }
 
-  ngOnInit() {
-    this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
-    this.getAllDocumentTypes();
-    this.getAllDivisionList();
-    this.getAllDepartmentList();
-    this.getAllSubDepartmentList();
-  }
-
-  private buildGrid(): void {
-    this.gridConfig = {
-      columns: this.getColumns(),
-      enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
-      enableSorting: true,
-      enableFiltering: true,
-      enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
-      rowHeight: 47,
-      headerHeight: 40,
-      domLayout: 'autoHeight',
-      theme: 'ag-theme-alpine',
-      suppressCellFocus: true,
-    };
-  }
-
-  private getColumns(): GridColumn[] {
+  private getRemainingColumns(): GridColumn[] {
     return [
-      // ✅ DIVISION
-      {
-        field: 'divisionName',
-        headerName: 'Division',
-        type: 'dropdown',
-        dropdownOptions: this.divisions,
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-
-      // ✅ DEPARTMENT
-      {
-        field: 'departmentName',
-        headerName: 'Department',
-        type: 'dropdown',
-        dependsOn: 'divisionName',
-        dataSourceKey: 'departments',
-        filterKey: 'divisionId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-      // ✅ SUB DEPARTMENT
-      {
-        field: 'subDepartmentName',
-        headerName: 'Sub Department',
-        type: 'dropdown',
-        dependsOn: 'departmentName',
-        dataSourceKey: 'subDepartments',
-        filterKey: 'departmentId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
-      // DOCUMENT TYPES
       {
         field: 'userId',
         headerName: 'User',
@@ -180,6 +118,121 @@ export class DRUsersComponent {
       },
     ];
   }
+
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: false,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+  }
+
+  private getColumns(): GridColumn[] {
+    return [
+      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...this.getRemainingColumns(),
+    ];
+  }
+
+  ngOnInit() {
+    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      this.cabinetHierarchy = levels;
+
+      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    });
+
+    // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    this.getAllDocumentTypes();
+    // this.getAllDivisionList();
+    // this.getAllDepartmentList();
+    // this.getAllSubDepartmentList();
+  }
+
+  // private buildGrid(): void {
+  //   this.gridConfig = {
+  //     columns: this.getColumns(),
+  //     enablePagination: true,
+  //     pageSize: 10,
+  //     pageSizeOptions: [10, 20, 50, 100],
+  //     enableSorting: true,
+  //     enableFiltering: true,
+  //     enableSelection: true,
+  //     enableInlineAdd: true,
+  //     enableInlineEdit: true,
+  //     enableInlineDelete: true,
+  //     rowHeight: 47,
+  //     headerHeight: 40,
+  //     domLayout: 'autoHeight',
+  //     theme: 'ag-theme-alpine',
+  //     suppressCellFocus: true,
+  //   };
+  // }
+
+  // private getColumns(): GridColumn[] {
+  //   return [
+  //     // ✅ DIVISION
+  //     {
+  //       field: 'divisionName',
+  //       headerName: 'Division',
+  //       type: 'dropdown',
+  //       dropdownOptions: this.divisions,
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+
+  //     // ✅ DEPARTMENT
+  //     {
+  //       field: 'departmentName',
+  //       headerName: 'Department',
+  //       type: 'dropdown',
+  //       dependsOn: 'divisionName',
+  //       dataSourceKey: 'departments',
+  //       filterKey: 'divisionId',
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+  //     // ✅ SUB DEPARTMENT
+  //     {
+  //       field: 'subDepartmentName',
+  //       headerName: 'Sub Department',
+  //       type: 'dropdown',
+  //       dependsOn: 'departmentName',
+  //       dataSourceKey: 'subDepartments',
+  //       filterKey: 'departmentId',
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+  //     // DOCUMENT TYPES
+  //     {
+  //       field: 'userId',
+  //       headerName: 'User',
+  //       type: 'dropdown',
+  //       dropdownOptions: this.users,
+  //       dropdownValueField: 'id',
+  //       dropdownDisplayField: 'text',
+  //       minWidth: 180,
+  //       required: true,
+  //     },
+  //   ];
+  // }
 
   GetAllManuallyManageEmployee(query: any) {
     const sort = query.sortModel?.[0];
@@ -243,9 +296,10 @@ export class DRUsersComponent {
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      divisionCode: rowData.DivisionName || rowData.divisionName,
-      departmentCode: rowData.DepartmentName || rowData.departmentName,
-      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      divisionCode: rowData.level1Id || rowData.level1Id,
+      departmentCode: rowData.level2Id || rowData.level2Id,
+      subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      businessDomainCode: rowData.level4Id || rowData.level4Id,
       userId: rowData.userId || rowData.userId,
     };
 
@@ -267,16 +321,29 @@ export class DRUsersComponent {
   onRowUpdated(event: { rowData: any; index: number }): void {
     console.log('Row updated:', event);
     debugger;
-    // Update display names
-    event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    event.rowData.departmentName = this.getDisplayName(
-      this.departments,
-      event.rowData.departmentId,
-    );
-    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
+    const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      divisionCode: event.rowData.level1Id || event.rowData.level1Id,
+      departmentCode: event.rowData.level2Id || event.rowData.level2Id,
+      subDepartmentCode: event.rowData.level3Id || event.rowData.level3Id,
+      businessDomainCode: event.rowData.level4Id || event.rowData.level4Id,
+      userId: event.rowData.userId || event.rowData.userId,
+    };
 
-    this.manualUserData[event.index] = { ...event.rowData };
-    this.manualUserData = [...this.manualUserData]; // Trigger change detection
+    this._userService.update(payLoad).subscribe(() => {
+      this._notification.createNotification('success', 'User', 'User created successfully!');
+
+      // Update display names
+      event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
+      event.rowData.departmentName = this.getDisplayName(
+        this.departments,
+        event.rowData.departmentId,
+      );
+      // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
+
+      this.manualUserData[event.index] = { ...event.rowData };
+      this.manualUserData = [...this.manualUserData]; // Trigger change detection
+    });
   }
 
   onRowDeleted(rowIndex: number): void {
@@ -323,51 +390,6 @@ export class DRUsersComponent {
       window.open(fileInfo.url, '_blank');
     }
   }
-
-  getAllDivisionList = () => {
-    this._divisionServices.getDivisions().subscribe((res) => {
-      if (res) {
-        this.divisions = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
-    });
-  };
-
-  getAllDepartmentList = () => {
-    this._departmentCacheService.getDepartments().subscribe((res) => {
-      if (res) {
-        this.departments = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          divisionId: d.DivisionCode || d.divisionCode,
-          Division: d.Division || d.division,
-        }));
-      } else {
-        this.departments = [];
-      }
-    });
-  };
-
-  getAllSubDepartmentList = () => {
-    this._subDepartmentServices.getSubDepartments().subscribe((res) => {
-      if (res) {
-        this.subDepartments = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-          departmentId: d.DepartmentCode || d.departmentCode,
-          department: d.Department || d.department,
-        }));
-      } else {
-        this.subDepartments = [];
-      }
-    });
-  };
 
   getAllDocumentTypes = () => {
     this._documentTypeService.getDocumentTypes().subscribe((res) => {

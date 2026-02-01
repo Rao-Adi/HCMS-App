@@ -13,7 +13,6 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { MyPendingRequestForApproval } from '../../documents/document-request-management/my-pending-request-for-approval/my-pending-request-for-approval';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 
 @Component({
@@ -30,8 +29,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
     NzButtonModule,
     NzDatePickerModule,
     CabinetStructureList,
-    DocumentTypeList,
-    MyPendingRequestForApproval
+    DocumentTypeList, 
   ],
   templateUrl: './view-document-pending-approval.html',
   styleUrl: './view-document-pending-approval.css',

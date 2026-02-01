@@ -7,18 +7,19 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
-import { NzButtonModule } from 'ng-zorro-antd/button'; 
-import { FormsModule } from '@angular/forms'; 
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DRDistributionList } from './drdistribution-list/drdistribution-list';
 import { DRUsersComponent } from './drusers-component/drusers-component';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit'; 
-import { NzInputModule } from 'ng-zorro-antd/input'; 
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal'; 
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { DocumentsComponent } from './documents-component/documents-component';
-import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { SelectList } from '@app/shared/interfaces/interfaces';
+import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
+import { CompanyService } from '@app/shared/services/company.service';
 
 @Component({
   selector: 'app-document-request-management',
@@ -33,14 +34,13 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
     NzRadioModule,
     NzButtonModule,
     NzInputModule,
-    NzModalModule, 
+    NzModalModule,
     DocumentTypeList,
     DRDistributionList,
     DRUsersComponent,
     DMSRichTextEdit,
     DocumentsComponent,
-    MyPendingRequestForApproval,
-    CabinetStructureList
+    CabinetStructureList,
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
@@ -287,16 +287,8 @@ export class DocumentRequestManagement {
     },
   ];
 
-  companies: SelectList[] = [
-    { CODE: '1', NAME: 'ATCO' },
-    { CODE: '2', NAME: 'Softronic' },
-  ];
-
-  requestTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Creation of new document' },
-    { CODE: '2', NAME: 'Revision of existing document' },
-    { CODE: '3', NAME: 'Obsoletion of existing document' },
-  ];
+  companies: any[] = [];
+  requestTypes: any[] = [];
 
   employees: SelectList[] = [
     { CODE: '1', NAME: 'John Doe' },
@@ -315,20 +307,26 @@ export class DocumentRequestManagement {
     { CODE: '2', NAME: 'Less than 30 days' },
   ];
 
-  constructor(private modal: NzModalService) {}
+  constructor(
+    private modal: NzModalService,
+    private _documentRequestTypeService: DocumentRequestTypeService,
+    private _companyService: CompanyService,
+  ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.getAllDocumentRequestTypes();
+    this.getAllCompanies();
+  }
 
-  selectedAuthorityType: string | null = null;
+  selectedDocumentRequestType: string | null = null;
   showDocumentDiv: boolean = false;
   showOtherDiv: boolean = false;
   onAuthorityTypeChange(value: string | null): void {
-   
-    this.selectedAuthorityType = value;
-    if (this.selectedAuthorityType == '1') {
+    this.selectedDocumentRequestType = value;
+    if (this.selectedDocumentRequestType == '1') {
       this.showOtherDiv = true;
       this.showDocumentDiv = false;
-    } else if (this.selectedAuthorityType == '2') {
+    } else if (this.selectedDocumentRequestType == '2') {
       this.showDocumentDiv = true;
       this.showOtherDiv = true;
     } else {
@@ -356,6 +354,11 @@ export class DocumentRequestManagement {
     this.selectedDocumentType = value;
   }
 
+  selectedCompany: string | null = null;
+  onCompanyChange(value: string | null) {
+    this.selectedCompany = value;
+  }
+
   GetAllDocuments(query: any) {}
 
   GetAllPendingApprovalRequests(query: any) {}
@@ -368,6 +371,32 @@ export class DocumentRequestManagement {
 
   GetAllUploadedDocuments(query: any) {}
   GetAllDistributionList(query: any) {}
+
+  getAllDocumentRequestTypes = () => {
+    this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
+      if (res) {
+        this.requestTypes = (res.Data ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Value,
+        }));
+      } else {
+        this.requestTypes = [];
+      }
+    });
+  };
+
+  getAllCompanies = () => {
+    this._companyService.getCompanyList().subscribe((res) => {
+      if (res) {
+        this.companies = (res.Data ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Value,
+        }));
+      } else {
+        this.companies = [];
+      }
+    });
+  };
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -457,6 +486,4 @@ export class DocumentRequestManagement {
         break;
     }
   }
-
-  
 }

@@ -10,6 +10,7 @@ import { CabinetTabVM } from '@app/shared/interfaces/interfaces';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { Observable } from 'rxjs';
+import { BusinessDomainList } from '../business-domain-list/business-domain-list';
 
 interface CabinetDropdownConfig {
   level: number;
@@ -30,6 +31,7 @@ interface CabinetLevel {
     DivisionList,
     DepartmentList,
     SubDepartmentList,
+    BusinessDomainList
   ],
   templateUrl: './cabinet-structure-list.html',
   styleUrl: './cabinet-structure-list.css',

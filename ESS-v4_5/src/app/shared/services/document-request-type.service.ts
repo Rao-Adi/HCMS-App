@@ -2,19 +2,20 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
-import { ApiResponse, BusinessDomain, SelectList } from '../interfaces/interfaces';
+import { ApiResponse, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
-import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs'; 
+import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
+import { DocumentType } from '../interfaces/interfaces';
 
 // import { Customer } from './customer';
 
 @Injectable({ providedIn: 'root' })
-export class BusinessDomainService {
-  private _departments: ReplaySubject<BusinessDomain[]> = new ReplaySubject<BusinessDomain[]>(1);
+export class DocumentRequestTypeService {
+  private _departments: ReplaySubject<DocumentType[]> = new ReplaySubject<DocumentType[]>(1);
 
   constructor(private http: HttpClient) {}
 
-  get departments$(): Observable<BusinessDomain[]> {
+  get departments$(): Observable<DocumentType[]> {
     return this._departments.asObservable();
   }
 
@@ -28,22 +29,22 @@ export class BusinessDomainService {
     return headers;
   }
 
-  getBusinessDomainList(): Observable<any> {
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-all-business-domain-list`;
+  getDocumentTypeList(): Observable<any> {
+    const uri = `${environment.baseUrl}/DMSDocumentRequestType/get-all-document-request-type-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getBusinessDomainsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-departments-by-division-code?dCode=${dCode}`;
+  getDocumentTypeCount(): Observable<GenericResponse<Number>> {
+    const uri = `${environment.baseUrl}/DMSDocumentRequestType/get-doucment-type-count`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getBusinessDomainCount(): Observable<GenericResponse<Number>> {
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-business-domain-count`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  //   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
+  //     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
+  //     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  //   }
 
-  GetAllBusinessDomains(
+  GetAllDocumentTypes(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
@@ -60,7 +61,7 @@ export class BusinessDomainService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-all-business-domain`;
+    const uri = `${environment.baseUrl}/DMSDocumentRequestType/get-all-document-request-types`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -69,22 +70,21 @@ export class BusinessDomainService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSBusinessDomain/create-business-domain`,
+      `${environment.baseUrl}/DMSDocumentRequestType/create-document-request-type`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSBusinessDomain/update-business-domain`,
+      `${environment.baseUrl}/DMSDocumentRequestType/update-document-request-type`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSBusinessDomain/delete-business-domain/${code}`
+      `${environment.baseUrl}/DMSDocumentRequestType/delete-document-request-type/${code}`
     );
   }
- 
 }

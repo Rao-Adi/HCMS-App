@@ -18,6 +18,12 @@ import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-l
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CabinetLevel } from '@app/shared/interfaces/interfaces';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
+import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
+import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
+import { BusinessDomainCacheService } from '@app/shared/services/CacheServices/business-domain-cache-service';
 
 @Component({
   selector: 'app-manual-manage-employee',
@@ -33,7 +39,9 @@ import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
   styleUrl: './manual-manage-employee.css',
 })
 export class ManualManageEmployee {
-  gridConfig: GridConfig = {} as GridConfig;
+  gridConfig: GridConfig = {
+    
+  } as GridConfig;
 
   manualUserData: any[] = [];
   divisions: any[] = [];
@@ -42,12 +50,13 @@ export class ManualManageEmployee {
   totalManullayManageEmployees = 0;
   loading = false;
 
-  selectedPageSize = 1; // default value
+  dropdownDataSources: Record<number, any[]> = {};
+  cabinetHierarchy: CabinetLevel[] = [];
+  levelTitles: Record<number, string> = {};
 
-  defaultColDef: ColDef = {
-    filter: true,
-    cellDataType: false,
-  };
+  selectedPageSize = 10; // default value
+
+ 
 
   pinnedTopRowDataPlanning: UploadDocumentColumns[] = [
     {
@@ -63,15 +72,22 @@ export class ManualManageEmployee {
     },
   ];
 
+   
+
   private getColumns(): GridColumn[] {
-    return [
+    const columns: GridColumn[] = [];
+
+    // ─────────────────────────────────────────────
+    // 1️⃣ FIXED (NON-CABINET) COLUMNS
+    // ─────────────────────────────────────────────
+    columns.push(
       {
         field: 'employeeCode',
         headerName: 'Employee Code',
-        type: 'text',
+        type: 'readonly',
         minWidth: 150,
         pinned: 'left',
-        required: true,
+        required: false,
       },
       {
         field: 'employeeName',
@@ -81,44 +97,38 @@ export class ManualManageEmployee {
         pinned: 'left',
         required: true,
       },
-      // ✅ DIVISION
-      {
-        field: 'divisionName',
-        headerName: 'Division',
-        type: 'dropdown',
-        dropdownOptions: this.divisions,
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
+    );
 
-      // ✅ DEPARTMENT
-      {
-        field: 'departmentName',
-        headerName: 'Department',
+    // ─────────────────────────────────────────────
+    // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
+    // ─────────────────────────────────────────────
+    this.cabinetHierarchy.forEach((level, index) => {
+      const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
+
+      columns.push({
+        field: `level${level.level}Id`,
+        headerName: level.title,
         type: 'dropdown',
-        dependsOn: 'divisionName',
-        dataSourceKey: 'departments',
-        filterKey: 'divisionId',
+
+        // 🔥 level-based data source
+        dropdownOptions: this.dropdownDataSources[level.level],
+
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+
+        // 🔥 dynamic parent dependency
+        dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
+        filterKey: parentLevel ? 'parentId' : undefined,
+
         minWidth: 180,
         required: true,
-      },
-      // ✅ SUB DEPARTMENT
-      {
-        field: 'subDepartmentName',
-        headerName: 'Sub Department',
-        type: 'dropdown',
-        dependsOn: 'departmentName',
-        dataSourceKey: 'subDepartments',
-        filterKey: 'departmentId',
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        minWidth: 180,
-        required: true,
-      },
+      });
+    });
+
+    // ─────────────────────────────────────────────
+    // 3️⃣ REMAINING FIXED COLUMNS
+    // ─────────────────────────────────────────────
+    columns.push(
       {
         field: 'email',
         headerName: 'Email',
@@ -151,22 +161,31 @@ export class ManualManageEmployee {
         minWidth: 150,
         pinned: 'left',
       },
-    ];
+    );
+    //console.log(JSON.stringify(columns));
+
+    return columns;
   }
 
   constructor(
     private _userService: UserService,
     private modal: NzModalService,
-    private _divisionServices: DivisionService,
+    private _divisionServices: DivisionCacheService,
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
+    private _businessDomainCacheService: BusinessDomainCacheService,
     private _notification: NotificationService,
+    private readonly hierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
-    this.getAllDivisionList();
-    this.getAllDepartmentList();
-    this.getAllSubDepartmentList();
+    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      this.cabinetHierarchy = levels;
+      this.levelTitles = this.hierarchyService.getLevelTitles();
+
+      this.loadCabinetDropdownData(levels);
+    });
+
     this.GetAllManuallyManageEmployee({
       pageNumber: 1,
       pageSize: this.selectedPageSize,
@@ -199,7 +218,7 @@ export class ManualManageEmployee {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
     const pageSize = Number(query?.pageSize) || 10;
-
+   
     this._userService
       .GetAllUser(
         query?.filterModel?.Name?.filter || '',
@@ -218,13 +237,17 @@ export class ManualManageEmployee {
             employeeName: item.employeeName || item.EmployeeName,
             email: item.email || item.Email,
             divisionCode: item.divisionCode || item.DivisionCode,
-            divisionName: item.divisionName || item.DivisionName,
+            level1Id: item.division || item.Division,
             departmentCode: item.departmentCode || item.DepartmentCode,
-            departmentName: item.departmentName || item.DepartmentName,
+            level2Id: item.department || item.Department,
             subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            subDepartmentName: item.subDepartmentName || item.SubDepartmentName,
+            level3Id: item.subDepartment || item.SubDepartment,
+            businessDomainCode: item.businessDomainCode || item.BusinessDomainCode,
+            level4Id: item.businessDomain || item.BusinessDomain,
             reportingTo: item.reportingTo || item.ReportingTo,
-            dateOfJoining: new CustomDateFormatPipe().transform(item.dateOfJoining || item.DateOfJoining),
+            dateOfJoining: new CustomDateFormatPipe().transform(
+              item.dateOfJoining || item.DateOfJoining,
+            ),
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             CreatedBy: item.createdBy || item.CreatedBy || '',
@@ -262,9 +285,10 @@ export class ManualManageEmployee {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
       employeeName: rowData.EmployeeName || rowData.employeeName,
-      divisionCode: rowData.DivisionCode || rowData.divisionName,
-      departmentCode: rowData.DepartmentCode || rowData.departmentName,
-      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      divisionCode: rowData.level1Id || rowData.level1Id,
+      departmentCode: rowData.level2Id || rowData.level2Id,
+      subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      businessDomainCode: rowData.level4Id || rowData.level4Id,
       email: rowData.Email || rowData.email,
       reportingTo: rowData.ReportingTo || rowData.reportingTo,
       dateOfJoining: rowData.DateOfJoining || rowData.dateOfJoining,
@@ -316,9 +340,10 @@ export class ManualManageEmployee {
     const payLoad = {
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
       employeeName: rowData.EmployeeName || rowData.employeeName,
-      divisionCode: rowData.DivisionCode || rowData.divisionName,
-      departmentCode: rowData.DepartmentCode || rowData.departmentName,
-      subDepartmentCode: rowData.SubDepartmentCode || rowData.subDepartmentName,
+      divisionCode: rowData.level1Id || rowData.level1Id,
+      departmentCode: rowData.level2Id || rowData.level2Id,
+      subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      businessDomainCode: rowData.level4Id || rowData.level4Id,
       email: rowData.Email || rowData.email,
       reportingTo: rowData.ReportingTo || rowData.reportingTo,
       dateOfJoining: rowData.DateOfJoining || rowData.dateOfJoining,
@@ -339,9 +364,10 @@ export class ManualManageEmployee {
           reportingTo: rowData.reportingTo,
           dateOfJoining: rowData.dateOfJoining,
           // Map dropdown IDs to display names
-          divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
-          departmentName: this.getDisplayName(this.departments, rowData.departmentName),
-          subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
+          divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+          departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+          subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
+          businessDomainName: this.getDisplayName(this.subDepartments, rowData.level4Id)
         };
 
         this.manualUserData = [rowWithId, ...this.manualUserData];
@@ -362,7 +388,6 @@ export class ManualManageEmployee {
         this._notification.createNotification('error', 'Document Attribute', message);
       },
     });
- 
   }
 
   onRowDeleted(rowIndex: number): void {
@@ -410,51 +435,96 @@ export class ManualManageEmployee {
     }
   }
 
-  getAllDivisionList = () => {
-    this._divisionServices.getDivisionList().subscribe((res) => {
-      if (res?.Data) {
-        this.divisions = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Value,
-        }));
-      } else {
-        this.divisions = [];
-      }
-      // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
-    });
-  };
-
-  getAllDepartmentList = () => {
-    this._departmentCacheService.getDepartments().subscribe((res) => {
-      if (res) {
-        this.departments = (res ?? []).map((d: any) => ({
+  getAllDivisionList(): Observable<any[]> {
+    return this._divisionServices.getDivisions().pipe(
+      map((res) =>
+        (res ?? []).map((d) => ({
           id: d.Code,
           text: d.Name,
-          divisionId: d.DivisionCode || d.divisionCode,
-          Division: d.Division || d.division,
-        }));
-      } else {
-        this.departments = [];
-      }
-    });
-  };
+        })),
+      ),
+    );
+  }
 
-  getAllSubDepartmentList = () => {
-    this._subDepartmentServices.getSubDepartments().subscribe((res) => {
-      if (res) {
-        this.subDepartments = (res ?? []).map((d: any) => ({
+ 
+  getAllDepartmentList(): Observable<any[]> {
+    return this._departmentCacheService.getDepartments().pipe(
+      map((res) =>
+        (res ?? []).map((d) => ({
           id: d.Code,
           text: d.Name,
-          departmentId: d.DepartmentCode || d.departmentCode,
-          department: d.Department || d.department,
-        }));
-      } else {
-        this.subDepartments = [];
+          parentId: d.DivisionCode, // 🔥 REQUIRED
+        })),
+      ),
+    );
+  }
+
+  
+  getAllSubDepartmentList(): Observable<any[]> {
+    return this._subDepartmentServices.getSubDepartments().pipe(
+      map((res) =>
+        (res ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Name,
+          parentId: d.DepartmentCode || d.departmentCode,
+        })),
+      ),
+      catchError(() => of([])),
+    );
+  }
+
+  getAllBusinessDomainList(): Observable<any[]> {
+    return this._businessDomainCacheService.getBusinessDomains().pipe(
+      map((res) =>
+        (res ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Name,
+          parentId: d.SubDepartmentCode || d.subDepartmentCode,
+        })),
+      ),
+      catchError(() => of([])),
+    );
+  }
+
+  loadCabinetDropdownData(levels: CabinetLevel[]) {
+    const loaders: Observable<any>[] = [];
+
+    levels.forEach((l) => {
+      switch (l.level) {
+        case 1:
+          loaders.push(
+            this.getAllDivisionList().pipe(tap((data) => (this.dropdownDataSources[1] = data))),
+          );
+          break;
+
+        case 2:
+          loaders.push(
+            this.getAllDepartmentList().pipe(tap((data) => (this.dropdownDataSources[2] = data))),
+          );
+          break;
+
+        case 3:
+          loaders.push(
+            this.getAllSubDepartmentList().pipe(
+              tap((data) => (this.dropdownDataSources[3] = data)),
+            ),
+          );
+          break;
+        case 4:
+          loaders.push(
+            this.getAllBusinessDomainList().pipe(
+              tap((data) => (this.dropdownDataSources[4] = data)),
+            ),
+          );
+          break;
       }
     });
-  };
 
+    forkJoin(loaders).subscribe(() => {
+      this.buildGrid(); // 🔥 NOW it is safe
+    });
+  }
+ 
   openMandatoryCabinetModal(rowData: any) {
     //console.log('Row clicked:', rowData);
 
@@ -472,6 +542,8 @@ export class ManualManageEmployee {
       console.log('Modal closed with:', result);
     });
   }
+
+  
 }
 
 class UploadDocumentColumns {

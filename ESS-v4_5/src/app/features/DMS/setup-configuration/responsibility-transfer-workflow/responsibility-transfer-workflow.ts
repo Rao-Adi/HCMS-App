@@ -3,46 +3,38 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
-import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
-import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { DivisionList } from '@app/shared/Dropdowns/division-list/division-list';
-import { SubDepartmentList } from '@app/shared/Dropdowns/sub-department-list/sub-department-list';
-import { DepartmentList } from '@app/shared/Dropdowns/department-list/department-list';
-import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
-import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { UserService } from '@app/shared/services/user-service';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import {
+  EditableAgGridWrapper,
+  GridColumn,
+  GridConfig,
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
-  imports: [
-    CommonModule,
-    FormsModule,
-    SafeTranslatePipe,
-    NzSelectModule,
-    NzIconModule,
-    NzSwitchModule,
-    NzRadioModule,
-    NzButtonModule,
-    DivisionList,
-    SubDepartmentList,
-    DepartmentList,
-    DocumentTypeList,
-    DesignationList,
-    RoleList,
-    CabinetStructureList
-  ],
+  imports: [CommonModule, FormsModule, SafeTranslatePipe, EditableAgGridWrapper],
   templateUrl: './responsibility-transfer-workflow.html',
   styleUrl: './responsibility-transfer-workflow.css',
 })
 export class ResponsibilityTransferWorkflow {
   public noRowsOverlay: string = '';
+  gridConfig: GridConfig = {} as GridConfig;
+  manualUserData: any[] = [];
+
+  pinnedTopRowDataPlanning: AccessLevelColumns[] = [
+    {
+      divisionId: null,
+      departmentId: null,
+      subDepartmentId: null,
+      documentTypeId: null,
+      isNewRow: true,
+    },
+  ];
 
   selectedTab: string = 'Request';
   switchValue1 = false;
@@ -65,22 +57,12 @@ export class ResponsibilityTransferWorkflow {
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
-
-  authorityTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Reporting to Levels' },
-    { CODE: '2', NAME: 'Employee' },
-    { CODE: '3', NAME: 'Role' },
-    { CODE: '4', NAME: 'Designation' },
-    { CODE: '5', NAME: 'Head of Division' },
-    { CODE: '6', NAME: 'Head of Department' },
-    { CODE: '7', NAME: 'Head of Sub-Department' },
-  ];
-  employees: any[] = [];
-
-  workflowExclude: SelectList[] = [
-    { CODE: '1', NAME: 'Designation' },
-    { CODE: '2', NAME: 'Role' },
-    { CODE: '3', NAME: 'Specific Employee' },
+  divisions: any[] = [];
+ 
+  workflowExclude: any[] = [
+    { id: '1', text: 'Director Of Board' },
+    { id: '2', text: 'Quality Director' },
+    { id: '3', text: 'Bizex Manager' },
   ];
 
   // Default Column Definitions: Apply configuration across all columns
@@ -89,182 +71,181 @@ export class ResponsibilityTransferWorkflow {
     cellDataType: false,
   };
 
-  constructor(private _userService: UserService) {}
+  constructor(
+    private _userService: UserService,
+    private _notification: NotificationService,
+    private _divisionServices: DivisionCacheService,
+  ) {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
-    this.getAllUsersList();
+   this.getAllDivisionList();
   }
 
-  UploadColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version' },
-    {
-      field: 'documentType',
-      headerName: 'Document Type',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
+  private getColumns(): GridColumn[] {
+    return [
+      // ✅ DIVISION
+      {
+        field: 'divisionName',
+        headerName: 'Division',
+        type: 'dropdown',
+        dropdownOptions: this.divisions,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        minWidth: 180,
+        required: true,
       },
-    },
-    {
-      field: 'division',
-      headerName: 'Division',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
+
+      // ✅ DEPARTMENT
+      {
+        field: 'approvalAuthority',
+        headerName: 'Approval Authority',
+        type: 'dropdown', 
+        dropdownOptions: this.workflowExclude,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        minWidth: 180,
+        required: true,
       },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'subDepartment',
-      headerName: 'Sub-Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'nextReviewDate',
-      headerName: 'Next Review Date',
-      cellEditor: 'agDateCellEditor',
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
-    },
-    { field: 'uploadDocument', headerName: 'Upload Document' },
-  ];
-
-  UploadedDocColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version Number' },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'nextReviewDate', headerName: 'Next Review Date' },
-  ];
-
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
+    ];
+  }
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: true,
+      enableInlineEdit: true,
+      enableInlineDelete: true,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
   }
 
-  selectedAuthorityType: number | null = null;
-
-  onAuthorityTypeChange(value: number | null): void {
-    this.selectedAuthorityType = value;
-    //reset preselected values
-    this.selectedUser = '';
-    this.selectedDivisions = '';
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-    this.selectedDocumentType = '';
-    this.selectedDesignation = '';
-    this.selectedRole = '';
-    this.selectedWorkflowExclude = 0;
+  onSelectionChanged(selectedRows: any[]): void {
+    //console.log('Selected rows:', selectedRows);
+    // Handle selection logic
   }
 
-  selectedWorkflowExclude: number | null = null;
-  onWorkflowExcludeChange(value: number | null): void {
-    this.selectedWorkflowExclude = value;
+  onGridReady(gridApi: any): void {
+    //console.log('Grid ready:', gridApi);
+    // Store grid API if needed for external operations
   }
 
-  onDivisionChange(value: string): void {
-    this.selectedDivisions = value;
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-  }
-  onDepartmentsChange(value: string): void {
-    this.selectedDepartment = value;
-    this.selectedSubDepartment = '';
-  }
+  onRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
+    debugger;
+    // Add logic to generate IDs, validate, etc.
+    const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      divisionCode: rowData.level1Id || rowData.level1Id,
+      departmentCode: rowData.level2Id || rowData.level2Id,
+      subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      businessDomainCode: rowData.level4Id || rowData.level4Id,
+      documentTypeId: rowData.documentTypeId || rowData.documentTypeId,
+    };
 
-  clickSwitch(mode: 'manual' | 'integration'): void {
-    if (this.loading) return;
+    this._userService.create(payLoad).subscribe(() => {
+      this._notification.createNotification(
+        'success',
+        'Access Level',
+        'Access Level created successfully!',
+      );
+    });
+    const rowWithId = {
+      ...rowData,
+      id: this.generateId(),
+      // divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+      // departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+      // subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
+      // businessDomainName: this.getDisplayName(this.subDepartments, rowData.level4Id),
+      // documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
+    };
 
-    this.loading = true;
-
-    setTimeout(() => {
-      this.activeMode = mode;
-
-      // mutually exclusive switches
-      this.switchValue1 = mode === 'manual';
-      this.switchValue2 = mode === 'integration';
-
-      this.loading = false;
-    }, 300); // keep UX fast
-  }
-
-  async saveClaim(): Promise<void> {
-    return;
-  }
-
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
-
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
-
-    this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
+    this.manualUserData = [rowWithId, ...this.manualUserData];
   }
 
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
+  onRowUpdated(event: { rowData: any; index: number }): void {
+    console.log('Row updated:', event);
+    debugger;
+    // Update display names
+    // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
+    // event.rowData.departmentName = this.getDisplayName(
+    //   this.departments,
+    //   event.rowData.departmentId,
+    // );
+    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
+
+    this.manualUserData[event.index] = { ...event.rowData };
+    this.manualUserData = [...this.manualUserData]; // Trigger change detection
   }
 
-  addExclusion() {
-    this.showExclusionTable = this.showExclusionTable == true ? false : true;
+  onRowDeleted(rowIndex: number): void {
+    console.log('Row deleted at index:', rowIndex);
+    this.manualUserData.splice(rowIndex, 1);
+    this.manualUserData = [...this.manualUserData];
   }
 
-  onDocumentTypeChange(value: string): void {
-    // this.loading = true;
-    this.selectedDocumentType = value;
+  onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
+    //console.log('Cell value changed:', JSON.stringify(event));
+
+    // Handle calculations if needed
+    if (event.field === 'currentSalary' || event.field === 'incrementPercentage') {
+      const currentSalary = event.rowData.currentSalary || 0;
+      const incrementPercentage = event.rowData.incrementPercentage || 0;
+      event.rowData.revisedSalary = currentSalary * (1 + incrementPercentage / 100);
+
+      // Update the row
+      this.manualUserData[event.rowIndex] = { ...event.rowData };
+    }
+
+    if (event.field === 'file-preview') {
+      // Handle file preview
+      // this.previewFile(event.value);
+    } else {
+      // Handle regular value changes
+      //console.log('Cell value changed:', event);
+    }
   }
 
-  getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
-      if (res?.Data) {
-        this.employees = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+  private generateId(): number {
+    return Date.now();
+  }
+
+  private getDisplayName(options: any[], id: any): string {
+    const option = options.find((opt) => opt.id == id);
+    return option ? option.text : '';
+  }
+
+  getAllDivisionList = () => {
+    this._divisionServices.getDivisions().subscribe((res) => {
+      if (res) {
+        this.divisions = (res ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Name,
         }));
       } else {
-        this.employees = [];
+        this.divisions = [];
       }
+      // ✅ build grid ONLY after divisions are ready
+      this.buildGrid();
     });
   };
+}
+
+class AccessLevelColumns {
+  divisionId: string | null = null;
+  //division: string | null = null;
+  departmentId: string | null = null;
+  //department: string | null = null;
+  subDepartmentId: string | null = null;
+  //subDepartment: string | null = null;
+  documentTypeId: string | null = null;
+  isNewRow: boolean = false;
 }

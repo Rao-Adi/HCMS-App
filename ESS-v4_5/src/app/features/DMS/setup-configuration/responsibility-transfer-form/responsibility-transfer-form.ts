@@ -38,17 +38,15 @@ import { ResponsibilityTransferService } from '@app/shared/services/responsibili
 export class ResponsibilityTransferForm {
   public noRowsOverlay: string = '';
   footerRender = (): string => 'extra footer';
-dateFormat = 'dd/MMM/yyyy';
+  dateFormat = 'dd/MMM/yyyy';
   selectedTab: string = 'Request';
   switchValue1 = false;
   switchValue2 = false;
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];
 
   attachment: File | null = null;
-  fileList: NzUploadFile[] = [];
 
   selectedEmployeeFrom?: any = '';
   selectedEmployeeTo?: any = '';
@@ -73,84 +71,10 @@ dateFormat = 'dd/MMM/yyyy';
     { id: '2', text: 'Approved' },
     { id: '3', text: 'Rejected' },
   ];
-  authorityTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Reporting to Levels' },
-    { CODE: '2', NAME: 'Employee' },
-    { CODE: '3', NAME: 'Role' },
-    { CODE: '4', NAME: 'Designation' },
-    { CODE: '5', NAME: 'Head of Division' },
-    { CODE: '6', NAME: 'Head of Department' },
-    { CODE: '7', NAME: 'Head of Sub-Department' },
-  ];
-
-  workflowExclude: SelectList[] = [
-    { CODE: '1', NAME: 'Designation' },
-    { CODE: '2', NAME: 'Role' },
-    { CODE: '3', NAME: 'Specific Employee' },
-  ];
-
-  UploadColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version' },
-    {
-      field: 'documentType',
-      headerName: 'Document Type',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'division',
-      headerName: 'Division',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'subDepartment',
-      headerName: 'Sub-Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
-    {
-      field: 'nextReviewDate',
-      headerName: 'Next Review Date',
-      cellEditor: 'agDateCellEditor',
-      // valueFormatter: (params: ValueFormatterParams<any, Date>) => {
-      //   if (!params.value) {
-      //     return '';
-      //   }
-      //   const month = params.value.getMonth() + 1;
-      //   const day = params.value.getDate();
-      //   return `${params.value.getFullYear()}-${month < 10 ? '0' + month : month}-${
-      //     day < 10 ? '0' + day : day
-      //   }`;
-      // },
-      // cellEditorParams: {
-      //   max: new Date('2008-12-31'),
-      // },
-    },
-    { field: 'uploadDocument', headerName: 'Upload Document' },
-  ];
-
-  UploadedDocColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version Number' },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'nextReviewDate', headerName: 'Next Review Date' },
+  reasonForTransfer: SelectList[] = [
+    { CODE: '1', NAME: 'Leave' },
+    { CODE: '2', NAME: 'Resignation' },
+    { CODE: '3', NAME: 'Role Transition/Promotion' },
   ];
 
   pendingRequestApprovalColumnDefs = [
@@ -167,14 +91,14 @@ dateFormat = 'dd/MMM/yyyy';
       from: 'Marketing Division',
       To: 'Marketing',
       reason: 'Digital Marketing',
-      status: 'Policy',
+      status: 'Pending',
     },
     {
       requestor: 'REQ-002',
       from: 'Software Division',
       To: 'IT',
       reason: 'Software Marketing',
-      status: 'SOP',
+      status: 'Pending',
     },
   ];
 
@@ -207,43 +131,10 @@ dateFormat = 'dd/MMM/yyyy';
     this.attachment = input.files[0];
     console.log('Selected file:', this.attachment);
   }
+  selectedStatus: number | null = null;
 
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
-
-  selectedAuthorityType: number | null = null;
-
-  onAuthorityTypeChange(value: number | null): void {
-    this.selectedAuthorityType = value;
-    //reset preselected values
-    this.selectedWorkflowExclude = 0;
-  }
-
-  selectedWorkflowExclude: number | null = null;
-  onWorkflowExcludeChange(value: number | null): void {
-    this.selectedWorkflowExclude = value;
-  }
-
-  clickSwitch(mode: 'manual' | 'integration'): void {
-    if (this.loading) return;
-
-    this.loading = true;
-
-    setTimeout(() => {
-      this.activeMode = mode;
-
-      // mutually exclusive switches
-      this.switchValue1 = mode === 'manual';
-      this.switchValue2 = mode === 'integration';
-
-      this.loading = false;
-    }, 300); // keep UX fast
-  }
-
-  async saveClaim(): Promise<void> {
-    return;
+  selectStatus(value: number | null): void {
+    this.selectedStatus = value;
   }
 
   loadData(pageNumber: number) {
@@ -305,9 +196,7 @@ dateFormat = 'dd/MMM/yyyy';
     //   filterModel: {},
     // });
   }
-
-  GetAllPendingApprovalRequests(query: any) {}
-
+ 
   saveTemplate(data: any) {
     debugger;
 
@@ -373,10 +262,7 @@ dateFormat = 'dd/MMM/yyyy';
       );
     });
   }
+ 
 
-  private appendDate(formData: FormData, key: string, value: Date | null) {
-    if (value) {
-      formData.append(key, value.toISOString());
-    }
-  }
+  export() {}
 }
