@@ -614,10 +614,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         break;
       case 'button':
         colDef.cellRendererSelector = (params: any) => {
+ 
           return {
             component: LinkRenderer,
             params: {
-              label: 'View Cabinet',
+              label: params.colDef.headerName || params.colDef.field,
               onClick: () => {
                 this.actionClicked.emit({
                   action: 'VIEW_CABINET',

@@ -16,9 +16,7 @@ import { DistributionListService } from '@app/shared/services/distribution-list.
 import { DistributionTypeService } from '@app/shared/services/distribution-type.service';
 import { RoleService } from '@app/shared/services/role.service';
 import { ColDef } from 'ag-grid-community';
-import { NzModalService } from 'ng-zorro-antd/modal';
 import { forkJoin } from 'rxjs';
-import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
 
 export interface DropdownOption {
   id: string | number;
@@ -67,8 +65,7 @@ export class DRDistributionList {
 
   constructor(
     private _distributionList: DistributionListService,
-    private _distributionTypeService: DistributionTypeService,
-    private modal: NzModalService,
+    private _distributionTypeService: DistributionTypeService, 
     private _roleServices: RoleService,
     private _notification: NotificationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
@@ -87,9 +84,7 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        required: true,        
-        clickable: true,
-        clickAction: '', // optional but VERY powerful
+        required: true
       },
       // DOCUMENT TYPES
       {
@@ -132,7 +127,7 @@ export class DRDistributionList {
     ];
   }
 
-  ngOnInit() {
+  ngOnInit() { 
     this.loadDropdownsAndGrid();
     this.GetAllDistributionList({
       pageNumber: 1,
@@ -141,11 +136,11 @@ export class DRDistributionList {
       filterModel: {},
     });
     //console.log(this.loadDropdownsAndGrid());
-    // this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-    //   this.cabinetHierarchy = levels;
+    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      this.cabinetHierarchy = levels;
 
-    //   this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    // });
+      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    });
   }
 
   GetAllDistributionList(query: any) {
@@ -190,6 +185,7 @@ export class DRDistributionList {
           this.distributionListData = [];
         }
         //this.cdr.detectChanges(); // force update
+ 
       });
   }
 
@@ -286,27 +282,7 @@ export class DRDistributionList {
     }
   }
 
-  handleGridAction(event: { action: string; rowData: any }) {
-    if (event.action === 'roleId') {
-      this.openCabinetModal(event.rowData);
-    }
-  }
-
-  openCabinetModal(rowData: any): void {
-    const modalRef = this.modal.create({
-      nzTitle: 'Rivision History',
-      nzContent: RivisionHistoryPopup,
-      nzData: {
-        data: rowData.Id, // 👈 this is what we’ll read inside modal
-      },
-      nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
-    });
-    modalRef.afterClose.subscribe((result) => {
-      //console.log('Modal closed with:', result);
-    });
-  }
-
+  
   private generateId(): number {
     return Date.now();
   }

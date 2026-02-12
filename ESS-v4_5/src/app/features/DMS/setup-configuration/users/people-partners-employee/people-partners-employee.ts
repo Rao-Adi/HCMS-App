@@ -52,6 +52,7 @@ export class PeoplePartnersEmployee {
     { field: 'DivisionName', label: 'Division', visible: true },
     { field: 'DepartmentName', label: 'Department', visible: true },
     { field: 'SubDepartmentName', label: 'Sub-Department', visible: true },
+    { field: 'Designation', label: 'Designation', visible: true },
     { field: 'Grade', label: 'Grade', visible: true },
     { field: 'ReportingTo', label: 'Reporting To', visible: true },
     { field: 'DateOfJoining', label: 'Date Of Joining', visible: true },
@@ -74,12 +75,16 @@ export class PeoplePartnersEmployee {
       headerName: 'Sub-Department',
     },
     {
+      field: 'Designation',
+      headerName: 'Designation',
+    },
+    {
       field: 'Grade',
       headerName: 'Grade',
     },
     {
       field: 'ReportingTo',
-      headerName: 'Reportin gManager',
+      headerName: 'Reporting Manager',
     },
     {
       field: 'DateOfJoining',
@@ -87,8 +92,7 @@ export class PeoplePartnersEmployee {
     },
     {
       field: 'accessLevel',
-      headerName: 'Access Level',
-      flex: 1,
+      headerName: 'Access Level', 
       editable: false,
       cellRenderer: (params: any) => {
         return `
@@ -96,7 +100,7 @@ export class PeoplePartnersEmployee {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          ${params.value ? 'View' : 'View'}
+          ${params.value ? 'Access Level' : 'Access Level'}
         </span>
       `;
       },
@@ -106,13 +110,14 @@ export class PeoplePartnersEmployee {
     },
   ];
 
-  pinnedTopRowDataPlanning: UploadDocumentColumns[] = [
+  pinnedTopRowDataPlanning: UsersColumns[] = [
     {
       employeeCode: '',
       employeeName: '',
       divisionId: null,
       departmentId: null,
       subDepartmentId: null,
+      designationId: null,
       grade: '',
       reportingTo: null,
       dateOfJoining: null,
@@ -163,6 +168,8 @@ export class PeoplePartnersEmployee {
             DepartmentName: item.department || item.Department,
             SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
             SubDepartmentName: item.subDepartment || item.SubDepartment,
+            DesignationCode: item.designationCode || item.DesignationCode,
+            Designation: item.designation || item.Designation,
             ReportingTo:
               item.ReportingTo + '-' + item.EmployeeName ||
               item.ReportingTo + '-' + item.EmployeeName,
@@ -207,22 +214,22 @@ export class PeoplePartnersEmployee {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
-      nzTitle: 'Mandatory (Cabinet Wise)',
+      nzTitle: 'Access Level to ' + (rowData.employeeName || rowData.EmployeeName),
       nzContent: AccessLevelModalDialog,
       nzData: {
-        name: 'Access Level',
+        employeeCode: rowData.employeeCode || rowData.EmployeeCode
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
-    });
-
+    }); 
+ 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });
   }
 }
 
-class UploadDocumentColumns {
+class UsersColumns {
   employeeCode: string = '';
   employeeName: string = '';
 
@@ -231,6 +238,7 @@ class UploadDocumentColumns {
   departmentId: string | null = null;
   //department: string | null = null;
   subDepartmentId: string | null = null;
+  designationId: string | null = null;
   //subDepartment: string | null = null;
   grade: string = '';
   reportingTo: any = null;

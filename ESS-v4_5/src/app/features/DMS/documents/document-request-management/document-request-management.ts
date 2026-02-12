@@ -17,9 +17,13 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { DocumentsComponent } from './documents-component/documents-component';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
 import { CompanyService } from '@app/shared/services/company.service';
+import { PendingRequestForApproval } from './pending-request-for-approval/pending-request-for-approval';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 
 @Component({
   selector: 'app-document-request-management',
@@ -41,6 +45,7 @@ import { CompanyService } from '@app/shared/services/company.service';
     DMSRichTextEdit,
     DocumentsComponent,
     CabinetStructureList,
+    PendingRequestForApproval,
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
@@ -51,9 +56,10 @@ export class DocumentRequestManagement {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
+  selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   inputJustificationValue?: string;
-
+  templateHtml: string = '';
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -311,6 +317,8 @@ export class DocumentRequestManagement {
     private modal: NzModalService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
+    private _doumentRequestService: DocumentRequestService,
+    private _notification : NotificationService
   ) {}
 
   ngOnInit() {
@@ -323,10 +331,13 @@ export class DocumentRequestManagement {
   showOtherDiv: boolean = false;
   onAuthorityTypeChange(value: string | null): void {
     this.selectedDocumentRequestType = value;
-    if (this.selectedDocumentRequestType == '1') {
+    if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
       this.showOtherDiv = true;
       this.showDocumentDiv = false;
-    } else if (this.selectedDocumentRequestType == '2') {
+    } else if (
+      this.selectedDocumentRequestType == '2' ||
+      this.selectedDocumentRequestType == 'DRT-0002'
+    ) {
       this.showDocumentDiv = true;
       this.showOtherDiv = true;
     } else {
@@ -486,4 +497,29 @@ export class DocumentRequestManagement {
         break;
     }
   }
+
+  SubmiteDocumentRequests() { 
+    debugger;
+    // Add logic to generate IDs, validate, etc.
+    const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      requestType: this.selectedDocumentRequestType,
+      // departmentCode: rowData.level2Id || rowData.level2Id,
+      // subDepartmentCode: rowData.level3Id || rowData.level3Id,
+      // businessDomainCode: rowData.level4Id || rowData.level4Id,
+      // userId: rowData.userId || rowData.userId,
+    };
+
+    this._doumentRequestService.create(payLoad).subscribe(() => {
+      this._notification.createNotification('success', 'User', 'User created successfully!');
+    });
+     
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+      this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+      this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+      this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+      this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    }
 }

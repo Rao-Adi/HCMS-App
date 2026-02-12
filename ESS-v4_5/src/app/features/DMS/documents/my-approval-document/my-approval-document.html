@@ -4,8 +4,8 @@
       <div class="card-custom">
         <div class="clearfix">
           <div class="pull-left">
-            <h3 class="mt-0">My Approvals – Request for Document Creation/Update</h3>
-            <small class="text-muted">My Approvals – Request for Document Creation/Update</small>
+            <h3 class="mt-0">Create or Update Document</h3>
+            <small class="text-muted">Create or Update Document</small>
           </div>
         </div>
         <br />
@@ -71,7 +71,8 @@
               </div>
             </div> -->
             <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-              <app-cabinet-structure-list></app-cabinet-structure-list>
+              <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+              </app-cabinet-structure-list>
             </div>
             <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
               <div class="PnlHeading">
@@ -205,7 +206,9 @@
             <h3 class="PnlHeader">Document Content</h3>
             <br />
             <app-dmsrich-text-edit
-              [editorStyle]="{ width: '100%', height: '250px' }"
+              [editorStyle]="{ width: '100%', height: '350px' }"
+              [contentHtml]="templateHtml"
+              (contentHtmlChange)="templateHtml = $event"
             ></app-dmsrich-text-edit>
           </div>
         </div>

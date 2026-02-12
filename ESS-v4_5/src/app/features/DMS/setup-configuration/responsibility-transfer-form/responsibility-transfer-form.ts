@@ -77,12 +77,21 @@ export class ResponsibilityTransferForm {
     { CODE: '3', NAME: 'Role Transition/Promotion' },
   ];
 
-  pendingRequestApprovalColumnDefs = [
+  pendingRequestApprovalColumnDefs:ColDef[] = [
     { field: 'requestor', headerName: 'Requestor', flex: 1 },
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
     { field: 'reason', headerName: 'Reason', flex: 1 },
-    { field: 'status', headerName: 'Status', flex: 1 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 1,
+       cellClassRules: {
+      'rag-green': params => params.value === 'Controlled',
+      'rag-blue': params => params.value === 'Approved',
+      'rag-red': params => params.value === 'Pending',
+    },
+    },
   ];
 
   pendingApprovalData: any[] = [
@@ -91,7 +100,7 @@ export class ResponsibilityTransferForm {
       from: 'Marketing Division',
       To: 'Marketing',
       reason: 'Digital Marketing',
-      status: 'Pending',
+      status: 'Approved',
     },
     {
       requestor: 'REQ-002',
@@ -196,7 +205,7 @@ export class ResponsibilityTransferForm {
     //   filterModel: {},
     // });
   }
- 
+
   saveTemplate(data: any) {
     debugger;
 
@@ -262,7 +271,6 @@ export class ResponsibilityTransferForm {
       );
     });
   }
- 
 
   export() {}
 }

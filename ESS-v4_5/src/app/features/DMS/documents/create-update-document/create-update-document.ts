@@ -8,7 +8,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DivisionService } from '@app/shared/services/division.services';
 import { DepartmentService } from '@app/shared/services/department.service';
@@ -60,10 +60,12 @@ export class CreateUpdateDocument {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
+  selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   selectedTrainingMode?: string = '';
   selectedCompany?: string = '';
   selectedRequestId: string = '';
+  templateHtml: string = '';
 
   constructor(
     private _divisionServices: DivisionService,
@@ -429,5 +431,12 @@ export class CreateUpdateDocument {
       default:
         break;
     }
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
 }

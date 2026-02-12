@@ -4,12 +4,38 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectList2 } from '@app/shared/interfaces/interfaces';
 import { RoleService } from '@app/shared/services/role.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-role-list',
   imports: [CommonModule, FormsModule, NzSelectModule],
-  templateUrl: './role-list.html',
-  styleUrl: './role-list.css',
+  // templateUrl: './role-list.html',
+  // styleUrl: './role-list.css',
+  template: `<nz-select
+    nzMode="multiple"
+    nzPlaceHolder="Select Roles"
+    nzAllowClear
+    nzShowSearch
+    nzServerSearch
+    [style.width]="width"
+    [(ngModel)]="selectedUser"
+    (nzOnSearch)="onSearch($event)"
+    (ngModelChange)="onSelectionChange($event)"
+  >
+    <nz-option *ngFor="let item of data" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
+  </nz-select>`,
+  styles: [
+    `
+      nz-select {
+        width: 100%;
+      }
+
+      .loading-icon {
+        margin-right: 8px;
+      }
+    `,
+  ],
+  //styleUrl: './designation-list.css',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -31,6 +57,9 @@ export class RoleList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
+  selectedUser: string[] = [];
+  loading = false;
+  searchChange$ = new BehaviorSubject('');
 
   constructor(private _roleService: RoleService) {}
 
@@ -38,7 +67,7 @@ export class RoleList implements ControlValueAccessor {
   private onTouched = () => {};
 
   ngOnInit() {
-    this.getAllDivisions();
+    this.getAllRoles();
   }
 
   writeValue(value: any): void {
@@ -57,14 +86,24 @@ export class RoleList implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  onSelectionChange(value: any): void {
-    this.value = value;
-    this.onChange(value);
+  onSelectionChange(value: string[]): void {
+    this.selectedUser = value;
+    this.onChange(value); // VERY IMPORTANT
     this.onTouched();
-    this.valueChange.emit(value);
+  }
+  // onSelectionChange(value: any): void {
+  //   this.value = value;
+  //   this.onChange(value);
+  //   this.onTouched();
+  //   this.valueChange.emit(value);
+  // }
+
+  onSearch(value: string): void {
+    this.loading = true;
+    this.searchChange$.next(value);
   }
 
-  getAllDivisions = () => {
+  getAllRoles = () => {
     this._roleService.getRoleList().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({

@@ -27,8 +27,13 @@ export class TemplateService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllTemplateList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSTemplate/get-all-templates-list`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getTemplateByDocumentTypeCode(code: string): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSTemplate/get-template-by-document-type/${code}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -43,7 +48,7 @@ export class TemplateService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -64,20 +69,20 @@ export class TemplateService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${environment.baseUrl}/DMSTemplate/create-template`,
-      payload
+      payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSTemplate/update-template`,
-      payload
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTemplate/delete-template/${code}`
+      `${environment.baseUrl}/DMSTemplate/delete-template/${code}`,
     );
   }
 }

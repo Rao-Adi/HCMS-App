@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
+import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-revision-history-modal',
@@ -38,6 +39,10 @@ export class RevisionHistoryModal {
       flex: 1,
     },
   ];
+
+
+  constructor(@Inject(NZ_MODAL_DATA) public modalData: any) {}
+
 
   ngOnInit() {
     this.loadData(this.pageSize);

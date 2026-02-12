@@ -39,6 +39,15 @@ export interface CabinetLevel {
   lastModifiedAt: string | null;
 }
 
+export interface ControlType {
+  Id: number; 
+  Name: string;
+  CreatedBy: string;
+  CreatedAt: string;
+  LastModifiedBy: string;
+  LastModifiedAt: string;
+}
+
 export interface Division {
   Id: number;
   Code: string;
@@ -48,6 +57,13 @@ export interface Division {
   LastModifiedBy: string;
   LastModifiedAt: string;
 }
+
+export interface CabinetSelection {
+  level: number;
+  title: string;
+  value: any;
+}
+
 
 export interface OrganizationItem {
   id: string;
@@ -396,7 +412,18 @@ export interface User extends AuditableEntity {
   divisionCode: string | null;
   departmentCode: string | null;
   subDepartmentCode: string | null;
+  businessDomainCode: string | null;
   userRoles: UserRole[];
+}
+
+export interface UserAccessLevel extends AuditableEntity {
+  id: string;
+  employeeCode: string; 
+  divisionCode: string | null;
+  departmentCode: string | null;
+  subDepartmentCode: string | null;
+  businessDomainCode: string | null;
+  users: User[];
 }
 
 export interface UserRole extends AuditableEntity {

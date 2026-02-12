@@ -12,7 +12,10 @@ import { NotificationService } from '../notification/notification.service';
 export class DocumentAttributeService {
   private _cabietStructureConfig = new ReplaySubject<DocumentAttribute[]>(1);
 
-  constructor(private http: HttpClient, private _notification: NotificationService) {}
+  constructor(
+    private http: HttpClient,
+    private _notification: NotificationService,
+  ) {}
 
   get cabietStructureConfig$(): Observable<DocumentAttribute[]> {
     return this._cabietStructureConfig.asObservable();
@@ -34,7 +37,12 @@ export class DocumentAttributeService {
   }
 
   getDocumentAttributeById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-id/${Id}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getDocumentAttributeByDocumentType(code: string): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-code/${code}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -44,7 +52,7 @@ export class DocumentAttributeService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -72,20 +80,20 @@ export class DocumentAttributeService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`,
-      payload
+      payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`,
-      payload
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`
+      `${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`,
     );
   }
 }

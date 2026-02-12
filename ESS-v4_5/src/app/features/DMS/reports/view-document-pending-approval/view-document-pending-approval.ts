@@ -10,7 +10,7 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
@@ -29,7 +29,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
     NzButtonModule,
     NzDatePickerModule,
     CabinetStructureList,
-    DocumentTypeList, 
+    DocumentTypeList,
   ],
   templateUrl: './view-document-pending-approval.html',
   styleUrl: './view-document-pending-approval.css',
@@ -41,6 +41,7 @@ export class ViewDocumentPendingApproval {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
+  selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
 
   pageSize = 10;
@@ -200,5 +201,12 @@ export class ViewDocumentPendingApproval {
       default:
         break;
     }
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
 }

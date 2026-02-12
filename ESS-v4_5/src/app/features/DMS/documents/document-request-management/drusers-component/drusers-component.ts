@@ -18,6 +18,8 @@ import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/doc
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
+import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
+import { NzModalService } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-drusers-component',
@@ -94,9 +96,7 @@ export class DRUsersComponent {
   constructor(
     private _userService: UserService,
     private _documentTypeService: DocumentTypeCacheService,
-    private _divisionServices: DivisionCacheService,
-    private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService,
+    private modal: NzModalService,
     private _notification: NotificationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
@@ -115,6 +115,8 @@ export class DRUsersComponent {
         dropdownDisplayField: 'text',
         minWidth: 180,
         required: true,
+        clickable: true,
+        clickAction: '', // optional but VERY powerful
       },
     ];
   }
@@ -280,6 +282,27 @@ export class DRUsersComponent {
       });
   }
 
+  handleGridAction(event: { action: string; rowData: any }) {
+    if (event.action === 'userId') {
+      this.openCabinetModal(event.rowData);
+    }
+  }
+
+  openCabinetModal(rowData: any): void {
+    const modalRef = this.modal.create({
+      nzTitle: 'Rivision History',
+      nzContent: RivisionHistoryPopup,
+      nzData: {
+        data: rowData.Id, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+    modalRef.afterClose.subscribe((result) => {
+      //console.log('Modal closed with:', result);
+    });
+  }
+
   onSelectionChanged(selectedRows: any[]): void {
     //console.log('Selected rows:', selectedRows);
     // Handle selection logic
@@ -312,7 +335,7 @@ export class DRUsersComponent {
       divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
       departmentName: this.getDisplayName(this.departments, rowData.departmentName),
       subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
-      userId: this.getDisplayName(this.documentTypes, rowData.userId),
+      userId: this.getDisplayName(this.users, rowData.userId),
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core'; 
+import { Component } from '@angular/core';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -7,7 +7,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
@@ -20,7 +20,7 @@ import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-r
     CommonModule,
     FormsModule,
     SafeTranslatePipe,
-    NzSelectModule, 
+    NzSelectModule,
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
@@ -39,11 +39,9 @@ export class MyApprovalDocument {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
+  selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
-
-  constructor() {}
-
-  ngOnInit() {}
+  templateHtml: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -180,6 +178,10 @@ export class MyApprovalDocument {
     },
   ];
 
+  constructor() {}
+
+  ngOnInit() {}
+
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
     this.selectedDepartment = '';
@@ -239,5 +241,12 @@ export class MyApprovalDocument {
       default:
         break;
     }
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
 }

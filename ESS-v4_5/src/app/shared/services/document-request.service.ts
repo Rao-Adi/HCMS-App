@@ -79,4 +79,11 @@ export class DocumentRequestService {
       `${environment.baseUrl}/DMSDocumentRequest/delete-document-request/${code}`
     );
   } 
+
+  submitDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentRequestType/submit-document-request`,
+      payload
+    );
+  }
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Inject, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -9,11 +9,13 @@ import {
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
-import { UserService } from '@app/shared/services/user-service';
+import { UserAccesssLevelService } from '@app/shared/services/user-access-level.service';
 import { ColDef } from 'ag-grid-community';
+import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-access-level-modal-dialog',
@@ -22,8 +24,6 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './access-level-modal-dialog.css',
 })
 export class AccessLevelModalDialog {
-  @Input() data: any;
-
   gridConfig: GridConfig = {} as GridConfig;
 
   manualUserData: any[] = [];
@@ -33,6 +33,8 @@ export class AccessLevelModalDialog {
   documentTypes: any[] = [];
   totalManullayManageEmployees = 0;
   loading = false;
+  
+  selectedPageSize = 10; // default value
 
   dropdownDataSources: Record<number, any[]> = {};
   cabinetHierarchy: CabinetLevel[] = [];
@@ -129,22 +131,31 @@ export class AccessLevelModalDialog {
   //   ];
   // }
 
-  constructor(
-    private _userService: UserService,
+  constructor( 
+    @Inject(NZ_MODAL_DATA) public modalData: any,
     private _documentTypeService: DocumentTypeCacheService,
     private _notification: NotificationService,
     private cabinetGridService: CabinetGridService,
     private readonly hierarchyService: CabinetHierarchyService,
+    private _userAccessLevelService: UserAccesssLevelService,
   ) {
     //this.loadSampleData();
   }
 
-  ngOnInit() {
+  ngOnInit() { 
+
     this.getAllDocumentTypes();
     this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
       this.cabinetHierarchy = levels;
 
       this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    });
+    
+    this.GetAllUserAccessLevel({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
     });
   }
 
@@ -168,6 +179,50 @@ export class AccessLevelModalDialog {
     };
   }
 
+
+  GetAllUserAccessLevel(query: any) {
+      const sort = query.sortModel?.[0];
+      const pageNumber = Number(query?.pageNumber) || 1;
+      const pageSize = Number(query?.pageSize) || 10;
+  
+      this._userAccessLevelService
+        .GetAllUser(
+          query?.filterModel?.Name?.filter || '',
+          sort?.sort?.toUpperCase() || 'ASC',
+          sort?.colId || 'Name',
+          true,
+          pageNumber,
+          pageSize,
+        )
+        .subscribe((res) => {
+          if (res?.Success && res.Data?.Items) {
+            this.totalManullayManageEmployees = res.Data.TotalCount;
+            this.manualUserData = res.Data.Items.map((item: any) => ({
+              Id: item.id || item.Id, 
+              divisionCode: item.divisionCode || item.DivisionCode,
+              level1Id: item.division || item.Division,
+              departmentCode: item.departmentCode || item.DepartmentCode,
+              level2Id: item.department || item.Department,
+              subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
+              level3Id: item.subDepartment || item.SubDepartment,
+              businessDomainCode: item.businessDomainCode || item.BusinessDomainCode,
+              level4Id: item.businessDomain || item.BusinessDomain,
+              documentTypeId: item.documentTypeCode || item.DocumentTypeCode,
+              documentTypeName: item.documentType || item.DocumentType,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              CreatedBy: item.createdBy || item.CreatedBy || '',
+              CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+            }));
+            //console.log('Mapped documentTypeData:', this.documentTypeData);
+          } else {
+            this.manualUserData = [];
+          }
+          //this.cdr.detectChanges(); // force update
+        });
+    }
+  
+  
   onSelectionChanged(selectedRows: any[]): void {
     //console.log('Selected rows:', selectedRows);
     // Handle selection logic
@@ -180,18 +235,19 @@ export class AccessLevelModalDialog {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-    debugger;
+  
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      employeeCode: this.modalData.employeeCode,
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,
       subDepartmentCode: rowData.level3Id || rowData.level3Id,
       businessDomainCode: rowData.level4Id || rowData.level4Id,
-      documentTypeId: rowData.documentTypeId || rowData.documentTypeId,
+      documentTypeCode: rowData.documentTypeId || rowData.documentTypeId,
     };
 
-    this._userService.create(payLoad).subscribe(() => {
+    this._userAccessLevelService.create(payLoad).subscribe(() => {
       this._notification.createNotification(
         'success',
         'Access Level',

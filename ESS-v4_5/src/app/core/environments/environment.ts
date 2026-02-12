@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
    baseUrl: 'http://localhost:5190/api',
-  // baseUrl: 'https://portal.dms.org:82/api',
+  // baseUrl: 'http://10.10.0.80:82/api',
   //baseUrl: 'https://api.dms.org/api',
   // baseUrl: 'https://dms-api.azurewebsites.net/api',
   // paymentRedirectURI: 'http://localhost:4200/admin',

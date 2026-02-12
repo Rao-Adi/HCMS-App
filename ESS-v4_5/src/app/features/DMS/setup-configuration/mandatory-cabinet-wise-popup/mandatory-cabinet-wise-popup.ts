@@ -65,9 +65,6 @@ export class MandatoryCabinetWisePopup {
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _attributeMandatoryService: AttributeMandatoryScopeService,
     private _notification: NotificationService,
-    private _divisionServices: DivisionCacheService,
-    private _departmentCacheService: DepartmentCacheService,
-    private _subDepartmentServices: SubDepartmentCacheService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
   ) {
@@ -335,17 +332,12 @@ export class MandatoryCabinetWisePopup {
     this.modalRef.close();
   }
 
-  GetAllAttributeMandatoryScopes(query: any) {
-    const sort = query.sortModel?.[0];
-    const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
-
+  GetAllAttributeMandatoryScopes(query: any) { 
     this._attributeMandatoryService
       .getAttributeMandatoryScopesById(this.cabinetId)
       .subscribe((res) => {
         const items = res?.Data?.Items;
-        //console.log(items);
-        debugger;
+        //console.log(items); 
         if (Array.isArray(items)) {
           this.mandatoryCabinetData = items.map((item: any) => ({
             Id: item.Id,
@@ -369,8 +361,6 @@ export class MandatoryCabinetWisePopup {
         } else {
           this.mandatoryCabinetData = [];
         }
-
-        console.log('RowData length:', this.mandatoryCabinetData.length);
       });
   }
 

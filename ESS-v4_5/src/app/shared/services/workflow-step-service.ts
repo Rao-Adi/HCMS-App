@@ -27,17 +27,17 @@ export class WorkflowStepService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getWorkflowStepList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSWorkflowStep/get-all-workflow-step-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-workflow-step-by-id/id=${Id}`;
+  getWorkflowStepByDocumentTypeCode(code: string): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-workflow-step-by-document-code/${code}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllWorkflowSteps(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
@@ -63,21 +63,21 @@ export class WorkflowStepService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/create-workflow-policy`,
+      `${environment.baseUrl}/DMSWorkflowStep/create-workflow-step`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/update-workflow-policy`,
+      `${environment.baseUrl}/DMSWorkflowStep/update-workflow-step`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/delete-workflow-policy/${code}`
+      `${environment.baseUrl}/DMSWorkflowStep/delete-workflow-step/${code}`
     );
   }
 }

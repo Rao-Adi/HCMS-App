@@ -21,8 +21,9 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
     [style.width]="width"
     [(ngModel)]="selectedUser"
     (nzOnSearch)="onSearch($event)"
+    (ngModelChange)="onSelectionChange($event)"
   >
-  <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+    <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
     <!-- @if (!loading) { @for (o of optionList; track o) {
     <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
     } } @else {
@@ -66,10 +67,10 @@ export class DesignationList implements ControlValueAccessor {
   value: any;
   disabled = false;
 
-  randomUserUrl = 'https://api.randomuser.me/?results=5';
+  // randomUserUrl = 'https://api.randomuser.me/?results=5';
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
-  selectedUser?: string;
+  selectedUser: string[] = [];
   loading = false;
 
   constructor(private _designationServices: DesignationService) {}
@@ -88,7 +89,7 @@ export class DesignationList implements ControlValueAccessor {
     //     this.loading = false;
     //   });
 
-    this.getAllDivisions();
+    this.getAllDesignations();
   }
 
   writeValue(value: any): void {
@@ -107,14 +108,20 @@ export class DesignationList implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  onSelectionChange(value: any): void {
-    this.value = value;
-    this.onChange(value);
+  onSelectionChange(value: string[]): void {
+    this.selectedUser = value;
+    this.onChange(value); // VERY IMPORTANT
     this.onTouched();
-    this.valueChange.emit(value);
   }
 
-  getAllDivisions = () => {
+  // onSelectionChange(value: any): void {
+  //   this.value = value;
+  //   this.onChange(value);
+  //   this.onTouched();
+  //   this.valueChange.emit(value);
+  // }
+
+  getAllDesignations = () => {
     this._designationServices.getDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({

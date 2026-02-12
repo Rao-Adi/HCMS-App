@@ -2,10 +2,14 @@ import { Component } from '@angular/core';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { ObservationModalPopup } from '../observation-modal-popup/observation-modal-popup';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'app-my-pending-request-for-approval',
-  imports: [AgGridWrapper],
+  imports: [AgGridWrapper, NzIconModule, NzSwitchModule, NzModalModule],
   templateUrl: './my-pending-request-for-approval.html',
   styleUrl: './my-pending-request-for-approval.css',
 })
@@ -20,6 +24,8 @@ export class MyPendingRequestForApproval {
   totalRows = 0;
   totalUsers = 0;
 
+  workflowAuthoritiesData: any[] = [];
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -29,56 +35,93 @@ export class MyPendingRequestForApproval {
 
   documentColumnDefs = [
     {
-      field: 'requestId',
-      headerName: 'RequestId',
+      field: 'documentTypeId',
+      headerName: 'Document Type',
     },
-
+    {
+      field: 'requestId',
+      headerName: 'Request Id',
+    },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+    },
+    {
+      field: 'observation',
+      headerName: 'Observation',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          ${params.value ? 'Observation' : 'Observation'}
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.openMandatoryCabinetModal(event.data);
+      },
+    },
+    {
+      field: 'justification',
+      headerName: 'Justification',
+    },
+    {
+      field: 'proposedDocumentNumber',
+      headerName: 'Proposed Document Number',
+    },
+    {
+      field: 'proposedVersionNumber',
+      headerName: 'Proposed Versioin Number',
+    },
     {
       field: 'division',
       headerName: 'Division',
       cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing', 'IT', 'Finance', 'HR'],
-      },
     },
     {
       field: 'department',
       headerName: 'Department',
       cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Digital Marketing', 'Software Marketing'],
-      },
     },
     {
       field: 'subdepartment',
       headerName: 'Sub-Department',
       cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Digital Marketing', 'Software Marketing'],
-      },
     },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentTitle', headerName: 'Document Title' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Created On' },
-    { field: 'pendingWith', headerName: 'Pending with' },
+    { field: 'dateOfCreation', headerName: 'Date Of Creation' },
+    { field: 'dateOfApproval', headerName: 'Date of Approval' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'approvalHistory', headerName: 'Approval History' },
   ];
 
   columnToggles?: ColumnToggle[] = [
+    { field: 'documentTypeId', label: 'document Type', visible: true },
     { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'observation', label: 'Observation', visible: true },
+    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
-    { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'documentTitle', label: 'Document Title', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
-    { field: 'createdOn', label: ' Created On', visible: true },
-    { field: 'pendingWith', label: 'Pending with', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
+    { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+    { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'approvalHistory', label: 'Approval History', visible: true },
   ];
 
-  workflowAuthoritiesData: any[] = [];
-
-  constructor() {}
+  constructor(private modal: NzModalService) {}
 
   ngOnInit() {
     this.loadData(this.pageSize);
@@ -117,6 +160,30 @@ export class MyPendingRequestForApproval {
       pendingWith: ['Finance Controller', 'Director Ops'][i % 2],
       documentTitle: ['Vechile Usage SOP', 'Vendor Payment Procedure'][i % 1],
     }));
+  }
+
+  handleGridAction(event: { action: string; rowData: any }) {
+    if (event.action === 'VIEW_CABINET') {
+      this.openMandatoryCabinetModal(event.rowData);
+    }
+  }
+
+  openMandatoryCabinetModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: ObservationModalPopup,
+      nzData: {
+        name: 'Access Level',
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
+    });
   }
 
   approve() {}

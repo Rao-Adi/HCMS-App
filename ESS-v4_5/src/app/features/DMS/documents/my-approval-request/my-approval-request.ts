@@ -8,11 +8,12 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
-import { FormsModule } from '@angular/forms'; 
+import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
+import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -25,10 +26,11 @@ import { MyPendingRequestForApproval } from './my-pending-request-for-approval/m
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
-    NzButtonModule, 
+    NzButtonModule,
     DocumentTypeList,
     MyPendingRequestForApproval,
-    CabinetStructureList
+    CabinetStructureList,
+    DMSRichTextEdit,
   ],
   templateUrl: './my-approval-request.html',
   styleUrl: './my-approval-request.css',
@@ -39,11 +41,9 @@ export class MyApprovalRequest {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
+  selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
-
-  constructor() {}
-
-  ngOnInit() {}
+  templateHtml: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -142,6 +142,10 @@ export class MyApprovalRequest {
     },
   ];
 
+  constructor() {}
+
+  ngOnInit() {}
+
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
     this.selectedDepartment = '';
@@ -202,5 +206,12 @@ export class MyApprovalRequest {
       default:
         break;
     }
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
 }

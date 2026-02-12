@@ -8,7 +8,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
@@ -46,6 +46,7 @@ export class DocumentAuthorizationPostTraining {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
+  selectedbusinessDomain?: string = '';
   selectedDocumentType?: string = '';
 
   // Store page sizes for each grid separately
@@ -322,4 +323,11 @@ export class DocumentAuthorizationPostTraining {
       nzWidth: 1200,
     });
   }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+      this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+      this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+      this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+      this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    }
 }

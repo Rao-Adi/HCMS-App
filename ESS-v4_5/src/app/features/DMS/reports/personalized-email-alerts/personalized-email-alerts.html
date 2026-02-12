@@ -56,61 +56,9 @@
                       </div>
                     </div>
                     <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <app-cabinet-structure-list></app-cabinet-structure-list>
+                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                      </app-cabinet-structure-list>
                     </div>
-                    <!-- <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Division' | safeTranslate }} </label>
-                      </div>
-                      <div class="Divtxtemployeeschright" style="width: 250px">
-                        <div>
-                          <app-division-list
-                            valueKey="CODE"
-                            labelKey="NAME"
-                            placeholder="Select Division"
-                            [(ngModel)]="selectedDivisions"
-                            (valueChange)="onDivisionChange($event)"
-                            width="250px"
-                          >
-                          </app-division-list>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Department' | safeTranslate }}</label>
-                      </div>
-                      <div>
-                        <app-department-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select Department"
-                          [division]="selectedDivisions"
-                          [(ngModel)]="selectedDepartment"
-                          (valueChange)="onDepartmentsChange($event)"
-                          width="250px"
-                        >
-                        </app-department-list>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
-                      </div>
-                      <div>
-                        <app-sub-department-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select SubDepartment"
-                          [department]="selectedDepartment"
-                          [(ngModel)]="selectedSubDepartment"
-                          width="250px"
-                        >
-                        </app-sub-department-list>
-                      </div>
-                    </div> -->
                   </div>
                 </div>
               </div>

@@ -32,9 +32,13 @@ export class UserService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getUserById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSUser/get-user-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetUserByFilters(payload: any): Observable<ApiResponse<any>> { 
+    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/get-user-with-filters`, payload);
   }
 
   GetAllUser(

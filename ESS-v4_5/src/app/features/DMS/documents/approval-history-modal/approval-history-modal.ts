@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
+import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-approval-history-modal',
@@ -38,6 +39,9 @@ export class ApprovalHistoryModal {
     { field: 'status', headerName: 'Status' },
   ];
 
+  constructor(@Inject(NZ_MODAL_DATA) public modalData: any) {}
+
+  
   ngOnInit() {
     this.loadData(this.pageSize);
   }

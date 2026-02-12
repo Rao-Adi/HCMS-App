@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { DivisionList } from '../division-list/division-list';
 import { DepartmentList } from '../department-list/department-list';
 import { SubDepartmentList } from '../sub-department-list/sub-department-list';
@@ -9,7 +9,7 @@ import { CabinetStructureTabsConfigService } from '@app/shared/services/CabinetS
 import { CabinetTabVM } from '@app/shared/interfaces/interfaces';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { BusinessDomainList } from '../business-domain-list/business-domain-list';
 
 interface CabinetDropdownConfig {
@@ -31,26 +31,38 @@ interface CabinetLevel {
     DivisionList,
     DepartmentList,
     SubDepartmentList,
-    BusinessDomainList
+    BusinessDomainList,
   ],
   templateUrl: './cabinet-structure-list.html',
   styleUrl: './cabinet-structure-list.css',
 })
 export class CabinetStructureList {
+  @Output() hierarchyChange = new EventEmitter<{ level: number; title: string; value: any }[]>();
+  
   readonly MAX_LEVEL = 4;
 
   dropdownLevels: CabinetLevel[] = [];
   levelTitles: Record<number, string> = {};
   selectedValues: Record<number, any> = {};
   hierarchyLevels$!: Observable<CabinetLevel[]>;
+  levelMap: Record<number, string> = {};
 
   constructor(
     private _cabietTabConfigService: CabinetStructureTabsConfigService,
     private _cabinetHirarchyService: CabinetHierarchyService,
   ) {}
 
-  ngOnInit() { 
-    this.hierarchyLevels$ = this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+  ngOnInit() {
+    // this.hierarchyLevels$ = this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    this.hierarchyLevels$ = this._cabinetHirarchyService.loadDropdownHierarchy().pipe(
+      tap((levels) => {
+        this.levelMap = {};
+
+        levels.forEach((l) => {
+          this.levelMap[l.level] = l.title;
+        });
+      }),
+    );
     // this._cabinetHirarchyService.loadDropdownHierarchy().subscribe(levels => {
     //   this.dropdownLevels = levels;
     //   this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
@@ -65,6 +77,19 @@ export class CabinetStructureList {
       .map(Number)
       .filter((l) => l > level)
       .forEach((l) => delete this.selectedValues[l]);
+
+    // 🔥 Emit updated hierarchy
+    // 🔥 Build clean hierarchy payload
+    const payload = Object.keys(this.selectedValues)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((l) => ({
+        level: l,
+        title: this.levelMap[l], // 👈 dropdown name
+        value: this.selectedValues[l],
+      }));
+
+    this.hierarchyChange.emit(payload);
   }
 
   private getDefaultChildTitle(level: number): string {
@@ -118,5 +143,12 @@ export class CabinetStructureList {
           this.levelTitles[l.level] = l.title;
         });
       });
+  }
+
+  resetHierarchy(): void {
+    this.selectedValues = {};
+
+    // Optional — notify parent that hierarchy is cleared
+    this.hierarchyChange.emit([]);
   }
 }

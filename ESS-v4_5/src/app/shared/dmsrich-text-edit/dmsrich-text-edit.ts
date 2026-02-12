@@ -3,9 +3,11 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
@@ -29,6 +31,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { Validators, toHTML, Editor, Toolbar, NgxEditorModule } from 'ngx-editor';
 import { QuillModule } from 'ngx-quill';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-dmsrich-text-edit',
@@ -37,9 +40,24 @@ import { QuillModule } from 'ngx-quill';
   styleUrl: './dmsrich-text-edit.css',
   encapsulation: ViewEncapsulation.None,
 })
-export class DMSRichTextEdit implements OnInit, OnDestroy {
+export class DMSRichTextEdit implements OnInit, OnDestroy, OnChanges {
   @Output() contentHtmlChange = new EventEmitter<string>();
+  // @Input() contentHtml: string = '';
+
+  private _contentHtml = '';
+  @Input()
+  set contentHtml(value: string | null | undefined) {
+    this._contentHtml = value ?? '';
+
+    this.form.get('editorContent')?.setValue(this._contentHtml, { emitEvent: false });
+  }
+
+  get contentHtml() {
+    return this._contentHtml;
+  }
+
   @Input() editorStyle: any = {};
+
   editordoc = 'jsonDoc';
   jsonDoc: string = '';
   editor: Editor = new Editor();
@@ -58,23 +76,41 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
     editorContent: new FormControl({ value: this.jsonDoc, disabled: false }, Validators.required()),
   });
 
+  private destroy$ = new Subject<void>();
+
   get doc(): any {
     return this.form.get('editorContent');
   }
 
   ngOnInit() {
     this.editor = new Editor();
+    this.form
+      .get('editorContent')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        if (!value) return;
+        this.contentHtmlChange.emit(value);
+      });
+    // this.form.get('editorContent')!.valueChanges.subscribe((value: any) => {
+    //   if (!value) return;
 
-    this.form.get('editorContent')!.valueChanges.subscribe((value: any) => {
-      if (!value) return;
-
-      //const html = toHTML(value);
-      this.contentHtmlChange.emit(value);
-    });
+    //   //const html = toHTML(value);
+    //   this.contentHtmlChange.emit(value);
+    // });
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.editor.destroy();
+  }
+
+  ngOnChanges(changes: SimpleChanges) { 
+    if (changes['contentHtml']) {
+      const value = changes['contentHtml'].currentValue ?? '';
+
+      this.form.patchValue({ editorContent: value }, { emitEvent: false });
+    }
   }
 
   //   @Output() contentChange = new EventEmitter<string>();

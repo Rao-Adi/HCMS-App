@@ -13,8 +13,8 @@ import { PeoplePartnersEmployee } from './people-partners-employee/people-partne
   imports: [
     CommonModule,
     FormsModule,
-    NzIconModule,
     NzSwitchModule,
+    NzIconModule,
     NzModalModule,
     ManualManageEmployee,
     PeoplePartnersEmployee,

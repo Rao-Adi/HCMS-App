@@ -86,5 +86,5 @@ export class DocumentRequestTypeService {
     return this.http.delete<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocumentRequestType/delete-document-request-type/${code}`
     );
-  }
+  } 
 }

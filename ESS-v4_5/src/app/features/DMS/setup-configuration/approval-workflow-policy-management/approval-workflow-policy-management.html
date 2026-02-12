@@ -58,7 +58,7 @@
                         <app-document-type-list
                           valueKey="CODE"
                           labelKey="NAME"
-                          placeholder="Select DocumentType"
+                          placeholder="--any--"
                           [(ngModel)]="selectedDocumentType"
                           (valueChange)="onDocumentTypeChange($event)"
                           width="250px"
@@ -67,61 +67,9 @@
                       </div>
                     </div>
                     <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <app-cabinet-structure-list></app-cabinet-structure-list>
+                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                      </app-cabinet-structure-list>
                     </div>
-                    <!-- <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Division' | safeTranslate }} </label>
-                      </div>
-                      <div class="Divtxtemployeeschright" style="width: 250px">
-                        <div>
-                          <app-division-list
-                            valueKey="CODE"
-                            labelKey="NAME"
-                            placeholder="Select Division"
-                            [(ngModel)]="selectedDivisions"
-                            (valueChange)="onDivisionChange($event)"
-                            width="250px"
-                          >
-                          </app-division-list>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Department' | safeTranslate }}</label>
-                      </div>
-                      <div>
-                        <app-department-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select Department"
-                          [division]="selectedDivisions"
-                          [(ngModel)]="selectedDepartment"
-                          (valueChange)="onDepartmentsChange($event)"
-                          width="250px"
-                        >
-                        </app-department-list>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.SubDepartment' | safeTranslate }}</label>
-                      </div>
-                      <div>
-                        <app-sub-department-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select SubDepartment"
-                          [department]="selectedDepartment"
-                          [(ngModel)]="selectedSubDepartment"
-                          width="250px"
-                        >
-                        </app-sub-department-list>
-                      </div>
-                    </div> -->
                   </div>
                 </div>
               </div>
@@ -168,7 +116,7 @@
                     <ng-container [ngSwitch]="selectedAuthorityType">
                       <!-- CASE 1: 3 Columns -->
                       <ng-container *ngSwitchCase="'1'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                           <span class="d-flex">Maximum 'Direct Reporting to' Levels</span>
                           <input
                             maxlength="10"
@@ -183,7 +131,7 @@
                           />
                         </div>
 
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                           <span class="d-flex">Workflow Should Exclude These</span>
                           <nz-select
                             style="width: 250px"
@@ -202,10 +150,10 @@
                           </nz-select>
                         </div>
 
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                           <div [ngSwitch]="selectedWorkflowExclude">
                             <div *ngSwitchCase="'1'">
-                              <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <span class="d-flex">Designation</span>
                                 <app-designation-list
                                   valueKey="CODE"
@@ -218,7 +166,7 @@
                               </div>
                             </div>
                             <div *ngSwitchCase="'2'">
-                              <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <span class="d-flex">Role</span>
                                 <app-role-list
                                   valueKey="ID"
@@ -231,16 +179,16 @@
                               </div>
                             </div>
                             <div *ngSwitchCase="'3'">
-                              <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <span class="d-flex">Employee</span>
-                                <nz-select nzShowSearch nzPlaceHolder="Select Employee">
-                                  <nz-option
-                                    *ngFor="let emp of employees"
-                                    [nzValue]="emp.CODE"
-                                    [nzLabel]="emp.NAME"
-                                  >
-                                  </nz-option>
-                                </nz-select>
+                                <app-employee-list
+                                  valueKey="ID"
+                                  labelKey="NAME"
+                                  placeholder="Select Employee"
+                                  [(ngModel)]="selectedEmployee"
+                                  width="250px"
+                                >
+                                </app-employee-list>
                               </div>
                             </div>
                             <div *ngSwitchDefault>
@@ -254,11 +202,18 @@
                       <ng-container *ngSwitchCase="'2'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Employee</span>
-                          <nz-select nzShowSearch nzPlaceHolder="Select Employee">
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedEmployeeSingle"
+                            nzPlaceHolder="Select Employee"
+                            (ngModelChange)="onEmployeeChange($event)"
+                            nzAllowClear
+                            nzShowSearch
+                          >
                             <nz-option
-                              *ngFor="let emp of employees"
-                              [nzValue]="emp.CODE"
-                              [nzLabel]="emp.NAME"
+                              *ngFor="let dep of employees"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
                             >
                             </nz-option>
                           </nz-select>
@@ -269,14 +224,21 @@
                       <ng-container *ngSwitchCase="'3'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Role</span>
-                          <app-role-list
-                            valueKey="ID"
-                            labelKey="NAME"
-                            placeholder="Select Role"
-                            [(ngModel)]="selectedRole"
-                            width="250px"
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedRoleSingle"
+                            nzPlaceHolder="Select Role"
+                            (ngModelChange)="onRoleChange($event)"
+                            nzAllowClear
+                            nzShowSearch
                           >
-                          </app-role-list>
+                            <nz-option
+                              *ngFor="let dep of roles"
+                              [nzValue]="dep.ID"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
                         </div>
                       </ng-container>
 
@@ -284,14 +246,21 @@
                       <ng-container *ngSwitchCase="'4'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Designation</span>
-                          <app-designation-list
-                            valueKey="CODE"
-                            labelKey="NAME"
-                            placeholder="Select Designation"
-                            [(ngModel)]="selectedDesignation"
-                            width="250px"
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedDesignationSingle"
+                            nzPlaceHolder="Select Designation"
+                            (ngModelChange)="onDesignationChange($event)"
+                            nzAllowClear
+                            nzShowSearch
                           >
-                          </app-designation-list>
+                            <nz-option
+                              *ngFor="let dep of designations"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
                         </div>
                       </ng-container>
 
@@ -332,14 +301,18 @@
                     <th></th>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>1</td>
-                      <td>
-                        Ebad Khan<br />
-                        Role: Developer<br />
-                        Designation: Business Manager
-                      </td>
-                    </tr>
+                    <!-- Use keyvalue pipe to convert the object -->
+                    @for (item of approvalSequenceData | keyvalue; track item.key; let i = $index) {
+                      <tr>
+                        <td>{{ i + 1 }}</td>
+                        <td>
+                          <!-- Access data using item.value -->
+                          {{ item.value.EmployeeName }}<br />
+                          Role: {{ item.value.UserRole }}<br />
+                          Designation: {{ item.value.Designation }}
+                        </td>
+                      </tr>
+                    }
                   </tbody>
                 </table>
               </div>

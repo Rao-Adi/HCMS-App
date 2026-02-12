@@ -17,6 +17,7 @@ import { DocumentAttributeService } from '@app/shared/services/document-attribut
 import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { ControlTypeService } from '@app/shared/services/control-type.service';
 @Component({
   selector: 'app-document-attributes',
   imports: [
@@ -41,22 +42,22 @@ export class DocumentAttributes {
   documentAttributeData: any[] = [];
 
   controlTypes: any[] = [
-    {
-      id: '1',
-      text: 'Date',
-    },
-    {
-      id: '2',
-      text: 'Numeric',
-    },
-    {
-      id: '3',
-      text: 'TextBox',
-    },
-    {
-      id: '4',
-      text: 'List',
-    },
+    // {
+    //   id: '1',
+    //   text: 'Date',
+    // },
+    // {
+    //   id: '2',
+    //   text: 'Numeric',
+    // },
+    // {
+    //   id: '3',
+    //   text: 'TextBox',
+    // },
+    // {
+    //   id: '4',
+    //   text: 'List',
+    // },
   ]; // for dropdowns
   selectedDocumentType?: string = '';
 
@@ -69,9 +70,30 @@ export class DocumentAttributes {
     private _documentAttribute: DocumentAttributeService,
     private modal: NzModalService,
     private _notification: NotificationService,
+    private _controlTypeService: ControlTypeService,
   ) {}
 
   ngOnInit() {
+    this.getAllControlTypeList();
+    // this.getAllDocumentAttributes({
+    //   pageNumber: 1,
+    //   pageSize: this.pageSize,
+    //   sortModel: [],
+    //   filterModel: {},
+    // });
+  }
+
+  pinnedTopRowDataPlanning: DocumentAttributeColumns[] = [
+    {
+      ControlLabel: '',
+      ControlTypeId: '',
+      ControlTypeName: '',
+      ListValue: '',
+      Mandatory: '',
+    },
+  ];
+
+  private GenerateGrid() {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -89,24 +111,7 @@ export class DocumentAttributes {
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
     };
-
-    this.getAllDocumentAttributes({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
-    });
   }
-
-  pinnedTopRowDataPlanning: DocumentAttributeColumns[] = [
-    {
-      ControlLabel: '',
-      ControlTypeId: '',
-      ControlTypeName: '',
-      ListValue: '',
-      Mandatory: '',
-    },
-  ];
 
   private getColumns(): GridColumn[] {
     return [
@@ -147,70 +152,75 @@ export class DocumentAttributes {
     ];
   }
 
-  getAllDocumentAttributes = (query: any) => {
-    const sort = query.sortModel?.[0];
-    const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
+  // getAllDocumentAttributes = (query: any) => {
+  //   const sort = query.sortModel?.[0];
+  //   const pageNumber = Number(query?.pageNumber) || 1;
+  //   const pageSize = Number(query?.pageSize) || 10;
 
-    this._documentAttribute
-      .GetAllDocumentAttribute(
-        query?.filterModel?.Name?.filter || '',
-        sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
-        true,
-        pageNumber,
-        pageSize,
-      )
-      .subscribe((res) => {
-        const items = res?.Data?.Items;
+  //   this._documentAttribute
+  //     .GetAllDocumentAttribute(
+  //       query?.filterModel?.Name?.filter || '',
+  //       sort?.sort?.toUpperCase() || 'ASC',
+  //       sort?.colId || 'Name',
+  //       true,
+  //       pageNumber,
+  //       pageSize,
+  //     )
+  //     .subscribe((res) => {
+  //       const items = res?.Data?.Items;
 
-        if (Array.isArray(items)) {
-          this.documentAttributeData = items.map((item: any) => ({
-            Id: item.Id,
-            DocumentTypeCode: item.DocumentTypeCode,
-            ControlLabel: item.ControlLabel,
-            ControlTypeId:
-              this.controlTypes.find((ct) => ct.id === String(item.ControlType))?.id ||
-              item.ControlType, // ✅ matches column
-            ListValue: item.ListValues, // ✅ plural in API
-            Mandatory: item.IsMandatory, // ✅ boolean
-          }));
-        } else {
-          this.documentAttributeData = [];
-        }
+  //       if (Array.isArray(items)) {
+  //         this.documentAttributeData = items.map((item: any) => ({
+  //           Id: item.Id,
+  //           DocumentTypeCode: item.DocumentTypeCode,
+  //           ControlLabel: item.ControlLabel,
+  //           ControlTypeId:
+  //             this.controlTypes.find((ct) => ct.id === String(item.ControlTypeId))?.id ||
+  //             item.ControlTypeId, // ✅ matches column
+  //           ListValue: item.ListValues, // ✅ plural in API
+  //           Mandatory: item.IsMandatory, // ✅ boolean
+  //         }));
+  //       } else {
+  //         this.documentAttributeData = [];
+  //       }
 
-        console.log('RowData length:', this.documentAttributeData.length);
-      });
+  //       //console.log('RowData length:', this.documentAttributeData.length);
+  //     });
+  // };
+
+  getAllDocumentAttributesByDocumentType = (documentType: any) => {
+    this._documentAttribute.getDocumentAttributeByDocumentType(documentType).subscribe((res) => {
+      const items = res?.Data;
+      if (Array.isArray(items)) {
+        this.documentAttributeData = items.map((item: any) => ({
+          Id: item.Id,
+          DocumentTypeCode: item.DocumentTypeCode,
+          ControlLabel: item.ControlLabel,
+          ControlTypeId:
+            this.controlTypes.find((ct) => ct.id === String(item.ControlTypeId))?.id ||
+            item.ControlTypeId, // ✅ matches column
+          ListValue: item.ListValues, // ✅ plural in API
+          Mandatory: item.IsMandatory, // ✅ boolean
+        }));
+      } else {
+        this.documentAttributeData = [];
+      }
+
+      //console.log('RowData length:', this.documentAttributeData.length);
+    });
   };
 
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
+    this.getAllDocumentAttributesByDocumentType(value);
   }
-
-  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    this.getAllDocumentAttributes({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
-  }
-
+ 
   onGridReady(gridApi: any): void {
     //console.log('Grid ready:', gridApi);
     // Store grid API if needed for external operations
   }
-
-  // private generateId(): number {
-  //   return Date.now();
-  // }
-
-  // private getDisplayName(options: any[], id: any): string {
-  //   const option = options.find((opt) => opt.id == id);
-  //   return option ? option.text : '';
-  // }
-
+ 
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
@@ -226,7 +236,7 @@ export class DocumentAttributes {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
-      ControlType: event.rowData.ControlTypeId,
+      ControlTypeId: event.rowData.ControlTypeId,
       listvalues: event.rowData.ListValue,
       isMandatory: false,
       IsActive: true,
@@ -276,7 +286,7 @@ export class DocumentAttributes {
       id: event.rowData.Id,
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
-      ControlType: event.rowData.ControlTypeId,
+      ControlTypeId: event.rowData.ControlTypeIdId,
       listValues: event.rowData.ListValue,
       isMandatory: true,
       IsActive: true,
@@ -318,8 +328,8 @@ export class DocumentAttributes {
 
   onCellValueChanged(event: any): void {
     //console.log('Cell value changed:', event);
-    debugger;
-    console.log('PARENT received:', event);
+ 
+    // console.log('PARENT received:', event);
     if (!event?.data) return;
 
     event.data.ControlTypeId =
@@ -363,6 +373,7 @@ export class DocumentAttributes {
   }
 
   openCabinetModal(rowData: any): void {
+ 
     const modalRef = this.modal.create({
       nzTitle: 'Mandatory (Cabinet Wise)',
       nzContent: MandatoryCabinetWisePopup,
@@ -377,6 +388,20 @@ export class DocumentAttributes {
       //console.log('Modal closed with:', result);
     });
   }
+
+  getAllControlTypeList = () => {
+    this._controlTypeService.getControlTypeList().subscribe((res) => {
+      if (res?.Data) {
+        this.controlTypes = (res.Data ?? []).map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
+        }));
+        this.GenerateGrid();
+      } else {
+        this.controlTypes = [];
+      }
+    });
+  };
 }
 
 class DocumentAttributeColumns {
