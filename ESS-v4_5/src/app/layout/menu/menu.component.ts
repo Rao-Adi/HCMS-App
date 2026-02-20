@@ -183,7 +183,7 @@ export class MenuComponent implements OnDestroy {
           {
             Text: 'Request for Document Creation/Update',
             Value: 'Reuest-for-Document-Creation-Update',
-            NavigateUrl: '/documents/request',
+            NavigateUrl: '/documents/request-for-document-creation-update',
             Class: 'menu-l2',
           },
           {
@@ -195,7 +195,7 @@ export class MenuComponent implements OnDestroy {
           {
             Text: 'Create/Update Document',
             Value: 'Document-Creation-Update',
-            NavigateUrl: '/documents/create-update',
+            NavigateUrl: '/documents/create-update-document',
             Class: 'menu-l2',
           },
           {

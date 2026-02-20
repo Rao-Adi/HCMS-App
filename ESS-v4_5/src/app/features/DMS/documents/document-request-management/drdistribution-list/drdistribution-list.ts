@@ -262,7 +262,7 @@ export class DRDistributionList {
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
     //console.log('Cell value changed:', JSON.stringify(event));
-    debugger;
+   
     // Handle calculations if needed
     if (event.field === 'currentSalary' || event.field === 'incrementPercentage') {
       const currentSalary = event.rowData.currentSalary || 0;

@@ -17,6 +17,34 @@
             <div class="custom-tab-container">
               <button
                 class="tab-button"
+                [ngClass]="{
+                  'active-tab': selectedPolicyId === PolicyId.RequestForDocumentCreation,
+                }"
+                (click)="selectTab(PolicyId.RequestForDocumentCreation)"
+              >
+                Request For Document Creation
+              </button>
+
+              <button
+                class="tab-button"
+                [ngClass]="{ 'active-tab': selectedPolicyId === PolicyId.DocumentCreation }"
+               (click)="selectTab(PolicyId.DocumentCreation)"
+              >
+                Document Creation
+              </button>
+
+              <button
+                class="tab-button"
+                [ngClass]="{
+                  'active-tab': selectedPolicyId === PolicyId.DocumentRevisionObsoletion,
+                }"
+                (click)="selectTab(PolicyId.DocumentRevisionObsoletion)"
+              >
+                Document Revision/Obsoletion
+              </button>
+
+              <!-- <button
+                class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'RequestForDocumentCreation' }"
                 (click)="selectedTab = 'RequestForDocumentCreation'"
@@ -39,7 +67,7 @@
                 (click)="selectedTab = 'DocumentRevisionObsoletion'"
               >
                 Document Revision/Obsoletion
-              </button>
+              </button> -->
             </div>
 
             <div class="row row-space">
@@ -295,7 +323,7 @@
                 *ngIf="showExclusionTable"
                 class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
               >
-                <table class="table">
+                <table class="table" *ngIf="approvalSequenceData && approvalSequenceData.length > 0">
                   <thead>
                     <th>Approval Sequence</th>
                     <th></th>
@@ -328,17 +356,29 @@
                       <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                           <div class="d-flex">
-                            <nz-radio-group [(ngModel)]="radioValue" class="display-flex-direction">
+                            <nz-radio-group
+                              [(ngModel)]="approvalPolicy"
+                              class="display-flex-direction"
+                            >
+                              <label nz-radio nzValue="OBSERVE_ONLY">
+                                Approval Authorities can only give their observations, but not edit
+                                the document
+                              </label>
+
+                              <label nz-radio nzValue="CAN_EDIT">
+                                Approval Authorities can even edit the documents before approval
+                              </label>
+                            </nz-radio-group>
+                            <!-- <nz-radio-group [(ngModel)]="radioValue" class="display-flex-direction">
                               <label nz-radio nzValue="A"
                                 >Approval Authorities can only give their observations, but not edit
                                 the document</label
                               >
-
                               <label nz-radio nzValue="B"
                                 >Approval Authorities can even edit the documents before
                                 approval</label
                               >
-                            </nz-radio-group>
+                            </nz-radio-group> -->
                           </div>
                         </div>
                       </div>
@@ -348,7 +388,7 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'DocumentCreation'">
+            <div class="row row-space" *ngIf="selectedPolicyId === PolicyId.DocumentCreation">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -360,7 +400,7 @@
                           <nz-switch
                             [(ngModel)]="switchValue1"
                             [nzControl]="true"
-                            (click)="clickSwitch('manual')"
+                            (click)="clickSwitch()"
                             [nzLoading]="loading"
                           >
                           </nz-switch>

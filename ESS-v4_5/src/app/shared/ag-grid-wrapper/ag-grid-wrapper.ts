@@ -97,7 +97,9 @@ export class AgGridWrapper implements OnInit {
   }>();
 
   @Output() gridReady = new EventEmitter<GridReadyEvent>();
-
+  @Output() selectionChange = new EventEmitter<any>();
+  @Output() rowSelected = new EventEmitter<any>();
+  @Output() rowDeselected = new EventEmitter<any>();
   finalColumnDefs: ColDef[] = [];
   gridContext: any;
   gridApi!: GridApi;
@@ -169,7 +171,7 @@ export class AgGridWrapper implements OnInit {
 
   onSelectionChanged() {
     const selectedRows = this.gridApi.getSelectedRows();
-    console.log('Selected rows:', selectedRows);
+    // console.log('Selected rows:', selectedRows);
   }
 
   goToPage(page: number) {
@@ -192,6 +194,12 @@ export class AgGridWrapper implements OnInit {
     this.gridApi = event.api;
     this.gridReady.emit(event);
     this.syncColumnState();
+
+    // Subscribe to selection changes
+    this.gridApi.addEventListener('selectionChanged', () => {
+      const selectedRows = this.gridApi.getSelectedRows();
+      this.selectionChange.emit(selectedRows);
+    });
     // Delay first emit to allow grid to stabilize
     // setTimeout(() => {
     //   this.isGridInitialized = true;
@@ -273,6 +281,14 @@ export class AgGridWrapper implements OnInit {
 
   onCellClicked(event: any) {
     this.cellClicked.emit(event);
+  }
+
+  onRowSelected(event: any): void {
+    if (event.node.selected) {
+      this.rowSelected.emit(event.node.data);
+    } else {
+      this.rowDeselected.emit(event.node.data);
+    }
   }
 
   toggleShow = false;

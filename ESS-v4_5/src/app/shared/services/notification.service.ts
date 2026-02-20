@@ -27,17 +27,17 @@ export class NotificationService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllNotificationsList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSNotification/get-all-notification-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getNotificationById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSNotification/get-notification-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllNotifications(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

@@ -27,17 +27,17 @@ export class DocumentApprovalService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllDocumentApprovalsList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentApproval/get-all-document-approval-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getDocumentApprovalById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentApproval/get-document-approval-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllDocumentApprovals(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

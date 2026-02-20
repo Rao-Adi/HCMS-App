@@ -27,17 +27,17 @@ export class DocumentVersionService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllDocumentVersionsList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentVersion/get-all-document-version-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getDocumentVersionById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentVersion/get-document-version-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllDocumentVersions(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

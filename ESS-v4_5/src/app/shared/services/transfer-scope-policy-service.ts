@@ -27,12 +27,12 @@ export class TransferScopePolicyService {
     return headers;
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getTransferScopePolicyById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSTransferScopePolicy/get-transfer-scope-policies-by-code/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllTransferScopePolicies(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

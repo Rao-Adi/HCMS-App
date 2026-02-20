@@ -24,6 +24,10 @@ import { PendingRequestForApproval } from './pending-request-for-approval/pendin
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { TemplateService } from '@app/shared/services/template.service';
+import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
+import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-document-request-management',
@@ -59,6 +63,7 @@ export class DocumentRequestManagement {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   inputJustificationValue?: string;
+  documentName?: string = '';
   templateHtml: string = '';
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -75,94 +80,19 @@ export class DocumentRequestManagement {
   totalDocuments = 0;
   totalPendingApprovals = 0;
   rowData: any[] = [];
+  trainingContent: boolean = false;
+  showExclusionTable = false;
 
   public noRowsOverlay: string = '';
+  selectedCompany: string | null = null;
+  selectedRequestType: string = '';
+  selectedDocumentRequestType: string | null = null;
+  showDocumentDiv: boolean = false;
+  showDocumentCreationDiv: boolean = false;
 
-  userGridColumnDefs = [
-    {
-      field: 'division',
-      headerName: 'Division',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing Division', 'Software Division', 'Finance Division', 'HR Division'],
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing', 'IT', 'Finance', 'HR'],
-      },
-    },
-    {
-      field: 'subDepartment',
-      headerName: 'Sub-Department',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Digital Marketing', 'Software Marketing'],
-      },
-    },
-    {
-      field: 'users',
-      headerName: 'Users',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: [
-          'Territory Sales Manager(TSM)',
-          'District Sales Manager(DSM)',
-          'Regional Sales Manager(RSM)',
-        ],
-      },
-    },
-  ];
-
-  distributionListGridColumnDefs = [
-    {
-      field: 'division',
-      headerName: 'Division',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing Division', 'Software Division'],
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['HR', 'IT', 'Finance', 'Legal'],
-      },
-    },
-    {
-      field: 'role',
-      headerName: 'Role',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: [
-          'Territory Sales Manager(TSM)',
-          'District Sales Manager(DSM)',
-          'Regional Sales Manager(RSM)',
-        ],
-      },
-    },
-    {
-      field: 'distributionType',
-      headerName: 'Distribution Type',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Physical', 'Digital'],
-      },
-    },
-  ];
+  employees: any[] = [];
+  selectedEmployee?: string = '';
+  documentRequestsData: any[] = [];
 
   workflowAuthoritiesColumnDefs = [
     { field: 'approvalSequence', headerName: 'Approval Sequence', flex: 1 },
@@ -171,96 +101,6 @@ export class DocumentRequestManagement {
     { field: 'division', headerName: 'Division', flex: 1 },
     { field: 'department', headerName: 'Department', flex: 1 },
     { field: 'subDepartment', headerName: 'Sub-Department', flex: 1 },
-  ];
-
-  pendingRequestApprovalColumnDefs = [
-    { field: 'requestId', headerName: 'Request ID', flex: 1 },
-    { field: 'division', headerName: 'Division', flex: 1 },
-    { field: 'department', headerName: 'Department', flex: 1 },
-    { field: 'subDepartment', headerName: 'Sub-Department', flex: 1 },
-    { field: 'documentType', headerName: 'Document Type', flex: 1 },
-    { field: 'documentTitle', headerName: 'Document Title', flex: 1 },
-    { field: 'justification', headerName: 'Justification', flex: 1 },
-    { field: 'createdOn', headerName: 'Created On', flex: 1 },
-    { field: 'pendingWith', headerName: 'Pending With', flex: 1 },
-  ];
-
-  userData: any[] = [
-    {
-      division: 'Marketing Division',
-      department: 'Marketing',
-      subDepartment: 'Digital Marketing',
-      user: 'Territory Sales Manager(TSM)',
-    },
-    {
-      division: 'Software Division',
-      department: 'IT',
-      subDepartment: 'Software Marketing',
-      user: 'District Sales Manager(DSM)',
-    },
-    {
-      division: 'Software Division',
-      department: 'Finance',
-      subDepartment: 'Software Marketing',
-      user: 'Regional Sales Manager(RSM)',
-    },
-  ];
-
-  distributionListData: any[] = [
-    {
-      division: 'Marketing Division',
-      department: 'Marketing',
-      role: 'Digital Marketing',
-      distributionType: 'Physical',
-    },
-    {
-      division: 'Software Division',
-      department: 'IT',
-      role: 'Software Marketing',
-      distributionType: 'Digital',
-    },
-    {
-      division: 'Software Division',
-      department: 'Finance',
-      role: 'Software Marketing',
-      distributionType: 'Digital',
-    },
-  ];
-
-  pendingApprovalData: any[] = [
-    {
-      requestId: 'REQ-001',
-      division: 'Marketing Division',
-      department: 'Marketing',
-      subDepartment: 'Digital Marketing',
-      documentType: 'Policy',
-      documentTitle: 'IT Security Policy',
-      justification: 'New compliance requirements',
-      createdOn: '2024-01-15',
-      pendingWith: 'Manager A',
-    },
-    {
-      requestId: 'REQ-002',
-      division: 'Software Division',
-      department: 'IT',
-      subDepartment: 'Software Marketing',
-      documentType: 'SOP',
-      documentTitle: 'Employee Onboarding SOP',
-      justification: 'Process improvement',
-      createdOn: '2024-02-10',
-      pendingWith: 'Manager B',
-    },
-    {
-      requestId: 'REQ-003',
-      division: 'Software Division',
-      department: 'Finance',
-      subDepartment: 'Software Marketing',
-      documentType: 'Manual',
-      documentTitle: 'Financial Reporting Manual',
-      justification: 'Regulatory update',
-      createdOn: '2024-03-05',
-      pendingWith: 'Manager C',
-    },
   ];
 
   workflowAuthoritiesData: any[] = [
@@ -295,18 +135,7 @@ export class DocumentRequestManagement {
 
   companies: any[] = [];
   requestTypes: any[] = [];
-
-  employees: SelectList[] = [
-    { CODE: '1', NAME: 'John Doe' },
-    { CODE: '2', NAME: 'Jane Smith' },
-    { CODE: '3', NAME: 'Alice Johnson' },
-  ];
-
-  workflowExclude: SelectList[] = [
-    { CODE: '1', NAME: 'Designation' },
-    { CODE: '2', NAME: 'Role' },
-    { CODE: '3', NAME: 'Specific Employee' },
-  ];
+  approvalSequenceData: any[] = [];
 
   filters: SelectList[] = [
     { CODE: '1', NAME: 'Over Due' },
@@ -318,7 +147,10 @@ export class DocumentRequestManagement {
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
     private _doumentRequestService: DocumentRequestService,
-    private _notification : NotificationService
+    private _notification: NotificationService,
+    private _documentTemplateService: TemplateService,
+    private _documentAttributeService: DocumentAttributeService,
+    private _workflowStepService: WorkflowStepService,
   ) {}
 
   ngOnInit() {
@@ -326,23 +158,20 @@ export class DocumentRequestManagement {
     this.getAllCompanies();
   }
 
-  selectedDocumentRequestType: string | null = null;
-  showDocumentDiv: boolean = false;
-  showOtherDiv: boolean = false;
-  onAuthorityTypeChange(value: string | null): void {
+  onRequestTypeChange(value: string | null): void {
     this.selectedDocumentRequestType = value;
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
-      this.showOtherDiv = true;
+      this.showDocumentCreationDiv = true;
       this.showDocumentDiv = false;
     } else if (
       this.selectedDocumentRequestType == '2' ||
       this.selectedDocumentRequestType == 'DRT-0002'
     ) {
       this.showDocumentDiv = true;
-      this.showOtherDiv = true;
+      this.showDocumentCreationDiv = true;
     } else {
       this.showDocumentDiv = false;
-      this.showOtherDiv = true;
+      this.showDocumentCreationDiv = true;
     }
   }
 
@@ -356,32 +185,71 @@ export class DocumentRequestManagement {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
   }
+
   onDepartmentsChange(value: string): void {
     this.selectedDepartment = value;
     this.selectedSubDepartment = '';
   }
+
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
-    this.selectedDocumentType = value;
+    if (value != null) {
+      this.selectedDocumentType = value;
+
+      //Get Template
+      this.GetTemplate(this.selectedDocumentType);
+   
+      const payLoad = {
+        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+        EntityType: 'Request',
+        documentTypeCode: this.selectedDocumentType,
+        divisionCode: this.selectedDivisions,
+        departmentCode: this.selectedDepartment,
+        subDepartmentCode: this.selectedSubDepartment,
+        businessDomainCode: this.selectedBusinessDomain,
+      };
+      this._workflowStepService
+        .getWorkflowStepByDocumentTypeCode(payLoad
+          // value,
+          // this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001'
+          //   ? 1
+          //   : this.selectedDocumentRequestType == '2' ||
+          //       this.selectedDocumentRequestType == 'DRT-0002'
+          //     ? 2
+          //     : 3,
+        )
+        .subscribe((res) => {
+          // console.log('User Details:', res);
+          this.showExclusionTable = true;
+          // this.totalDistribution = res?.Data ? res.Data.length : 0;
+          this.approvalSequenceData = res?.Data ? res.Data : [];
+        });
+    } else {
+      this.approvalSequenceData = [];
+      this.selectedDocumentType = '';
+      this.showExclusionTable = false;
+    }
   }
 
-  selectedCompany: string | null = null;
+  GetTemplate(value: string) {
+    this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
+      next: (response) => {
+        this.templateHtml = response.Data.TemplateContent;
+        // Promise.resolve().then(() => {
+        //   this.templateHtml = response.Data.TemplateContent;
+        // });
+      },
+      error: (err) => console.error(err),
+    });
+
+    if (value === 'Select') {
+      this.trainingContent = true;
+    }
+  }
+
   onCompanyChange(value: string | null) {
     this.selectedCompany = value;
   }
-
-  GetAllDocuments(query: any) {}
-
-  GetAllPendingApprovalRequests(query: any) {}
-
-  GetAllUsers(query: any) {}
-
-  GetAllUsers2(query: any) {}
-
-  GetAllWorkflowAuthorities(query: any) {}
-
-  GetAllUploadedDocuments(query: any) {}
-  GetAllDistributionList(query: any) {}
 
   getAllDocumentRequestTypes = () => {
     this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
@@ -400,7 +268,7 @@ export class DocumentRequestManagement {
     this._companyService.getCompanyList().subscribe((res) => {
       if (res) {
         this.companies = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
+          id: d.Id,
           text: d.Value,
         }));
       } else {
@@ -415,111 +283,179 @@ export class DocumentRequestManagement {
   // add more as needed...
   selectedPageSize = 1; // default value
 
-  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
-
-    switch (gridId) {
-      case 'distributionList2Grid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDistributionList({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'documentGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDistributionList({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'usersGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDistributionList({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'users2Grid':
-        this.employeePageSize = pageSize;
-        this.GetAllDistributionList({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'distributionListGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'workflowAuthorities1Grid':
-        this.employeePageSize = pageSize;
-        this.GetAllDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'workflowAuthorities2Grid':
-        this.employeePageSize = pageSize;
-        this.GetAllDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'myRequestPendingApprovalGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDistributionList({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      // handle other grids...
-
-      default:
-        break;
+  DraftDocumentRequests() {
+    if (!this.selectedDocumentRequestType) {
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please select an Document Request Type.',
+      );
+      return;
     }
-  }
+    if (!this.selectedCompany) {
+      this._notification.createNotification('warning', 'Validation', 'Please select a Company.');
+      return;
+    }
+    if (!this.documentName || this.documentName.trim() === '') {
+      this._notification.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      return;
+    }
+    if (!this.selectedDocumentType) {
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Document Type.',
+      );
+      return;
+    }
+    if (!this.selectedDivisions) {
+      this._notification.createNotification('warning', 'Validation', 'Please select a Division.');
+      return;
+    }
+    if (!this.selectedDepartment) {
+      this._notification.createNotification('warning', 'Validation', 'Please select a Department.');
+      return;
+    }
+    if (!this.selectedSubDepartment) {
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Sub Department.',
+      );
+      return;
+    }
+    if (!this.selectedBusinessDomain) {
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Business Domain.',
+      );
+      return;
+    }
 
-  SubmiteDocumentRequests() { 
     debugger;
-    // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      requestType: this.selectedDocumentRequestType,
-      // departmentCode: rowData.level2Id || rowData.level2Id,
-      // subDepartmentCode: rowData.level3Id || rowData.level3Id,
-      // businessDomainCode: rowData.level4Id || rowData.level4Id,
-      // userId: rowData.userId || rowData.userId,
+      CompanyId: this.selectedCompany,
+      DocumentRequestTypeCode: this.selectedDocumentRequestType,
+      documentTypeCode: this.selectedDocumentType || null,
+      documentName: this.documentName || '',
+      justification: this.inputJustificationValue || '',
+      proposedContent: this.templateHtml || '',
+      divisionCode: this.selectedDivisions || null,
+      departmentCode: this.selectedDepartment || null,
+      subDepartmentCode: this.selectedSubDepartment || null,
+      businessDomainCode: this.selectedBusinessDomain || null,
+      CreatedByUserId: 1, // this will be bind with UserId
     };
 
-    this._doumentRequestService.create(payLoad).subscribe(() => {
-      this._notification.createNotification('success', 'User', 'User created successfully!');
+    this._doumentRequestService.draftDocumentRequest(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notification.createNotification(
+            'success',
+            'User',
+            'Document drafted successfully!',
+          );
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to draft document.');
+      },
     });
-     
+  }
+
+  SubmiteDocumentRequests() {
+    debugger;
+    const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      requestId: this.selectedDocumentRequestType,
+      submittedBy: this.selectedDocumentType || null,
+    };
+
+    this._doumentRequestService.submitDocumentRequest(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this.approvalSequenceData = [...response.Data];
+
+          this._notification.createNotification(
+            'success',
+            'User',
+            'Document submitted successfully!',
+          );
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+      },
+    });
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
-      this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-      this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-      this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-      this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
-    }
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
+
+  GetAllPendingDocuments(query: any) {
+    const payload = {
+      companyId: 1,
+      userId: 1,
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      employeeCode: this.selectedEmployee,
+    };
+    this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          if (response?.Data) {
+            this.totalRows = response.Data.TotalCount;
+            this.documentRequestsData = response.Data.map((item: any) => ({
+              Id: item.id || item.Id,
+              requestId: item.Id || item.id,
+              documentType: item.DocumentType || item.documentType,
+              proposedDocumentNumber: item.RequestNumber || item.requestNumber,
+              stepId: item.StepId || item.stepId,
+              stepOrder: item.StepOrder || item.stepOrder,
+              startedAt: item.StartedAt || item.startedAt,
+              division: item.Division,
+              documentId: item.DocumentNumber,
+              documentName: item.DocumentName,
+              proposedContent: item.ProposedContent,
+              department: item.Department,
+              departmentId: item.DepartmentCode,
+              subdepartment: item.SubDepartment,
+              justification: item.Justification,
+              businessdomainId: item.BusinessDomainCode,
+              requestCreatedBy: item.createdBy || item.CreatedBy || '',
+              dateOfCreation: new CustomDateFormatPipe().transform(
+                item.createdAt || item.CreatedAt || '',
+              ),
+              requestCreatedOn: new CustomDateFormatPipe().transform(
+                item.createdAt || item.CreatedAt || '',
+              ),
+              previousVersionCreatedOn:
+                item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+              proposedVersionNumber: item.RowVersion || item.rowVersion,
+            }));
+          } else {
+          }
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification(
+          'error',
+          'Error',
+          err?.Message || 'Failed to fetch pending documents.',
+        );
+      },
+    });
+  }
+
+  onEmployeeChange(value: string): void {
+    this.selectedEmployee = value;
+    this.GetAllPendingDocuments(value);
+  }
 }

@@ -273,7 +273,7 @@ export class DocumentAttributes {
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    debugger;
+ 
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
       this._notification.createNotification(
         'warning',
@@ -326,10 +326,7 @@ export class DocumentAttributes {
     });
   }
 
-  onCellValueChanged(event: any): void {
-    //console.log('Cell value changed:', event);
- 
-    // console.log('PARENT received:', event);
+  onCellValueChanged(event: any): void { 
     if (!event?.data) return;
 
     event.data.ControlTypeId =
@@ -340,11 +337,7 @@ export class DocumentAttributes {
     event.node.setData(event.data);
   }
 
-  onRowValueChanged(event: any): void {
-    debugger; // 🔥 WILL HIT
-
-    console.log('ROW UPDATED', event.data);
-
+  onRowValueChanged(event: any): void { 
     // normalize dropdown
     event.data.ControlTypeId =
       this.controlTypes.find((ct) => ct.text === event.data.ControlTypeId)?.id ??
@@ -373,7 +366,7 @@ export class DocumentAttributes {
   }
 
   openCabinetModal(rowData: any): void {
- 
+    debugger;
     const modalRef = this.modal.create({
       nzTitle: 'Mandatory (Cabinet Wise)',
       nzContent: MandatoryCabinetWisePopup,

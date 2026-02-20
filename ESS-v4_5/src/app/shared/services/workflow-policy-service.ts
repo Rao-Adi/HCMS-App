@@ -27,17 +27,17 @@ export class WorkflowPolicyService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllWorkflowPoliciesList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSWorkflowPolicy/get-all-workflow-policy-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getWorkflowPolicyById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSWorkflowPolicy/get-workflow-policy-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllWorkflowPolicies(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

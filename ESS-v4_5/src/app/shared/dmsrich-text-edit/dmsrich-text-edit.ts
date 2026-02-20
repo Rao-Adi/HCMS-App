@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  forwardRef,
   Input,
   OnChanges,
   OnDestroy,
@@ -16,6 +18,7 @@ import {
   FormControl,
   FormGroup,
   FormsModule,
+  NG_VALUE_ACCESSOR,
   ReactiveFormsModule,
 } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
@@ -39,10 +42,20 @@ import { Subject, takeUntil } from 'rxjs';
   templateUrl: './dmsrich-text-edit.html',
   styleUrl: './dmsrich-text-edit.css',
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => DMSRichTextEdit),
+      multi: true,
+    },
+  ],
 })
 export class DMSRichTextEdit implements OnInit, OnDestroy, OnChanges {
   @Output() contentHtmlChange = new EventEmitter<string>();
   // @Input() contentHtml: string = '';
+  private onChange = (value: any) => {};
+  private onTouched = () => {};
 
   private _contentHtml = '';
   @Input()
@@ -105,12 +118,32 @@ export class DMSRichTextEdit implements OnInit, OnDestroy, OnChanges {
     this.editor.destroy();
   }
 
-  ngOnChanges(changes: SimpleChanges) { 
+  ngOnChanges(changes: SimpleChanges) {
     if (changes['contentHtml']) {
       const value = changes['contentHtml'].currentValue ?? '';
 
       this.form.patchValue({ editorContent: value }, { emitEvent: false });
     }
+  }
+
+  writeValue(value: string): void {
+    if (value) {
+      //this.setEditorContent(value); // your method
+    }
+  }
+
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
+
+  // call this whenever editor content changes
+  handleEditorChange(html: string) {
+    this.onChange(html);
+    this.onTouched();
   }
 
   //   @Output() contentChange = new EventEmitter<string>();

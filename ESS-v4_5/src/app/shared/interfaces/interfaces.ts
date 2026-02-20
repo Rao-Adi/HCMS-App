@@ -20,6 +20,22 @@ export interface ApiResponse<T> {
   Message: string;
   Data: T;
 }
+export type ControlTypes =
+  | 'textbox'
+  | 'numeric'
+  | 'textarea'
+  | 'list'
+  | 'date'
+  | 'checkbox';
+ 
+export interface DocumentAttribute {
+  Id: number;
+  ControlLabel: string;
+  ControlType: ControlTypes;
+  ListValues?: string;
+  IsMandatory: boolean;
+  options?: string[];
+}
 
 export interface CabinetTabVM {
   level: number;

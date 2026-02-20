@@ -8,12 +8,19 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { ObservationModalPopup } from './observation-modal-popup/observation-modal-popup';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { fa_IR } from 'ng-zorro-antd/i18n';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { UserService } from '@app/shared/services/user-service';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -31,6 +38,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
     MyPendingRequestForApproval,
     CabinetStructureList,
     DMSRichTextEdit,
+    NzSelectModule,
   ],
   templateUrl: './my-approval-request.html',
   styleUrl: './my-approval-request.css',
@@ -49,7 +57,7 @@ export class MyApprovalRequest {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   pageSize = 10;
@@ -59,111 +67,262 @@ export class MyApprovalRequest {
   rowData: any[] = [];
   public noRowsOverlay: string = '';
 
+  documentRequestsData: any[] = [];
+  totalRows = 0;
+  // Track selection state
+  hasSelectedRows = false;
+  stepId: number = 0;
+  employees: any[] = [];
+  selectedEmployee?: string = '';
+
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
 
-  pendingDocumentsGridColumnDefs = [
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'requestId', headerName: 'Request Id' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'observation', headerName: 'Observation' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
-    { field: 'proposedVerion', headerName: 'Proposed Version' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment ', headerName: 'Sub-Department' },
-    { field: 'dateOfCreation', headerName: 'Date of Creation' },
+  documentColumnDefs = [
+    {
+      field: 'documentType',
+      headerName: 'Document Type',
+    },
+    {
+      field: 'requestId',
+      headerName: 'Request Id',
+    },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+    },
+    {
+      field: 'proposedContent',
+      headerName: 'ProposedContent',
+      hide: true,
+    },
+    {
+      field: 'rowVersion',
+      headerName: 'RowVersion',
+      hide: true,
+    },
+    {
+      field: 'stepId',
+      headerName: 'StepId',
+      hide: true,
+    },
+    {
+      field: 'stepOrder',
+      headerName: 'StepOrder',
+      hide: true,
+    },
+    {
+      field: 'startedAt',
+      headerName: 'StartedAt',
+      hide: true,
+    },
+
+    {
+      field: 'observation',
+      headerName: 'Observation',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+            ${params.value ? 'Observation' : 'Observation'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openMandatoryCabinetModal(event.data);
+      },
+    },
+    {
+      field: 'justification',
+      headerName: 'Justification',
+    },
+    {
+      field: 'proposedDocumentNumber',
+      headerName: 'Proposed Document Number',
+    },
+    {
+      field: 'proposedVersionNumber',
+      headerName: 'Proposed Versioin Number',
+    },
+    {
+      field: 'division',
+      headerName: 'Division',
+    },
+    {
+      field: 'department',
+      headerName: 'Department',
+    },
+    {
+      field: 'subdepartment',
+      headerName: 'Sub-Department',
+    },
+    { field: 'dateOfCreation', headerName: 'Date Of Creation' },
     { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestedBy', headerName: 'Requested By' },
-    { field: 'requestedOn', headerName: 'Requested On' },
-    { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
-    { field: 'approvalHistory', headerName: 'Approval History' },
-  ];
-
-  pendingDocumentData: any[] = [
+    { field: 'requestCreatedBy', headerName: 'Request Created By' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
     {
-      documentType: 'SOP',
-      requestId: 'REQ001',
-      documentName: 'Document 1',
-      observation: 'Observation',
-      justification: 'Training Request',
-      proposedDocumentNumber: 'DOC-SOP-QA-001',
-      proposedVerion: '1.0',
-      division: 'Marketing Division',
-      department: 'Marketing',
-      subDepartment: 'Digital Marketing',
-      dateOfCreation: '2024-06-01',
-      dateOfApproval: '2024-06-05',
-      requestedBy: 'John Doe',
-      requestedOn: '2024-06-01',
-      previsousversionCreatedBy: 'Jane Smith',
-    },
-    {
-      documentType: 'Policy',
-      requestId: 'REQ002',
-      documentName: 'Document 2',
-      observation: 'Observation 2',
-      justification: 'New Policy',
-      proposedDocumentNumber: 'DOC-POL-HR-002',
-      proposedVerion: '1.0',
-      division: 'HR Division',
-      department: 'HR',
-      subDepartment: 'Employee Relations',
-      dateOfCreation: '2024-06-02',
-      dateOfApproval: '2024-06-06',
-      requestedBy: 'Alice Johnson',
-      requestedOn: '2024-06-02',
-      previsousVersionCreatedBy: 'Bob Brown',
-      previsousVersionCreatedOn: '2024-05-15',
-      approvalHistory: 'Approved by Manager on 2024-06-06',
-    },
-    {
-      documentType: 'Manual',
-      requestId: 'REQ003',
-      documentName: 'Document 3',
-      observation: 'Observation 3',
-      justification: 'Update Manual',
-      proposedDocumentNumber: 'DOC-MAN-IT-003',
-      proposedVerion: '2.0',
-      division: 'Software Division',
-      department: 'IT',
-      subDepartment: 'Software Marketing',
-      dateOfCreation: '2024-06-03',
-      dateOfApproval: '2024-06-07',
-      requestedBy: 'Charlie Davis',
-      requestedOn: '2024-06-03',
-      previsousVersionCreatedBy: 'Diana Evans',
-      previsousVersionCreatedOn: '2024-05-20',
-      approvalHistory: 'Approved by Manager on 2024-06-07',
+      field: 'approvalHistory',
+      headerName: 'Approval History',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+            ${params.value ? 'Approval History' : 'Approval History'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openMandatoryCabinetModal(event.data);
+      },
     },
   ];
 
-  constructor() {}
+  columnToggles?: ColumnToggle[] = [
+    { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'observation', label: 'Observation', visible: true },
+    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'department', label: 'Department', visible: true },
+    { field: 'subdepartment', label: 'Sub-Department', visible: true },
+    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
+    { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+    { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'approvalHistory', label: 'Approval History', visible: true },
+  ];
 
-  ngOnInit() {}
+  constructor(
+    private _doumentRequestService: DocumentRequestService,
+    private modal: NzModalService,
+    private _notification: NotificationService,
+    private _userService: UserService,
+  ) {}
+
+  ngOnInit() {
+    this.getAllUsersList();
+    // this.GetAllPendingDocuments({
+    //   pageNumber: 1,
+    //   pageSize: this.pageSize,
+    //   sortModel: [],
+    //   filterModel: {},
+    // });
+
+    this.hasSelectedRows = false;
+  }
 
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
+    this.emptyAllFileds();
   }
   onDepartmentsChange(value: string): void {
     this.selectedDepartment = value;
-    this.selectedSubDepartment = '';
+    this.emptyAllFileds();
   }
 
-  onDocumentTypeChange(value: string): void {
+  emptyAllFileds() {
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.templateHtml = '';
+  }
+
+  async onDocumentTypeChange(value: string) {
     // this.loading = true;
     this.selectedDocumentType = value;
+    await this.GetAllPendingDocuments('');
+    this.emptyAllFileds();
   }
 
-  GetAllPendingDocuments(query: any) {}
+  async onTabChange(status: string) {
+    this.selectedTab = status;
+    await this.GetAllPendingDocuments('');
+    this.emptyAllFileds();
+  }
+
+  onEmployeeChange(value: string): void {
+    this.selectedEmployee = value;
+    this.emptyAllFileds();
+    if (value != null) {
+      this.GetAllPendingDocuments(value);
+    }
+  }
+
+  GetAllPendingDocuments(query: any) {
+    const payload = {
+      companyId: 1,
+      userId: 1,
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      documentTypeCode: this.selectedDocumentType,
+      employeeCode: this.selectedEmployee,
+      RequestStatus: this.selectedTab,
+    };
+    this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          if (response?.Data) {
+            this.totalRows = response.Data.TotalCount;
+            this.documentRequestsData = response.Data.map((item: any) => ({
+              Id: item.id || item.Id,
+              requestId: item.Id || item.id,
+              documentType: item.DocumentType || item.documentType,
+              proposedDocumentNumber: item.RequestNumber || item.requestNumber,
+              stepId: item.StepId || item.stepId,
+              stepOrder: item.StepOrder || item.stepOrder,
+              startedAt: item.StartedAt || item.startedAt,
+              division: item.Division,
+              documentId: item.DocumentNumber,
+              documentName: item.DocumentName,
+              proposedContent: item.ProposedContent,
+              department: item.Department,
+              departmentId: item.DepartmentCode,
+              subdepartment: item.SubDepartment,
+              justification: item.Justification,
+              businessdomainId: item.BusinessDomainCode,
+              requestCreatedBy: item.createdBy || item.CreatedBy || '',
+              dateOfCreation: new CustomDateFormatPipe().transform(
+                item.createdAt || item.CreatedAt || '',
+              ),
+              requestCreatedOn: new CustomDateFormatPipe().transform(
+                item.createdAt || item.CreatedAt || '',
+              ),
+              previousVersionCreatedOn:
+                item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+              proposedVersionNumber: item.RowVersion || item.rowVersion,
+            }));
+          } else {
+          }
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification(
+          'error',
+          'Error',
+          err?.Message || 'Failed to fetch documents.',
+        );
+      },
+    });
+  }
   GetAllApprovedDocuments(query: any) {}
   GetAllDisApprovedDocuments(query: any) {}
+  GetAllDocuments(query: any) {}
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -214,4 +373,79 @@ export class MyApprovalRequest {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
+
+  // handleGridAction(event: { action: string; rowData: any }) {
+  //   if (event.action === 'VIEW_CABINET') {
+  //     this.openMandatoryCabinetModal(event.rowData);
+  //   }
+  // }
+
+  // Handle selection changes
+  onSelectionChange(selectedRows: any): void {
+    this.hasSelectedRows = selectedRows && selectedRows.length > 0;
+    this.templateHtml = selectedRows[0]?.proposedContent || '';
+    this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
+  }
+
+  onCellClicked(event: any): void {
+    this.templateHtml = event.data?.proposedContent || '';
+  }
+
+  openMandatoryCabinetModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: ObservationModalPopup,
+      nzData: {
+        data: rowData.Id,
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
+    });
+  }
+
+  approve() {
+    //alert('Approve action triggered for selected rows');
+    debugger;
+    const payLoad = {
+      companyId: 1,
+      stepId: this.stepId,
+      userId: 1,
+      action: 'APPROVE',
+      observation: 'Approved by manager',
+    };
+
+    this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notification.createNotification('success', 'Workflow', response.Message);
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+      },
+    });
+  }
+
+  disapprove() {}
+  revert() {}
+  export() {}
+
+  getAllUsersList = () => {
+    this._userService.getUserList().subscribe((res) => {
+      if (res?.Data) {
+        this.employees = (res.Data ?? []).map((d: any) => ({
+          CODE: d.Code,
+          NAME: d.Value,
+        }));
+      } else {
+        this.employees = [];
+      }
+    });
+  };
 }

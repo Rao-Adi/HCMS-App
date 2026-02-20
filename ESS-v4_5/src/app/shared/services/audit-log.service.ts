@@ -27,17 +27,17 @@ export class AuditLogService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllAuditLogsList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSAuditLog/get-all-audit-log-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getAuditLogById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSAuditLog/get-audit-log-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllAuditLogs(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

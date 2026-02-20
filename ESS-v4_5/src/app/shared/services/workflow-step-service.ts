@@ -32,8 +32,16 @@ export class WorkflowStepService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getWorkflowStepByDocumentTypeCode(code: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-workflow-step-by-document-code/${code}`;
+  getWorkflowStepByDocumentTypeCode(payload:any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSWorkflowStep/get-workflow-step-by-document-code`,
+      payload
+    );
+  }
+
+
+  getPendingApprovals(companyId: number, userId:number): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-pending-approvals/${companyId}/${userId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

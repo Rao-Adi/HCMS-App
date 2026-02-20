@@ -28,7 +28,7 @@
                     <app-document-type-list
                       valueKey="CODE"
                       labelKey="NAME"
-                      placeholder="Select DocumentType"
+                      placeholder="--any--"
                       [(ngModel)]="selectedDocumentType"
                       (valueChange)="onDocumentTypeChange($event)"
                       width="250px"
@@ -51,17 +51,31 @@
 
               <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                  <div class="d-flex">
-                    <nz-radio-group [(ngModel)]="radioValue">
-                      <label nz-radio nzValue="A"
-                        >Approval Authorities can only give their observations, but not edit the
-                        document</label
-                      >
-                      <br />
-                      <label nz-radio nzValue="B"
-                        >Approval Authorities can even edit the documents before approval</label
-                      >
-                    </nz-radio-group>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                      <div class="d-flex">
+                        <nz-radio-group [(ngModel)]="approvalPolicy" class="display-flex-direction">
+                          <label nz-radio nzValue="OBSERVE_ONLY">
+                            Approval Authorities can only give their observations, but not edit the
+                            document
+                          </label>
+
+                          <label nz-radio nzValue="CAN_EDIT">
+                            Approval Authorities can even edit the documents before approval
+                          </label>
+                        </nz-radio-group>
+                        <!-- <nz-radio-group [(ngModel)]="radioValue" class="display-flex-direction">
+                              <label nz-radio nzValue="A"
+                                >Approval Authorities can only give their observations, but not edit
+                                the document</label
+                              >
+                              <label nz-radio nzValue="B"
+                                >Approval Authorities can even edit the documents before
+                                approval</label
+                              >
+                            </nz-radio-group> -->
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -189,11 +203,18 @@
                   <ng-container *ngSwitchCase="'2'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Employee</span>
-                      <nz-select nzShowSearch nzPlaceHolder="Select Employee" style="width: 250px">
+                      <nz-select
+                        style="width: 250px"
+                        [(ngModel)]="selectedEmployeeSingle"
+                        nzPlaceHolder="Select Employee"
+                        (ngModelChange)="onEmployeeChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
                         <nz-option
-                          *ngFor="let emp of employees"
-                          [nzValue]="emp.CODE"
-                          [nzLabel]="emp.NAME"
+                          *ngFor="let dep of employees"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
                         >
                         </nz-option>
                       </nz-select>
@@ -268,20 +289,31 @@
                   *ngIf="showExclusionTable"
                   class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
                 >
-                  <table class="table">
+                  <table
+                    class="table"
+                    *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                  >
                     <thead>
                       <th>Approval Sequence</th>
                       <th></th>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>1</td>
-                        <td>
-                          Ebad Khan<br />
-                          Role: Developer<br />
-                          Designation: Business Manager
-                        </td>
-                      </tr>
+                      <!-- Use keyvalue pipe to convert the object -->
+                      @for (
+                        item of approvalSequenceData | keyvalue;
+                        track item.key;
+                        let i = $index
+                      ) {
+                        <tr>
+                          <td>{{ i + 1 }}</td>
+                          <td>
+                            <!-- Access data using item.value -->
+                            {{ item.value.EmployeeName }}<br />
+                            Role: {{ item.value.UserRole }}<br />
+                            Designation: {{ item.value.Designation }}
+                          </td>
+                        </tr>
+                      }
                     </tbody>
                   </table>
                 </div>

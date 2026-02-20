@@ -22,7 +22,7 @@
                     <div>
                       <nz-select
                         style="width: 250px"
-                        [(ngModel)]="selectedAuthorityType"
+                        [(ngModel)]="selectedRequestType"
                         nzPlaceHolder="Select RequestType"
                         (ngModelChange)="onAuthorityTypeChange($event)"
                         nzAllowClear
@@ -87,67 +87,45 @@
                     </div>
                   </div>
                 </div>
+                <!--User List for training-->
                 <div class="row row-space">
-                  <ng-container [ngSwitch]="selectedUsers">
-                    <ng-container *ngSwitchCase="'1'">
-                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <div class="PnlHeading">
-                          <h3 class="PnlHeader">Users</h3>
+                  <div *ngIf="trainingContent">
+                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                      <div class="PnlHeading">
+                        <h3 class="PnlHeader">Users</h3>
+                      </div>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
+                          </div>
+                          <div>
+                            <app-document-type-list
+                              valueKey="CODE"
+                              labelKey="NAME"
+                              placeholder="Select Training Mode"
+                              [(ngModel)]="selectedTrainingMode"
+                              (valueChange)="onTrainingModeChange($event)"
+                              width="250px"
+                            >
+                            </app-document-type-list>
+                          </div>
                         </div>
-                        <br />
-                        <div class="row">
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                            <div class="PnlHeading">
-                              <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
-                            </div>
-                            <div>
-                              <app-document-type-list
-                                valueKey="CODE"
-                                labelKey="NAME"
-                                placeholder="Select Training Mode"
-                                [(ngModel)]="selectedTrainingMode"
-                                (valueChange)="onTrainingModeChange($event)"
-                                width="250px"
-                              >
-                              </app-document-type-list>
-                            </div>
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.Trainers' | safeTranslate }} </label>
                           </div>
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                            <div class="PnlHeading">
-                              <label>{{ 'labels.Trainers' | safeTranslate }} </label>
-                            </div>
-                            <div class="Divtxtemployeeschright" style="width: 250px">
-                              <div>
-                                <nz-select
-                                  style="width: 250px"
-                                  [nzPlaceHolder]="'Select Trainers'"
-                                  nzAllowClear
-                                  nzShowSearch
-                                >
-                                  <nz-option
-                                    *ngFor="let dep of trainers"
-                                    [nzValue]="dep.CODE"
-                                    [nzLabel]="dep.NAME"
-                                  >
-                                  </nz-option>
-                                </nz-select>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                            <div class="PnlHeading">
-                              <label>{{ 'labels.User' | safeTranslate }}</label>
-                            </div>
+                          <div class="Divtxtemployeeschright" style="width: 250px">
                             <div>
                               <nz-select
                                 style="width: 250px"
-                                [nzPlaceHolder]="'Select User'"
+                                [nzPlaceHolder]="'Select Trainers'"
                                 nzAllowClear
                                 nzShowSearch
                               >
                                 <nz-option
-                                  *ngFor="let dep of users"
+                                  *ngFor="let dep of trainers"
                                   [nzValue]="dep.CODE"
                                   [nzLabel]="dep.NAME"
                                 >
@@ -155,43 +133,64 @@
                               </nz-select>
                             </div>
                           </div>
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                            <button class="tab-button" tabindex="0" class="btn btn-primary">
-                              Add
-                            </button>
+                        </div>
+
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="PnlHeading">
+                            <label>{{ 'labels.User' | safeTranslate }}</label>
+                          </div>
+                          <div>
+                            <nz-select
+                              style="width: 250px"
+                              [nzPlaceHolder]="'Select User'"
+                              nzAllowClear
+                              nzShowSearch
+                            >
+                              <nz-option
+                                *ngFor="let dep of users"
+                                [nzValue]="dep.CODE"
+                                [nzLabel]="dep.NAME"
+                              >
+                              </nz-option>
+                            </nz-select>
                           </div>
                         </div>
-                      </div>
-                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <h3 class="PnlHeader">
-                          {{ 'labels.User List' | safeTranslate }}
-                        </h3>
-                        <br />
-                        <div class="col-lg-12 col-md-12 col-sm-12">
-                          <app-ag-grid-wrapper
-                            [gridStyle]="{ width: '100%', height: '250px' }"
-                            [columnDefs]="workflowAuthoritiesColumnDefs"
-                            [defaultColDef]="defaultColDef"
-                            [rowData]="workflowAuthoritiesData"
-                            [isSelectionRequired]="true"
-                            [showDisplayOption]="false"
-                            [pageSize]="pageSize"
-                            [totalRows]="totalWorkflowAuthorities"
-                            [pageSize]="selectedPageSize"
-                            gridId="userListGrid"
-                            (pageSizeChange)="onPageSizeChanged($event)"
-                            (serverQuery)="GetAllWorkflowAuthorities($event)"
-                          >
-                          </app-ag-grid-wrapper>
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <button class="tab-button" tabindex="0" class="btn btn-primary">
+                            Add
+                          </button>
                         </div>
                       </div>
-                    </ng-container>
-                  </ng-container>
+                    </div>
+                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                      <h3 class="PnlHeader">
+                        {{ 'labels.User List' | safeTranslate }}
+                      </h3>
+                      <br />
+                      <div class="col-lg-12 col-md-12 col-sm-12">
+                        <app-ag-grid-wrapper
+                          [gridStyle]="{ width: '100%', height: '250px' }"
+                          [columnDefs]="distributionListGridColumnDefs"
+                          [defaultColDef]="defaultColDef"
+                          [rowData]="workflowAuthoritiesData"
+                          [isSelectionRequired]="true"
+                          [showDisplayOption]="false"
+                          [pageSize]="pageSize"
+                          [totalRows]="totalWorkflowAuthorities"
+                          [pageSize]="selectedPageSize"
+                          gridId="userListGrid"
+                          (pageSizeChange)="onPageSizeChanged($event)"
+                          (serverQuery)="GetAllWorkflowAuthorities($event)"
+                        >
+                        </app-ag-grid-wrapper>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="row row-space">
                   <!-- Dynamic Columns -->
-                  <ng-container [ngSwitch]="selectedAuthorityType">
+                  <ng-container [ngSwitch]="selectedRequestType">
                     <!-- CASE 1: 3 Columns -->
                     <ng-container *ngSwitchCase="'1'">
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -201,15 +200,21 @@
                               <label>{{ 'labels.Request ID' | safeTranslate }} </label>
                             </div>
                             <div>
-                              <app-document-type-list
-                                valueKey="CODE"
-                                labelKey="NAME"
-                                placeholder="Select Request"
+                              <nz-select
+                                style="width: 250px"
                                 [(ngModel)]="selectedRequestId"
-                                (valueChange)="onRequestIdChange($event)"
-                                width="250px"
+                                nzPlaceHolder="Select RequestID"
+                                (ngModelChange)="onRequestIdChange($event)"
+                                nzAllowClear
+                                nzShowSearch
                               >
-                              </app-document-type-list>
+                                <nz-option
+                                  *ngFor="let dep of requestTypes"
+                                  [nzValue]="dep.CODE"
+                                  [nzLabel]="dep.NAME"
+                                >
+                                </nz-option>
+                              </nz-select>
                             </div>
                           </div>
                           <br />
@@ -219,19 +224,31 @@
                           </div>
                         </div>
                         <br />
-                        <div class="row">
-                          <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                            <span class="d-flex">Document Content</span>
-                            <app-dmsrich-text-edit
-                            [editorStyle]="{ width: '100%', height: '350px' }"
-                            [contentHtml]="templateHtml"
-                            (contentHtmlChange)="templateHtml = $event"
-                          ></app-dmsrich-text-edit>
+                        <div class="row row-space">
+                          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <app-dynamic-form-by-document-attribute
+                              *ngIf="selectedDocumentType && selectedDocumentType !== ''"
+                              [documentTypeCode]="selectedDocumentType"
+                              [attributes]="attributes"
+                              (formReady)="dynamicForm = $event"
+                            >
+                            </app-dynamic-form-by-document-attribute>
+
+                            <!-- <h3 class="PnlHeader">
+                                {{ 'labels.Document Content' | safeTranslate }}
+                              </h3>
+                              <br />
+
+                              <app-dmsrich-text-edit
+                                [editorStyle]="{ width: '100%', height: '350px' }"
+                                [contentHtml]="templateHtml"
+                                (contentHtmlChange)="templateHtml = $event"
+                              ></app-dmsrich-text-edit> -->
                           </div>
                         </div>
                       </div>
 
-                      <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                      <!-- <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <div class="PnlHeading">
                           <h3 class="PnlHeader">Document Attributes</h3>
                         </div>
@@ -256,28 +273,62 @@
                             />
                           </div>
                         </div>
-                      </div>
+                      </div> -->
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                        <h3 class="PnlHeader">
-                          {{ 'labels.Workflow Authorities' | safeTranslate }}
-                        </h3>
-                        <br />
                         <div class="col-lg-12 col-md-12 col-sm-12">
-                          <app-ag-grid-wrapper
+                          <div
+                            *ngIf="showExclusionTable"
+                            class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+                          >
+                            <h3 class="PnlHeader">
+                              {{ 'labels.Workflow Authorities' | safeTranslate }}
+                            </h3>
+                            <br />
+                            <table
+                              class="table"
+                              *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                            >
+                              <thead>
+                                <th>Approval Sequence</th>
+                                <th>Employee Code</th>
+                                <th>Employee Name</th>
+                                <th>Designation</th>
+                              </thead>
+                              <tbody>
+                                @for (
+                                  item of approvalSequenceData | keyvalue;
+                                  track item.key;
+                                  let i = $index
+                                ) {
+                                  <tr>
+                                    <td>{{ item.value.StepOrder }}</td>
+                                    <td>
+                                      {{ item.value.EmployeeCode }}
+                                    </td>
+                                    <td>
+                                      {{ item.value.EmployeeName }}
+                                    </td>
+                                    <td>
+                                      {{ item.value.Designation }}
+                                    </td>
+                                  </tr>
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                          <!-- <app-ag-grid-wrapper
                             [gridStyle]="{ width: '100%', height: '250px' }"
-                            [columnDefs]="distributionListGridColumnDefs"
+                            [columnDefs]="workflowAuthoritiesColumnDefs"
                             [defaultColDef]="defaultColDef"
-                            [rowData]="distributionListData"
+                            [rowData]="approvalSequenceData"
                             [pageSize]="pageSize"
                             [isSelectionRequired]="false"
                             [showDisplayOption]="false"
                             [totalRows]="totalDistribution"
                             [pageSize]="selectedPageSize"
                             gridId="distributionListGrid"
-                            (pageSizeChange)="onPageSizeChanged($event)"
-                            (serverQuery)="GetAllDistribution($event)"
                           >
-                          </app-ag-grid-wrapper>
+                          </app-ag-grid-wrapper> -->
                         </div>
                       </div>
                     </ng-container>
@@ -309,7 +360,7 @@
                         </div>
                       </div>
                     </ng-container>
-
+                    <!--Obsoletion of existing document-->
                     <ng-container *ngSwitchCase="'3'">
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <h3 class="PnlHeader">
@@ -319,7 +370,7 @@
                         <div class="col-lg-12 col-md-12 col-sm-12">
                           <app-ag-grid-wrapper
                             [gridStyle]="{ width: '100%', height: '250px' }"
-                            [columnDefs]="workflowAuthoritiesColumnDefs"
+                            [columnDefs]="distributionListGridColumnDefs"
                             [defaultColDef]="defaultColDef"
                             [rowData]="workflowAuthoritiesData"
                             [isSelectionRequired]="false"
@@ -339,6 +390,13 @@
                   </ng-container>
                 </div>
               </div>
+              <button
+                class="btn btn-primary"
+                (click)="submitDynamicForm()"
+                [disabled]="!dynamicForm || dynamicForm.invalid"
+              >
+                Submit
+              </button>
             </div>
           </div>
         </div>

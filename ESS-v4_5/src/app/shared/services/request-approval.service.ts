@@ -27,17 +27,17 @@ export class RequestApprovalService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllRequestApprovalsList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSRequestApproval/get-all-request-approval-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getRequestApprovalById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSRequestApproval/get-request-approval-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllRequestApprovals(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

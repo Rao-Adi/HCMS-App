@@ -37,12 +37,12 @@ export class TemplateService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getTemplateById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSTemplate/get-template-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllTemplates(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

@@ -134,6 +134,8 @@ export class DocumentsComponent {
   workflowAuthoritiesData: any[] = [];
 
   constructor(private modal: NzModalService) {}
+
+  
   ngOnInit() {
     this.loadData(this.pageSize);
   }

@@ -2,15 +2,31 @@ import { Component } from '@angular/core';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { UserService } from '@app/shared/services/user-service';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+
+export enum DocumentRequestStatus {
+  Draft = 0,
+  Submitted = 1,
+  InApproval = 2,
+  Approved = 3,
+  Rejected = 4,
+}
 
 @Component({
   selector: 'app-pending-request-for-approval',
-  imports: [AgGridWrapper],
+  imports: [CommonModule, FormsModule, AgGridWrapper, NzSelectModule],
   templateUrl: './pending-request-for-approval.html',
-  styleUrl: './pending-request-for-approval.css'
+  styleUrl: './pending-request-for-approval.css',
 })
 export class PendingRequestForApproval {
-// Store page sizes for each grid separately
+  // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
@@ -27,6 +43,22 @@ export class PendingRequestForApproval {
     editable: true,
   };
 
+  employees: any[] = [];
+  selectedEmployee?: string = '';
+  selectedStatus: number = 0;
+  documentRequestsData: any[] = [];
+
+  requestId: number = 0;
+  submittedby: number = 0;
+
+  DocumentRequestStatusOptions = [
+    { value: DocumentRequestStatus.Draft, label: 'Draft' },
+    { value: DocumentRequestStatus.Submitted, label: 'Submitted' },
+    { value: DocumentRequestStatus.InApproval, label: 'In Approval' },
+    { value: DocumentRequestStatus.Approved, label: 'Approved' },
+    { value: DocumentRequestStatus.Rejected, label: 'Rejected' },
+  ];
+
   documentColumnDefs = [
     {
       field: 'requestId',
@@ -36,32 +68,21 @@ export class PendingRequestForApproval {
     {
       field: 'division',
       headerName: 'Division',
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing', 'IT', 'Finance', 'HR'],
-      },
     },
     {
       field: 'department',
       headerName: 'Department',
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Digital Marketing', 'Software Marketing'],
-      },
     },
     {
       field: 'subdepartment',
       headerName: 'Sub-Department',
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Digital Marketing', 'Software Marketing'],
-      },
     },
     { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentTitle', headerName: 'Document Title' },
+    { field: 'documentName', headerName: 'Document Title' },
     { field: 'justification', headerName: 'Justification' },
     { field: 'createdOn', headerName: 'Created On' },
     { field: 'pendingWith', headerName: 'Pending with' },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide:true },
   ];
 
   columnToggles?: ColumnToggle[] = [
@@ -70,18 +91,20 @@ export class PendingRequestForApproval {
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'documentTitle', label: 'Document Title', visible: true },
+    { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'createdOn', label: ' Created On', visible: true },
     { field: 'pendingWith', label: 'Pending with', visible: true },
   ];
 
-  workflowAuthoritiesData: any[] = [];
-
-  constructor() {}
+  constructor(
+    private _doumentRequestService: DocumentRequestService,
+    private _notification: NotificationService,
+    private _userService: UserService,
+  ) {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
+    this.getAllUsersList();
   }
 
   GetAllDocuments(query: any) {}
@@ -90,36 +113,118 @@ export class PendingRequestForApproval {
     const { gridId, pageSize } = event;
   }
 
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
-
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
-
-    this.workflowAuthoritiesData = allData.slice(start, end);
-    this.totalRows = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
-  }
-
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      requestId: ['SOP', 'IT Policy', 'Duideline'][i % 2],
-      division: ['Marketing', 'IT', 'HR', 'Admin'][i % 2],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subdepartment: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      justification: ['test'][i % 1],
-      documentType: ['SOP', 'Procedure'][i % 2],
-      createdOn: ['13/Aug/2025', '09/Aug/2026'][i % 2],
-      pendingWith: ['Finance Controller', 'Director Ops'][i % 2],
-      documentTitle: ['Vechile Usage SOP', 'Vendor Payment Procedure'][i % 1],
-    }));
-  }
-
   approve() {}
   disapprove() {}
   revert() {}
+
+  GetAllDraftDocuments(query: any) {
+    const payload = {
+      companyId: 1,
+      initiator: this.selectedEmployee,
+      divisionCode: null,
+      departmentCode: null,
+      status: this.selectedStatus,
+    };
+    this._doumentRequestService.GetMyRequestsPendingApproval(payload).subscribe({
+      next: (response) => {
+        if (response?.Data) {
+          this.totalRows = response.Data.TotalCount;
+          this.documentRequestsData = response.Data.map((item: any) => ({
+            Id: item.id || item.Id,
+            requestId: item.RequestId || item.requestId,
+            documentType: item.DocumentType || item.documentType,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber,
+            stepId: item.StepId || item.stepId,
+            stepOrder: item.StepOrder || item.stepOrder,
+            startedAt: item.StartedAt || item.startedAt,
+            division: item.Division,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            proposedContent: item.ProposedContent,
+            department: item.Department,
+            departmentId: item.DepartmentCode,
+            subdepartment: item.SubDepartment,
+            justification: item.Justification,
+            businessdomainId: item.BusinessDomainCode,
+            pendingWith: item.CurrentAssignedUser,
+            sumbittedby: item.CreatedBy,
+            createdOn: new CustomDateFormatPipe().transform(
+              item.SubmittedAt || item.submittedAt || '',
+            ),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.createdAt || item.CreatedAt || '',
+            ),
+            previousVersionCreatedOn:
+              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+            proposedVersionNumber: item.RowVersion || item.rowVersion,
+          }));
+        } else {
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification(
+          'error',
+          'Error',
+          err?.Message || 'Failed to fetch draft documents.',
+        );
+      },
+    });
+  }
+
+  onEmployeeChange(value: string): void {
+    this.selectedEmployee = value;
+    if (value != null) {
+      this.GetAllDraftDocuments(value);
+    }
+  }
+
+  onSelectionChange(selectedRows: any): void {
+
+    this.requestId = selectedRows[0].requestId;
+    this.submittedby = selectedRows[0].sumbittedby;
+    // this.hasSelectedRows = selectedRows && selectedRows.length > 0;
+    // this.templateHtml = selectedRows[0]?.proposedContent || '';
+    // this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
+  }
+
+  onStatusChange(value: number): void {
+    this.selectedStatus = value;
+  }
+
+  getAllUsersList = () => {
+    this._userService.getUserList().subscribe((res) => {
+      if (res?.Data) {
+        this.employees = (res.Data ?? []).map((d: any) => ({
+          CODE: d.Code,
+          NAME: d.Value,
+        }));
+      } else {
+        this.employees = [];
+      }
+    });
+  };
+
+  SubmiteDocumentRequests() {
+    debugger;
+    const payLoad = {
+      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      requestId: this.requestId,
+      submittedBy: this.submittedby,
+    };
+
+    this._doumentRequestService.submitDocumentRequest(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notification.createNotification(
+            'success',
+            'User',
+            'Document submitted successfully!',
+          );
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+      },
+    });
+  }
 }

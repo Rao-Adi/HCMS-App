@@ -30,7 +30,7 @@ export class MyPendingRequestForApproval {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   documentColumnDefs = [

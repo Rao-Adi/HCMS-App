@@ -8,7 +8,7 @@ import { CreateUpdateDocument } from "./create-update-document/create-update-doc
 const routes: Routes = [
   { path: 'request', component: DocumentRequestManagement },
   { path: 'my-approvals-request', component: MyApprovalDocument },
-  { path: 'create-update', component: CreateUpdateDocument },
+  { path: 'create-update-document', component: CreateUpdateDocument },
   { path: 'my-approvals-documents', component: MyApprovalDocument },
   { path: 'sop-training', component: SOPDocumentTraining },
   { path: 'authorization-post-training', component: DocumentAuthorizationPostTraining }

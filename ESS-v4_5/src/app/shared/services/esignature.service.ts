@@ -27,17 +27,17 @@ export class ESignatureService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllESignaturesList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSESignature/get-all-esignatures-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getESignatureById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSESignature/get-esignatures-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllESignatures(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

@@ -27,17 +27,17 @@ export class ResponsibilityTransferService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllResponsibilityTransfersList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSResponsibilityTransfer/get-all-responsibility-transfer-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getResponsibilityTransferById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSResponsibilityTransfer/get-responsibility-transfer-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllResponsibilityTransfers(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

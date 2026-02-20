@@ -27,17 +27,17 @@ export class DocumentTrainingService {
     return headers;
   }
 
-  getCabietStructureTabsList(): Observable<GenericResponse<any>> {
+  getAllDocumentTrainingsList(): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentTraining/get-all-document-training-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getDocumentTrainingById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentTraining/get-document-training-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllCabietStructureTabs(
+  GetAllDocumentTrainings(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

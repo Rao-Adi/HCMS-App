@@ -40,7 +40,7 @@ export const routes: Routes = [
         path: 'documents',
         children: [
           {
-            path: 'request',
+            path: 'request-for-document-creation-update',
             loadComponent: () =>
               import(
                 '@app/features/DMS/documents/document-request-management/document-request-management'
@@ -54,7 +54,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'create-update',
+            path: 'create-update-document',
             loadComponent: () =>
               import(
                 '@app/features/DMS/documents/create-update-document/create-update-document'

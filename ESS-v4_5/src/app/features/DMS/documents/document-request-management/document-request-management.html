@@ -46,7 +46,7 @@
                           style="width: 250px"
                           [(ngModel)]="selectedDocumentRequestType"
                           nzPlaceHolder="Select RequestType"
-                          (ngModelChange)="onAuthorityTypeChange($event)"
+                          (ngModelChange)="onRequestTypeChange($event)"
                           nzAllowClear
                           nzShowSearch
                         >
@@ -116,32 +116,22 @@
                             </div>
                             <div class="mt-4">
                               <app-documents-component></app-documents-component>
-                            </div> 
+                            </div>
                           </div>
                         </div>
                       </div>
                       <!-- CASE 1: 3 Columns -->
-                      <div *ngIf="showOtherDiv">
+                      <div *ngIf="showDocumentCreationDiv">
                         <div class="row">
-                          <div *ngIf="!showDocumentDiv" class="col-sm-3 col-md-3 col-lg-3 mb-10 mt-4">
-                            <span class="d-flex">Request ID</span>
-                            <input
-                              maxlength="200"
-                              appDecimalInput
-                              name="RequestId"
-                              type="text"
-                              style="width: 250px !important"
-                              [ngClass]="{
-                                'form-control': true,
-                                'input-sm': true,
-                              }"
-                            />
-                          </div>
-                          <div *ngIf="!showDocumentDiv" class="col-sm-3 col-md-3 col-lg-3 mb-10 mt-4">
+                          <div
+                            *ngIf="!showDocumentDiv"
+                            class="col-sm-3 col-md-3 col-lg-3 mb-10 mt-4"
+                          >
                             <span class="d-flex">Document Name</span>
                             <input
                               maxlength="200"
                               appDecimalInput
+                              [(ngModel)]="documentName"
                               name="DocumentName"
                               type="text"
                               style="width: 250px !important"
@@ -183,8 +173,10 @@
                             </div>
 
                             <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                              <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
-                </app-cabinet-structure-list>
+                              <app-cabinet-structure-list
+                                (hierarchyChange)="onHierarchyChange($event)"
+                              >
+                              </app-cabinet-structure-list>
                             </div>
                           </div>
                         </div>
@@ -206,7 +198,8 @@
                           <br />
                           <div class="col-lg-12 col-md-12 col-sm-12">
                             <app-drdistribution-list
-                             [DocumentRequestType]="selectedDocumentRequestType"></app-drdistribution-list>
+                              [DocumentRequestType]="selectedDocumentRequestType"
+                            ></app-drdistribution-list>
                           </div>
                         </div>
                         <br />
@@ -217,10 +210,10 @@
                             <h3 class="PnlHeader">Document Content</h3>
                             <br />
                             <app-dmsrich-text-edit
-                            [editorStyle]="{ width: '100%', height: '350px' }"
-                            [contentHtml]="templateHtml"
-                            (contentHtmlChange)="templateHtml = $event"
-                          ></app-dmsrich-text-edit>
+                              [editorStyle]="{ width: '100%', height: '350px' }"
+                              [contentHtml]="templateHtml"
+                              (contentHtmlChange)="templateHtml = $event"
+                            ></app-dmsrich-text-edit>
                           </div>
                         </div>
                         <br />
@@ -228,9 +221,47 @@
                         <hr />
                         <div class="row mt-4">
                           <div class="col-lg-12 col-md-12 col-sm-12">
-                            <h3 class="PnlHeader">Workflow Authorities</h3>
-                            <br />
-                            <app-ag-grid-wrapper
+                            <div
+                              *ngIf="showExclusionTable"
+                              class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+                            >
+                              <h3 class="PnlHeader">
+                                {{ 'labels.Workflow Authorities' | safeTranslate }}
+                              </h3>
+                              <br />
+                              <table
+                                class="table"
+                                *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                              >
+                                <thead>
+                                  <th>Approval Sequence</th>
+                                  <th>Employee Code</th>
+                                  <th>Employee Name</th>
+                                  <th>Designation</th>
+                                </thead>
+                                <tbody>
+                                  @for (
+                                    item of approvalSequenceData | keyvalue;
+                                    track item.key;
+                                    let i = $index
+                                  ) {
+                                    <tr>
+                                      <td>{{ item.value.StepOrder }}</td>
+                                      <td>
+                                        {{ item.value.EmployeeCode }}
+                                      </td>
+                                      <td>
+                                        {{ item.value.EmployeeName }}
+                                      </td>
+                                      <td>
+                                        {{ item.value.Designation }}
+                                      </td>
+                                    </tr>
+                                  }
+                                </tbody>
+                              </table>
+                            </div>
+                            <!-- <app-ag-grid-wrapper
                               [gridStyle]="{ width: '100%', height: '250px' }"
                               [columnDefs]="workflowAuthoritiesColumnDefs"
                               [defaultColDef]="defaultColDef"
@@ -244,7 +275,7 @@
                               (pageSizeChange)="onPageSizeChanged($event)"
                               (serverQuery)="GetAllWorkflowAuthorities($event)"
                             >
-                            </app-ag-grid-wrapper>
+                            </app-ag-grid-wrapper> -->
                           </div>
                         </div>
                       </div>
@@ -257,6 +288,7 @@
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'MyRequestPendingApproval'">
+           
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <app-pending-request-for-approval> </app-pending-request-for-approval>
               </div>
@@ -265,8 +297,24 @@
         </div>
 
         <div class="row mt-4 btn-stick">
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <button class="tab-button" tabindex="0" class="btn btn-primary" (click)="SubmiteDocumentRequests()">Submit</button>
+          <div class="col-lg-12 col-md-12 col-sm-12 d-flex">
+            <button *ngIf="selectedTab === 'NewRequest'"
+              class="tab-button"
+              tabindex="0"
+              class="btn btn-primary"
+              (click)="DraftDocumentRequests()"
+            >
+              Draft
+            </button>
+
+            <!-- <button *ngIf="selectedTab === 'MyRequestPendingApproval'"
+              class="tab-button"
+              tabindex="0"
+              class="btn btn-primary"
+              (click)="SubmiteDocumentRequests()"
+            >
+              Submit
+            </button> -->
           </div>
         </div>
       </div>

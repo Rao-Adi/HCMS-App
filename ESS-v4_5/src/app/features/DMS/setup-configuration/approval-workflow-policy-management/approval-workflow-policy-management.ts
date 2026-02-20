@@ -22,6 +22,19 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
 import { DesignationService } from '@app/shared/services/designation.service';
 import { RoleService } from '@app/shared/services/role.service';
 
+export enum ApprovalPolicy {
+  ObserveOnly = 'OBSERVE_ONLY',
+  CanEdit = 'CAN_EDIT',
+  // CrossFunctional = 'CROSS_FUNCTIONAL',
+  // ParallelApproval = 'PARALLEL',
+}
+
+export enum PolicyId {
+  RequestForDocumentCreation = 1,
+  DocumentCreation = 2,
+  DocumentRevisionObsoletion = 3,
+}
+
 @Component({
   selector: 'app-approval-workflow-policy-management',
   imports: [
@@ -55,7 +68,6 @@ export class ApprovalWorkflowPolicyManagement {
 
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
-  switchValue2 = false;
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
@@ -71,8 +83,15 @@ export class ApprovalWorkflowPolicyManagement {
   selectedRole?: string[] = [];
   selectedEmployee?: string[] = [];
   radioValue = '';
- 
-  selectedEmployeeSingle: any = null; // For single select 
+
+  selectedAuthorityType: number | null = null;
+  selectedWorkflowExclude: number | null = null;
+
+  approvalPolicy: ApprovalPolicy | null = null;
+  PolicyId = PolicyId; // 👈 REQUIRED
+  selectedPolicyId: PolicyId = PolicyId.RequestForDocumentCreation;
+
+  selectedEmployeeSingle: any = null; // For single select
   selectedDesignationSingle: any = null; // For single select
   selectedRoleSingle: any = null; // For single select
   // single state
@@ -115,16 +134,7 @@ export class ApprovalWorkflowPolicyManagement {
     private _roleService: RoleService,
   ) {}
 
-  ngOnInit() {
-    this.loadData(this.pageSize);
-  }
-
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
-
-  selectedAuthorityType: number | null = null;
+  ngOnInit() {}
 
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;
@@ -144,7 +154,6 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedWorkflowExclude = 0;
   }
 
-  selectedWorkflowExclude: number | null = null;
   onWorkflowExcludeChange(value: number | null): void {
     this.selectedWorkflowExclude = value;
   }
@@ -170,63 +179,32 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedSubDepartment = '';
   }
 
-  clickSwitch(mode: 'manual' | 'integration'): void {
+  clickSwitch(): void {
     if (this.loading) return;
 
-    this.loading = true;
-
-    setTimeout(() => {
-      this.activeMode = mode;
-
-      // mutually exclusive switches
-      this.switchValue1 = mode === 'manual';
-      this.switchValue2 = mode === 'integration';
-
-      this.loading = false;
-    }, 300); // keep UX fast
-  }
-
-  async saveClaim(): Promise<void> {
-    return;
-  }
-
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
-
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
-
-    this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
-  }
-
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
+    this.switchValue1 = this.switchValue1 == true ? false : true;
   }
 
   addExclusion() {
-    this.showExclusionTable = this.showExclusionTable == true ? false : true;
     debugger;
+    this.showExclusionTable = this.showExclusionTable == true ? false : true;
+    if (!this.approvalPolicy) {
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please select an approval policy.',
+      );
+      return;
+    }
+
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID, 
-      WorkflowPolicyId: 1, // need to get this from somewhere
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      EntityType: this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+                  ? 'Request'
+                  : this.selectedPolicyId == PolicyId.DocumentCreation
+                    ? 'Document'
+                    : 'Revision',
+      StepType: 'Review', // this will be discussed and sent from frontend, for now we are hardcoding it
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -235,28 +213,35 @@ export class ApprovalWorkflowPolicyManagement {
       designationCodes: this.getDesignationCodes(),
       roles: this.getRoleCodes(),
       employeeCodes: this.getEmployeeCodes(),
+      CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
+      RequireCrossFunctionalHead: false,
+      IsParallelApproval: false,
     };
 
-    this._workflowStepService.create(payLoad).subscribe(() => {
-        this._notification.createNotification('success', 'User', 'User created successfully!');
-      });
+    this._workflowStepService.create(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this.approvalSequenceData = [...response.Data];
 
-    // this._userService.GetUserByFilters(payLoad).subscribe((res) => {
-    //   console.log('User Details:', res);
-    //   this.approvalSequenceData = res?.Data ? [res.Data] : [];
+          this._notification.createNotification('success', 'Workflow', response.Message);
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+      },
+    });
+  }
 
-    //   var workflowPayload = {
-    //     CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-    //     workflowPolicyId: 0,
-    //     sequence: 1,
-    //     approverRoleId: 0,
-    //     approverUserId: res?.Data.Id,
-    //     approvalLevel: 0,
-    //   };
-    //   this._workflowStepService.create(workflowPayload).subscribe(() => {
-    //     this._notification.createNotification('success', 'User', 'User created successfully!');
-    //   });
-    // });
+  selectTab(policyId: any) {
+    // 1. Update the selected tab
+    this.selectedPolicyId = policyId;
+
+    this.approvalSequenceData = [];
+    this.selectedDocumentType = '';
+    this.showExclusionTable = false;
+
+    // If you are using Reactive Forms, use:
+    // this.yourForm.reset();
   }
 
   private getEmployeeCodes(): string[] {
@@ -323,14 +308,39 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onDocumentTypeChange(value: string): void {
- 
-    this.selectedDocumentType = value;
-    this._workflowStepService.getWorkflowStepByDocumentTypeCode(value).subscribe((res) => {
-      console.log('User Details:', res);
-      this.showExclusionTable= true;
-      this.approvalSequenceData = res?.Data ? res.Data : [];
- 
-    });
+    if (value != null) {
+      this.selectedDocumentType = value;
+      debugger; 
+            const payLoad = {
+              companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+              EntityType: 'Request',
+              documentTypeCode: this.selectedDocumentType,
+              divisionCode: this.selectedDivisions,
+              departmentCode: this.selectedDepartment,
+              subDepartmentCode: this.selectedSubDepartment,
+              businessDomainCode: this.selectedBusinessDomain,
+            };
+      this._workflowStepService
+        .getWorkflowStepByDocumentTypeCode(payLoad)
+        .subscribe((res) => {
+          // console.log('User Details:', res);
+          this.showExclusionTable = true;
+          this.approvalSequenceData = res?.Data ? res.Data : [];
+        });
+    } else {
+      this.approvalSequenceData = [];
+      this.selectedDocumentType = '';
+      this.showExclusionTable = false;
+    }
+  }
+
+  // Function to handle the change
+  onPolicyChange(value: string, step: any) {
+    if (value === 'A') {
+      step.CanEdit = false;
+    } else if (value === 'B') {
+      step.CanEdit = true;
+    }
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
