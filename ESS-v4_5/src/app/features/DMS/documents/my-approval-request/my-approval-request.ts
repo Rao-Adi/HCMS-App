@@ -18,9 +18,10 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { ObservationModalPopup } from './observation-modal-popup/observation-modal-popup';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { fa_IR } from 'ng-zorro-antd/i18n';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { UserService } from '@app/shared/services/user-service';
+import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -74,6 +75,7 @@ export class MyApprovalRequest {
   stepId: number = 0;
   employees: any[] = [];
   selectedEmployee?: string = '';
+  observation: string = '';
 
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
@@ -134,7 +136,7 @@ export class MyApprovalRequest {
         `;
       },
       onCellClicked: (event: any) => {
-        this.openMandatoryCabinetModal(event.data);
+        this.openObservationModal(event.data);
       },
     },
     {
@@ -182,7 +184,7 @@ export class MyApprovalRequest {
         `;
       },
       onCellClicked: (event: any) => {
-        this.openMandatoryCabinetModal(event.data);
+        this.openWorkflowDeatilsModal(event.data);
       },
     },
   ];
@@ -376,7 +378,7 @@ export class MyApprovalRequest {
 
   // handleGridAction(event: { action: string; rowData: any }) {
   //   if (event.action === 'VIEW_CABINET') {
-  //     this.openMandatoryCabinetModal(event.rowData);
+  //     this.openWorkflowDeatilsModal(event.rowData);
   //   }
   // }
 
@@ -391,14 +393,15 @@ export class MyApprovalRequest {
     this.templateHtml = event.data?.proposedContent || '';
   }
 
-  openMandatoryCabinetModal(rowData: any) {
+  openWorkflowDeatilsModal(rowData: any) {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
-      nzTitle: 'Observation',
-      nzContent: ObservationModalPopup,
+      nzTitle: 'Workflow History',
+      nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        data: rowData.Id,
+        id: rowData.Id,
+        entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
@@ -409,25 +412,33 @@ export class MyApprovalRequest {
     });
   }
 
-  approve() {
+  approveDocumentRequest() {
     //alert('Approve action triggered for selected rows');
     debugger;
+    if (this.observation == '' || this.observation == null) {
+      this._notification.createNotification('error', 'Request', 'Observation is required');
+      return;
+    }
     const payLoad = {
       companyId: 1,
       stepId: this.stepId,
       userId: 1,
       action: 'APPROVE',
-      observation: 'Approved by manager',
+      observation: this.observation,
     };
 
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification('success', 'Workflow', response.Message);
+          this._notification.createNotification('success', 'Request', response.Message);
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+        this._notification.createNotification(
+          'error',
+          'Request',
+          'Failed to create workflow step.',
+        );
       },
     });
   }
@@ -448,4 +459,25 @@ export class MyApprovalRequest {
       }
     });
   };
+
+  openObservationModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: rowData.Id,
+        entityType: 'Request',
+        mode: this.selectedTab === 'Pending' ? 'input' : 'view',
+        action: 'Approver',
+      },
+      nzFooter: null,
+      nzWidth: 1000,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      if (!result) return;
+      this.observation = result.observation;
+    });
+  }
 }

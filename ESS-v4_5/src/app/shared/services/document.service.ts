@@ -32,18 +32,65 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
+  getDocumentById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocument/get-document-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetRequestIdsFinalization(companyId: string,documentTypeCode?:string): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSDocument/get-request-ids-finalization?companyId=${companyId}&documentTypeCode=${documentTypeCode}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GerFinalizedDocumentByRequestId(
+    companyId: string,
+    requestId: string,
+  ): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSDocument/get-draft-by-request/${companyId}/${requestId}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  approveDocument(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocument/approve-document`,
+      payload,
+    );
+  }
+
+  submitDocument(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocument/submit-document`,
+      payload,
+    );
+  }
+
+  rejectDocument(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocument/reject-document`,
+      payload,
+    );
+  }
+
+  revertDocument(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocument/send-back-for-rework`,
+      payload,
+    );
+  }
+
+  GetMyDocuments(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocument/get-my-document`,
+      payload,
+    );
+  }
   GetAllDocument(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -64,20 +111,20 @@ export class DocumentService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocument/create-document`,
-      payload
+      payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocument/update-document`,
-      payload
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocument/delete-document/${code}`
+      `${environment.baseUrl}/DMSDocument/delete-document/${code}`,
     );
   }
 }

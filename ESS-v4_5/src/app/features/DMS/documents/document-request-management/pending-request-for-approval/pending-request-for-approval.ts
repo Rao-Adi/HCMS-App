@@ -117,7 +117,7 @@ export class PendingRequestForApproval {
   disapprove() {}
   revert() {}
 
-  GetAllDraftDocuments(query: any) {
+  GetAllDraftDocuments() {
     const payload = {
       companyId: 1,
       initiator: this.selectedEmployee,
@@ -174,7 +174,7 @@ export class PendingRequestForApproval {
   onEmployeeChange(value: string): void {
     this.selectedEmployee = value;
     if (value != null) {
-      this.GetAllDraftDocuments(value);
+      this.GetAllDraftDocuments();
     }
   }
 
@@ -204,15 +204,14 @@ export class PendingRequestForApproval {
     });
   };
 
-  SubmiteDocumentRequests() {
-    debugger;
+  SubmiteDocumentRequests() { 
     const payLoad = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       requestId: this.requestId,
       submittedBy: this.submittedby,
     };
 
-    this._doumentRequestService.submitDocumentRequest(payLoad).subscribe({
+    this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification(
@@ -220,6 +219,7 @@ export class PendingRequestForApproval {
             'User',
             'Document submitted successfully!',
           );
+          this.GetAllDraftDocuments();
         }
       },
       error: (err) => {

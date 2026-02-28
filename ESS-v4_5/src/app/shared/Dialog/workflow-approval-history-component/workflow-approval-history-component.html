@@ -1,0 +1,43 @@
+<div class="approval-table-wrapper">
+  <table class="approval-table">
+    <thead>
+      <tr>
+        <th>Approval sequence</th>
+        <th>Employee Approval Authority</th> 
+        <th>ReceivedOn</th>
+        <th>Status updated on</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let h of workflowHistory">
+        <td>{{ h.StepOrder }}</td>
+
+        <td class="emp">
+          {{ h.EmployeeName || '—' }}
+        </td> 
+        
+        <td>
+          {{ h.ReceivedOn }}
+        </td>
+        <td>
+          {{ h.StatusUpdatedOn }}
+        </td>
+
+        <td>
+          <span
+            class="badge"
+            [ngClass]="{
+              approve: h.Decision === 'Approved',
+              reject: h.Decision === 'Rejected',
+              pending: !h.Decision,
+            }"
+          >
+            {{ h.Decision || 'Pending' }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

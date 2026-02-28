@@ -33,33 +33,50 @@ export class DocumentRequestService {
   }
 
   getDocumentRequestById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-document-request-by-id/id=${Id}`;
+    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-document-request-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getDocumentRequestDetailsById(
+  GetWorkflowObservationDetails(
     companyId: any,
     requestId: any,
+    entityType: string,
   ): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-request-details?companyId=${companyId}&requestId=${requestId}`;
+    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-document-observation-details?companyId=${companyId}&requestId=${requestId}&entityType=${entityType}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getWorkflowDeatils(
+    companyId: any,
+    requestId: any,
+    entityType: string,
+  ): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-workflow-details?companyId=${companyId}&requestId=${requestId}&entityType=${entityType}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getMyPendingDocumentRequest(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequest/get-my-pending-request`,
+      `${environment.baseUrl}/DMSDocumentRequest/get-my-pending-document-request`,
       payload,
     );
   }
 
-  getMyDraftDocumentRequest(companyId: number, userId: any): Observable<GenericResponse<any>> {
+  getMyDraftDocumentRequest(companyId: string, userId: any): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSDocumentRequest/get-my-draft-request?companyId=${companyId}&userId=${userId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   GetMyRequestsPendingApproval(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequest/get-my-request-pending-approval`,
+      `${environment.baseUrl}/DMSDocumentRequest/get-my-document-requests-for-approval`,
+      payload,
+    );
+  }
+
+  UpdateDraftDocumentRequest(payload: any) {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocumentRequest/update-draft-document-request`,
       payload,
     );
   }
@@ -87,16 +104,16 @@ export class DocumentRequestService {
     });
   }
 
-  draftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+  CreateDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequest/draft-document-request`,
+      `${environment.baseUrl}/DMSDocumentRequest/create-draft-document-request`,
       payload,
     );
   }
 
-  submitDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+  SubmitDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequest/submit-document-request`,
+      `${environment.baseUrl}/DMSDocumentRequest/submit-draft-document-request`,
       payload,
     );
   }
@@ -111,13 +128,6 @@ export class DocumentRequestService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${environment.baseUrl}/DMSDocumentRequest/create-document-request`,
-      payload,
-    );
-  }
-
-  update(payload: any) {
-    return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequest/update-document-request`,
       payload,
     );
   }

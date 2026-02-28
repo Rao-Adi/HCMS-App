@@ -1,0 +1,70 @@
+.approval-table-wrapper{
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.approval-table{
+  width:100%;
+  border-collapse: collapse;
+  font-size:13px;
+  font-family:'Segoe UI';
+}
+
+.approval-table th{
+  background:#f4f6f9;
+  text-align:left;
+  padding:10px;
+  border-bottom:2px solid #dee2e6;
+  color:#5a6a85;
+}
+
+.approval-table td{
+  padding:10px;
+  border-bottom:1px solid #edf1f5;
+}
+
+.approval-table tbody tr:hover{
+  background:#f9fbfd;
+}
+
+.emp{
+  font-weight:600;
+  color:#2b3a55;
+}
+
+.obs{
+  max-width:300px;
+  word-wrap: break-word;
+}
+
+/* Decision Badge */
+.badge{
+  padding:3px 10px;
+  border-radius:12px;
+  font-size:11px;
+  font-weight:600;
+}
+
+.badge.approve{
+  background:#e6f9f0;
+  color:#00a86b;
+}
+
+.badge.reject{
+  background:#fdecea;
+  color:#e74c3c;
+}
+
+.badge.pending{
+  background:#fff4e5;
+  color:#f39c12;
+}
+
+/* Status */
+.status{
+  font-size:11px;
+  font-weight:600;
+}
+
+.status.done{ color:#2f80ed; }
+.status.active{ color:#00a86b; }

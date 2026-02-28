@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -10,29 +10,25 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { DRDistributionList } from './drdistribution-list/drdistribution-list';
-import { DRUsersComponent } from './drusers-component/drusers-component';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { DocumentsComponent } from './documents-component/documents-component';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
 import { CompanyService } from '@app/shared/services/company.service';
-import { PendingRequestForApproval } from './pending-request-for-approval/pending-request-for-approval';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
+import { DRUsersComponent } from '../drusers-component/drusers-component';
+import { DocumentsComponent } from '../documents-component/documents-component';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { TemplateService } from '@app/shared/services/template.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { DocumentRequestForm } from './document-request-form/document-request-form';
-import { DraftRequestList } from './draft-request-list/draft-request-list';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
 
 @Component({
-  selector: 'app-document-request-management',
+  selector: 'app-document-request-form',
   imports: [
     CommonModule,
     FormsModule,
@@ -51,16 +47,13 @@ import { DraftRequestList } from './draft-request-list/draft-request-list';
     DMSRichTextEdit,
     DocumentsComponent,
     CabinetStructureList,
-    PendingRequestForApproval,
-    DocumentRequestForm,
-    DraftRequestList,
   ],
-  templateUrl: './document-request-management.html',
-  styleUrl: './document-request-management.css',
+  templateUrl: './document-request-form.html',
+  styleUrl: './document-request-form.css',
 })
-export class DocumentRequestManagement { 
-
-  selectedTab: string = 'NewRequest';
+export class DocumentRequestForm {
+  @Input() mode: 'create' | 'edit' = 'create';
+  @Input() draftData: any;
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -101,45 +94,6 @@ export class DocumentRequestManagement {
 
   distributionListPayload: any[] = [];
 
-  workflowAuthoritiesColumnDefs = [
-    { field: 'approvalSequence', headerName: 'Approval Sequence', flex: 1 },
-    { field: 'employeeCode', headerName: 'Employee Code', flex: 1 },
-    { field: 'employeeName', headerName: 'Employee Name', flex: 1 },
-    { field: 'division', headerName: 'Division', flex: 1 },
-    { field: 'department', headerName: 'Department', flex: 1 },
-    { field: 'subDepartment', headerName: 'Sub-Department', flex: 1 },
-  ];
-
-  workflowAuthoritiesData: any[] = [
-    {
-      approvalSequence: 1,
-      employeeCode: '000100442',
-      employeeName: 'Muhammad Junaid',
-      division: 'Finance Division',
-      department: 'IT',
-      subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy',
-    },
-    {
-      approvalSequence: 2,
-      employeeCode: '000100442',
-      employeeName: 'Muhammad Junaid',
-      division: 'Finance Division',
-      department: 'IT',
-      subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy',
-    },
-    {
-      approvalSequence: 3,
-      employeeCode: '000100442',
-      employeeName: 'Muhammad Junaid',
-      division: 'Finance Division',
-      department: 'IT',
-      subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy',
-    },
-  ];
-
   companies: any[] = [];
   requestTypes: any[] = [];
   approvalSequenceData: any[] = [];
@@ -153,8 +107,8 @@ export class DocumentRequestManagement {
     private modal: NzModalService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
-    private _doumentRequestService: DocumentRequestService,
     private _notification: NotificationService,
+    private _doumentRequestService: DocumentRequestService,
     private _documentTemplateService: TemplateService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
@@ -164,7 +118,7 @@ export class DocumentRequestManagement {
     this.getAllDocumentRequestTypes();
     this.getAllCompanies();
   }
- 
+
   onRequestTypeChange(value: string | null): void {
     this.selectedDocumentRequestType = value;
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
@@ -182,20 +136,8 @@ export class DocumentRequestManagement {
     }
   }
 
-  selectedWorkflowExclude: string | null = null;
-  onWorkflowExcludeChange(value: string | null): void {
-    this.selectedWorkflowExclude = value;
-  }
-
-  onDivisionChange(value: string): void {
-    this.selectedDivisions = value;
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-  }
-
-  onDepartmentsChange(value: string): void {
-    this.selectedDepartment = value;
-    this.selectedSubDepartment = '';
+  onCompanyChange(value: string | null) {
+    this.selectedCompany = value;
   }
 
   onDocumentTypeChange(value: string): void {
@@ -239,6 +181,43 @@ export class DocumentRequestManagement {
     }
   }
 
+  onDistributionChanged(list: any[]) {
+    this.distributionListPayload = list;
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
+
+  getAllCompanies = () => {
+    this._companyService.getCompanyList().subscribe((res) => {
+      if (res) {
+        this.companies = (res.Data ?? []).map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
+        }));
+      } else {
+        this.companies = [];
+      }
+    });
+  };
+
+  getAllDocumentRequestTypes = () => {
+    this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
+      if (res) {
+        this.requestTypes = (res.Data ?? []).map((d: any) => ({
+          id: d.Code,
+          text: d.Value,
+        }));
+      } else {
+        this.requestTypes = [];
+      }
+    });
+  };
+
   GetTemplate(value: string) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response) => {
@@ -254,42 +233,6 @@ export class DocumentRequestManagement {
       this.trainingContent = true;
     }
   }
-
-  onCompanyChange(value: string | null) {
-    this.selectedCompany = value;
-  }
-
-  getAllDocumentRequestTypes = () => {
-    this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
-      if (res) {
-        this.requestTypes = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Value,
-        }));
-      } else {
-        this.requestTypes = [];
-      }
-    });
-  };
-
-  getAllCompanies = () => {
-    this._companyService.getCompanyList().subscribe((res) => {
-      if (res) {
-        this.companies = (res.Data ?? []).map((d: any) => ({
-          id: d.Id,
-          text: d.Value,
-        }));
-      } else {
-        this.companies = [];
-      }
-    });
-  };
-
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
 
   DraftDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
@@ -378,10 +321,18 @@ export class DocumentRequestManagement {
 
   SubmiteDocumentRequests() {
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      requestId: this.selectedDocumentRequestType,
-      submittedBy: this.selectedDocumentType || null,
+      CompanyId: this.selectedCompany,
+      RequestId: this.selectedDocumentRequestType,
+      SubmittedBy: this.selectedDocumentType || null,
+      DistributionList: this.distributionListPayload,
+      UserIds: [],
     };
+
+    // const payLoad = {
+    //   CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    //   requestId: this.selectedDocumentRequestType,
+    //   submittedBy: this.selectedDocumentType || null,
+    // };
 
     this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
       next: (response) => {
@@ -401,75 +352,6 @@ export class DocumentRequestManagement {
     });
   }
 
-  onHierarchyChange(values: CabinetSelection[]) {
-    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
-  }
-
-  GetAllPendingDocuments(query: any) {
-    const payload = {
-      companyId: 1,
-      userId: 1,
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
-      employeeCode: this.selectedEmployee,
-    };
-    this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          if (response?.Data) {
-            this.totalRows = response.Data.TotalCount;
-            this.documentRequestsData = response.Data.map((item: any) => ({
-              Id: item.id || item.Id,
-              requestId: item.Id || item.id,
-              documentType: item.DocumentType || item.documentType,
-              proposedDocumentNumber: item.RequestNumber || item.requestNumber,
-              stepId: item.StepId || item.stepId,
-              stepOrder: item.StepOrder || item.stepOrder,
-              startedAt: item.StartedAt || item.startedAt,
-              division: item.Division,
-              documentId: item.DocumentNumber,
-              documentName: item.DocumentName,
-              proposedContent: item.ProposedContent,
-              department: item.Department,
-              departmentId: item.DepartmentCode,
-              subdepartment: item.SubDepartment,
-              justification: item.Justification,
-              businessdomainId: item.BusinessDomainCode,
-              requestCreatedBy: item.createdBy || item.CreatedBy || '',
-              dateOfCreation: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              requestCreatedOn: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              previousVersionCreatedOn:
-                item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-              proposedVersionNumber: item.RowVersion || item.rowVersion,
-            }));
-          } else {
-          }
-        }
-      },
-      error: (err) => {
-        this._notification.createNotification(
-          'error',
-          'Error',
-          err?.Message || 'Failed to fetch pending documents.',
-        );
-      },
-    });
-  }
-
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    this.GetAllPendingDocuments(value);
-  }
-
   emptyFields() {
     this.selectedRequestType = '';
     this.selectedCompany = '';
@@ -481,9 +363,5 @@ export class DocumentRequestManagement {
     this.selectedSubDepartment = '';
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
-  }
-
-  onDistributionChanged(list: any[]) {
-    this.distributionListPayload = list;
   }
 }

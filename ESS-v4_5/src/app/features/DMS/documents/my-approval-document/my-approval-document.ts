@@ -7,12 +7,22 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
+import { DocumentService } from '@app/shared/services/document.service';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { UserService } from '@app/shared/services/user-service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { ObservationModalPopup } from '../my-approval-request/observation-modal-popup/observation-modal-popup';
+import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -29,6 +39,7 @@ import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-r
     MyPendingRequestForApproval,
     DMSRichTextEdit,
     CabinetStructureList,
+    AgGridWrapper,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -42,6 +53,16 @@ export class MyApprovalDocument {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   templateHtml: string = '';
+  hasSelectedRows = false;
+  stepId: number = 0;
+  documentId: number = 0;
+  executionId: number = 0;
+  totalRows = 0;
+  employees: any[] = [];
+  selectedEmployee?: string = '';
+  observation: string = '';
+
+  documentRequestsData: any[] = [];
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -62,14 +83,52 @@ export class MyApprovalDocument {
     { CODE: '2', NAME: 'Softronic' },
   ];
 
+  columnToggles?: ColumnToggle[] = [
+    { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'observation', label: 'Observation', visible: true },
+    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'department', label: 'Department', visible: true },
+    { field: 'subdepartment', label: 'Sub-Department', visible: true },
+    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
+    { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+    { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'approvalHistory', label: 'Approval History', visible: true },
+  ];
+
   pendingDocumentsGridColumnDefs = [
+    { field: 'executionId', headerName: 'ExecutionId', hide: true },
+    {
+      field: 'observation',
+      headerName: 'Observation',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          ${params.value ? 'Observation' : 'Observation'}
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.openObservationModal(event.data);
+      },
+    },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'requestId', headerName: 'Request Id' },
     { field: 'documentName', headerName: 'Document Name' },
-    { field: 'observation', headerName: 'Observation' },
-    { field: 'justification', headerName: 'Justification' },
+    { field: 'company', headerName: 'Company' },
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
-    { field: 'proposedVerion', headerName: 'Proposed Version' },
+    { field: 'proposedVersionNumber', headerName: 'Proposed Version Number' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment ', headerName: 'Sub-Department' },
@@ -79,108 +138,38 @@ export class MyApprovalDocument {
     { field: 'requestedOn', headerName: 'Requested On' },
     { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
     { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
-    { field: 'approvalHistory', headerName: 'Approval History' },
-  ];
-  approvedDocumentsGridColumnDefs = [
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'requestId', headerName: 'Request Id' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'observation', headerName: 'Observation' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
-    { field: 'proposedVerion', headerName: 'Proposed Version' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment ', headerName: 'Sub-Department' },
-    { field: 'dateOfCreation', headerName: 'Date of Creation' },
-    { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestedBy', headerName: 'Requested By' },
-    { field: 'requestedOn', headerName: 'Requested On' },
-    { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
-    { field: 'approvalHistory', headerName: 'Approval History' },
-  ];
-  disapprovedDocumentsGridColumnDefs = [
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'requestId', headerName: 'Request Id' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'observation', headerName: 'Observation' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
-    { field: 'proposedVerion', headerName: 'Proposed Version' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment ', headerName: 'Sub-Department' },
-    { field: 'dateOfCreation', headerName: 'Date of Creation' },
-    { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestedBy', headerName: 'Requested By' },
-    { field: 'requestedOn', headerName: 'Requested On' },
-    { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
-    { field: 'approvalHistory', headerName: 'Approval History' },
-  ];
-
-  pendingDocumentData: any[] = [
     {
-      documentType: 'SOP',
-      requestId: 'REQ001',
-      documentName: 'Document 1',
-      observation: 'Observation',
-      justification: 'Training Request',
-      proposedDocumentNumber: 'DOC-SOP-QA-001',
-      proposedVerion: '1.0',
-      division: 'Marketing Division',
-      department: 'Marketing',
-      subDepartment: 'Digital Marketing',
-      dateOfCreation: '2024-06-01',
-      dateOfApproval: '2024-06-05',
-      requestedBy: 'John Doe',
-      requestedOn: '2024-06-01',
-      previsousversionCreatedBy: 'Jane Smith',
-    },
-    {
-      documentType: 'Policy',
-      requestId: 'REQ002',
-      documentName: 'Document 2',
-      observation: 'Observation 2',
-      justification: 'New Policy',
-      proposedDocumentNumber: 'DOC-POL-HR-002',
-      proposedVerion: '1.0',
-      division: 'HR Division',
-      department: 'HR',
-      subDepartment: 'Employee Relations',
-      dateOfCreation: '2024-06-02',
-      dateOfApproval: '2024-06-06',
-      requestedBy: 'Alice Johnson',
-      requestedOn: '2024-06-02',
-      previsousVersionCreatedBy: 'Bob Brown',
-      previsousVersionCreatedOn: '2024-05-15',
-      approvalHistory: 'Approved by Manager on 2024-06-06',
-    },
-    {
-      documentType: 'Manual',
-      requestId: 'REQ003',
-      documentName: 'Document 3',
-      observation: 'Observation 3',
-      justification: 'Update Manual',
-      proposedDocumentNumber: 'DOC-MAN-IT-003',
-      proposedVerion: '2.0',
-      division: 'Software Division',
-      department: 'IT',
-      subDepartment: 'Software Marketing',
-      dateOfCreation: '2024-06-03',
-      dateOfApproval: '2024-06-07',
-      requestedBy: 'Charlie Davis',
-      requestedOn: '2024-06-03',
-      previsousVersionCreatedBy: 'Diana Evans',
-      previsousVersionCreatedOn: '2024-05-20',
-      approvalHistory: 'Approved by Manager on 2024-06-07',
+      field: 'approvalHistory',
+      headerName: 'Approval History',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          ${params.value ? 'View' : 'View'}
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.openWorkflowDeatilsModal(event.data);
+      },
     },
   ];
 
-  constructor() {}
+  pendingDocumentData: any[] = [];
 
-  ngOnInit() {}
+  constructor(
+    private modal: NzModalService,
+    private _documentService: DocumentService,
+    private _notification: NotificationService,
+    private _userService: UserService,
+  ) {}
+
+  ngOnInit() {
+    this.getAllUsersList();
+  }
 
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
@@ -196,7 +185,164 @@ export class MyApprovalDocument {
     this.selectedDocumentType = value;
   }
 
-  GetAllPendingDocuments(query: any) {}
+  GetAllPendingDocuments(query: any) {
+    const payLoad = {
+      companyId: 1,
+      userId: 1,
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      documentTypeCode: this.selectedDocumentType,
+      employeeCode: this.selectedEmployee,
+      RequestStatus: this.selectedTab =='Disapproved'? 'Rejected': this.selectedTab,
+    };
+
+    this._documentService.GetMyDocuments(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this.totalRows = response.Data.TotalCount;
+          this.documentRequestsData = response.Data.map((item: any) => {
+            // Helper to get value with case-insensitive fallback
+            const get = (keys: string[], defaultValue: any = ''): any => {
+              for (const key of keys) {
+                if (item[key] !== undefined && item[key] !== null) return item[key];
+                const lower = key.toLowerCase();
+                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+              }
+              return defaultValue;
+            };
+
+            const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
+            const startedAtRaw = get(['StartedAt', 'startedAt']);
+
+            return {
+              // ──────────────────────────────────────────────
+              // Identification & Request
+              // ──────────────────────────────────────────────
+              ExecutionId: get(['ExecutionId', 'executionId']),
+              Id: get(['Id', 'id']),
+              requestId: get(['Id', 'id']), // often same as Id
+              stepId: get(['StepId', 'stepId']),
+              stepOrder: get(['StepOrder', 'stepOrder']),
+              ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
+
+              // ──────────────────────────────────────────────
+              // Document metadata
+              // ──────────────────────────────────────────────
+              documentType: get(['DocumentType', 'documentType']),
+              documentName: get(['Title', 'title']),
+              company: get(['Company', 'company'], ''),
+              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
+
+              // ──────────────────────────────────────────────
+              // Organizational context
+              // ──────────────────────────────────────────────
+              division: get(['Division']),
+              department: get(['Department']),
+              departmentId: get(['DepartmentCode', 'departmentCode']),
+              // subdepartment: get(['SubDepartment', 'subDepartment']),
+              subdepartmentId: get(['SubDepartment', 'subDepartment']),
+              businessdomain: get(['BusinessDomain', 'businessDomain']),
+              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
+              // ──────────────────────────────────────────────
+              // Content / Justification
+              // ──────────────────────────────────────────────
+
+              proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+
+              // ──────────────────────────────────────────────
+              // Audit / History fields
+              // ──────────────────────────────────────────────
+              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
+              requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
+              startedAt: this.formatDate(startedAtRaw),
+
+              // Previous version info (only if present in real payloads)
+              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              previousVersionCreatedOn: this.formatDate(
+                get(['RequestCreatedAt', 'requestCreatedAt']),
+              ),
+
+              // ──────────────────────────────────────────────
+              // Placeholder / missing fields from your original
+              // (add real data source when available)
+              // ──────────────────────────────────────────────
+              observation: '', // ← not in sample → populate when available
+              requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
+              dateOfApproval: '', // ← not present
+              approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
+            };
+          });
+          // this.documentRequestsData = response.Data.map((item: any) => ({
+          //   observation : item.observation,
+          //   Id: item.id || item.Id,
+          //   requestId: item.Id || item.id,
+          //   documentType: item.DocumentType || item.documentType,
+          //   proposedDocumentNumber: item.DocumentNumber || item.documentNumber,
+          //   stepId: item.StepId || item.stepId,
+          //   stepOrder: item.StepOrder || item.stepOrder,
+          //   startedAt: item.StartedAt || item.startedAt,
+          //   division: item.Division,
+          //   documentId: item.DocumentNumber,
+          //   documentName: item.Title,
+          //   proposedContent: item.ProposedContent,
+          //   department: item.Department,
+          //   departmentId: item.DepartmentCode,
+          //   subdepartment: item.SubDepartment,
+          //   subdepartmentId :item.SubDepartmentCode,
+          //   justification: item.Justification,
+          //   businessdomainId: item.BusinessDomainCode,
+          //   requestCreatedBy: item.createdBy || item.CreatedBy || '',
+          //   dateOfCreation: new CustomDateFormatPipe().transform(
+          //     item.createdAt || item.CreatedAt || '',
+          //   ),
+          //   requestCreatedOn: new CustomDateFormatPipe().transform(
+          //     item.createdAt || item.CreatedAt || '',
+          //   ),
+          //   previousVersionCreatedOn:
+          //     item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+          //   proposedVersionNumber: item.RowVersion || item.rowVersion,
+          // }));
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+      },
+    });
+  }
+
+  // Option 1: Simple custom method (no pipe dependency)
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '';
+
+    // Input example: "02/21/2026 11:04:01"
+    try {
+      const [datePart, timePart = ''] = value.split(' ');
+      const [month, day, year] = datePart.split('/');
+      if (!year || !month || !day) return value;
+
+      // Desired format example: 21-02-2026 11:04:01
+      return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year} ${timePart.trim()}`.trim();
+    } catch {
+      return value; // fallback — show original if parsing fails
+    }
+  }
+
+  onCellClicked(event: any): void {
+    this.templateHtml = event.data?.proposedContent || '';
+  }
+
+  onSelectionChange(selectedRows: any): void {
+    this.hasSelectedRows = selectedRows && selectedRows.length > 0;
+    this.templateHtml = selectedRows[0]?.proposedContent || '';
+    this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
+    this.documentId = selectedRows[0]?.Id || 0;
+    this.executionId = selectedRows[0]?.ExecutionId || 0;
+  }
+
   GetAllApprovedDocuments(query: any) {}
   GetAllDisApprovedDocuments(query: any) {}
 
@@ -248,5 +394,177 @@ export class MyApprovalDocument {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
+
+  onEmployeeChange(value: string): void {
+    this.selectedEmployee = value;
+    this.emptyAllFileds();
+    if (value != null) {
+      this.GetAllPendingDocuments(value);
+    }
+  }
+
+  async onTabChange(status: string) {
+    this.selectedTab = status;
+    await this.GetAllPendingDocuments('');
+    this.emptyAllFileds();
+  }
+
+  emptyAllFileds() {
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.templateHtml = '';
+  }
+
+  approveDocument() {
+    //alert('Approve action triggered for selected rows');
+    debugger;
+    if (this.observation == '' || this.observation == null) {
+      this._notification.createNotification('error', 'Error', 'Observation is required');
+      return;
+    }
+    const payLoad = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      documentid: this.documentId,
+      userId: 1,
+      executionid: this.executionId,
+      action: 'APPROVE',
+      observation: this.observation,
+      employeeCode: this.selectedEmployee,
+    };
+
+    this._documentService.approveDocument(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notification.createNotification('success', 'Workflow', response.Message);
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification(
+          'error',
+          'Document Approve',
+          'Failed to create workflow step.',
+        );
+      },
+    });
+  }
+
+  disapprove() {
+    debugger;
+    if (this.observation == '' || this.observation == null) {
+      this._notification.createNotification('error', 'Error', 'Observation is required');
+      return;
+    }
+    const payLoad = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      documentid: this.documentId,
+      userId: 1,
+      executionid: this.executionId,
+      action: 'Rejected',
+      observation: this.observation,
+      employeeCode: this.selectedEmployee,
+    };
+
+    this._documentService.rejectDocument(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notification.createNotification('success', 'Workflow', response.Message);
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification(
+          'error',
+          'Document Rejected',
+          'Failed to create workflow step.',
+        );
+      },
+    });
+  }
+
+  revert() {
+    debugger;
+    if (this.observation == '' || this.observation == null) {
+      this._notification.createNotification('error', 'Error', 'Observation is required');
+      return;
+    }
+    const payLoad = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      documentid: this.documentId,
+      userId: 1,
+      executionid: this.executionId,
+      action: 'Rework',
+      observation: this.observation,
+      employeeCode: this.selectedEmployee,
+    };
+
+    this._documentService.revertDocument(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notification.createNotification('success', 'Workflow', response.Message);
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification(
+          'error',
+          'Document Rework',
+          'Failed to create workflow step.',
+        );
+      },
+    });
+  }
+  export() {}
+
+  getAllUsersList = () => {
+    this._userService.getUserList().subscribe((res) => {
+      if (res?.Data) {
+        this.employees = (res.Data ?? []).map((d: any) => ({
+          CODE: d.Code,
+          NAME: d.Value,
+        }));
+      } else {
+        this.employees = [];
+      }
+    });
+  };
+
+  openObservationModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: rowData.Id,
+        entityType: 'Document',
+        mode: this.selectedTab === 'Pending' ? 'input' : 'view',
+        action: 'Approver',
+      },
+      nzFooter: null,
+      nzWidth: 1000,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      if (!result) return;
+      this.observation = result.observation;
+    });
+  }
+
+  openWorkflowDeatilsModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Workflow History',
+      nzContent: WorkflowApprovalHistoryComponent,
+      nzData: {
+        id: rowData.Id,
+        entityType: 'Document',
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
+    });
   }
 }

@@ -199,11 +199,12 @@ export class ApprovalWorkflowPolicyManagement {
 
     const payLoad = {
       companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      EntityType: this.selectedPolicyId == PolicyId.RequestForDocumentCreation
-                  ? 'Request'
-                  : this.selectedPolicyId == PolicyId.DocumentCreation
-                    ? 'Document'
-                    : 'Revision',
+      EntityType:
+        this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+          ? 'Request'
+          : this.selectedPolicyId == PolicyId.DocumentCreation
+            ? 'Document'
+            : 'Revision',
       StepType: 'Review', // this will be discussed and sent from frontend, for now we are hardcoding it
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
@@ -221,6 +222,7 @@ export class ApprovalWorkflowPolicyManagement {
     this._workflowStepService.create(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
+          this.showExclusionTable = true;
           this.approvalSequenceData = [...response.Data];
 
           this._notification.createNotification('success', 'Workflow', response.Message);
@@ -310,23 +312,26 @@ export class ApprovalWorkflowPolicyManagement {
   onDocumentTypeChange(value: string): void {
     if (value != null) {
       this.selectedDocumentType = value;
-      debugger; 
-            const payLoad = {
-              companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-              EntityType: 'Request',
-              documentTypeCode: this.selectedDocumentType,
-              divisionCode: this.selectedDivisions,
-              departmentCode: this.selectedDepartment,
-              subDepartmentCode: this.selectedSubDepartment,
-              businessDomainCode: this.selectedBusinessDomain,
-            };
-      this._workflowStepService
-        .getWorkflowStepByDocumentTypeCode(payLoad)
-        .subscribe((res) => {
-          // console.log('User Details:', res);
-          this.showExclusionTable = true;
-          this.approvalSequenceData = res?.Data ? res.Data : [];
-        });
+
+      const payLoad = {
+        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+        EntityType:
+          this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+            ? 'Request'
+            : this.selectedPolicyId == PolicyId.DocumentCreation
+              ? 'Document'
+              : 'Revision',
+        documentTypeCode: this.selectedDocumentType,
+        divisionCode: this.selectedDivisions,
+        departmentCode: this.selectedDepartment,
+        subDepartmentCode: this.selectedSubDepartment,
+        businessDomainCode: this.selectedBusinessDomain,
+      };
+      this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+        // console.log('User Details:', res);
+        this.showExclusionTable = true;
+        this.approvalSequenceData = res?.Data ? res.Data : [];
+      });
     } else {
       this.approvalSequenceData = [];
       this.selectedDocumentType = '';

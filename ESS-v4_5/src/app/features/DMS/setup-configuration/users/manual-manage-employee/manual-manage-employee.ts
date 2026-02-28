@@ -342,7 +342,7 @@ export class ManualManageEmployee {
             grade: item.grade || item.Grade,
             reportingTo: item.reportingTo || item.ReportingTo,
             dateOfJoining: new CustomDateFormatPipe().transform(
-              item.dateOfJoining || item.DateOfJoining,
+              item.dateOfJoining || item.DateOfJoining || '',
             ),
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
@@ -641,16 +641,16 @@ export class ManualManageEmployee {
     });
   }
 
-  openMandatoryCabinetModal(rowData: any) { 
+  openMandatoryCabinetModal(rowData: any) {
     const modalRef = this.modal.create({
       nzTitle: 'Access Level to ' + (rowData.employeeName || rowData.EmployeeName),
       nzContent: AccessLevelModalDialog,
       nzData: {
-        employeeCode: rowData.employeeCode || rowData.EmployeeCode
+        employeeCode: rowData.employeeCode || rowData.EmployeeCode,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
-    }); 
+    });
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);

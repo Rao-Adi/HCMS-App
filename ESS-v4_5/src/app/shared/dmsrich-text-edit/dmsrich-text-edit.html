@@ -10,12 +10,21 @@
 
 <div class="row mt-2">
   <div class="col-lg-12 col-md-12 col-sm-12">
-    <form [formGroup]="form">
+    <!-- <form [formGroup]="form">
       <div class="editor" [ngStyle]="editorStyle">
         <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"> </ngx-editor-menu>
-        <ngx-editor [editor]="editor" formControlName="editorContent"> </ngx-editor>
+        <ngx-editor [editor]="editor" formControlName="editorContent" [disabled]="IsReadyOnly"> </ngx-editor>
       </div>
-    </form>
+    </form> -->
+
+    <quill-editor
+      #editor
+      format="html"
+      [ngStyle]="editorStyle"
+      (onEditorCreated)="editorCreated($event)"
+      (onContentChanged)="changeContent($event)"
+    >
+    </quill-editor>
   </div>
 </div>
 

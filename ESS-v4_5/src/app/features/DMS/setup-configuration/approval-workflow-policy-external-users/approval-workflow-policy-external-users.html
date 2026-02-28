@@ -22,7 +22,7 @@
               <div class="row">
                 <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
                   </div>
                   <div>
                     <app-document-type-list
@@ -84,12 +84,12 @@
                 <!-- Authority Type -->
                 <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.AuthorityType*' | safeTranslate }}</label>
+                    <label>{{ 'labels.Authority Type*' | safeTranslate }}</label>
                   </div>
                   <nz-select
                     style="width: 250px"
                     [(ngModel)]="selectedAuthorityType"
-                    nzPlaceHolder="Select AuthorityType"
+                    nzPlaceHolder="Select Authority Type"
                     (ngModelChange)="onAuthorityTypeChange($event)"
                     nzAllowClear
                     nzShowSearch

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -28,6 +28,9 @@ import { NzModalService } from 'ng-zorro-antd/modal';
   styleUrl: './drusers-component.css',
 })
 export class DRUsersComponent {
+  @Input() selectedUsers: any[] = [];
+  @Output() usersChanged = new EventEmitter<any[]>();
+
   gridConfig: GridConfig = {} as GridConfig;
 
   manualUserData: any[] = [];
@@ -104,6 +107,30 @@ export class DRUsersComponent {
     //this.loadSampleData();
   }
 
+  ngOnInit() {
+    if (this.selectedUsers) {
+      this.users = [...this.selectedUsers];
+    }
+
+    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      this.cabinetHierarchy = levels;
+
+      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    });
+
+    // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    this.getAllDocumentTypes();
+    // this.getAllDivisionList();
+    // this.getAllDepartmentList();
+    // this.getAllSubDepartmentList();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['selectedUsers']) {
+      this.users = [...this.selectedUsers];
+    }
+  }
+
   private getRemainingColumns(): GridColumn[] {
     return [
       {
@@ -146,20 +173,6 @@ export class DRUsersComponent {
       ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
       ...this.getRemainingColumns(),
     ];
-  }
-
-  ngOnInit() {
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
-
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
-
-    // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
-    this.getAllDocumentTypes();
-    // this.getAllDivisionList();
-    // this.getAllDepartmentList();
-    // this.getAllSubDepartmentList();
   }
 
   // private buildGrid(): void {

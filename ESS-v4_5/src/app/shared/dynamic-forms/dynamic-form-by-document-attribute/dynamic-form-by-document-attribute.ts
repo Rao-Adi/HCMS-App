@@ -38,6 +38,7 @@ import { TemplateService } from '@app/shared/services/template.service';
 })
 export class DynamicFormByDocumentAttribute {
   @Input() attributes!: DocumentAttribute[];
+  @Input() documentContentHTML: string ='';
   @Input() documentTypeCode?: string = '';
   @Output() formReady = new EventEmitter<FormGroup>();
 

@@ -86,7 +86,7 @@ export class ObservationModalPopup {
       requestId: this.modalData.data,
     };
     this._doumentRequestService
-      .getDocumentRequestDetailsById(payload.companyId, payload.requestId)
+      .GetWorkflowObservationDetails(payload.companyId, payload.requestId,'')
       .subscribe({
         next: (response) => { 
           if (response  && response.Data) {

@@ -37,13 +37,13 @@
 
             <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
               <div class="PnlHeading">
-                <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                <label>{{ 'labels.Document Type' | safeTranslate }} </label>
               </div>
               <div>
                 <app-document-type-list
                   valueKey="CODE"
                   labelKey="NAME"
-                  placeholder="Select DocumentType"
+                  placeholder="Select Document Type"
                   [(ngModel)]="selectedDocumentType"
                   (valueChange)="onDocumentTypeChange($event)"
                   width="250px"
@@ -114,7 +114,7 @@
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
                             title="Approve"
-                            (click)="approve()"
+                            (click)="approveDocumentRequest()"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-check2-square"></i>

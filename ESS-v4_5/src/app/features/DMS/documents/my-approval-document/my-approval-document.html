@@ -4,13 +4,26 @@
       <div class="card-custom">
         <div class="clearfix">
           <div class="pull-left">
-            <h3 class="mt-0">Create or Update Document</h3>
-            <small class="text-muted">Create or Update Document</small>
+            <h3 class="mt-0">My Approvals – Documents</h3>
+            <small class="text-muted">My Approvals – Documents</small>
           </div>
         </div>
         <br />
         <hr />
-
+        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+          <span class="d-flex">Employee</span>
+          <nz-select
+            style="width: 250px"
+            [(ngModel)]="selectedEmployee"
+            nzPlaceHolder="Select Employee"
+            (ngModelChange)="onEmployeeChange($event)"
+            nzAllowClear
+            nzShowSearch
+          >
+            <nz-option *ngFor="let dep of employees" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
+            </nz-option>
+          </nz-select>
+        </div>
         <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
           <h3 class="PnlHeader">
             {{ 'labels.Filters' | safeTranslate }}
@@ -76,13 +89,13 @@
             </div>
             <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
               <div class="PnlHeading">
-                <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                <label>{{ 'labels.Document Type' | safeTranslate }} </label>
               </div>
               <div>
                 <app-document-type-list
                   valueKey="CODE"
                   labelKey="NAME"
-                  placeholder="Select DocumentType"
+                  placeholder="Select Document Type"
                   [(ngModel)]="selectedDocumentType"
                   (valueChange)="onDocumentTypeChange($event)"
                   width="250px"
@@ -101,7 +114,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
-                (click)="selectedTab = 'Pending'"
+                 (click)="onTabChange('Pending')"
               >
                 Pending
               </button>
@@ -109,7 +122,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
-                (click)="selectedTab = 'Approved'"
+                 (click)="onTabChange('Approved')"
               >
                 Approved
               </button>
@@ -118,7 +131,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
-                (click)="selectedTab = 'Disapproved'"
+                 (click)="onTabChange('Disapproved')"
               >
                 Disapproved
               </button>
@@ -131,21 +144,67 @@
                   <br />
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                      <!-- <app-ag-grid-wrapper
-                        [gridStyle]="{ width: '100%', height: '250px' }"
-                        [columnDefs]="pendingDocumentData"
-                        [defaultColDef]="defaultColDef"
-                        [rowData]="pendingDocumentsGridColumnDefs"
-                        [isSelectionRequired]="false"
-                        [showDisplayOption]="false"
-                        [pageSize]="selectedPageSize"
-                        gridId="pendingGrid"
-                        (pageSizeChange)="onPageSizeChanged($event)"
-                        [totalRows]="totalPendingDocuments"
-                        (serverQuery)="GetAllPendingDocuments($event)"
-                      >
-                      </app-ag-grid-wrapper> -->
+                      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <app-ag-grid-wrapper
+                          [gridStyle]="{ width: '100%', height: '450px' }"
+                          [columnToggles]="columnToggles"
+                          [columnDefs]="pendingDocumentsGridColumnDefs"
+                          [defaultColDef]="defaultColDef"
+                          [isSelectionRequired]="true"
+                          [showDisplayOption]="true"
+                          [rowData]="documentRequestsData"
+                          [pageSize]="pageSize"
+                          [totalRows]="totalRows"
+                          [pageSize]="selectedPageSize"
+                          gridId="documentGrid"
+                          (pageSizeChange)="onPageSizeChanged($event)"
+                          (selectionChange)="onSelectionChange($event)"
+                          (serverQuery)="GetAllPendingDocuments($event)"
+                          (cellClicked)="onCellClicked($event)"
+                        >
+                          <div grid-actions class="grid-action-icons">
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Approve"
+                              (click)="approveDocument()"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-check2-square"></i>
+                            </button>
+
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Disapprove"
+                              (click)="disapprove()"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-x-square"></i>
+                            </button>
+
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Revert"
+                              (click)="revert()"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-reply"></i>
+                            </button>
+
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Export"
+                              (click)="export()"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-filetype-xls"></i>
+                            </button>
+                          </div>
+                        </app-ag-grid-wrapper>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -157,21 +216,24 @@
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
                   <br />
-                  <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                  <!-- <app-ag-grid-wrapper
-                    [gridStyle]="{ width: '100%', height: '250px' }"
-                    [columnDefs]="approvedDocumentsGridColumnDefs"
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '450px' }"
+                    [columnToggles]="columnToggles"
+                    [columnDefs]="pendingDocumentsGridColumnDefs"
                     [defaultColDef]="defaultColDef"
-                    [rowData]="pendingDocumentData"
                     [isSelectionRequired]="false"
-                    [showDisplayOption]="false"
+                    [showDisplayOption]="true"
+                    [rowData]="documentRequestsData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalRows"
                     [pageSize]="selectedPageSize"
-                    gridId="approvedGrid"
+                    gridId="documentGrid"
                     (pageSizeChange)="onPageSizeChanged($event)"
-                    [totalRows]="totalApprovedDocuments"
-                    (serverQuery)="GetAllApprovedDocuments($event)"
+                    (selectionChange)="onSelectionChange($event)"
+                    (serverQuery)="GetAllPendingDocuments($event)"
+                    (cellClicked)="onCellClicked($event)"
                   >
-                  </app-ag-grid-wrapper> -->
+                  </app-ag-grid-wrapper>
                 </div>
               </div>
             </div>
@@ -181,21 +243,24 @@
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
                   <br />
-                  <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                  <!-- <app-ag-grid-wrapper
-                    [gridStyle]="{ width: '100%', height: '250px' }"
-                    [columnDefs]="disapprovedDocumentsGridColumnDefs"
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '450px' }"
+                    [columnToggles]="columnToggles"
+                    [columnDefs]="pendingDocumentsGridColumnDefs"
                     [defaultColDef]="defaultColDef"
-                    [rowData]="pendingDocumentData"
                     [isSelectionRequired]="false"
-                    [showDisplayOption]="false"
+                    [showDisplayOption]="true"
+                    [rowData]="documentRequestsData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalRows"
                     [pageSize]="selectedPageSize"
-                    gridId="disapprovedGrid"
+                    gridId="documentGrid"
                     (pageSizeChange)="onPageSizeChanged($event)"
-                    [totalRows]="totalDisApprovedDocuments"
-                    (serverQuery)="GetAllDisApprovedDocuments($event)"
+                    (selectionChange)="onSelectionChange($event)"
+                    (serverQuery)="GetAllPendingDocuments($event)"
+                    (cellClicked)="onCellClicked($event)"
                   >
-                  </app-ag-grid-wrapper> -->
+                  </app-ag-grid-wrapper>
                 </div>
               </div>
             </div>

@@ -15,37 +15,37 @@
             <div class="row row-space">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="row">
-                  <div class="col-lg-3 col-md-3 col-sm-3 mb-10">
+                  <div class="col-lg-2 col-md-2 col-sm-2 mb-10">
                     <div class="PnlHeading">
-                      <label>{{ 'labels.ActivityType' | safeTranslate }} </label>
+                      <label>{{ 'labels.Activity Type' | safeTranslate }} </label>
                     </div>
                     <div>
                       <nz-select
                         style="width: 250px"
                         [(ngModel)]="selectedRequestType"
-                        nzPlaceHolder="Select RequestType"
-                        (ngModelChange)="onAuthorityTypeChange($event)"
+                        nzPlaceHolder="Select Request Type"
+                        (ngModelChange)="onRequestTypeChange($event)"
                         nzAllowClear
                         nzShowSearch
                       >
                         <nz-option
                           *ngFor="let dep of requestTypes"
-                          [nzValue]="dep.CODE"
-                          [nzLabel]="dep.NAME"
+                          [nzValue]="dep.id"
+                          [nzLabel]="dep.text"
                         >
                         </nz-option>
                       </nz-select>
                     </div>
                   </div>
-                  <div class="col-lg-2col-md-2 col-sm-6 mb-10">
+                  <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
                     <div class="PnlHeading">
-                      <label>{{ 'labels.DocumentType' | safeTranslate }} </label>
+                      <label>{{ 'labels.Document Type' | safeTranslate }} </label>
                     </div>
                     <div>
                       <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
-                        placeholder="Select DocumentType"
+                        placeholder="Select Document Type"
                         [(ngModel)]="selectedDocumentType"
                         (valueChange)="onDocumentTypeChange($event)"
                         width="250px"
@@ -63,14 +63,17 @@
                     <br />
                     <div class="row">
                       <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                        <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                        <app-cabinet-structure-list
+                          [hierarchy]="cabinetHierarchy"
+                          (hierarchyChange)="onHierarchyChange($event)"
+                        >
                         </app-cabinet-structure-list>
                       </div>
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
                           <label>{{ 'labels.Company' | safeTranslate }} </label>
                         </div>
-                        <div class="Divtxtemployeeschright" style="width: 250px">
+                        <div style="width: 250px">
                           <div>
                             <app-company-list
                               valueKey="CODE"
@@ -92,7 +95,7 @@
                   <div *ngIf="trainingContent">
                     <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                       <div class="PnlHeading">
-                        <h3 class="PnlHeader">Users</h3>
+                        <h3 class="PnlHeader">Trainers</h3>
                       </div>
                       <br />
                       <div class="row">
@@ -155,35 +158,48 @@
                             </nz-select>
                           </div>
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                          <button class="tab-button" tabindex="0" class="btn btn-primary">
-                            Add
+                        <div class="col-lg-1 col-md-1 col-sm-1 mt-4">
+                          <button
+                            class="grid-icon-btn"
+                            title="Approve"
+                            (click)="AddTrainingUsers()"
+                          >
+                            <i class="bi bi-plus-circle"></i>
                           </button>
                         </div>
                       </div>
                     </div>
-                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <h3 class="PnlHeader">
-                        {{ 'labels.User List' | safeTranslate }}
-                      </h3>
-                      <br />
-                      <div class="col-lg-12 col-md-12 col-sm-12">
-                        <app-ag-grid-wrapper
-                          [gridStyle]="{ width: '100%', height: '250px' }"
-                          [columnDefs]="distributionListGridColumnDefs"
-                          [defaultColDef]="defaultColDef"
-                          [rowData]="workflowAuthoritiesData"
-                          [isSelectionRequired]="true"
-                          [showDisplayOption]="false"
-                          [pageSize]="pageSize"
-                          [totalRows]="totalWorkflowAuthorities"
-                          [pageSize]="selectedPageSize"
-                          gridId="userListGrid"
-                          (pageSizeChange)="onPageSizeChanged($event)"
-                          (serverQuery)="GetAllWorkflowAuthorities($event)"
-                        >
-                        </app-ag-grid-wrapper>
-                      </div>
+                    <div
+                      *ngIf="showTrainingUserTable"
+                      class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+                    >
+                      <table
+                        class="table"
+                        *ngIf="trainingUsersData && trainingUsersData.length > 0"
+                      >
+                        <thead>
+                          <th>Approval Sequence</th>
+                          <th></th>
+                        </thead>
+                        <tbody>
+                          <!-- Use keyvalue pipe to convert the object -->
+                          @for (
+                            item of trainingUsersData | keyvalue;
+                            track item.key;
+                            let i = $index
+                          ) {
+                            <tr>
+                              <td>{{ i + 1 }}</td>
+                              <td>
+                                <!-- Access data using item.value -->
+                                {{ item.value.EmployeeName }}<br />
+                                Role: {{ item.value.UserRole }}<br />
+                                Designation: {{ item.value.Designation }}
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -192,7 +208,7 @@
                   <!-- Dynamic Columns -->
                   <ng-container [ngSwitch]="selectedRequestType">
                     <!-- CASE 1: 3 Columns -->
-                    <ng-container *ngSwitchCase="'1'">
+                    <ng-container *ngSwitchCase="'DRT-0001'">
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <div class="row mb-10">
                           <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
@@ -203,15 +219,15 @@
                               <nz-select
                                 style="width: 250px"
                                 [(ngModel)]="selectedRequestId"
-                                nzPlaceHolder="Select RequestID"
+                                nzPlaceHolder="Select Request ID"
                                 (ngModelChange)="onRequestIdChange($event)"
                                 nzAllowClear
                                 nzShowSearch
                               >
                                 <nz-option
-                                  *ngFor="let dep of requestTypes"
-                                  [nzValue]="dep.CODE"
-                                  [nzLabel]="dep.NAME"
+                                  *ngFor="let dep of requestIds"
+                                  [nzValue]="dep.id"
+                                  [nzLabel]="dep.text"
                                 >
                                 </nz-option>
                               </nz-select>
@@ -227,23 +243,23 @@
                         <div class="row row-space">
                           <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                             <app-dynamic-form-by-document-attribute
-                              *ngIf="selectedDocumentType && selectedDocumentType !== ''"
                               [documentTypeCode]="selectedDocumentType"
+                              [documentContentHTML]="templateHtml"
                               [attributes]="attributes"
                               (formReady)="dynamicForm = $event"
                             >
                             </app-dynamic-form-by-document-attribute>
 
-                            <!-- <h3 class="PnlHeader">
-                                {{ 'labels.Document Content' | safeTranslate }}
-                              </h3>
-                              <br />
+                            <h3 class="PnlHeader">
+                              {{ 'labels.Document Content' | safeTranslate }}
+                            </h3>
+                            <br />
 
-                              <app-dmsrich-text-edit
-                                [editorStyle]="{ width: '100%', height: '350px' }"
-                                [contentHtml]="templateHtml"
-                                (contentHtmlChange)="templateHtml = $event"
-                              ></app-dmsrich-text-edit> -->
+                            <app-dmsrich-text-edit
+                              [editorStyle]="{ width: '100%', height: '350px' }"
+                              [contentHtml]="templateHtml"
+                              (contentHtmlChange)="templateHtml = $event"
+                            ></app-dmsrich-text-edit>
                           </div>
                         </div>
                       </div>
@@ -331,9 +347,21 @@
                           </app-ag-grid-wrapper> -->
                         </div>
                       </div>
+                      <div class="row mt-4 btn-stick">
+                        <div class="col-lg-12 col-md-12 col-sm-12 d-flex">
+                          <button
+                            class="tab-button"
+                            tabindex="0"
+                            class="btn btn-primary"
+                            (click)="SubmiteDocumentRequests()"
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      </div>
                     </ng-container>
 
-                    <ng-container *ngSwitchCase="'2'">
+                    <ng-container *ngSwitchCase="'DRT-0002'">
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <h3 class="PnlHeader">
                           {{ 'labels.Documents' | safeTranslate }}
@@ -361,7 +389,7 @@
                       </div>
                     </ng-container>
                     <!--Obsoletion of existing document-->
-                    <ng-container *ngSwitchCase="'3'">
+                    <ng-container *ngSwitchCase="'DRT-0003'">
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <h3 class="PnlHeader">
                           {{ 'labels.Documents' | safeTranslate }}
@@ -390,13 +418,6 @@
                   </ng-container>
                 </div>
               </div>
-              <button
-                class="btn btn-primary"
-                (click)="submitDynamicForm()"
-                [disabled]="!dynamicForm || dynamicForm.invalid"
-              >
-                Submit
-              </button>
             </div>
           </div>
         </div>

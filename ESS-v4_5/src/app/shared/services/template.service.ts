@@ -32,7 +32,7 @@ export class TemplateService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getTemplateByDocumentTypeCode(code: string): Observable<GenericResponse<any>> {
+  getTemplateByDocumentTypeCode(code?: string): Observable<GenericResponse<any>> {
     const uri = `${environment.baseUrl}/DMSTemplate/get-template-by-document-type/${code}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }

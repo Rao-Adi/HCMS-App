@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -22,7 +22,15 @@ export interface DropdownOption {
   id: string | number;
   text: string;
 }
-
+export interface DistributionGridRow {
+  id: number;
+  level1Id: string | null;
+  level2Id: string | null;
+  level3Id: string | null;
+  level4Id: string | null;
+  roleId: number | null;
+  distributiontypeId: number | null;
+}
 @Component({
   selector: 'app-drdistribution-list',
   imports: [CommonModule, FormsModule, EditableAgGridWrapper],
@@ -30,10 +38,15 @@ export interface DropdownOption {
   styleUrl: './drdistribution-list.css',
 })
 export class DRDistributionList {
-  @Input() DocumentRequestType: string | null = null;
+  @Input() DocumentTypeCode: string | null = null;
+  @Input() selectedDistributionList: any[] = [];
+  @Output() distributionChanged = new EventEmitter<any[]>();
+
+  private isInternalUpdate = false;
+
   gridConfig: GridConfig = {} as GridConfig;
 
-  distributionListData: any[] = [];
+  distributionListData: DistributionGridRow[] = [];
   divisions: any[] = [];
   departments: any[] = [];
   roles: { id: any; text: string }[] = [];
@@ -65,13 +78,58 @@ export class DRDistributionList {
 
   constructor(
     private _distributionList: DistributionListService,
-    private _distributionTypeService: DistributionTypeService, 
+    private _distributionTypeService: DistributionTypeService,
     private _roleServices: RoleService,
     private _notification: NotificationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
   ) {
     //this.loadSampleData();
+  }
+
+  ngOnInit() {
+    this.loadDropdownsAndGrid();
+    // this.GetAllDistributionList({
+    //   pageNumber: 1,
+    //   pageSize: this.selectedPageSize,
+    //   sortModel: [], // or your current sort/filter model
+    //   filterModel: {},
+    // });
+    //console.log(this.loadDropdownsAndGrid());
+    // this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+    //   this.cabinetHierarchy = levels;
+
+    //   this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    // });
+  }
+
+  ngOnChanges(changes: SimpleChanges) { 
+    if (changes['selectedDistributionList']) {
+      if (this.isInternalUpdate) {
+        this.isInternalUpdate = false;
+        return; // prevent re-hydration loop
+      }
+
+      this.setGridData();
+    }
+  }
+
+  private setGridData() { 
+    if (!this.selectedDistributionList.length) return;
+    // console.log(JSON.stringify(this.selectedDistributionList));
+    this.distributionListData = this.selectedDistributionList.map((item: any) => ({
+      id: item.Id ?? this.generateId(),
+
+      level1Id: item.DivisionCode ?? item.level1Id ?? null,
+      level2Id: item.DepartmentCode ?? item.level2Id ?? null,
+      level3Id: item.SubDepartmentCode ?? item.level3Id ?? null,
+      level4Id: item.BusinessDomainCode ?? item.level4Id ?? null,
+
+      roleId: item.RoleId ?? item.roleId ?? null,
+      distributiontypeId: item.DistributionTypeId ?? item.distributiontypeId ?? null,
+    }));
+
+    this.distributionListData = [...this.distributionListData];
   }
 
   private getRemainingColumns(): GridColumn[] {
@@ -84,7 +142,7 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        required: true
+        required: true,
       },
       // DOCUMENT TYPES
       {
@@ -95,7 +153,7 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        required: true
+        required: true,
       },
     ];
   }
@@ -125,22 +183,6 @@ export class DRDistributionList {
       ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
       ...this.getRemainingColumns(),
     ];
-  }
-
-  ngOnInit() { 
-    this.loadDropdownsAndGrid();
-    this.GetAllDistributionList({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
-    //console.log(this.loadDropdownsAndGrid());
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
-
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
   }
 
   GetAllDistributionList(query: any) {
@@ -185,7 +227,6 @@ export class DRDistributionList {
           this.distributionListData = [];
         }
         //this.cdr.detectChanges(); // force update
- 
       });
   }
 
@@ -201,42 +242,73 @@ export class DRDistributionList {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-    console.log('Row added:', rowData);
+    // console.log('Row added:', rowData);
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      distributionType: rowData.DistributiontypeId || rowData.distributiontypeId,
-      divisionCode: rowData.level1Id || rowData.level1Id,
-      departmentCode: rowData.level2Id || rowData.level2Id,
-      subDepartmentCode: rowData.level3Id || rowData.level3Id,
-      businessDomainCode: rowData.level4Id || rowData.level4Id,
-      roleId: rowData.RoleId || rowData.roleId,
-      DocumentRequestTypeCode: this.DocumentRequestType,
+    // const payLoad = {
+    //   CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    //   distributionType: rowData.DistributiontypeId || rowData.distributiontypeId,
+    //   divisionCode: rowData.level1Id || rowData.level1Id,
+    //   departmentCode: rowData.level2Id || rowData.level2Id,
+    //   subDepartmentCode: rowData.level3Id || rowData.level3Id,
+    //   businessDomainCode: rowData.level4Id || rowData.level4Id,
+    //   roleId: rowData.RoleId || rowData.roleId,
+    //   DocumentTypeCode: this.DocumentTypeCode,
+    // };
+
+    // this.distributionListData = [payLoad, ...this.distributionListData];
+
+    const newRow = {
+      id: this.generateId(),
+
+      level1Id: rowData.level1Id ?? null,
+      level2Id: rowData.level2Id ?? null,
+      level3Id: rowData.level3Id ?? null,
+      level4Id: rowData.level4Id ?? null,
+
+      roleId: rowData.roleId ?? null,
+      distributiontypeId: rowData.distributiontypeId ?? null,
     };
 
-    this._distributionList.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
-        'sucess',
-        'Distribution List',
-        'Distribution list added successfully!',
-      );
+    this.distributionListData = [newRow, ...this.distributionListData];
 
-      const rowWithId = {
-        ...rowData,
-        id: this.generateId(),
-        divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
-        departmentName: this.getDisplayName(this.departments, rowData.level2Id),
-        subDepartmentName: this.getDisplayName(this.roles, rowData.level3Id),
-        businessDomainName: this.getDisplayName(this.roles, rowData.level4Id),
-        distributiontypeId: this.getDisplayName(
-          this.distributionTypeList,
-          rowData.distributiontypeId,
-        ),
-      };
+    // const rowWithId: = {
+    //   ...rowData,
+    //   id: this.generateId(),
+    //   divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+    //   departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+    //   subDepartmentName: this.getDisplayName(this.roles, rowData.level3Id),
+    //   businessDomainName: this.getDisplayName(this.roles, rowData.level4Id),
+    //   distributiontypeId: this.getDisplayName(
+    //     this.distributionTypeList,
+    //     rowData.distributiontypeId,
+    //   ),
+    // };
+    //this.distributionListData = [rowWithId, ...this.distributionListData];
+    this.notifyParent();
 
-      this.distributionListData = [rowWithId, ...this.distributionListData];
-    });
+    // this._distributionList.create(payLoad).subscribe(() => {
+    //   this._notification.createNotification(
+    //     'sucess',
+    //     'Distribution List',
+    //     'Distribution list added successfully!',
+    //   );
+
+    //   const rowWithId = {
+    //     ...rowData,
+    //     id: this.generateId(),
+    //     divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+    //     departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+    //     subDepartmentName: this.getDisplayName(this.roles, rowData.level3Id),
+    //     businessDomainName: this.getDisplayName(this.roles, rowData.level4Id),
+    //     distributiontypeId: this.getDisplayName(
+    //       this.distributionTypeList,
+    //       rowData.distributiontypeId,
+    //     ),
+    //   };
+
+    //   this.distributionListData = [rowWithId, ...this.distributionListData];
+    // });
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
@@ -255,14 +327,16 @@ export class DRDistributionList {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    // console.log('Row deleted at index:', rowIndex);
     this.distributionListData.splice(rowIndex, 1);
     this.distributionListData = [...this.distributionListData];
+
+    this.notifyParent();
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
     //console.log('Cell value changed:', JSON.stringify(event));
-   
+
     // Handle calculations if needed
     if (event.field === 'currentSalary' || event.field === 'incrementPercentage') {
       const currentSalary = event.rowData.currentSalary || 0;
@@ -282,7 +356,6 @@ export class DRDistributionList {
     }
   }
 
-  
   private generateId(): number {
     return Date.now();
   }
@@ -326,6 +399,21 @@ export class DRDistributionList {
       // ✅ Load hierarchy dropdown data
       this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => this.buildGrid());
     });
+  }
+
+  private notifyParent(): void {
+    this.isInternalUpdate = true;
+    this.distributionChanged.emit([...this.distributionListData]);
+    // const cleanList = this.distributionListData.map((x) => ({
+    //   divisionCode: x.level1Id,
+    //   departmentCode: x.level2Id,
+    //   subDepartmentCode: x.level3Id,
+    //   businessDomainCode: x.level4Id,
+    //   roleId: x.roleId,
+    //   distributionTypeId: x.distributiontypeId,
+    // }));
+
+    // this.distributionChanged.emit(cleanList);
   }
 }
 
