@@ -37,9 +37,11 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetRequestIdsFinalization(companyId: string,documentTypeCode?:string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocument/get-request-ids-finalization?companyId=${companyId}&documentTypeCode=${documentTypeCode}`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  GetApprovedRequestForDocumentCreation(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${environment.baseUrl}/DMSDocument/get-approved-request-for-document-creation`,
+      payload,
+    );
   }
 
   GerFinalizedDocumentByRequestId(
@@ -80,7 +82,7 @@ export class DocumentService {
 
   GetMyDocuments(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocument/get-my-document`,
+      `${environment.baseUrl}/DMSDocument/get-document-for-approval`,
       payload,
     );
   }

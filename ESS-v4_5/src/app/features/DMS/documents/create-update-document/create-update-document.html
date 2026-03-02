@@ -23,7 +23,7 @@
                       <nz-select
                         style="width: 250px"
                         [(ngModel)]="selectedRequestType"
-                        nzPlaceHolder="Select Request Type"
+                        nzPlaceHolder="Select Activity Type"
                         (ngModelChange)="onRequestTypeChange($event)"
                         nzAllowClear
                         nzShowSearch
@@ -247,6 +247,7 @@
                               [documentContentHTML]="templateHtml"
                               [attributes]="attributes"
                               (formReady)="dynamicForm = $event"
+                               mode="create"
                             >
                             </app-dynamic-form-by-document-attribute>
 

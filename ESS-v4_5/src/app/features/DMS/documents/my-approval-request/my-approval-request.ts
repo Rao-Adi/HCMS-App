@@ -431,6 +431,7 @@ export class MyApprovalRequest {
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification('success', 'Request', response.Message);
+          this.GetAllPendingDocuments('');
         }
       },
       error: (err) => {
@@ -472,7 +473,7 @@ export class MyApprovalRequest {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 1000,
+      nzWidth: 850,
     });
 
     modalRef.afterClose.subscribe((result) => {

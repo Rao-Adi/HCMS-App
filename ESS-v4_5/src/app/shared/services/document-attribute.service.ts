@@ -46,6 +46,14 @@ export class DocumentAttributeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getDocumentAttributeByDocumentId(
+    companyId: string,
+    documentId: number,
+  ): Observable<GenericResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-documentId?companyId=${companyId}&documentId=${documentId}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllDocumentAttribute(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

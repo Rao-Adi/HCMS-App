@@ -332,16 +332,16 @@ export class MandatoryCabinetWisePopup {
     this.modalRef.close();
   }
 
-  GetAllAttributeMandatoryScopes(query: any) { 
+  GetAllAttributeMandatoryScopes(query: any) {
     this._attributeMandatoryService
       .getAttributeMandatoryScopesById(this.cabinetId)
       .subscribe((res) => {
         const items = res?.Data?.Items;
-        //console.log(items); 
+        //console.log(items);
         if (Array.isArray(items)) {
           this.mandatoryCabinetData = items.map((item: any) => ({
             Id: item.Id,
-            divisionName: item.Division, 
+            divisionName: item.Division,
             level1Id: item.DivisionCode,
             documentId: item.DocumentNumber,
             documentName: item.DocumentName,
@@ -398,7 +398,6 @@ export class MandatoryCabinetWisePopup {
     //     }
     //   });
   }
- 
 }
 
 class UploadDocumentColumns {

@@ -8,7 +8,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, DocumentAttribute, SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, ControlTypes, DocumentAttribute, SelectList } from '@app/shared/interfaces/interfaces';
 import {
   FormBuilder,
   FormGroup,
@@ -256,7 +256,7 @@ export class CreateUpdateDocument {
     // Control visibility of conditional sections based on request type
     switch (code) {
       case 'DRT-0001': // Creation of new document
-        this.trainingContent = true;
+        this.trainingContent = false;
         this.showExclusionTable = true;
         break;
       case 'DRT-0002': // Revision of existing document
@@ -328,11 +328,10 @@ export class CreateUpdateDocument {
   }
 
   onDocumentTypeChange(value: string): void {
-    this.selectedDocumentType = value; 
+    this.selectedDocumentType = value;
     if (value === 'SOP') {
       this.trainingContent = true;
-    }
-    else{
+    } else {
       this.trainingContent = false;
     }
     //Get the Document Type's template
@@ -368,8 +367,12 @@ export class CreateUpdateDocument {
     this._documentAttributeService.getDocumentAttributeByDocumentType(value).subscribe((res) => {
       if (res) {
         if (!res?.Data) return;
-
-        this.attributes = res.Data;
+        this.attributes = res.Data.map((attr: any) => ({
+          ...attr,
+          ControlType: attr.ControlType.toLowerCase() as ControlTypes,
+          options: attr.ListValues ? attr.ListValues.split(',').map((v: string) => v.trim()) : [],
+        }));
+        //this.attributes = res.Data;
       } else {
         this.attributes = [];
       }
@@ -380,19 +383,25 @@ export class CreateUpdateDocument {
     if (this.selectedDocumentType == '' || this.selectedDocumentType == null) {
       return;
     }
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
-    this._documentService
-      .GetRequestIdsFinalization(companyId, this.selectedDocumentType)
-      .subscribe((res) => {
-        if (res) {
-          this.requestIds = (res.Data ?? []).map((d: any) => ({
-            id: d.id,
-            text: d.requestnumber,
-          }));
-        } else {
-          this.requestIds = [];
-        }
-      });
+    const payLoad = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      UserId: 1,
+      documentTypeCode: this.selectedDocumentType,
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+    };
+    this._documentService.GetApprovedRequestForDocumentCreation(payLoad).subscribe((res) => {
+      if (res) {
+        this.requestIds = (res.Data ?? []).map((d: any) => ({
+          id: d.id,
+          text: d.requestnumber,
+        }));
+      } else {
+        this.requestIds = [];
+      }
+    });
   }
 
   onRequestIdChange(value: string): void {
@@ -414,7 +423,6 @@ export class CreateUpdateDocument {
     // this.loading = true;
     this.selectedTrainingMode = value;
   }
-  GetAllWorkflowAuthorities(query: any) {}
 
   GetAllDistribution(query: any) {}
 
@@ -477,19 +485,10 @@ export class CreateUpdateDocument {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.GetAllApprovedRequests();
   }
 
-  setCabinetHierarchyFromParent(): void {
-    this.cabinetHierarchy = [
-      { level: 1, title: 'Division', value: this.selectedDivisions },
-      { level: 2, title: 'Department', value: this.selectedDepartment },
-      { level: 3, title: 'Sub-Department', value: this.selectedSubDepartment },
-      { level: 4, title: 'Business Domain', value: this.selectedBusinessDomain },
-    ].filter((x) => x.value !== null && x.value !== undefined && x.value !== '');
-  }
-
-  submitDynamicForm() {
-    debugger;
+  submitDynamicForm() { 
     if (!this.dynamicForm) return;
 
     if (this.dynamicForm.invalid) {
@@ -560,10 +559,15 @@ export class CreateUpdateDocument {
 
   SubmiteDocumentRequests() {
     debugger;
+
+    const attributeValues = this.buildAttributePayload();
+    console.log(JSON.stringify(attributeValues));
+
     const payLoad = {
       companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       documentid: this.documentId,
       userid: 1,
+      attributes: attributeValues,
     };
 
     this._documentService.submitDocument(payLoad).subscribe({
@@ -577,15 +581,71 @@ export class CreateUpdateDocument {
       },
     });
   }
-  GetDocumentTemplate() {
-    this.documentTemplateService.getTemplateByDocumentTypeCode(this.selectedDocumentType).subscribe({
-      next: (response) => {
-        this.templateHtml = response.Data.TemplateContent;
-        // Promise.resolve().then(() => {
-        //   this.templateHtml = response.Data.TemplateContent;
-        // });
-      },
-      error: (err) => console.error(err),
+
+  private buildAttributePayload(): any[] {
+    debugger;
+    const result: any[] = [];
+    const formValues = this.dynamicForm.value;
+
+    this.attributes.forEach((attr) => {
+      const controlName = 'ctrl_' + attr.Id;
+      const value = formValues[controlName];
+
+      // ✅ Skip truly empty values
+      const isEmpty =
+        value === null ||
+        value === undefined ||
+        value === '' ||
+        (typeof value === 'string' && value.trim() === '');
+
+      if (isEmpty) return;
+
+      const dto: any = {
+        companyId: MASTER_DEFAULT_KEYS.COMPANYID, // ✅ force number
+        documentAttributeId: attr.Id,
+        valueText: null,
+        valueNumber: null,
+        valueDate: null,
+        valueBoolean: null,
+      };
+
+      switch (attr.ControlType) {
+        case 'textbox':
+        case 'textarea':
+        case 'list':
+          dto.valueText = value;
+          break;
+
+        case 'numeric':
+          dto.valueNumber = Number(value);
+          break;
+
+        case 'date':
+          dto.valueDate = value instanceof Date ? value : new Date(value);
+          break;
+
+        case 'checkbox':
+          dto.valueBoolean = !!value;
+          break;
+      }
+
+      result.push(dto);
     });
+
+    return result;
+  }
+
+  GetDocumentTemplate() {
+    this.documentTemplateService
+      .getTemplateByDocumentTypeCode(this.selectedDocumentType)
+      .subscribe({
+        next: (response) => {
+          this.templateHtml = response.Data.TemplateContent;
+          // Promise.resolve().then(() => {
+          //   this.templateHtml = response.Data.TemplateContent;
+          // });
+        },
+        error: (err) => console.error(err),
+      });
   }
 }

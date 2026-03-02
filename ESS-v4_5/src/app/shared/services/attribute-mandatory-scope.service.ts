@@ -42,6 +42,8 @@ export class AttributeMandatoryScopeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+
+
   GetAllAttributeMandatoryScopes(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

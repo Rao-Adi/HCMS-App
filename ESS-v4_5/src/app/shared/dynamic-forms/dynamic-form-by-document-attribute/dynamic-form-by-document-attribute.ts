@@ -38,9 +38,12 @@ import { TemplateService } from '@app/shared/services/template.service';
 })
 export class DynamicFormByDocumentAttribute {
   @Input() attributes!: DocumentAttribute[];
-  @Input() documentContentHTML: string ='';
+  @Input() documentContentHTML: string = '';
   @Input() documentTypeCode?: string = '';
   @Output() formReady = new EventEmitter<FormGroup>();
+
+  @Input() mode: 'create' | 'view' = 'create';
+  @Input() attributeValues: any[] = []; // values from API
 
   options: string[] = [];
   form!: FormGroup;
@@ -56,11 +59,27 @@ export class DynamicFormByDocumentAttribute {
     this.GetDocumentTemplate();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['attributes']?.currentValue?.length) {
-      this.prepareAttributes();
+  ngOnChanges(changes: SimpleChanges): void { 
+    // const attributesExist = this.attributes?.length;
+    // const valuesExist = this.attributeValues?.length;
 
+    const attributesChanged = changes['attributes'];
+    const valuesChanged = changes['attributeValues'];
+
+    // 1️⃣ If attributes changed → rebuild form
+    if (attributesChanged && this.attributes?.length) {
+      this.prepareAttributes();
       this.buildDynamicForm(this.attributes);
+
+      // Patch immediately if in view mode
+      if (this.mode === 'view' && this.attributeValues?.length) {
+        this.patchValues();
+      }
+    }
+
+    // 2️⃣ If only values changed → patch existing form
+    if (valuesChanged && this.mode === 'view' && this.form && this.attributeValues?.length) {
+      this.patchValues();
     }
   }
 
@@ -68,7 +87,7 @@ export class DynamicFormByDocumentAttribute {
     this.attributes = this.attributes.map((attr) => ({
       ...attr,
 
-      ControlType: attr.ControlType.toLowerCase() as ControlTypes,
+      // ControlType: attr.ControlType.toLowerCase() as ControlTypes,
 
       options: attr.ListValues ? attr.ListValues.split(',').map((v) => v.trim()) : [],
     }));
@@ -80,26 +99,41 @@ export class DynamicFormByDocumentAttribute {
     attributes.forEach((attr) => {
       const controlName = 'ctrl_' + attr.Id;
 
-      const validators = attr.IsMandatory ? [Validators.required] : [];
+      const validators = attr.IsMandatory && this.mode === 'create' ? [Validators.required] : [];
 
-      // ⭐ numeric starts with null
       const defaultValue = attr.ControlType === 'numeric' ? null : '';
 
       group[controlName] = [defaultValue, validators];
     });
 
-    // ⭐ ADD RICH TEXT CONTROL
     group['documentContent'] = [this.templateHtml || ''];
 
     this.form = this.fb.group(group);
 
-    // 🔥 SEND FORM TO PARENT
-    Promise.resolve().then(() => {
-      this.formReady.emit(this.form);
-    });
+    if (this.mode === 'create') {
+      Promise.resolve().then(() => {
+        this.formReady.emit(this.form);
+      });
+    }
   }
 
-  GetDocumentTemplate() { 
+  private patchValues() {
+    if (!this.form) return;
+
+    this.attributeValues.forEach((val) => {
+      const controlName = 'ctrl_' + val.DocumentAttributeId; // ⚠ make sure casing matches API
+
+      const value = val.ValueText ?? val.ValueNumber ?? val.ValueDate ?? val.ValueBoolean;
+
+      if (this.form.contains(controlName)) {
+        this.form.get(controlName)?.setValue(value);
+      }
+    });
+
+    this.form.disable();
+  }
+
+  GetDocumentTemplate() {
     var _documentTypeCode = this.documentTypeCode ? this.documentTypeCode : '';
     this.documentTemplateService.getTemplateByDocumentTypeCode(_documentTypeCode).subscribe({
       next: (response) => {

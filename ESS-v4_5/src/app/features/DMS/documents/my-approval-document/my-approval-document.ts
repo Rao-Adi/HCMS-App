@@ -7,7 +7,13 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
+import {
+  CabinetSelection,
+  ColumnToggle,
+  ControlTypes,
+  DocumentAttribute,
+  SelectList,
+} from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
@@ -18,11 +24,11 @@ import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { UserService } from '@app/shared/services/user-service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { ObservationModalPopup } from '../my-approval-request/observation-modal-popup/observation-modal-popup';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
+import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -40,6 +46,7 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
     DMSRichTextEdit,
     CabinetStructureList,
     AgGridWrapper,
+    DynamicFormByDocumentAttribute,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -63,7 +70,8 @@ export class MyApprovalDocument {
   observation: string = '';
 
   documentRequestsData: any[] = [];
-
+  documentAttributeValues: any[] = [];
+  attributes: DocumentAttribute[] = [];
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -124,6 +132,7 @@ export class MyApprovalDocument {
       },
     },
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
     { field: 'requestId', headerName: 'Request Id' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'company', headerName: 'Company' },
@@ -165,6 +174,8 @@ export class MyApprovalDocument {
     private _documentService: DocumentService,
     private _notification: NotificationService,
     private _userService: UserService,
+    private _documentAttribute: DocumentAttributeService,
+    private _documentAttributeService: DocumentAttributeService,
   ) {}
 
   ngOnInit() {
@@ -195,7 +206,7 @@ export class MyApprovalDocument {
       businessDomainCode: this.selectedBusinessDomain,
       documentTypeCode: this.selectedDocumentType,
       employeeCode: this.selectedEmployee,
-      RequestStatus: this.selectedTab =='Disapproved'? 'Rejected': this.selectedTab,
+      RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
     };
 
     this._documentService.GetMyDocuments(payLoad).subscribe({
@@ -231,6 +242,7 @@ export class MyApprovalDocument {
               // Document metadata
               // ──────────────────────────────────────────────
               documentType: get(['DocumentType', 'documentType']),
+              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
               documentName: get(['Title', 'title']),
               company: get(['Company', 'company'], ''),
               proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
@@ -333,6 +345,9 @@ export class MyApprovalDocument {
 
   onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';
+    this.documentId = event.data?.Id;
+    this.GetDocumentAttributeByDocumentId(this.documentId);
+    this.GetDocumentAttributes(event.data?.documentTypeCode);
   }
 
   onSelectionChange(selectedRows: any): void {
@@ -526,6 +541,35 @@ export class MyApprovalDocument {
       }
     });
   };
+
+  GetDocumentAttributeByDocumentId = (documentId: any) => {
+    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
+    this._documentAttribute
+      .getDocumentAttributeByDocumentId(companyId, documentId)
+      .subscribe((res) => {
+        if (res?.Data) {
+          this.documentAttributeValues = res.Data;
+        } else {
+          this.documentAttributeValues = [];
+        }
+      });
+  };
+
+  GetDocumentAttributes(value: string) {
+    this._documentAttributeService.getDocumentAttributeByDocumentType(value).subscribe((res) => {
+      if (res) {
+        if (!res?.Data) return;
+        this.attributes = res.Data.map((attr: any) => ({
+          ...attr,
+          ControlType: attr.ControlType.toLowerCase() as ControlTypes,
+          options: attr.ListValues ? attr.ListValues.split(',').map((v: string) => v.trim()) : [],
+        }));
+        //this.attributes = res.Data;
+      } else {
+        this.attributes = [];
+      }
+    });
+  }
 
   openObservationModal(rowData: any) {
     //console.log('Row clicked:', rowData);

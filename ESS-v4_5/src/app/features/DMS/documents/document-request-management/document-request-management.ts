@@ -464,11 +464,7 @@ export class DocumentRequestManagement {
       },
     });
   }
-
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    this.GetAllPendingDocuments(value);
-  }
+ 
 
   emptyFields() {
     this.selectedRequestType = '';

@@ -11,7 +11,7 @@
               <!-- LABEL -->
               <label class="form-label fw-semibold">
                 {{ attr.ControlLabel }}
-                <span *ngIf="attr.IsMandatory" class="text-danger">*</span>
+                <span *ngIf="attr.IsMandatory && mode === 'create'" class="text-danger">*</span>
               </label>
 
               <ng-container [ngSwitch]="attr.ControlType">
@@ -19,6 +19,7 @@
                 <nz-date-picker
                   *ngSwitchCase="'date'"
                   [formControlName]="'ctrl_' + attr.Id"
+                  [nzDisabled]="mode === 'view'"
                 ></nz-date-picker>
 
                 <!-- TEXTBOX -->
@@ -30,6 +31,7 @@
                     'input-sm': true,
                   }"
                   [formControlName]="'ctrl_' + attr.Id"
+                  [readonly]="mode === 'view'"
                 />
 
                 <!-- NUMERIC -->
@@ -41,6 +43,7 @@
                     'input-sm': true,
                   }"
                   [formControlName]="'ctrl_' + attr.Id"
+                  [readonly]="mode === 'view'"
                 />
 
                 <!-- TEXTAREA -->
@@ -52,6 +55,7 @@
                     'input-sm': true,
                   }"
                   [formControlName]="'ctrl_' + attr.Id"
+                  [readonly]="mode === 'view'"
                 >
                 </textarea>
 
@@ -64,6 +68,8 @@
                   nzAllowClear
                   nzShowSearch
                   [formControlName]="'ctrl_' + attr.Id"
+                  [nzAllowClear]="mode !== 'view'"
+                  [nzShowSearch]="mode !== 'view'"
                 >
                   <nz-option
                     *ngFor="let option of attr.options"

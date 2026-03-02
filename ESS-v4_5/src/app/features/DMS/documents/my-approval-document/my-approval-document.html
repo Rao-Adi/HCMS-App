@@ -114,7 +114,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
-                 (click)="onTabChange('Pending')"
+                (click)="onTabChange('Pending')"
               >
                 Pending
               </button>
@@ -122,7 +122,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
-                 (click)="onTabChange('Approved')"
+                (click)="onTabChange('Approved')"
               >
                 Approved
               </button>
@@ -131,7 +131,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
-                 (click)="onTabChange('Disapproved')"
+                (click)="onTabChange('Disapproved')"
               >
                 Disapproved
               </button>
@@ -264,6 +264,16 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="row mt-4 mb-4">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <app-dynamic-form-by-document-attribute
+              [attributes]="attributes"
+              [attributeValues]="documentAttributeValues"
+              mode="view"
+            >
+            </app-dynamic-form-by-document-attribute>
           </div>
         </div>
         <div class="row mb-4">

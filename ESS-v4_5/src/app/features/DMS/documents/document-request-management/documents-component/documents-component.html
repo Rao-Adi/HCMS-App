@@ -3,7 +3,7 @@
   [columnToggles]="columnToggles"
   [columnDefs]="documentColumnDefs"
   [defaultColDef]="defaultColDef"
-  [isSelectionRequired]="true"
+  [isSelectionRequired]="false"
   [showDisplayOption]="true"
   [rowData]="workflowAuthoritiesData"
   [pageSize]="pageSize"
@@ -13,7 +13,7 @@
   (pageSizeChange)="onPageSizeChanged($event)"
   (serverQuery)="GetAllDocuments($event)"
 >
-  <div grid-actions class="grid-action-icons">
+  <!-- <div grid-actions class="grid-action-icons">
     <button class="grid-icon-btn" title="Share with other Employees" (click)="export()">
       <i class="bi bi-folder-symlink"></i>
     </button>
@@ -29,5 +29,5 @@
     <button class="grid-icon-btn" title="Initiate Revision Process" (click)="submit()">
       <i class="bi bi-box-arrow-right"></i>
     </button>
-  </div>
+  </div> -->
 </app-ag-grid-wrapper>
