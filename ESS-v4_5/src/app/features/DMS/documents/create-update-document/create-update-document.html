@@ -247,7 +247,7 @@
                               [documentContentHTML]="templateHtml"
                               [attributes]="attributes"
                               (formReady)="dynamicForm = $event"
-                               mode="create"
+                              mode="create"
                             >
                             </app-dynamic-form-by-document-attribute>
 
@@ -333,19 +333,6 @@
                               </tbody>
                             </table>
                           </div>
-                          <!-- <app-ag-grid-wrapper
-                            [gridStyle]="{ width: '100%', height: '250px' }"
-                            [columnDefs]="workflowAuthoritiesColumnDefs"
-                            [defaultColDef]="defaultColDef"
-                            [rowData]="approvalSequenceData"
-                            [pageSize]="pageSize"
-                            [isSelectionRequired]="false"
-                            [showDisplayOption]="false"
-                            [totalRows]="totalDistribution"
-                            [pageSize]="selectedPageSize"
-                            gridId="distributionListGrid"
-                          >
-                          </app-ag-grid-wrapper> -->
                         </div>
                       </div>
                       <div class="row mt-4 btn-stick">
@@ -369,13 +356,11 @@
                         </h3>
                         <br />
                         <div class="col-lg-12 col-md-12 col-sm-12">
-                          <app-my-pending-request-for-approval>
-                          </app-my-pending-request-for-approval>
-                          <!-- <app-ag-grid-wrapper
+                          <app-ag-grid-wrapper
                             [gridStyle]="{ width: '100%', height: '250px' }"
-                            [columnDefs]="workflowAuthoritiesColumnDefs"
+                            [columnDefs]="documentRevisionColumnDefs"
                             [defaultColDef]="defaultColDef"
-                            [rowData]="workflowAuthoritiesData"
+                            [rowData]="documentRevisionData"
                             [isSelectionRequired]="false"
                             [showDisplayOption]="false"
                             [pageSize]="pageSize"
@@ -384,8 +369,9 @@
                             gridId="document2Grid"
                             (pageSizeChange)="onPageSizeChanged($event)"
                             (serverQuery)="GetAllDistribution($event)"
+                            (cellClicked)="onCellClicked($event)"
                           >
-                          </app-ag-grid-wrapper> -->
+                          </app-ag-grid-wrapper>
                         </div>
                       </div>
                     </ng-container>
@@ -399,10 +385,10 @@
                         <div class="col-lg-12 col-md-12 col-sm-12">
                           <app-ag-grid-wrapper
                             [gridStyle]="{ width: '100%', height: '250px' }"
-                            [columnDefs]="distributionListGridColumnDefs"
+                            [columnDefs]="DocumentObsoletionGridColumnDefs"
                             [defaultColDef]="defaultColDef"
-                            [rowData]="workflowAuthoritiesData"
-                            [isSelectionRequired]="false"
+                            [rowData]="DocumentObseletionData"
+                            [isSelectionRequired]="true"
                             [showDisplayOption]="false"
                             [pageSize]="pageSize"
                             [totalRows]="totalDocuments"
@@ -410,11 +396,23 @@
                             gridId="documentGrid"
                             (pageSizeChange)="onPageSizeChanged($event)"
                             (serverQuery)="GetAllDistribution($event)"
+                            (cellClicked)="onCellClicked($event)"
                           >
                           </app-ag-grid-wrapper>
                         </div>
                       </div>
                     </ng-container>
+                    <div class="row mb-4" *ngIf="showDocumentContent">
+                      <div class="col-lg-12 col-md-12 col-sm-12">
+                        <h3 class="PnlHeader">Document Content</h3>
+                        <br />
+                        <app-dmsrich-text-edit
+                          [editorStyle]="{ width: '100%', height: '350px' }"
+                          [contentHtml]="templateHtml"
+                          (contentHtmlChange)="templateHtml = $event"
+                        ></app-dmsrich-text-edit>
+                      </div>
+                    </div>
                     <!-- DEFAULT CASE: No Columns -->
                   </ng-container>
                 </div>

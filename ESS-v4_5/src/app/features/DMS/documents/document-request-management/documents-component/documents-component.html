@@ -5,13 +5,13 @@
   [defaultColDef]="defaultColDef"
   [isSelectionRequired]="false"
   [showDisplayOption]="true"
-  [rowData]="workflowAuthoritiesData"
+  [rowData]="documentRevisionData"
   [pageSize]="pageSize"
   [totalRows]="totalRows"
   [pageSize]="selectedPageSize"
   gridId="documentGrid"
   (pageSizeChange)="onPageSizeChanged($event)"
-  (serverQuery)="GetAllDocuments($event)"
+  (serverQuery)="GetAllApprovedDocuments($event)"
 >
   <!-- <div grid-actions class="grid-action-icons">
     <button class="grid-icon-btn" title="Share with other Employees" (click)="export()">

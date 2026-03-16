@@ -8,7 +8,12 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, ControlTypes, DocumentAttribute, SelectList } from '@app/shared/interfaces/interfaces';
+import {
+  CabinetSelection,
+  ControlTypes,
+  DocumentAttribute,
+  SelectList,
+} from '@app/shared/interfaces/interfaces';
 import {
   FormBuilder,
   FormGroup,
@@ -33,6 +38,11 @@ import { DocumentRequestTypeService } from '@app/shared/services/document-reques
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { DocumentService } from '@app/shared/services/document.service';
 import { TemplateService } from '@app/shared/services/template.service';
+import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
+import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
+import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 
 // Define interface for request types
 interface RequestType {
@@ -90,6 +100,7 @@ export class CreateUpdateDocument {
   selectedRequestId: string = '';
   templateHtml: string = '';
   trainingContent: boolean = false;
+  showDocumentContent: boolean = false;
   documentId: string = '';
 
   selectedRequestType: string = '';
@@ -117,95 +128,6 @@ export class CreateUpdateDocument {
   attributes: DocumentAttribute[] = [];
   dynamicForm!: FormGroup;
 
-  distributionListGridColumnDefs = [
-    {
-      field: 'division',
-      headerName: 'Division',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Marketing Division', 'Software Division'],
-      },
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['HR', 'IT', 'Finance', 'Legal'],
-      },
-    },
-    {
-      field: 'role',
-      headerName: 'Role',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: [
-          'Territory Sales Manager(TSM)',
-          'District Sales Manager(DSM)',
-          'Regional Sales Manager(RSM)',
-        ],
-      },
-    },
-    {
-      field: 'distributionType',
-      headerName: 'Distribution Type',
-      flex: 1,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['Physical', 'Digital'],
-      },
-    },
-  ];
-
-  workflowAuthoritiesColumnDefs = [
-    // { field: 'approvalSequence', headerName: 'Approval Sequence', flex: 1 },
-    // { field: 'employeeCode', headerName: 'Employee Code', flex: 1 },
-    // { field: 'employeeName', headerName: 'Employee Name', flex: 1 },
-    // { field: 'division', headerName: 'Division', flex: 1 },
-    // { field: 'department', headerName: 'Department', flex: 1 },
-    // { field: 'subDepartment', headerName: 'Sub-Department', flex: 1 },
-
-    { field: 'sequence', headerName: 'Approval Sequence', flex: 1 },
-    { field: 'employeeCode', headerName: 'Employee Code', flex: 1 },
-    { field: 'employeeName', headerName: 'Employee Name', flex: 1 },
-    { field: 'designation', headerName: 'Designation', flex: 1 },
-    { field: 'Department', headerName: 'Department', flex: 1 },
-    { field: 'SubDepartment', headerName: 'Sub-Department', flex: 1 },
-  ];
-
-  workflowAuthoritiesData: any[] = [
-    {
-      approvalSequence: 1,
-      employeeCode: '000100442',
-      employeeName: 'Muhammad Junaid',
-      division: 'Finance Division',
-      department: 'IT',
-      subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy',
-    },
-    {
-      approvalSequence: 2,
-      employeeCode: '000100442',
-      employeeName: 'Muhammad Junaid',
-      division: 'Finance Division',
-      department: 'IT',
-      subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy',
-    },
-    {
-      approvalSequence: 3,
-      employeeCode: '000100442',
-      employeeName: 'Muhammad Junaid',
-      division: 'Finance Division',
-      department: 'IT',
-      subDepartment: 'Digital Marketing',
-      documentTitle: 'IT Security Policy',
-    },
-  ];
-
   trainers: SelectList[] = [];
 
   users: SelectList[] = [
@@ -218,7 +140,99 @@ export class CreateUpdateDocument {
   // Map to store the display values
   requestTypeMap: Map<string, string> = new Map();
 
+  documentRevisionData: [] = [];
+  documentRevisionColumnDefs = [
+    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentName', headerName: 'Document Name' },
+    { field: 'version', headerName: 'Version' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'subDepartment', headerName: 'Sub-Department' },
+
+    { field: 'requestCreatedBy', headerName: 'Request Created By' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    {
+      field: 'approvalHistory',
+      headerName: 'Approval History',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          ${params.value ? 'View' : 'View'}
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.openWorkflowDeatilsModal(event.data);
+      },
+    },
+    {
+      field: 'revisionHistory',
+      headerName: 'Revision History',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          ${params.value ? 'View' : 'View'}
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.openWorkflowDeatilsModal(event.data);
+      },
+    }
+  ];
+
+  DocumentObsoletionGridColumnDefs = [
+    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentName', headerName: 'Document Name' },
+    { field: 'version', headerName: 'Version' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'subDepartment', headerName: 'Sub-Department' },
+
+    { field: 'requestCreatedBy', headerName: 'Request Created By' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+
+    {
+      field: 'approvalHistory',
+      headerName: 'Approval History',
+      cellRendererSelector: () => ({
+        component: LinkRenderer,
+        params: {
+          label: 'View',
+          onClick: (rowData: any) => {
+            this.openWorkflowDeatilsModal(rowData);
+          },
+        },
+      }),
+    },
+    {
+      field: 'revisionHistory',
+      headerName: 'Revision History',
+      cellRendererSelector: () => ({
+        component: LinkRenderer,
+        params: {
+          label: 'View',
+          onClick: (rowData: any) => {
+            this.openRevisionHistoryModal(rowData);
+          },
+        },
+      }),
+    },
+  ];
+  DocumentObseletionData: any[] = [];
+
   constructor(
+    private modal: NzModalService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
     private _notification: NotificationService,
@@ -252,6 +266,7 @@ export class CreateUpdateDocument {
   onRequestTypeChange(code: string): void {
     // this.selectedRequestType = value;
     this.selectedRequestType = code;
+    this.emptyFields();
 
     // Control visibility of conditional sections based on request type
     switch (code) {
@@ -262,6 +277,7 @@ export class CreateUpdateDocument {
       case 'DRT-0002': // Revision of existing document
         this.trainingContent = false;
         this.showExclusionTable = false;
+        this.GetAllApprovedDocuments('');
         break;
       case 'DRT-0003': // Obsoletion of existing document
         this.trainingContent = false;
@@ -275,6 +291,11 @@ export class CreateUpdateDocument {
 
     // Trigger any other necessary actions
     this.loadRequestSpecificData(code);
+  }
+
+  onCellClicked(event: any): void {
+    this.templateHtml = event.data?.proposedContent || '';
+    this.showDocumentContent = true;
   }
 
   loadRequestSpecificData(code: string) {
@@ -488,7 +509,7 @@ export class CreateUpdateDocument {
     this.GetAllApprovedRequests();
   }
 
-  submitDynamicForm() { 
+  submitDynamicForm() {
     if (!this.dynamicForm) return;
 
     if (this.dynamicForm.invalid) {
@@ -561,7 +582,7 @@ export class CreateUpdateDocument {
     debugger;
 
     const attributeValues = this.buildAttributePayload();
-    console.log(JSON.stringify(attributeValues));
+    // console.log(JSON.stringify(attributeValues));
 
     const payLoad = {
       companyId: MASTER_DEFAULT_KEYS.COMPANYID,
@@ -647,5 +668,165 @@ export class CreateUpdateDocument {
         },
         error: (err) => console.error(err),
       });
+  }
+
+  openRevisionHistoryModal(row: any): void {
+    this.modal.create({
+      nzTitle: 'Revision History',
+      nzContent: RevisionHistoryModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+  }
+
+  openWorkflowDeatilsModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Approval History',
+      nzContent: WorkflowApprovalHistoryComponent,
+      nzData: {
+        id: rowData.Id,
+        entityType: 'Document',
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1000,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
+    });
+  }
+
+  GetAllApprovedDocuments(query: any) {
+    const payLoad = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      userId: 1,
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      documentTypeCode: this.selectedDocumentType,
+      employeeCode: 'EMP-0001',
+      RequestStatus: 'Approved',
+    };
+
+    this._documentService.GetDocumentByStatus(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this.totalRows = response.Data.TotalCount;
+          this.documentRevisionData = response.Data.map((item: any) => {
+            // Helper to get value with case-insensitive fallback
+            const get = (keys: string[], defaultValue: any = ''): any => {
+              for (const key of keys) {
+                if (item[key] !== undefined && item[key] !== null) return item[key];
+                const lower = key.toLowerCase();
+                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+              }
+              return defaultValue;
+            };
+
+            const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
+            const startedAtRaw = get(['StartedAt', 'startedAt']);
+
+            return {
+              // ──────────────────────────────────────────────
+              // Identification & Request
+              // ──────────────────────────────────────────────
+              ExecutionId: get(['ExecutionId', 'executionId']),
+              Id: get(['Id', 'id']),
+              requestId: get(['Id', 'id']), // often same as Id
+              stepId: get(['StepId', 'stepId']),
+              stepOrder: get(['StepOrder', 'stepOrder']),
+              ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
+
+              // ──────────────────────────────────────────────
+              // Document metadata
+              // ──────────────────────────────────────────────
+              documentType: get(['DocumentType', 'documentType']),
+              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
+              documentName: get(['Title', 'title']),
+              company: get(['Company', 'company'], ''),
+              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
+
+              // ──────────────────────────────────────────────
+              // Organizational context
+              // ──────────────────────────────────────────────
+              division: get(['Division']),
+              department: get(['Department']),
+              departmentId: get(['DepartmentCode', 'departmentCode']),
+              subDepartment: get(['SubDepartment', 'SubDepartment']),
+              businessdomain: get(['BusinessDomain', 'businessDomain']),
+              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
+              version: get(['ProposedVersionNumber', 'proposedVersionNumber']),
+              // ──────────────────────────────────────────────
+              // Content / Justification
+              // ──────────────────────────────────────────────
+
+              proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+
+              // ──────────────────────────────────────────────
+              // Audit / History fields
+              // ──────────────────────────────────────────────
+              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
+              requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
+              startedAt: this.formatDate(startedAtRaw),
+
+              // Previous version info (only if present in real payloads)
+              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              previousVersionCreatedOn: this.formatDate(
+                get(['RequestCreatedAt', 'requestCreatedAt']),
+              ),
+
+              // ──────────────────────────────────────────────
+              // Placeholder / missing fields from your original
+              // (add real data source when available)
+              // ──────────────────────────────────────────────
+              observation: '', // ← not in sample → populate when available
+              requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
+              dateOfApproval: '', // ← not present
+              approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
+            };
+          });
+        }
+      },
+      error: (err) => {
+        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+      },
+    });
+  }
+
+  // Option 1: Simple custom method (no pipe dependency)
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '';
+
+    // Input example: "02/21/2026 11:04:01"
+    try {
+      const [datePart, timePart = ''] = value.split(' ');
+      const [month, day, year] = datePart.split('/');
+      if (!year || !month || !day) return value;
+
+      // Desired format example: 21-02-2026 11:04:01
+      return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year} ${timePart.trim()}`.trim();
+    } catch {
+      return value; // fallback — show original if parsing fails
+    }
+  }
+
+  
+  emptyFields() { 
+    this.showDocumentContent = false;
+    this.selectedCompany = ''; 
+    this.selectedDocumentType = '';
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.templateHtml = '';
   }
 }

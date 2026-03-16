@@ -265,6 +265,9 @@ export class MyApprovalRequest {
   }
 
   GetAllPendingDocuments(query: any) {
+    if(this.selectedEmployee == ""){
+      return;
+    }
     const payload = {
       companyId: 1,
       userId: 1,

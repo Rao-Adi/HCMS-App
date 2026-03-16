@@ -80,9 +80,10 @@ export class DocumentService {
     );
   }
 
-  GetMyDocuments(payload: any): Observable<ApiResponse<any>> {
+  //This method is for Pending,Approved and Revision of Existing Document as well.
+  GetDocumentByStatus(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocument/get-document-for-approval`,
+      `${environment.baseUrl}/DMSDocument/get-document-by-status`,
       payload,
     );
   }

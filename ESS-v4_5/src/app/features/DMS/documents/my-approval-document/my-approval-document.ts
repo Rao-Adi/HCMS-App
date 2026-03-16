@@ -193,10 +193,16 @@ export class MyApprovalDocument {
   }
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
+    debugger;
     this.selectedDocumentType = value;
+    this.GetAllPendingDocuments('');
+    this.emptyAllFileds();
   }
 
   GetAllPendingDocuments(query: any) {
+    if (this.selectedEmployee == "") {
+      return;
+    }
     const payLoad = {
       companyId: 1,
       userId: 1,
@@ -209,7 +215,7 @@ export class MyApprovalDocument {
       RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
     };
 
-    this._documentService.GetMyDocuments(payLoad).subscribe({
+    this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
           this.totalRows = response.Data.TotalCount;
