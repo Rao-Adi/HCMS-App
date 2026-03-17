@@ -73,6 +73,7 @@ export class MyApprovalRequest {
   // Track selection state
   hasSelectedRows = false;
   stepId: number = 0;
+  selectedRow: any = null;
   employees: any[] = [];
   selectedEmployee?: string = '';
   observation: string = '';
@@ -390,6 +391,7 @@ export class MyApprovalRequest {
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     this.templateHtml = selectedRows[0]?.proposedContent || '';
     this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
+    this.selectedRow = selectedRows[0] || null;
   }
 
   onCellClicked(event: any): void {
@@ -415,19 +417,40 @@ export class MyApprovalRequest {
     });
   }
 
-  approveDocumentRequest() {
-    //alert('Approve action triggered for selected rows');
-    debugger;
-    if (this.observation == '' || this.observation == null) {
-      this._notification.createNotification('error', 'Request', 'Observation is required');
+  promptAction(action: string) {
+    if (!this.selectedRow) return;
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: this.selectedRow.Id || this.selectedRow.id,
+        entityType: 'Request',
+        mode: 'input',
+        action: 'Approver',
+      },
+      nzFooter: null,
+      nzWidth: 850,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      if (!result || !result.observation) return;
+      this.submitWorkflowAction(action, result.observation);
+    });
+  }
+
+  submitWorkflowAction(action: string, observation: string) {
+    if (!observation || observation.trim() === '') {
+      this._notification.createNotification('error', 'Validation', 'Observation is required');
       return;
     }
+
     const payLoad = {
       companyId: 1,
       stepId: this.stepId,
       userId: 1,
-      action: 'APPROVE',
-      observation: this.observation,
+      action: action,
+      observation: observation,
     };
 
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
@@ -447,8 +470,6 @@ export class MyApprovalRequest {
     });
   }
 
-  disapprove() {}
-  revert() {}
   export() {}
 
   getAllUsersList = () => {
@@ -472,7 +493,7 @@ export class MyApprovalRequest {
       nzData: {
         id: rowData.Id,
         entityType: 'Request',
-        mode: this.selectedTab === 'Pending' ? 'input' : 'view',
+        mode: 'view',
         action: 'Approver',
       },
       nzFooter: null,

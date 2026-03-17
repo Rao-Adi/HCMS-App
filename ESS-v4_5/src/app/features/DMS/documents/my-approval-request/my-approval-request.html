@@ -114,7 +114,7 @@
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
                             title="Approve"
-                            (click)="approveDocumentRequest()"
+                            (click)="promptAction('APPROVE')"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-check2-square"></i>
@@ -124,7 +124,7 @@
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
                             title="Disapprove"
-                            (click)="disapprove()"
+                            (click)="promptAction('REJECT')"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-x-square"></i>
@@ -134,7 +134,7 @@
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
                             title="Revert"
-                            (click)="revert()"
+                            (click)="promptAction('REVERT')"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-reply"></i>
