@@ -96,6 +96,8 @@ export class DocumentRequestForm {
   documentRequestsData: any[] = [];
 
   distributionListPayload: any[] = [];
+  distributionUserList: any[] = [];
+  selectedDocumentRow: any = null;
 
   companies: any[] = [];
   requestTypes: any[] = [];
@@ -225,6 +227,7 @@ export class DocumentRequestForm {
 
   onRequestTypeChange(value: string | null): void {
     this.selectedDocumentRequestType = value;
+    this.selectedDocumentRow = null;
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
       this.showDocumentCreationDiv = true;
       this.showDocumentDiv = false;
@@ -245,6 +248,24 @@ export class DocumentRequestForm {
     this.selectedCompany = value;
   }
 
+  loadWorkflowAuthorities(documentType: string) {
+    const payLoad = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      EntityType: 'Request',
+      documentTypeCode: documentType,
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+    };
+    this._workflowStepService
+      .getWorkflowStepByDocumentTypeCode(payLoad)
+      .subscribe((res) => {
+        this.showExclusionTable = true;
+        this.approvalSequenceData = res?.Data ? res.Data : [];
+      });
+  }
+
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     if (value != null) {
@@ -253,32 +274,7 @@ export class DocumentRequestForm {
       //Get Template
       this.GetTemplate(this.selectedDocumentType);
 
-      const payLoad = {
-        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-        EntityType: 'Request',
-        documentTypeCode: this.selectedDocumentType,
-        divisionCode: this.selectedDivisions,
-        departmentCode: this.selectedDepartment,
-        subDepartmentCode: this.selectedSubDepartment,
-        businessDomainCode: this.selectedBusinessDomain,
-      };
-      this._workflowStepService
-        .getWorkflowStepByDocumentTypeCode(
-          payLoad,
-          // value,
-          // this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001'
-          //   ? 1
-          //   : this.selectedDocumentRequestType == '2' ||
-          //       this.selectedDocumentRequestType == 'DRT-0002'
-          //     ? 2
-          //     : 3,
-        )
-        .subscribe((res) => {
-          // console.log('User Details:', res);
-          this.showExclusionTable = true;
-          // this.totalDistribution = res?.Data ? res.Data.length : 0;
-          this.approvalSequenceData = res?.Data ? res.Data : [];
-        });
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
     } else {
       this.approvalSequenceData = [];
       this.selectedDocumentType = '';
@@ -424,7 +420,6 @@ export class DocumentRequestForm {
     });
   }
 
-  SubmiteDocumentRequests() {
   SubmitDocumentRequests() {
     const payLoad = {
       CompanyId: this.selectedCompany,
@@ -460,6 +455,7 @@ export class DocumentRequestForm {
 
   emptyFields() {
     this.selectedRequestType = '';
+    this.selectedDocumentRequestType = null;
     this.selectedCompany = '';
     this.documentName = '';
     this.inputJustificationValue = '';
@@ -469,6 +465,11 @@ export class DocumentRequestForm {
     this.selectedSubDepartment = '';
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
+    this.distributionListPayload = [];
+    this.distributionUserList = [];
+    this.selectedDocumentRow = null;
+    this.showDocumentDiv = false;
+    this.showDocumentCreationDiv = false;
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -599,10 +600,11 @@ export class DocumentRequestForm {
     const row = event.data;
     debugger;
 
+    this.selectedDocumentRow = row;
+
     this.requestId = row.Id;
-    this.submittedby = row.sumbittedby;
-    this.submittedby = row.submittedBy;
-    this.selectedCompany = row.companyId;
+    this.submittedby = row.submittedBy || row.sumbittedby;
+    this.selectedCompany = row.companyId || row.company;
     // ✅ Populate form fields
     this.documentName = row.documentName;
     this.inputJustificationValue = row.justification;
@@ -611,16 +613,17 @@ export class DocumentRequestForm {
     this.selectedDivisions = row.division;
     this.selectedDepartment = row.department;
     this.selectedSubDepartment = row.subdepartment;
-    this.selectedBusinessDomain = row.businessdomainId;
+    this.selectedBusinessDomain = row.businessdomainId || row.businessdomain;
 
     // ✅ Populate Distribution List
     this.distributionListPayload = row.distributionListPayload || [];
 
     // ✅ Populate Users
-    // this.distributionUserList = row.distributionUserList || [];
+    this.distributionUserList = row.distributionUserList || [];
 
-    // console.log('Distribution:', this.distributionListPayload);
-    // console.log('Users:', this.distributionUserList);
+    if (this.selectedDocumentType) {
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+    }
   }
 
   openRevisionHistoryModal(row: any): void {
