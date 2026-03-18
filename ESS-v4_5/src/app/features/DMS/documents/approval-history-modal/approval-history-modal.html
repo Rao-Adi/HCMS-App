@@ -1,0 +1,12 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '450px' }"
+  [columnDefs]="pendingAuthorizationColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [isSelectionRequired]="false"
+  [showDisplayOption]="false"
+  [rowData]="averateDocumentScoreData"
+  [pageSize]="pageSize"
+  [totalRows]="totalRows"
+  [pageSize]="selectedPageSize"
+  gridId="documentGrid" 
+></app-ag-grid-wrapper>

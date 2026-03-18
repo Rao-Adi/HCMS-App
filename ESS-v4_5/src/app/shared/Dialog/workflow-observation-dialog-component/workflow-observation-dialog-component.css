@@ -1,0 +1,80 @@
+/* ===== Modal Content Padding ===== */
+.obs-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ===== Header ===== */
+.obs-table thead {
+  background: #f5f7fa;
+}
+
+.obs-table th {
+  text-align: left;
+  padding: 12px 10px;
+  color: #5a6a85;
+  font-weight: 600;
+  border-bottom: 2px solid #e4e7ec;
+}
+
+/* ===== Body ===== */
+.obs-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #eef1f5;
+  vertical-align: middle;
+}
+
+/* ===== Hover Effect ===== */
+.obs-table tbody tr:hover {
+  background-color: #f9fbfd;
+  transition: 0.2s ease-in-out;
+}
+
+/* ===== Employee Name Highlight ===== */
+.emp {
+  font-weight: 600;
+  color: #2b3a55;
+}
+
+/* ===== Observation Text ===== */
+.obs {
+  color: #444;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+
+/* ===== Action Badge ===== */
+.action-badge {
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ===== Approved ===== */
+.action-badge.approve {
+  background-color: #e6f9f0;
+  color: #00a86b;
+}
+
+/* ===== Rejected ===== */
+.action-badge.reject {
+  background-color: #fdecea;
+  color: #e74c3c;
+}
+
+/* ===== Review ===== */
+.action-badge.review {
+  background-color: #e8f1ff;
+  color: #2f80ed;
+}
+
+/* ===== Date ===== */
+.obs-table td:last-child {
+  color: #888;
+  font-size: 12px;
+}

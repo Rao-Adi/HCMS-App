@@ -1,0 +1,304 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Cabinet Structure</h3>
+            <small class="text-muted">Cabinet Structure</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <!-- <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Level 1' }"
+                (click)="selectedTab = 'Level 1'"
+              >
+                Level 1
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Level 2' }"
+                (click)="selectedTab = 'Level 2'"
+              >
+                Level 2
+              </button>
+
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === ' Level 2' }"
+                (click)="selectedTab = 'Level 3'"
+              >
+                Level 3
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === ' Level 4' }"
+                (click)="selectedTab = 'Level 4'"
+              >
+                Level 4
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Document Type' }"
+                (click)="selectedTab = 'Document Type'"
+              >
+                Document Type
+              </button>
+            </div> -->
+            <div class="custom-tab-container">
+              <button
+                *ngFor="let tab of tabs; trackBy: trackByTabId"
+                class="tab-button"
+                [ngClass]="{ 'active-tab': activeTab === tab.level }"
+                (click)="onTabChange(tab)"
+              >
+                Level {{ tab.level }}
+              </button>
+
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': activeTab === 'DOCUMENT_TYPE' }"
+                (click)="onDocumentTypeClick()"
+              >
+                Document Type
+              </button>
+            </div>
+
+            <div class="row row-space" *ngIf="activeTab === 1">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Title Level</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      type="text"
+                      [(ngModel)]="selectedTabTitle"
+                      class="form-control input-sm"
+                      style="width: 200px"
+                    />
+                    <button
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ cabinetConfigStructure.lastModifiedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>
+                    {{
+                      cabinetConfigStructure.lastModifiedAt
+                        ? (cabinetConfigStructure.lastModifiedAt | date: 'dd/MMM/yyyy')
+                        : 'N/A'
+                    }}
+                  </span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                  <app-division-component></app-division-component>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="activeTab === 2">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4 mb-10">
+                  <span class="d-flex">Title Level</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                    <button
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ cabinetConfigStructure.lastModifiedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>
+                    {{
+                      cabinetConfigStructure.lastModifiedAt
+                        ? (cabinetConfigStructure.lastModifiedAt | date: 'dd/MMM/yyyy')
+                        : 'N/A'
+                    }}
+                  </span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-department-component
+                    [level]="activeTab"
+                    [levelTitles]="levelTitles"
+                  ></app-department-component>
+                </div>
+              </div>
+            </div>
+            <div class="row row-space" *ngIf="activeTab === 3">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Title Level</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                    <button
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ cabinetConfigStructure.lastModifiedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>
+                    {{
+                      cabinetConfigStructure.lastModifiedAt
+                        ? (cabinetConfigStructure.lastModifiedAt | date: 'dd/MMM/yyyy')
+                        : 'N/A'
+                    }}
+                  </span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                  <app-sub-department-component></app-sub-department-component>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="activeTab === 4">
+              <div class="row mb-4">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <span class="d-flex">Title Level</span>
+                  <div class="d-inline-flex">
+                    <input
+                      maxlength="50"
+                      appDecimalInput
+                      name="level1Title"
+                      [(ngModel)]="selectedTabTitle"
+                      type="text"
+                      style="width: 200px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                    <button
+                      aria-label="Save tabs name"
+                      title="Save tabs name"
+                      (click)="saveTabTitle()"
+                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    >
+                      <i class="bi bi-file-earmark-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved By' | safeTranslate }}</label>
+                  </div>
+                  <span>{{ cabinetConfigStructure.lastModifiedBy || 'N/A' }}</span>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Last Saved On' | safeTranslate }}</label>
+                  </div>
+                  <span>
+                    {{
+                      cabinetConfigStructure.lastModifiedAt
+                        ? (cabinetConfigStructure.lastModifiedAt | date: 'dd/MMM/yyyy')
+                        : 'N/A'
+                    }}
+                  </span>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-business-domain-component></app-business-domain-component>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="activeTab === 'DOCUMENT_TYPE'">
+              <br />
+              <div class="row mt-3">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-document-type-component></app-document-type-component>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

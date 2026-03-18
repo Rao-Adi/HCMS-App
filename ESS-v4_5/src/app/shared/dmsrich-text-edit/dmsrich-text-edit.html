@@ -1,0 +1,39 @@
+<!-- <quill-editor
+  name="templateEditor"
+  [ngStyle]="quillStyle"
+  [(ngModel)]="htmlText"
+  (ngModelChange)="onModelChange($event)"
+  [modules]="quillConfig"
+></quill-editor>
+
+<input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" /> -->
+
+<div class="row mt-2">
+  <div class="col-lg-12 col-md-12 col-sm-12">
+    <!-- <form [formGroup]="form">
+      <div class="editor" [ngStyle]="editorStyle">
+        <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"> </ngx-editor-menu>
+        <ngx-editor [editor]="editor" formControlName="editorContent" [disabled]="IsReadyOnly"> </ngx-editor>
+      </div>
+    </form> -->
+
+    <quill-editor
+      #editor
+      format="html"
+      [ngStyle]="editorStyle"
+      (onEditorCreated)="editorCreated($event)"
+      (onContentChanged)="changeContent($event)"
+    >
+    </quill-editor>
+  </div>
+</div>
+
+<!-- <div
+  class="ql-attachment"
+  data-url="https://cdn.company.com/files/abc123.pdf"
+  data-name="report.pdf"
+  data-size="245 KB"
+>
+  📎 <a href="https://cdn.company.com/files/abc123.pdf">report.pdf</a>
+  <span>(245 KB)</span>
+</div> -->

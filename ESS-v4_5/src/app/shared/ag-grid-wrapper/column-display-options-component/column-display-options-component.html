@@ -1,0 +1,14 @@
+<div class="display-options">
+  <div class="display-options-header">Display Options</div>
+
+  <div class="display-options-body">
+    <label class="option-item" *ngFor="let col of columnToggles">
+      <input
+        type="checkbox"
+        [checked]="col.visible"
+        (change)="onToggle(col)"
+      />
+      <span>{{ col.label }}</span>
+    </label>
+  </div>
+</div>

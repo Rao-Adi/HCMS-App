@@ -1,0 +1,226 @@
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { Component, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MedicalReimbursementService } from '@app/features/personnel/medical-reimbursement-service';
+import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NZ_ICONS } from 'ng-zorro-antd/icon';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzIconService } from 'ng-zorro-antd/icon';
+import { DownloadOutline } from '@ant-design/icons-angular/icons';
+import { BehaviorSubject, catchError, debounceTime, map, Observable, of, switchMap } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { TemplateService } from '@app/shared/services/template.service';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { CabinetSelection } from '@app/shared/interfaces/interfaces';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+
+const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
+
+interface MockUser {
+  name: {
+    first: string;
+  };
+}
+
+@Component({
+  selector: 'app-document-template',
+  imports: [
+    CommonModule,
+    FormsModule,
+    NzFormModule,
+    SafeTranslatePipe,
+    NzDatePickerModule,
+    NzSelectModule,
+    NzButtonModule,
+    DocumentTypeList,
+    DMSRichTextEdit,
+    NzCheckboxModule,
+    CabinetStructureList,
+  ],
+  providers: [
+    MedicalReimbursementService,
+    DatePipe,
+    DecimalPipe,
+    { provide: NZ_ICONS, useValue: icons },
+  ],
+  templateUrl: './document-template.html',
+  styleUrl: './document-template.css',
+})
+export class DocumentTemplate {
+  @ViewChild(CabinetStructureList)
+  cabinetStructure!: CabinetStructureList;
+
+  randomUserUrl = '';
+  searchChange$ = new BehaviorSubject('');
+  optionList: string[] = [];
+  selectedUser?: string;
+  loading = false;
+  templateName: string = '';
+  isDefaultTemplate = false;
+  templateHtml: string = '';
+
+  selectedDivisions?: string = '';
+  selectedDepartment?: string = '';
+  selectedSubDepartment?: string = '';
+  selectedbusinessDomain?: string = '';
+  selectedDocumentType?: string = '';
+  selectedTemplateType?: string = '';
+
+  templateTypes: any[] = [
+    {
+      id: '1',
+      text: 'PDF',
+    },
+    {
+      id: '2',
+      text: 'Word Document',
+    },
+    {
+      id: '3',
+      text: 'HTML',
+    },
+  ];
+
+  constructor(
+    private http: HttpClient,
+    private datePipe: DatePipe,
+    private decimalPipe: DecimalPipe,
+    private iconService: NzIconService,
+    private documentTemplateService: TemplateService,
+    private _notification: NotificationService,
+  ) {
+    this.iconService.addIcon(DownloadOutline);
+    this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
+  }
+
+  ngOnInit(): void {
+    this.searchChange$
+      .pipe(
+        debounceTime(500),
+        switchMap((name) => this.getRandomNameList(name)),
+      )
+      .subscribe((data) => {
+        this.optionList = data;
+        this.loading = false;
+      });
+  }
+
+  onfiscalYearchange() {}
+
+  onSearch(value: string): void {
+    this.loading = true;
+    this.searchChange$.next(value);
+  }
+
+  getRandomNameList(name: string): Observable<string[]> {
+    return this.http.get<{ results: MockUser[] }>(`${this.randomUserUrl}`).pipe(
+      map((res) => res.results),
+      catchError(() => of<MockUser[]>([])),
+      map((list) => list.map((item) => `${item.name.first} ${name}`)),
+    );
+  }
+
+  onDivisionChange(value: string): void {
+    this.selectedDivisions = value;
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+  }
+  onDepartmentsChange(value: string): void {
+    this.selectedDepartment = value;
+    this.selectedSubDepartment = '';
+  }
+
+  onDocumentTypeChange(value: string): void {
+    // this.loading = true;
+    this.selectedDocumentType = value;
+
+    this.documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
+      next: (response) => {
+        this.templateHtml = response.Data.TemplateContent;
+      },
+      error: (err) => console.error(err),
+    });
+  }
+
+  saveTemplate(data: any) { 
+
+    if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
+      this._notification.createNotification('warning', 'Document Type', 'Document Type required');
+      return;
+    }
+    if (!this.isDefaultTemplate) {
+      // if (this.selectedDivisions === undefined || this.selectedDivisions === '') {
+      //   this._notification.createNotification('warning', 'Division', 'Division required');
+      // } else
+
+      if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
+        this._notification.createNotification('warning', 'Department', 'Department required');
+        return;
+      } else if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
+        this._notification.createNotification(
+          'warning',
+          'Templeate Type',
+          'Template Type required',
+        );
+        return;
+      }
+    }
+
+    const payload = {
+      id: '', // or generate if needed; usually backend handles this
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      documentTypeCode: this.selectedDocumentType,
+      templateName: this.templateName,
+      templateFileURL: this.randomUserUrl || '', // fallback empty string if no URL
+      templateType: this.selectedTemplateType,
+      divisionCode: this.selectedDivisions || null,
+      departmentCode: this.selectedDepartment || null,
+      subDepartmentCode: this.selectedSubDepartment || null,
+      businessDomainCode: this.selectedbusinessDomain || null,
+      isDefault: this.isDefaultTemplate,
+      templateContent: this.templateHtml,
+      // Plus fields from AuditableEntity if required or optional
+    };
+
+    this.documentTemplateService.create(payload).subscribe({
+      next: () => {
+        this._notification.createNotification(
+          'success',
+          'Document Template',
+          'Document Template created successfully!',
+        );
+
+        this.cabinetStructure.resetHierarchy();
+      },
+      error: (err) => {
+        console.error('Document Template failed:', err);
+
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notification.createNotification('error', 'Document Template', message);
+      },
+    });
+  }
+
+  onHierarchyChange(values: CabinetSelection[]) {
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
+}

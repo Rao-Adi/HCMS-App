@@ -1,0 +1,276 @@
+.ag-paging-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-top: 1px solid #dde2eb;
+  background-color: #fafafa;
+}
+
+.ag-paging-row-summary {
+  color: #666;
+}
+
+.ag-paging-controls {
+  display: flex;
+  align-items: center;
+}
+
+.ag-paging-button {
+  min-width: 22px;
+  height: 22px;
+  margin: 0 2px;
+  border: 1px solid #c3c3c3;
+  background: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ag-paging-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ag-paging-page-size select {
+  margin-left: 6px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.save-btn {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background-color: #40a9ff;
+}
+
+/* columns show/hide display */
+.display-options {
+  background: #f7f7f7;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+}
+
+.display-options-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.display-options-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.option-item input {
+  cursor: pointer;
+}
+
+
+/* Toolbar */
+.grid-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 0px;
+  float: right;
+}
+
+.display-options-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.display-options-btn:hover {
+  background: #f5f7fa;
+}
+
+/* Panel */
+.display-options-panel {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 12px;
+  margin-bottom: 10px;
+
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.display-options-panel.open {
+  max-height: 200px;
+  opacity: 1;
+  display: inline-block;
+}
+
+/* Header */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.close-icon {
+  cursor: pointer;
+  font-size: 12px;
+  color: #999;
+}
+
+.close-icon:hover {
+  color: #000;
+}
+
+/* Body */
+.panel-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  transform: translateX(26px);
+}
+
+/* Checkbox Chips */
+.column-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  background: #fafafa;
+}
+
+.column-chip:hover {
+  background: #f0f5ff;
+  border-color: #91caff;
+}
+
+.column-chip input {
+  cursor: pointer;
+}
+
+
+/* The container around the switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+/* Hide the default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The track (background) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 7px;
+  left: 0px;
+  right: 6px;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+/* The sliding circle (knob) */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 15px;
+  width: 15px;
+  left: 0px;
+  bottom: 1px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+/* Background color when checked */
+input:checked+.slider {
+  background-color: #2196F3;
+}
+
+/* Move the circle to the right when checked */
+input:checked+.slider:before {
+  transform: translateX(26px);
+}
+
+.toggle-all {
+  position: relative;
+  display: inline-flex;
+}
+
+.toggle-all input,
+.column-chip input {
+  width: 36px;
+  height: 18px;
+  appearance: none;
+  background: #ccc;
+  border-radius: 9px;
+  position: relative;
+  cursor: pointer;
+}
+
+.toggle-all input:checked,
+.column-chip input:checked {
+  background: #3f51b5;
+}
+
+.toggle-all input::after,
+.column-chip input::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.toggle-all input:checked::after,
+.column-chip input:checked::after {
+  transform: translateX(18px);
+}
+ 
+
+

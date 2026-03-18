@@ -1,0 +1,83 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Request for Document Creation/Update</h3>
+            <small class="text-muted">Request for Document Creation/Update</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'NewRequest' }"
+                (click)="selectedTab = 'NewRequest'"
+              >
+                New Request
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'DraftRequest' }"
+                (click)="selectedTab = 'DraftRequest'"
+              >
+                Draft Request
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'MyRequestPendingApproval' }"
+                (click)="selectedTab = 'MyRequestPendingApproval'"
+              >
+                My Request For Pending Approval
+              </button>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'NewRequest'">
+              <app-document-request-form [mode]="'create'"> </app-document-request-form>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'DraftRequest'">
+              <app-draft-request-list></app-draft-request-list> 
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'MyRequestPendingApproval'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-pending-request-for-approval> </app-pending-request-for-approval>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-4 btn-stick">
+          <div class="col-lg-12 col-md-12 col-sm-12 d-flex">
+            <!-- <button
+              *ngIf="selectedTab === 'NewRequest'"
+              class="tab-button"
+              tabindex="0"
+              class="btn btn-primary"
+              (click)="DraftDocumentRequests()"
+            >
+              Draft
+            </button> -->
+
+            <!-- <button *ngIf="selectedTab === 'MyRequestPendingApproval'"
+              class="tab-button"
+              tabindex="0"
+              class="btn btn-primary"
+              (click)="SubmiteDocumentRequests()"
+            >
+              Submit
+            </button> -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

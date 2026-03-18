@@ -9,7 +9,7 @@ import {
   EmbeddedViewRef,
   OnDestroy,
   HostListener,
-  ElementRef
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router'; // This import is correct
@@ -17,17 +17,17 @@ import { DataService } from '@app/core/services/data.service';
 
 /** Your EXISTING item model, UPDATED to match RealData.txt */
 export interface MenuItem {
-  Text: string;                 // Was 'text'
-  Value: string;                // Was 'value'
-  NavigateUrl?: string;         // Was 'navigateUrl'
-  Class?: string;               // Was 'class'
-  count?: number;               // Kept from original
-  imageUrl?: string;            // Kept from original
-  ClsSep?: string;              // Was 'clsSep'
-  CLSSEP?: string;              // Added from RealData.txt 
-  formdescription?: string;     // Kept from original (is lowercase in RealData.txt)
-  child?: MenuItem[];           // Kept from original (is lowercase in RealData.txt)
-  subChild?: MenuItem[];        // Kept from original (is lowercase in RealData.txt)
+  Text: string; // Was 'text'
+  Value: string; // Was 'value'
+  NavigateUrl?: string; // Was 'navigateUrl'
+  Class?: string; // Was 'class'
+  count?: number; // Kept from original
+  imageUrl?: string; // Kept from original
+  ClsSep?: string; // Was 'clsSep'
+  CLSSEP?: string; // Added from RealData.txt
+  formdescription?: string; // Kept from original (is lowercase in RealData.txt)
+  child?: MenuItem[]; // Kept from original (is lowercase in RealData.txt)
+  subChild?: MenuItem[]; // Kept from original (is lowercase in RealData.txt)
 }
 
 /** What the parent expects in getForms($event) - NO CHANGE NEEDED */
@@ -46,7 +46,7 @@ export interface FormSelectPayload {
   standalone: true,
   imports: [CommonModule, RouterModule], // This is correct
   templateUrl: './menu.component.html',
-  styleUrls: ['./menu.component.css']
+  styleUrls: ['./menu.component.css'],
 })
 export class MenuComponent implements OnDestroy {
   @Input() isExpanded = true;
@@ -71,17 +71,222 @@ export class MenuComponent implements OnDestroy {
   constructor(
     private _dataService: DataService, // Injected DataService
     private renderer: Renderer2,
-    private elRef: ElementRef
-    // You do NOT need to inject the Router, which is correct
-  ) { }
+    private elRef: ElementRef // You do NOT need to inject the Router, which is correct
+  ) {}
 
   public ngOnInit() {
-    this.RootItems = [];
+    //this.RootItems = [];
+    this.RootItems = [
+      {
+        Text: 'Dashboard',
+        Value: 'dashboard',
+        NavigateUrl: '/dashboard',
+        Class: 'menu-l1',
+      },
+      {
+        Text: 'Impelementation',
+        Value: 'impelementation',
+        Class: 'menu-l1',
+        child: [
+          {
+            Text: 'Upload Old Documents',
+            Value: 'upload-old-documents',
+            NavigateUrl: '/implementation/upload-old-documents',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'AG-Grid inline edit test',
+            Value: 'aggridinlineediting',
+            NavigateUrl: '/implementation/aggridinlineediting',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Upload Old Documents Edit',
+            Value: 'upload-old-documents-edit',
+            NavigateUrl: '/implementation/upload-old-documents-edit',
+            Class: 'menu-l2',
+          },
+        ],
+      },
+      {
+        Text: 'Setups And Configurations',
+        Value: 'setups-and-configurations',
+        Class: 'menu-l1',
+        child: [
+          {
+            Text: 'Cabinet Structure',
+            Value: 'Cabinet-Structure',
+            NavigateUrl: '/setups-configurations/cabinet-structure',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Document Attributes',
+            Value: 'Document-Attributes',
+            NavigateUrl: '/setups-configurations/document-attributes',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Template',
+            Value: 'Template',
+            NavigateUrl: '/setups-configurations/document-template',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Users',
+            Value: 'Users',
+            NavigateUrl: '/setups-configurations/users',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Approval Workflow Policy Management',
+            Value: 'Approval-Workflow-Policy-Management',
+            NavigateUrl: '/setups-configurations/approval-workflow-policy-management',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Approval Workflow Policy(External Users)',
+            Value: 'Approval-Workflow-Policy(External-Users)',
+            NavigateUrl: '/setups-configurations/approval-workflow-policy-external-users',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Misc Policies',
+            Value: 'Misc-Policies',
+            NavigateUrl: '/setups-configurations/misc-policies',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'E-Signature',
+            Value: 'ESignature',
+            NavigateUrl: '/setups-configurations/esignature',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Responsibility Transfer Form',
+            Value: 'responsibility-transfer-form',
+            NavigateUrl: '/setups-configurations/responsibility-transfer-form',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Responsibility Transfer Workflow',
+            Value: 'responsibility-transfer-workflow',
+            NavigateUrl: '/setups-configurations/responsibility-transfer-workflow',
+            Class: 'menu-l2',
+          },
+        ],
+      },
+      {
+        Text: 'Documents',
+        Value: 'documents',
+        Class: 'menu-l1',
+        child: [
+          {
+            Text: 'Request for Document Creation/Update',
+            Value: 'Reuest-for-Document-Creation-Update',
+            NavigateUrl: '/documents/request-for-document-creation-update',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'My Approvals – Request for Document Creation/Update',
+            Value: 'My-Approvals-Reuest-for-Document-Creation-Update',
+            NavigateUrl: '/documents/my-approvals-request',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Create/Update Document',
+            Value: 'Document-Creation-Update',
+            NavigateUrl: '/documents/create-update-document',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'My Approvals-Documents',
+            Value: 'My-Approvals-Documents',
+            NavigateUrl: '/documents/my-approvals-documents',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'SOP Documents Training',
+            Value: 'SOP-Documents-Training',
+            NavigateUrl: 'documents/sop-training',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Document Authorization-Post Training',
+            Value: 'Document-Authorization-Post-Training',
+            NavigateUrl: '/documents/authorization-post-training',
+            Class: 'menu-l2',
+          },
+        ],
+      },
+      {
+        Text: 'Reports',
+        Value: 'reports',
+        Class: 'menu-l1',
+        child: [
+          {
+            Text: 'Approval Documents',
+            Value: 'Approval-Documents',
+            NavigateUrl: '/reports/view-document',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'Personalized Email Alerts',
+            Value: 'personalized-Email-Alerts',
+            NavigateUrl: '/reports/personalized-email-alerts',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'AI Report',
+            Value: 'Ai-Report',
+            NavigateUrl: '/reports/ai-report',
+            Class: 'menu-l2',
+          },
+          {
+            Text: 'View Documents(Pending Apprvovals)',
+            Value: 'View-Documents-Pending-Apprvovals',
+            NavigateUrl: '/reports/pending-approval',
+            Class: 'menu-l2',
+          },
+        ],
+      },
+      // {
+      //   Text: 'Documents',
+      //   Value: 'documents',
+      //   Class: 'menu-l1',
+      //   child: [
+      //     {
+      //       Text: 'All Documents',
+      //       Value: 'all-docs',
+      //       NavigateUrl: '/documents/all',
+      //       Class: 'menu-l2',
+      //     },
+      //     {
+      //       Text: 'Workflows',
+      //       Value: 'workflows',
+      //       Class: 'menu-l2',
+      //       subChild: [
+      //         {
+      //           Text: 'Pending',
+      //           Value: 'pending-workflows',
+      //           NavigateUrl: '/documents/workflows/pending',
+      //           Class: 'menu-l3',
+      //         },
+      //         {
+      //           Text: 'Approved',
+      //           Value: 'approved-workflows',
+      //           NavigateUrl: '/documents/workflows/approved',
+      //           Class: 'menu-l3',
+      //         },
+      //       ],
+      //     },
+      //   ],
+      // },
+    ];
     this.getMenuData();
   }
 
   getMenuData(): void {
-    this._dataService.get<any[]>('Menu/GetMenuDataThroughRedis/ESSv4.5').subscribe(data => {
+    this._dataService.get<any[]>('Menu/GetMenuDataThroughRedis/ESSv4.5').subscribe((data) => {
       console.log(data);
       this.RootItems = data;
       //this._UtilitiesService.setActiveMenu();
@@ -96,8 +301,12 @@ export class MenuComponent implements OnDestroy {
 
   // #region Menu scirpt working
   // Keys
-  key(v: string) { return v; }
-  getSubmenuKey(rootValue: string, childValue: string) { return `${rootValue}::${childValue}`; }
+  key(v: string) {
+    return v;
+  }
+  getSubmenuKey(rootValue: string, childValue: string) {
+    return `${rootValue}::${childValue}`;
+  }
 
   // Accordion toggles
   toggleRoot(root: MenuItem) {
@@ -113,11 +322,11 @@ export class MenuComponent implements OnDestroy {
 
   // Emit leaf selection (This function is correct, no changes needed)
   selectIfLeaf(item: MenuItem) {
-    if (!(item.child?.length) && !(item.subChild?.length)) {
+    if (!item.child?.length && !item.subChild?.length) {
       this.formSelected.emit({
-        formName: item.Text ?? '',                     // <-- UPDATED
-        formdescription: item.formdescription ?? '',    // <-- NO CHANGE (lowercase in RealData)
-        formId: item.Value ?? ''                        // <-- UPDATED
+        formName: item.Text ?? '', // <-- UPDATED
+        formdescription: item.formdescription ?? '', // <-- NO CHANGE (lowercase in RealData)
+        formId: item.Value ?? '', // <-- UPDATED
       });
       if (!this.isExpanded) {
         this.closeFlyout();
@@ -145,7 +354,6 @@ export class MenuComponent implements OnDestroy {
   // ==========================
   handleRootClick(event: MouseEvent, root: MenuItem) {
     if (this.isExpanded) {
-
       // --- THIS IS THE FIX ---
       if (root.child?.length) {
         // It's a parent, so prevent the '#' navigation
@@ -154,7 +362,6 @@ export class MenuComponent implements OnDestroy {
       }
       // If it's a leaf, we do nothing and let [routerLink] work
       this.selectIfLeaf(root);
-
     } else {
       // This 'else' block was already correct!
       event.preventDefault();
@@ -335,7 +542,6 @@ export class MenuComponent implements OnDestroy {
     host.style.visibility = 'visible';
   }
 
-
   // openFlyout (UPDATED with smart positioning)
   openFlyout(trigger: HTMLElement, ctx: { level: 1 | 2; root?: MenuItem; child?: MenuItem }) {
     if (this.isExpanded) return;
@@ -353,7 +559,8 @@ export class MenuComponent implements OnDestroy {
         this[targetHost] = this.createFlyoutHost();
       }
       this.renderer.setStyle(this[targetHost], 'display', 'block');
-    } else { // level 2
+    } else {
+      // level 2
       targetHost = 'flyoutHostL2';
       targetView = 'flyoutViewL2';
       if (!this[targetHost]) {
@@ -371,7 +578,7 @@ export class MenuComponent implements OnDestroy {
     while ((child = host.firstChild)) {
       host.removeChild(child);
     }
-    view.rootNodes.forEach(n => this[targetHost].appendChild(n));
+    view.rootNodes.forEach((n) => this[targetHost].appendChild(n));
     this[targetView] = view;
 
     // ====== ADDED: Smart positioning after content is rendered ======
@@ -416,7 +623,7 @@ export class MenuComponent implements OnDestroy {
     const trigger = evt.currentTarget as HTMLElement;
 
     if (!this.hoverHost) {
-      this.hoverHost = this.createFlyoutHost();          // you already have this helper
+      this.hoverHost = this.createFlyoutHost(); // you already have this helper
       this.renderer.addClass(this.hoverHost, 'menu-hover-host');
     }
 
@@ -436,7 +643,9 @@ export class MenuComponent implements OnDestroy {
   }
 
   ngAfterViewInit() {
-    const scroller = this.elRef.nativeElement.querySelector('.menu-scroll-container') as HTMLElement;
+    const scroller = this.elRef.nativeElement.querySelector(
+      '.menu-scroll-container'
+    ) as HTMLElement;
     if (scroller) this.renderer.listen(scroller, 'scroll', () => this.hideRootHint());
     this.renderer.listen(window, 'resize', () => this.hideRootHint());
   }

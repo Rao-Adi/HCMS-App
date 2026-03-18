@@ -1,0 +1,44 @@
+.save-btn {
+    background-color: #1890ff;
+    color: white;
+    border: none !important;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.save-btn:hover {
+    background-color: #40a9ff;
+}
+
+.btn-insert {
+    background: none;
+    border: none;
+    color: green;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
+    user-select: none;
+}
+
+.btn-edit {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 6px;
+    user-select: none;
+}
+
+.btn-delete {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 6px;
+    user-select: none;
+}

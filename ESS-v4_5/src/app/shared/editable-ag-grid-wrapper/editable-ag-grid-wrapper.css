@@ -1,0 +1,18 @@
+/* Remove vertical separators between columns */
+/* .ag-theme-alpine .ag-cell {
+  border-right: 1px solid transparent !important;
+} */
+
+/* .ag-theme-alpine .ag-cell:not(:last-child) {
+  border-right: 1px solid #e5e7eb !important;
+} */
+
+/* Ensure file upload cell doesn't have special borders */
+/* .ag-theme-alpine .ag-cell[col-id="documentFile"] {
+  border-right: 1px solid #e5e7eb !important;
+} */
+
+/* Make sure all cells have consistent padding */
+/* .ag-theme-alpine .ag-cell {
+  padding: 0 8px !important;
+} */

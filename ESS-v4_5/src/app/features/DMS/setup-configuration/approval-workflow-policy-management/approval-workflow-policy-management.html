@@ -1,0 +1,425 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">Approval Workflow Policy - Document Creation/Revision/Obsoletion</h3>
+            <small class="text-muted"
+              >Approval Workflow Policy - Document Creation/Revision/Obsoletion</small
+            >
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                [ngClass]="{
+                  'active-tab': selectedPolicyId === PolicyId.RequestForDocumentCreation,
+                }"
+                (click)="selectTab(PolicyId.RequestForDocumentCreation)"
+              >
+                Request For Document Creation
+              </button>
+
+              <button
+                class="tab-button"
+                [ngClass]="{ 'active-tab': selectedPolicyId === PolicyId.DocumentCreation }"
+               (click)="selectTab(PolicyId.DocumentCreation)"
+              >
+                Document Creation
+              </button>
+
+              <button
+                class="tab-button"
+                [ngClass]="{
+                  'active-tab': selectedPolicyId === PolicyId.DocumentRevisionObsoletion,
+                }"
+                (click)="selectTab(PolicyId.DocumentRevisionObsoletion)"
+              >
+                Document Revision/Obsoletion
+              </button>
+
+              <!-- <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'RequestForDocumentCreation' }"
+                (click)="selectedTab = 'RequestForDocumentCreation'"
+              >
+                Request For Document Creation
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'DocumentCreation' }"
+                (click)="selectedTab = 'DocumentCreation'"
+              >
+                Document Creation
+              </button>
+
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === ' DocumentRevisionObsoletion' }"
+                (click)="selectedTab = 'DocumentRevisionObsoletion'"
+              >
+                Document Revision/Obsoletion
+              </button> -->
+            </div>
+
+            <div class="row row-space">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">
+                    {{ 'labels.Cabinet' | safeTranslate }}
+                  </h3>
+                  <br />
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                      </div>
+                      <div>
+                        <app-document-type-list
+                          valueKey="CODE"
+                          labelKey="NAME"
+                          placeholder="--any--"
+                          [(ngModel)]="selectedDocumentType"
+                          (valueChange)="onDocumentTypeChange($event)"
+                          width="250px"
+                        >
+                        </app-document-type-list>
+                      </div>
+                    </div>
+                    <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                      </app-cabinet-structure-list>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Approval Authorities</h3>
+                  <br />
+
+                  <div class="row row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <!-- Authority Type -->
+                    <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Authority Type*' | safeTranslate }}</label>
+                      </div>
+                      <nz-select
+                        style="width: 250px"
+                        [(ngModel)]="selectedAuthorityType"
+                        nzPlaceHolder="Select Authority Type"
+                        (ngModelChange)="onAuthorityTypeChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of authorityTypes"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+
+                      <button
+                        aria-label="Collapse Menu"
+                        title="Collapse Menu"
+                        (click)="addExclusion()"
+                        class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      >
+                        <i class="bi bi-plus-circle"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row row-space">
+                    <!-- Dynamic Columns -->
+                    <ng-container [ngSwitch]="selectedAuthorityType">
+                      <!-- CASE 1: 3 Columns -->
+                      <ng-container *ngSwitchCase="'1'">
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <span class="d-flex">Maximum 'Direct Reporting to' Levels</span>
+                          <input
+                            maxlength="10"
+                            appDecimalInput
+                            name="TotalClaim"
+                            type="text"
+                            style="width: 250px !important"
+                            [ngClass]="{
+                              'form-control': true,
+                              'input-sm': true,
+                            }"
+                          />
+                        </div>
+
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <span class="d-flex">Workflow Should Exclude These</span>
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedWorkflowExclude"
+                            nzPlaceHolder="Select Exclusion"
+                            (ngModelChange)="onWorkflowExcludeChange($event)"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of workflowExclude"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+
+                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div [ngSwitch]="selectedWorkflowExclude">
+                            <div *ngSwitchCase="'1'">
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                                <span class="d-flex">Designation</span>
+                                <app-designation-list
+                                  valueKey="CODE"
+                                  labelKey="NAME"
+                                  placeholder="Select Designation"
+                                  [(ngModel)]="selectedDesignation"
+                                  width="250px"
+                                >
+                                </app-designation-list>
+                              </div>
+                            </div>
+                            <div *ngSwitchCase="'2'">
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                                <span class="d-flex">Role</span>
+                                <app-role-list
+                                  valueKey="ID"
+                                  labelKey="NAME"
+                                  placeholder="Select Role"
+                                  [(ngModel)]="selectedRole"
+                                  width="250px"
+                                >
+                                </app-role-list>
+                              </div>
+                            </div>
+                            <div *ngSwitchCase="'3'">
+                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                                <span class="d-flex">Employee</span>
+                                <app-employee-list
+                                  valueKey="ID"
+                                  labelKey="NAME"
+                                  placeholder="Select Employee"
+                                  [(ngModel)]="selectedEmployee"
+                                  width="250px"
+                                >
+                                </app-employee-list>
+                              </div>
+                            </div>
+                            <div *ngSwitchDefault>
+                              <small class="text-muted"></small>
+                            </div>
+                          </div>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 2: 1 Column -->
+                      <ng-container *ngSwitchCase="'2'">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Employee</span>
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedEmployeeSingle"
+                            nzPlaceHolder="Select Employee"
+                            (ngModelChange)="onEmployeeChange($event)"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of employees"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 3 -->
+                      <ng-container *ngSwitchCase="'3'">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Role</span>
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedRoleSingle"
+                            nzPlaceHolder="Select Role"
+                            (ngModelChange)="onRoleChange($event)"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of roles"
+                              [nzValue]="dep.ID"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 4 -->
+                      <ng-container *ngSwitchCase="'4'">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Designation</span>
+                          <nz-select
+                            style="width: 250px"
+                            [(ngModel)]="selectedDesignationSingle"
+                            nzPlaceHolder="Select Designation"
+                            (ngModelChange)="onDesignationChange($event)"
+                            nzAllowClear
+                            nzShowSearch
+                          >
+                            <nz-option
+                              *ngFor="let dep of designations"
+                              [nzValue]="dep.CODE"
+                              [nzLabel]="dep.NAME"
+                            >
+                            </nz-option>
+                          </nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 5 -->
+                      <ng-container *ngSwitchCase="'5'">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Division Head</span>
+                          <nz-select nzPlaceHolder="Select Division Head"></nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 6 -->
+                      <ng-container *ngSwitchCase="'6'">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Department Head</span>
+                          <nz-select nzPlaceHolder="Select Department Head"></nz-select>
+                        </div>
+                      </ng-container>
+
+                      <!-- CASE 7 -->
+                      <ng-container *ngSwitchCase="'7'">
+                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
+                          <span class="d-flex">Sub-Department Head</span>
+                          <nz-select nzPlaceHolder="Select Sub-Department Head"></nz-select>
+                        </div>
+                      </ng-container>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+              <div
+                *ngIf="showExclusionTable"
+                class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+              >
+                <table class="table" *ngIf="approvalSequenceData && approvalSequenceData.length > 0">
+                  <thead>
+                    <th>Approval Sequence</th>
+                    <th></th>
+                  </thead>
+                  <tbody>
+                    <!-- Use keyvalue pipe to convert the object -->
+                    @for (item of approvalSequenceData | keyvalue; track item.key; let i = $index) {
+                      <tr>
+                        <td width="250px">{{ i + 1 }}</td>
+                        <td>
+                          <!-- Access data using item.value -->
+                          {{ item.value.EmployeeName }}<br />
+                          Role: {{ item.value.UserRole }}<br />
+                          Designation: {{ item.value.Designation }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="row row-space">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="main-content d-flex flex-column min-vw-0">
+                  <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="status-box-leftColmd6-standard">
+                      <h3 class="PnlHeader">Other Policies</h3>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                          <div class="d-flex">
+                            <nz-radio-group
+                              [(ngModel)]="approvalPolicy"
+                              class="display-flex-direction"
+                            >
+                              <label nz-radio nzValue="OBSERVE_ONLY">
+                                Approval Authorities can only give their observations, but not edit
+                                the document
+                              </label>
+
+                              <label nz-radio nzValue="CAN_EDIT">
+                                Approval Authorities can even edit the documents before approval
+                              </label>
+                            </nz-radio-group>
+                            <!-- <nz-radio-group [(ngModel)]="radioValue" class="display-flex-direction">
+                              <label nz-radio nzValue="A"
+                                >Approval Authorities can only give their observations, but not edit
+                                the document</label
+                              >
+                              <label nz-radio nzValue="B"
+                                >Approval Authorities can even edit the documents before
+                                approval</label
+                              >
+                            </nz-radio-group> -->
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedPolicyId === PolicyId.DocumentCreation">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="main-content d-flex flex-column min-vw-0">
+                  <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="status-box-leftColmd6-standard">
+                      <h3 class="PnlHeader">Approval Authorities for cross-functional users</h3>
+                      <br />
+                      <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                          <nz-switch
+                            [(ngModel)]="switchValue1"
+                            [nzControl]="true"
+                            (click)="clickSwitch()"
+                            [nzLoading]="loading"
+                          >
+                          </nz-switch>
+                          <span class="d-flex"
+                            >If a document has cross-functional users, then their respective Heads
+                            of Division will approve the document first (in parallel). After each
+                            Head approves, the document will then go to the next approval authority
+                            as per the sequence configured above.</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -2,17 +2,20 @@
   display: block;
   height: 100%;
   /* overflow: hidden;  <-- remove this */
-  overflow: visible; /* add this */
+  overflow: visible;
+  /* add this */
 }
+
 /* optional but harmless safety net */
 .modern-menu {
   overflow: visible;
 }
+
 .modern-menu {
   --icon-size: 20px;
   width: 260px;
   background: #fff;
-  font: 14px Inter,'Segoe UI',system-ui,-apple-system,sans-serif;
+  font: 14px Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
   transition: width .25s ease;
   position: relative;
   height: 100%;
@@ -20,42 +23,43 @@
   flex-direction: column;
 }
 
-  .modern-menu:not(.expanded) {
-    width: 72px;
-  }
+.modern-menu:not(.expanded) {
+  width: 72px;
+}
 
 /* Scrollable menu container */
 .menu-scroll-container {
   flex: 1 1 auto;
   /* was: overflow-y: auto; overflow-x: hidden; */
   overflow-y: auto;
-  overflow-x: hidden; /* <-- important */
+  overflow-x: hidden;
+  /* <-- important */
   padding: 0;
 }
 
-  /* Fancy custom scrollbar - slim and subtle */
-  .menu-scroll-container::-webkit-scrollbar {
-    width: 4px;
-  }
+/* Fancy custom scrollbar - slim and subtle */
+.menu-scroll-container::-webkit-scrollbar {
+  width: 4px;
+}
 
-  .menu-scroll-container::-webkit-scrollbar-track {
-    background: transparent;
-    margin: 4px 0;
-  }
+.menu-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
 
-  .menu-scroll-container::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-    transition: background 0.2s ease, opacity 0.2s ease;
-  }
+.menu-scroll-container::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
 
-    .menu-scroll-container::-webkit-scrollbar-thumb:hover {
-      background: #cbd5e1;
-    }
+.menu-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
 
-    .menu-scroll-container::-webkit-scrollbar-thumb:active {
-      background: #94a3b8;
-    }
+.menu-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #94a3b8;
+}
 
 /* Firefox scrollbar */
 .menu-scroll-container {
@@ -88,25 +92,25 @@ ul {
   position: relative;
 }
 
-  .menu-link:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-    transform: translateX(2px);
-  }
+.menu-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  transform: translateX(2px);
+}
 
-  .menu-link:active {
-    transform: translateX(0);
-  }
+.menu-link:active {
+  transform: translateX(0);
+}
 
-.menu-item.activepage > .menu-link {
+.menu-item.activepage>.menu-link {
   background: #27347c;
   color: #fff;
   transform: translateX(0);
 }
 
-  .menu-item.activepage > .menu-link:hover {
-    background: #1e2966;
-  }
+.menu-item.activepage>.menu-link:hover {
+  background: #1e2966;
+}
 
 .menu-icon {
   display: none;
@@ -131,7 +135,7 @@ ul {
   transform: scale(1.05);
 }
 
-.menu-item.activepage > .menu-link .menu-icon {
+.menu-item.activepage>.menu-link .menu-icon {
   opacity: 1;
 }
 
@@ -252,8 +256,8 @@ ul {
   transition: all .2s ease;
 }
 
-.menu-item.activepage > .menu-link .menu-count {
-  background: rgba(255,255,255,.2);
+.menu-item.activepage>.menu-link .menu-count {
+  background: rgba(255, 255, 255, .2);
   color: #fff;
 }
 
@@ -266,7 +270,7 @@ ul {
   transform-origin: center;
 }
 
-.menu-item.open > .menu-link .submenu-indicator {
+.menu-item.open>.menu-link .submenu-indicator {
   opacity: 1;
   transform: rotate(90deg);
 }
@@ -284,44 +288,44 @@ ul {
   margin-right: .5rem;
 }
 
-  .submenu .menu-link {
-    padding: .5rem .75rem .5rem 2rem;
-    font-size: 13px;
-    gap: .625rem;
-    font-weight: 400;
-    position: relative;
-  }
+.submenu .menu-link {
+  padding: .5rem .75rem .5rem 2rem;
+  font-size: 13px;
+  gap: .625rem;
+  font-weight: 400;
+  position: relative;
+}
 
-    .submenu .menu-link::before {
-      content: '';
-      position: absolute;
-      left: 1.25rem;
-      top: 0;
-      bottom: 0;
-      width: 1px;
-      background: #e5e7eb;
-      transition: background .2s ease;
-    }
+.submenu .menu-link::before {
+  content: '';
+  position: absolute;
+  left: 1.25rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb;
+  transition: background .2s ease;
+}
 
-    .submenu .menu-link:hover::before {
-      background: #cbd5e1;
-    }
+.submenu .menu-link:hover::before {
+  background: #cbd5e1;
+}
 
-  .submenu.level-2 .menu-link {
-    padding-left: 3rem;
-    background: transparent;
-  }
+.submenu.level-2 .menu-link {
+  padding-left: 3rem;
+  background: transparent;
+}
 
-    .submenu.level-2 .menu-link::before {
-      left: 2.25rem;
-    }
+.submenu.level-2 .menu-link::before {
+  left: 2.25rem;
+}
 
-  .submenu .menu-link:hover {
-    background: #f1f5f9;
-    transform: translateX(2px);
-  }
+.submenu .menu-link:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
 
-.menu-item.has-children.open > .submenu {
+.menu-item.has-children.open>.submenu {
   display: block;
   animation: slideDown 0.2s ease;
 }
@@ -369,16 +373,16 @@ ul {
   transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
 }
 
-  /* Arrow pointer for tooltip */
-  .modern-menu:not(.expanded) .menu-text::before {
-    content: '';
-    position: absolute;
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 6px solid transparent;
-    border-right-color: #27347c;
-  }
+/* Arrow pointer for tooltip */
+.modern-menu:not(.expanded) .menu-text::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #27347c;
+}
 
 .modern-menu:not(.expanded) .root-item .menu-count {
   position: absolute;
@@ -390,10 +394,10 @@ ul {
   line-height: 16px;
   font-size: 10px;
   border: 1px solid #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.modern-menu:not(.expanded) .menu-item.activepage > .menu-link .menu-count,
+.modern-menu:not(.expanded) .menu-item.activepage>.menu-link .menu-count,
 .modern-menu:not(.expanded) .menu-link:hover .menu-count {
   background-color: #dc3545;
   color: #fff;
@@ -413,12 +417,12 @@ ul {
   background: #fff;
   border: 1px solid #e6e9ee;
   border-radius: 10px;
-  box-shadow: 0 10px 40px rgba(16,24,40,.12);
+  box-shadow: 0 10px 40px rgba(16, 24, 40, .12);
   min-width: 220px;
   max-width: 280px;
   pointer-events: auto;
   padding: 6px;
-  font-family: Inter,'Segoe UI',system-ui,-apple-system,sans-serif;
+  font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -451,9 +455,9 @@ ul {
   transition: background 0.2s ease;
 }
 
-  .flyout::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-  }
+.flyout::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
 
 .flyout {
   scrollbar-width: thin;
@@ -473,23 +477,23 @@ ul {
   display: block;
 }
 
-  .submenu.in-flyout .menu-link {
-    padding: 10px 14px !important;
-    gap: 10px;
-    border-bottom: 0;
-    white-space: nowrap;
-    margin: 2px 0;
-    font-size: 13px;
-  }
+.submenu.in-flyout .menu-link {
+  padding: 10px 14px !important;
+  gap: 10px;
+  border-bottom: 0;
+  white-space: nowrap;
+  margin: 2px 0;
+  font-size: 13px;
+}
 
-    .submenu.in-flyout .menu-link::before {
-      display: none;
-    }
+.submenu.in-flyout .menu-link::before {
+  display: none;
+}
 
-    .submenu.in-flyout .menu-link:hover {
-      background: #f1f5f9;
-      border-radius: 6px;
-    }
+.submenu.in-flyout .menu-link:hover {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
 
 /* Focus state */
 .menu-link:focus-visible {
@@ -515,3 +519,14 @@ ul {
   visibility: hidden;
 }
 
+
+.menu-link.active {
+  background-color: #e6e9ee; /* or your theme color */
+  color: rgb(0, 0, 0);
+  font-weight: 600;
+}
+
+.active-parent > .menu-link {
+  font-weight: 700;
+  color: #000000;
+}

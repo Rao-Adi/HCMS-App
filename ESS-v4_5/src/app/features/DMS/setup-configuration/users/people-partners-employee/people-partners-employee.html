@@ -1,0 +1,32 @@
+<!-- <app-editable-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '500px' }"
+  class="ag-theme-alpine"
+  [gridId]="'employee-planning-grid'"
+  [config]="gridConfig"
+  [rowData]="integrationUserData"
+  [isSelectionRequired]="true"
+  [pinnedTopRowData]="pinnedTopRowDataPlanning"
+  (selectionChanged)="onSelectionChanged($event)" 
+  (selectionChanged)="onSelectionChanged($event)"
+  (gridReady)="onGridReady($event)"
+  (actionClicked)="handleGridAction($event)"
+>
+</app-editable-ag-grid-wrapper> -->
+
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '450px' }"
+  [rowData]="integrationUserData"
+  [columnToggles]="columnToggles"
+  [columnDefs]="documentColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [isSelectionRequired]="false"
+  [showDisplayOption]="true"
+  [rowData]="pinnedTopRowDataPlanning"
+  [pageSize]="pageSize"
+  [totalRows]="totalRows"
+  [pageSize]="selectedPageSize"
+  gridId="documentGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="GetAllIntegeratedPeoplepartners($event)"
+>
+</app-ag-grid-wrapper>

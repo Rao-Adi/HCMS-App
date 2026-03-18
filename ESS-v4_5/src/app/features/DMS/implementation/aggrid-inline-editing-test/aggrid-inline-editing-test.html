@@ -1,0 +1,28 @@
+<div class="row">
+  <div class="status-box-leftColmd6-standard mt-3">
+    <div class="row">
+      <div class="PnlHeader">{{ 'labels.PlanningSummary' | safeTranslate }}</div>
+      <div class="PnlBody">
+        <ag-grid-angular
+          style="width: 100%"
+          class="ag-theme-alpine"
+          [rowData]="newPositionPlanningGrid"
+          [columnDefs]="planningColumnDefs"
+          [defaultColDef]="defaultColDef"
+          [rowHeight]="47"
+          [headerHeight]="40"
+          [pagination]="true"
+          domLayout="autoHeight"
+          [paginationPageSize]="5"
+          [paginationPageSizeSelector]="[10, 20, 20, 100]"
+          [suppressCellFocus]="true"
+          (filterChanged)="onFilterChanged()"
+          [pinnedTopRowData]="pinnedTopRowDataPlanning"
+          (gridReady)="onPlanningGridReady($event)"
+          (cellClicked)="onPlanningCellClicked($event)"
+        >
+        </ag-grid-angular>
+      </div>
+    </div>
+  </div>
+</div>

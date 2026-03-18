@@ -34,7 +34,7 @@ export const errorInterceptor: HttpInterceptorFn = (
         if (!router.url.includes('/sessiontimeout')) {
           localStorage.setItem('HRISRedirectURL', router.url);
         }
-        router.navigate(['/sessiontimeout']);
+        //router.navigate(['/sessiontimeout']);
         return throwError(() => ({ status: 401, message: 'SessionTimeOut' }));
       }
 

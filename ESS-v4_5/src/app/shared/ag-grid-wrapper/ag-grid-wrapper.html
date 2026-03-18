@@ -1,0 +1,86 @@
+<div class="row">
+  <div class="col-lg-2 col-md-2 col-sm-2">
+    <div class="row mb-2">
+      <div class="col-sm-3">
+        <div class="example-header"> 
+          <input
+            class="form-control"
+            style="width: 250px"
+            nz-input
+            placeholder="Search"
+            [(ngModel)]="searchValue"
+            (input)="onFilterTextBoxChanged()"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2 col-md-2 col-sm-2 mb-2">
+    <!-- 🔹 ACTIONS FROM PARENT -->
+    <ng-content select="[grid-actions]"></ng-content>
+  </div>
+  <div class="col-lg-8 col-md-8 col-sm-8">
+    <div class="grid-toolbar">
+      <button class="display-options-btn" (click)="toggleDisplayOptions()">
+        <i nz-icon nzType="setting"></i>
+        Display Options
+      </button>
+    </div>
+
+    <div class="display-options-panel" [class.open]="showDisplayOption && toggleShow">
+      <div class="panel-header">
+        <span>Visible Columns</span>
+
+        <div class="toggle-all">
+          <label class="switch">
+            <input type="checkbox" [checked]="isAllSelected" (change)="toggleAllColumns($event)" />
+            <span class="slider round"></span>
+          </label>
+          <span class="span mt-1">All</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <label class="column-chip" *ngFor="let col of columnToggles">
+          <nz-switch
+            nzSize="small"
+            [(ngModel)]="col.visible"
+            (ngModelChange)="toggleColumn(col, $event)"
+            [nzDisabled]="!gridApi"
+          ></nz-switch>
+          <span>{{ col.label }}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12">
+    <ag-grid-angular
+      class="ag-theme-alpine"
+      [ngStyle]="gridStyle"
+      [rowData]="rowData"
+      [gridOptions]="gridOptions"
+      [columnDefs]="finalColumnDefs"
+      [defaultColDef]="defaultColDef"
+      [context]="{ componentParent: this }"
+      [pagination]="true"
+      [rowHeight]="config.rowHeight"
+      [headerHeight]="config.headerHeight"
+      [pagination]="config.enablePagination"
+      [context]="gridContext"
+      [paginationPageSize]="config.pageSize"
+      [paginationPageSizeSelector]="config.pageSizeOptions"
+      [suppressCellFocus]="config.suppressCellFocus"
+      (gridReady)="onGridReady($event)"
+      (sortChanged)="onSortChanged()"
+      (filterChanged)="onFilterChanged()"
+      (cellValueChanged)="onCellValueChanged($event)"
+      (cellClicked)="onCellClicked($event)"
+      (selectionChanged)="onSelectionChanged()"
+      (rowSelected)="onRowSelected($event)"
+    >
+    </ag-grid-angular>
+  </div>
+</div>

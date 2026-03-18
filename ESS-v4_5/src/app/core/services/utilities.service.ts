@@ -111,7 +111,7 @@ export class UtilitiesService {
 
           if (resultValue === 'SessionTimeOut') {
             this.SetRedirectURL();
-            this.router.navigate(['sessiontimeout']);
+            //this.router.navigate(['sessiontimeout']);
             observer.error('SessionTimeOut');
           } else {
             const canAccess = (resultValue === true || String(resultValue).toLowerCase() === "true");

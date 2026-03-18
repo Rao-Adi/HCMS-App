@@ -1,0 +1,50 @@
+<div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <h2>Employee Planning</h2>
+      <div class="btn-group">
+        <button class="btn btn-primary" (click)="exportData()">
+          <i class="fas fa-download"></i> Export Data
+        </button>
+        <button class="btn btn-danger" (click)="clearAll()">
+          <i class="fas fa-trash"></i> Clear All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Employee List</h5>
+        </div>
+        <div class="card-body">
+          <app-editable-ag-grid-wrapper
+            [gridStyle]="{ width: '100%', height: '500px' }"
+            class="ag-theme-alpine"
+            [gridId]="'employee-planning-grid'"
+            [config]="gridConfig"
+            [rowData]="employeeData"
+            [documentTypeList]="documentTypes"
+            [divisionList]="divisions"
+            [departmentList]="departments"
+            [subDepartmentList]="subDepartments"
+            [pinnedTopRowData]="pinnedTopRowDataPlanning"
+            [isSelectionRequired]="true"
+            (rowAdded)="onRowAdded($event)"
+            (rowUpdated)="onRowUpdated($event)"
+            (rowDeleted)="onRowDeleted($event)"
+            (cellValueChanged)="onCellValueChanged($event)"
+            (selectionChanged)="onSelectionChanged($event)"
+            (gridReady)="onGridReady($event)"
+          >
+          </app-editable-ag-grid-wrapper>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted"> Total Records: {{ employeeData.length }} </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

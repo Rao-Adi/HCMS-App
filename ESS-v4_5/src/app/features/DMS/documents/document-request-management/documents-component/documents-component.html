@@ -1,0 +1,33 @@
+<app-ag-grid-wrapper
+  [gridStyle]="{ width: '100%', height: '450px' }"
+  [columnToggles]="columnToggles"
+  [columnDefs]="documentColumnDefs"
+  [defaultColDef]="defaultColDef"
+  [isSelectionRequired]="false"
+  [showDisplayOption]="true"
+  [rowData]="documentRevisionData"
+  [pageSize]="pageSize"
+  [totalRows]="totalRows"
+  [pageSize]="selectedPageSize"
+  gridId="documentGrid"
+  (pageSizeChange)="onPageSizeChanged($event)"
+  (serverQuery)="GetAllApprovedDocuments($event)"
+>
+  <!-- <div grid-actions class="grid-action-icons">
+    <button class="grid-icon-btn" title="Share with other Employees" (click)="export()">
+      <i class="bi bi-folder-symlink"></i>
+    </button>
+
+    <button class="grid-icon-btn" title="Temporarily share with External Users" (click)="print()">
+      <i class="bi bi-layout-text-window-reverse"></i>
+    </button>
+
+    <button class="grid-icon-btn" title="Download" (click)="openHistory()">
+      <i class="bi bi-download"></i>
+    </button>
+
+    <button class="grid-icon-btn" title="Initiate Revision Process" (click)="submit()">
+      <i class="bi bi-box-arrow-right"></i>
+    </button>
+  </div> -->
+</app-ag-grid-wrapper>

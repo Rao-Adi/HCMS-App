@@ -38,7 +38,13 @@
     "bootstrap-icons": "^1.13.1",
     "jest-editor-support": "*",
     "ng-zorro-antd": "^20.0.0",
+    "ngx-editor": "^19.0.0-beta.1",
+    "ngx-quill": "^30.0.1",
+    "quill": "^2.0.3",
+    "quill-emoji": "^0.1.7",
+    "quill-mention": "^2.1.1",
     "rxjs": "~7.8.0",
+    "signature_pad": "3.0.0-beta.4",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },

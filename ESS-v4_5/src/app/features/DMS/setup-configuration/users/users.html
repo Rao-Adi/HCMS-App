@@ -1,0 +1,55 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="card-custom">
+        <div class="clearfix">
+          <div class="pull-left">
+            <h3 class="mt-0">User</h3>
+            <small class="text-muted">User</small>
+          </div>
+        </div>
+        <br />
+        <hr />
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="custom-tab-container">
+              <div class="row row-space">
+                <div class="col-lg-6">
+                  <span class="d-flex">Manually Manage Employee(s) Info</span>
+                  <nz-switch
+                    [(ngModel)]="switchValue1"
+                    [nzControl]="true"
+                    (click)="clickSwitch('manual')"
+                    [nzLoading]="loading"
+                  >
+                  </nz-switch>
+                </div>
+                <div class="col-lg-6">
+                  <span class="d-flex">Integration With People.Partners</span>
+                  <nz-switch
+                    [(ngModel)]="switchValue2"
+                    [nzControl]="true"
+                    (click)="clickSwitch('integration')"
+                    [nzLoading]="loading"
+                  ></nz-switch>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="activeMode === 'manual'">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-manual-manage-employee> </app-manual-manage-employee>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="activeMode === 'integration'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <app-people-partners-employee> </app-people-partners-employee>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

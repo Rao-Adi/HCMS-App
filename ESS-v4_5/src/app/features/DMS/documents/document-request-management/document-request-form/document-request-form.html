@@ -1,0 +1,368 @@
+<div class="row row-space">
+  <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="status-box-leftColmd6-standard">
+      <h3 class="PnlHeader">Document Justification</h3>
+      <br />
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+          <div class="PnlHeading">
+            <label>{{ 'labels.Request Type' | safeTranslate }} </label>
+          </div>
+          <div>
+            <nz-select
+              style="width: 250px"
+              [(ngModel)]="selectedDocumentRequestType"
+              nzPlaceHolder="Select Request Type"
+              (ngModelChange)="onRequestTypeChange($event)"
+              nzAllowClear
+              nzShowSearch
+            >
+              <nz-option *ngFor="let dep of requestTypes" [nzValue]="dep.id" [nzLabel]="dep.text">
+              </nz-option>
+            </nz-select>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+          <div class="PnlHeading">
+            <label>{{ 'labels.Company' | safeTranslate }} </label>
+          </div>
+          <div class="Divtxtemployeeschright">
+            <div>
+              <nz-select
+                style="width: 250px"
+                [nzPlaceHolder]="'Select Company'"
+                [(ngModel)]="selectedCompany"
+                (ngModelChange)="onCompanyChange($event)"
+                nzAllowClear
+                nzShowSearch
+              >
+                <nz-option *ngFor="let dep of companies" [nzValue]="dep.id" [nzLabel]="dep.text">
+                </nz-option>
+              </nz-select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <!-- Dynamic Columns -->
+        <ng-container [ngSwitch]="selectedDocumentRequestType">
+          <div *ngIf="showDocumentDiv">
+            <div class="row">
+              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                <span class="d-flex">Filter</span>
+                <nz-select
+                  style="width: 200px"
+                  [nzPlaceHolder]="'Select Filter'"
+                  nzAllowClear
+                  nzShowSearch
+                >
+                  <nz-option *ngFor="let dep of filters" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
+                  </nz-option>
+                </nz-select>
+              </div>
+            </div>
+            <br />
+            <br />
+            <div class="row">
+              <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <h3 class="PnlHeader">Documents</h3>
+                </div>
+                <div class="mt-4">
+                    <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '450px' }"
+                    [columnToggles]="columnToggles"
+                    [columnDefs]="documentColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [isSelectionRequired]="false"
+                    [showDisplayOption]="true"
+                    [rowData]="documentRevisionData"
+                    [pageSize]="pageSize"
+                    [totalRows]="totalRows"
+                    [pageSize]="selectedPageSize"
+                    gridId="documentGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
+                    (serverQuery)="GetAllApprovedDocuments($event)"
+                    (cellClicked)="onCellClicked($event)"
+                    > 
+                    </app-ag-grid-wrapper>
+                  <!-- <app-documents-component></app-documents-component> -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- CASE 1: 3 Columns -->
+          <div *ngIf="showDocumentCreationDiv && (!showDocumentDiv || selectedDocumentRow)">
+            <div class="row">
+              <div class="col-sm-3 col-md-3 col-lg-3 mb-10 mt-4">
+                <span class="d-flex">Document Name</span>
+                <input
+                  maxlength="200"
+                  appDecimalInput
+                  [(ngModel)]="documentName"
+                  name="Document Name"
+                  type="text"
+                  [disabled]="showDocumentDiv"
+                  style="width: 250px !important"
+                  [ngClass]="{
+                    'form-control': true,
+                    'input-sm': true,
+                  }"
+                />
+              </div>
+              <div class="col-lg-9 col-md-9 col-sm-6 mb-10 mt-4">
+                <span class="d-flex">Justification</span>
+                <textarea rows="4" nz-input [(ngModel)]="inputJustificationValue"></textarea>
+              </div>
+            </div>
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <h3 class="PnlHeader">Cabinet</h3>
+              <br />
+              <div class="row" *ngIf="!showDocumentDiv">
+                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <app-document-type-list
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="Select Document Type"
+                      [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
+                      width="250px"
+                    >
+                    </app-document-type-list>
+                  </div>
+                </div>
+
+                <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                  <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                  </app-cabinet-structure-list>
+                </div>
+              </div>
+
+              <div class="row" *ngIf="showDocumentDiv">
+                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <input
+                      maxlength="200"
+                      appDecimalInput
+                      [(ngModel)]="selectedDocumentType"
+                      [disabled]="true"
+                      name="Document Type"
+                      type="text"
+                      style="width: 250px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Division' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <input
+                      maxlength="200"
+                      appDecimalInput
+                      [(ngModel)]="selectedDivisions"
+                      [disabled]="true"
+                      name="Division"
+                      type="text"
+                      style="width: 250px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Department' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <input
+                      maxlength="200"
+                      appDecimalInput
+                      [(ngModel)]="selectedDepartment"
+                      [disabled]="true"
+                      name="Department"
+                      type="text"
+                      style="width: 250px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Sub-Department' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <input
+                      maxlength="200"
+                      appDecimalInput
+                      [(ngModel)]="selectedSubDepartment"
+                      [disabled]="true"
+                      name="Sub-Department"
+                      type="text"
+                      style="width: 250px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Business Domain' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <input
+                      maxlength="200"
+                      appDecimalInput
+                      [(ngModel)]="selectedBusinessDomain"
+                      [disabled]="true"
+                      name="Business Domain"
+                      type="text"
+                      style="width: 250px !important"
+                      [ngClass]="{
+                        'form-control': true,
+                        'input-sm': true,
+                      }"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <br />
+            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <h3 class="PnlHeader">Users</h3>
+              <br />
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-drusers-component
+                  [selectedUsers]="distributionUserList"
+                  (usersChanged)="distributionUserList = $event"
+                ></app-drusers-component>
+              </div>
+            </div>
+            <br />
+            <br />
+            <hr />
+
+            <div class="row-space">
+              <h3 class="PnlHeader">Distribution List</h3>
+              <br />
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <app-drdistribution-list
+                  [DocumentTypeCode]="selectedDocumentType"
+                  [selectedDistributionList]="distributionListPayload"
+                  (distributionChanged)="onDistributionChanged($event)"
+                >
+                </app-drdistribution-list>
+              </div>
+            </div>
+            <br />
+            <br />
+            <hr />
+            <div class="row mb-4">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <h3 class="PnlHeader">Document Content</h3>
+                <br />
+                <app-dmsrich-text-edit
+                  [editorStyle]="{ width: '100%', height: '350px' }"
+                  [contentHtml]="templateHtml"
+                  (contentHtmlChange)="templateHtml = $event"
+                ></app-dmsrich-text-edit>
+              </div>
+            </div>
+            <br />
+            <br />
+            <hr />
+            <div class="row mt-4">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <div
+                  *ngIf="showExclusionTable"
+                  class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+                >
+                  <h3 class="PnlHeader">
+                    {{ 'labels.Workflow Authorities' | safeTranslate }}
+                  </h3>
+                  <br />
+                  <table
+                    class="table"
+                    *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                  >
+                    <thead>
+                      <th>Approval Sequence</th>
+                      <th>Employee Code</th>
+                      <th>Employee Name</th>
+                      <th>Designation</th>
+                    </thead>
+                    <tbody>
+                      @for (
+                        item of approvalSequenceData | keyvalue;
+                        track item.key;
+                        let i = $index
+                      ) {
+                        <tr>
+                          <td>{{ item.value.StepOrder }}</td>
+                          <td>
+                            {{ item.value.EmployeeCode }}
+                          </td>
+                          <td>
+                            {{ item.value.EmployeeName }}
+                          </td>
+                          <td>
+                            {{ item.value.Designation }}
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DEFAULT CASE: No Columns -->
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4 btn-stick">
+    <div class="col-lg-12 col-md-12 col-sm-12 d-flex">
+      <button
+        class="tab-button"
+        tabindex="0"
+        class="btn btn-primary"
+        (click)="DraftDocumentRequests()"
+      >
+        Draft
+      </button>
+
+      <button
+        class="tab-button"
+        tabindex="0"
+        class="btn btn-primary"
+        (click)="SubmitDocumentRequests()"
+      >
+        Submit
+      </button>
+    </div>
+  </div>
+</div>

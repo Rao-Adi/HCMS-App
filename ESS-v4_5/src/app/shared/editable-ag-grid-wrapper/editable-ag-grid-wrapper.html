@@ -1,0 +1,49 @@
+<div class="row mb-2">
+  <div class="col-sm-3">
+    <div class="example-header">
+      <span>Search</span>
+      <input
+        nz-input
+        placeholder="Basic usage"
+        [(ngModel)]="value"
+        (input)="onFilterTextBoxChanged()"
+      />
+    </div>
+  </div>
+</div>
+
+<ag-grid-angular
+  [gridId]="gridId"
+  [ngStyle]="gridStyle"
+  [class]="config.theme || 'ag-theme-alpine'"
+  [rowData]="rowData"
+  [columnDefs]="columnDefs"
+  [defaultColDef]="defaultColDef"
+  [rowHeight]="config.rowHeight"
+  [headerHeight]="config.headerHeight"
+  [pagination]="config.enablePagination"
+  [context]="gridContext"
+  [paginationPageSize]="config.pageSize"
+  [paginationPageSizeSelector]="config.pageSizeOptions"
+  [suppressCellFocus]="config.suppressCellFocus"
+  [pinnedTopRowData]="pinnedTopRowData"
+  [pinnedBottomRowData]="pinnedBottomRowData"
+  [rowSelection]="config.enableSelection ? 'multiple' : undefined"
+  (gridReady)="onGridReady($event)"
+  (rowEditingStopped)="handleRowEditingStopped($event)"
+  (cellClicked)="onCellClicked($event)"
+  (selectionChanged)="onSelectionChanged($event)"
+  (filterChanged)="refreshGrid()"
+  (onCellValueChanged)="onCellValueChanged($event)"
+>
+</ag-grid-angular>
+
+<!-- domLayout="{{ config.domLayout }}" -->
+
+<!-- <nz-spin nzTip="Loading...">
+      <nz-alert
+        nzType="info"
+        nzMessage="Alert message title"
+        nzDescription="Further details about the context of this alert."
+      ></nz-alert>
+    </nz-spin> -->

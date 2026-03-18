@@ -1,0 +1,66 @@
+<div class="row">
+  <ng-container *ngIf="hierarchyLevels$ | async as levels">
+    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngFor="let level of levels; let idx = index">
+      <!-- Dynamic Label -->
+      <div class="PnlHeading">
+        <label>{{ level.title }}</label>
+      </div>
+
+      <!-- LEVEL 1 -->
+      <app-division-list
+        *ngIf="level.level === 1"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'--any--'"
+        [(ngModel)]="selectedValues[1]"
+        (valueChange)="onValueChange(1, $event)"
+        width="250px"
+      >
+      </app-division-list>
+
+      <!-- LEVEL 2 -->
+      <app-department-list
+        *ngIf="level.level === 2"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'--any--'"
+        [division]="selectedValues[1]"
+        [(ngModel)]="selectedValues[2]"
+        (valueChange)="onValueChange(2, $event)"
+        width="250px"
+      >
+      </app-department-list>
+
+      <!-- LEVEL 3 -->
+      <app-sub-department-list
+        *ngIf="level.level === 3"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'--any--'"
+        [department]="selectedValues[2]"
+        [(ngModel)]="selectedValues[3]"
+        (valueChange)="onValueChange(3, $event)"
+        width="250px"
+      >
+      </app-sub-department-list>
+
+      <!-- Add LEVEL 4 here when needed --> 
+      <app-business-domain-list
+        *ngIf="level.level === 4"
+        valueKey="CODE"
+        labelKey="NAME"
+        [placeholder]="'--any--'"
+        [subDepartment]="selectedValues[3]"
+        [(ngModel)]="selectedValues[4]"
+        (valueChange)="onValueChange(4, $event)"
+        width="250px"
+      >
+      </app-business-domain-list>
+      <!-- <app-business-domain-list *ngIf="level.level === 4" ... > -->
+    </div>
+  </ng-container>
+
+  <!-- Optional: loading / empty state -->
+  <div class="col-12 text-center" *ngIf="!(hierarchyLevels$ | async)">Loading hierarchy...</div>
+</div>
+ 
