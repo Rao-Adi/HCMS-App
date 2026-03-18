@@ -66,6 +66,7 @@ export class DocumentRequestForm {
   inputJustificationValue?: string;
   documentName?: string = '';
   templateHtml: string = '';
+  originalContentHtml: string = '';
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -385,6 +386,15 @@ export class DocumentRequestForm {
       return;
     }
     debugger;
+    const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
+      divisionCode: x.level1Id || x.divisionCode,
+      departmentCode: x.level2Id || x.departmentCode,
+      subDepartmentCode: x.level3Id || x.subDepartmentCode,
+      businessDomainCode: x.level4Id || x.businessDomainCode,
+      roleId: x.roleId,
+      distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+    }));
+
     const payLoad = {
       CompanyId: this.selectedCompany,
       DocumentRequestTypeCode: this.selectedDocumentRequestType,
@@ -397,7 +407,7 @@ export class DocumentRequestForm {
       subDepartmentCode: this.selectedSubDepartment || null,
       businessDomainCode: this.selectedBusinessDomain || null,
       CreatedByUserId: 1, // this will be bind with UserId
-      distributionList: this.distributionListPayload,
+      distributionList: cleanDistributionList,
       userids: [],
     };
 
@@ -421,12 +431,62 @@ export class DocumentRequestForm {
   }
 
   SubmitDocumentRequests() {
+    if (!this.selectedDocumentRequestType) {
+      this._notification.createNotification('warning', 'Validation', 'Please select a Request Type.');
+      return;
+    }
+    if (!this.selectedCompany) {
+      this._notification.createNotification('warning', 'Validation', 'Please select a Company.');
+      return;
+    }
+    if (!this.documentName || this.documentName.trim() === '') {
+      this._notification.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      return;
+    }
+
+    // UC-22: Revision Validation Checks
+    if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
+      if (!this.selectedDocumentRow) {
+        this._notification.createNotification('warning', 'Validation', 'Please select an existing document to revise.');
+        return;
+      }
+      
+      // Mandatory Justification
+      if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
+        this._notification.createNotification('warning', 'Validation', 'Justification is mandatory for a document revision.');
+        return;
+      }
+
+      // Special Requirement: Document Content must be altered
+      if (this.templateHtml === this.originalContentHtml) {
+        this._notification.createNotification('warning', 'Validation', 'Document Content must be altered from the original version before submission.');
+        return;
+      }
+    }
+
+    const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
+      divisionCode: x.level1Id || x.divisionCode,
+      departmentCode: x.level2Id || x.departmentCode,
+      subDepartmentCode: x.level3Id || x.subDepartmentCode,
+      businessDomainCode: x.level4Id || x.businessDomainCode,
+      roleId: x.roleId,
+      distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+    }));
+
     const payLoad = {
       CompanyId: this.selectedCompany,
-      RequestId: this.selectedDocumentRequestType,
-      SubmittedBy: this.selectedDocumentType || null,
-      DistributionList: this.distributionListPayload,
-      UserIds: [],
+      DocumentRequestTypeCode: this.selectedDocumentRequestType,
+      documentTypeCode: this.selectedDocumentType || null,
+      documentName: this.documentName || '',
+      justification: this.inputJustificationValue || '',
+      proposedContent: this.templateHtml || '',
+      divisionCode: this.selectedDivisions || null,
+      departmentCode: this.selectedDepartment || null,
+      subDepartmentCode: this.selectedSubDepartment || null,
+      businessDomainCode: this.selectedBusinessDomain || null,
+      CreatedByUserId: 1, 
+      DistributionList: cleanDistributionList,
+      userids: this.distributionUserList.map(u => u.employeeCode || u.userId) || [],
     };
 
     // const payLoad = {
@@ -465,6 +525,7 @@ export class DocumentRequestForm {
     this.selectedSubDepartment = '';
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
+    this.originalContentHtml = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];
     this.selectedDocumentRow = null;
@@ -494,8 +555,7 @@ export class DocumentRequestForm {
         if (response?.Success) {
           this.totalRows = response.Data.TotalCount;
           this.documentRevisionData = response.Data.map((item: any) => {
-            // Helper to get value with case-insensitive fallback
-            debugger;
+            // Helper to get value with case-insensitive fallback 
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
                 if (item[key] !== undefined && item[key] !== null) return item[key];
@@ -567,7 +627,15 @@ export class DocumentRequestForm {
               requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
               dateOfApproval: '', // ← not present
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
-              distributionListPayload: item.DistributionList,
+              distributionListPayload: (item.DistributionList || []).map((x: any) => ({
+                ...x,
+                level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+                level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+                level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+                level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+                roleId: x.roleId || x.RoleId,
+                distributiontypeId: x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+              })),
             distributionUserList: item.UserList,
             };
           });
@@ -597,8 +665,7 @@ export class DocumentRequestForm {
   }
 
   onCellClicked(event: any): void {
-    const row = event.data;
-    debugger;
+    const row = event.data; 
 
     this.selectedDocumentRow = row;
 
@@ -609,6 +676,7 @@ export class DocumentRequestForm {
     this.documentName = row.documentName;
     this.inputJustificationValue = row.justification;
     this.templateHtml = row.proposedContent;
+    this.originalContentHtml = row.proposedContent || '';
     this.selectedDocumentType = row.documentType;
     this.selectedDivisions = row.division;
     this.selectedDepartment = row.department;

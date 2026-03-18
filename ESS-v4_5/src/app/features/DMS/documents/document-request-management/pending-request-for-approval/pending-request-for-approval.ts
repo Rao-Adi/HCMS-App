@@ -113,10 +113,6 @@ export class PendingRequestForApproval {
     const { gridId, pageSize } = event;
   }
 
-  approve() {}
-  disapprove() {}
-  revert() {}
-
   GetAllDraftDocuments() {
     const payload = {
       companyId: 1,
@@ -203,28 +199,4 @@ export class PendingRequestForApproval {
       }
     });
   };
-
-  SubmiteDocumentRequests() { 
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      requestId: this.requestId,
-      submittedBy: this.submittedby,
-    };
-
-    this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          this._notification.createNotification(
-            'success',
-            'User',
-            'Document submitted successfully!',
-          );
-          this.GetAllDraftDocuments();
-        }
-      },
-      error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
-      },
-    });
-  }
 }

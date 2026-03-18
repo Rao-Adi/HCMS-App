@@ -116,7 +116,7 @@ export class DraftRequestList {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Created On', flex:1 },
+    { field: 'createdOn', headerName: 'Created On'},
     { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
   ];
 
@@ -176,7 +176,16 @@ export class DraftRequestList {
             previousVersionCreatedOn:
               item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
             proposedVersionNumber: item.RowVersion || item.rowVersion,
-            distributionListPayload: item.DistributionList,
+            // Map backend fields back to the frontend keys expected by the component
+            distributionListPayload: (item.DistributionList || []).map((x: any) => ({
+              ...x,
+              level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+              level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+              level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+              level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+              roleId: x.roleId || x.RoleId,
+              distributiontypeId: x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+            })),
             distributionUserList: item.UserList,
           }));
         } else {
@@ -219,15 +228,8 @@ export class DraftRequestList {
   }
 
   onDistributionChanged(list: any[]) {
-    const cleanList = list.map((x) => ({
-      divisionCode: x.level1Id,
-      departmentCode: x.level2Id,
-      subDepartmentCode: x.level3Id,
-      businessDomainCode: x.level4Id,
-      roleId: x.roleId,
-      distributionTypeId: x.distributiontypeId,
-    }));
-    this.distributionListPayload = cleanList;
+    // Maintain frontend format to avoid breaking the UI bindings
+    this.distributionListPayload = list;
   }
 
   onEmployeeChange(value: string): void {
@@ -249,8 +251,7 @@ export class DraftRequestList {
   }
 
   onCellClicked(event: any): void {
-    const row = event.data;
-    debugger;
+    const row = event.data; 
     this.selectedDraftRequest = row;
 
     this.requestId = row.Id;
@@ -276,13 +277,21 @@ export class DraftRequestList {
     console.log('Users:', this.distributionUserList);
   }
 
-  SubmiteDocumentRequests() {
-    debugger;
+  SubmiteDocumentRequests() { 
+    const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
+      divisionCode: x.level1Id || x.divisionCode,
+      departmentCode: x.level2Id || x.departmentCode,
+      subDepartmentCode: x.level3Id || x.subDepartmentCode,
+      businessDomainCode: x.level4Id || x.businessDomainCode,
+      roleId: x.roleId,
+      distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+    }));
+
     const payLoad = {
       CompanyId: this.selectedCompany,
       requestid:  this.requestId ,
       submittedby: 1, // this will be bind with UserId
-      distributionlist: this.distributionListPayload,
+      distributionlist: cleanDistributionList,
       userlist: [],
     };
 
@@ -305,6 +314,15 @@ export class DraftRequestList {
 
   UpdateDocumentRequests() {
     debugger;
+    const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
+      divisionCode: x.level1Id || x.divisionCode,
+      departmentCode: x.level2Id || x.departmentCode,
+      subDepartmentCode: x.level3Id || x.subDepartmentCode,
+      businessDomainCode: x.level4Id || x.businessDomainCode,
+      roleId: x.roleId,
+      distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+    }));
+
     const payLoad = {
       companyId: this.selectedCompany,
       requestid:  this.requestId , 
@@ -312,7 +330,7 @@ export class DraftRequestList {
       justification: this.inputJustificationValue || '',
       proposedcontent: this.templateHtml || '', 
       modifiedbyuserid: 1, // this will be bind with UserId
-      distributionlist: this.distributionListPayload,
+      distributionlist: cleanDistributionList,
       userlist: [],
     };
 
