@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostBinding, inject, signal, Signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostBinding, HostListener, inject, signal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 // 1. IMPORT ActivatedRoute, REMOVE NavigationEnd and filter
 import { RouterOutlet, Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -10,8 +10,10 @@ import { DataService } from '@app/core/services/data.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { AppConfigService } from '@app/core/services/app-config';
 import { SpinnerService } from '@app/core/services/spinner.service';
+import { NotificationService as NotificationHttpService } from '@app/shared/services/notification.service';
 import { NotificationSignalrService, AppNotification } from '@app/shared/services/notification-signalr.service';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
+import { environment } from '@app/core/environments/environment';
 
 // 2. DEFINE THE API RESPONSE
 // This interface fixes all the 'unknown' type errors
@@ -67,6 +69,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   unreadNotificationCount: number = 0;
   private spinnerService = inject(SpinnerService);
   public isLoading: Signal<boolean> = this.spinnerService.isLoading.asReadonly();
+  isNotificationOpen: boolean = false;
   // --- END of properties ---
 
   constructor(
@@ -77,7 +80,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private cdRef: ChangeDetectorRef,
     // 3. INJECT ActivatedRoute
     private activatedRoute: ActivatedRoute,
-    private notificationSignalrService: NotificationSignalrService
+    private notificationSignalrService: NotificationSignalrService,
+    private notificationHttpService: NotificationHttpService
   ) { }
 
   ngOnInit(): void {
@@ -91,6 +95,20 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.subscriptions.push(this.offlineEvent$.subscribe(() => this.updateConnectionStatus(false)));
       this.updateConnectionStatus(navigator.onLine);
     }
+
+    // Start SignalR Connection using the backend URL
+    let hubBaseUrl = environment.baseUrl;
+    if (hubBaseUrl.endsWith('/api')) {
+      hubBaseUrl = hubBaseUrl.substring(0, hubBaseUrl.length - 4);
+    }
+    const hubUrl = `${hubBaseUrl}/notificationHub`;
+    
+    // Retrieve your JWT token from localStorage (or your Auth Service)
+    let token = '';
+    if (typeof window !== 'undefined' && localStorage) {
+      token = localStorage.getItem('token') || ''; // IMPORTANT: Adjust 'token' if your storage key is different
+    }
+    this.notificationSignalrService.startConnection(hubUrl, token);
 
     this.subscriptions.push(
       this.notificationSignalrService.notification$.subscribe((notification: AppNotification) => {
@@ -107,6 +125,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { //
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.notificationSignalrService.stopConnection();
   }
 
   // --- 5. ADDED GetRouterUrl (from home.component.ts) ---
@@ -304,6 +323,33 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   openDashboard(): void { this.router.navigate(['/dashboard']); } //
   openReportDialog(): void { alert('Report Problem functionality not implemented yet.'); } //
   onEnter(searchText: string): void { alert(`Search for "${searchText}" not implemented yet.`); } //
+
+  toggleNotifications(event: Event): void {
+    event.stopPropagation();
+    this.isNotificationOpen = !this.isNotificationOpen;
+  }
+
+  @HostListener('document:click')
+  closeNotifications(): void {
+    if (this.isNotificationOpen) {
+      this.isNotificationOpen = false;
+      this.cdRef.detectChanges();
+    }
+  }
+
+  // --- TEMPORARY METHOD FOR TESTING: Remove after SSO integration ---
+  triggerTestNotification(): void {
+    const payload = {
+      title: "Test",
+      message: "Test",
+      type: "Request"
+    };
+
+    this.notificationHttpService.sendTestNotification(payload).subscribe({
+      next: () => console.log('Test notification triggered successfully via API.'),
+      error: (err) => console.error('Failed to trigger test notification via API', err)
+    });
+  }
 
   markAsRead(notification: DisplayNotification): void {
     if (!notification.isRead) {
