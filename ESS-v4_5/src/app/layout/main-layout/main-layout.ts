@@ -10,6 +10,7 @@ import { DataService } from '@app/core/services/data.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { AppConfigService } from '@app/core/services/app-config';
 import { SpinnerService } from '@app/core/services/spinner.service';
+import { NotificationSignalrService, AppNotification } from '@app/shared/services/notification-signalr.service';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 // 2. DEFINE THE API RESPONSE
@@ -20,6 +21,10 @@ interface HeaderDetailsResponse {
   IsFavorite: boolean; // Correctly typed
   FormLocation: string;
   formdescription: string;
+}
+
+interface DisplayNotification extends AppNotification {
+  isRead: boolean;
 }
 
 @Component({
@@ -58,6 +63,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   connectionStatus: string = 'online';
   showStatusMessage: boolean = false;
   isSidebarHovering = false;
+  notifications: DisplayNotification[] = [];
+  unreadNotificationCount: number = 0;
   private spinnerService = inject(SpinnerService);
   public isLoading: Signal<boolean> = this.spinnerService.isLoading.asReadonly();
   // --- END of properties ---
@@ -69,7 +76,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private _config: AppConfigService,
     private cdRef: ChangeDetectorRef,
     // 3. INJECT ActivatedRoute
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private notificationSignalrService: NotificationSignalrService
   ) { }
 
   ngOnInit(): void {
@@ -83,6 +91,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.subscriptions.push(this.offlineEvent$.subscribe(() => this.updateConnectionStatus(false)));
       this.updateConnectionStatus(navigator.onLine);
     }
+
+    this.subscriptions.push(
+      this.notificationSignalrService.notification$.subscribe((notification: AppNotification) => {
+        this.notifications.unshift({ ...notification, isRead: false });
+        this.unreadNotificationCount++;
+        this.cdRef.detectChanges();
+      })
+    );
 
     // --- 4. REMOVED the router.events subscription ---
     // The this.subscriptions.push(this.router.events.pipe(...))
@@ -288,4 +304,28 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   openDashboard(): void { this.router.navigate(['/dashboard']); } //
   openReportDialog(): void { alert('Report Problem functionality not implemented yet.'); } //
   onEnter(searchText: string): void { alert(`Search for "${searchText}" not implemented yet.`); } //
+
+  markAsRead(notification: DisplayNotification): void {
+    if (!notification.isRead) {
+      notification.isRead = true;
+      this.unreadNotificationCount--;
+      this.cdRef.detectChanges();
+    }
+  }
+
+  markAllAsRead(): void {
+    this.notifications.forEach(n => n.isRead = true);
+    this.unreadNotificationCount = 0;
+    this.cdRef.detectChanges();
+  }
+
+  getNotificationBadgeClass(type?: string): string {
+    switch (type) {
+      case 'success': return 'bg-success';
+      case 'warning': return 'bg-warning text-dark';
+      case 'error': return 'bg-danger';
+      case 'info':
+      default: return 'bg-info text-dark';
+    }
+  }
 }
