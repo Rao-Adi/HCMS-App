@@ -42,6 +42,16 @@ export class TemplateService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  DownloadTemplateByDocumentTypeCode(code: string) {
+  return this.http.get(
+    `${environment.baseUrl}/DMSTemplate/download-template/${code}`,
+    {
+      observe: 'response',
+      responseType: 'blob' // ✅ CRITICAL FIX
+    }
+  );
+}
+
   GetAllTemplates(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

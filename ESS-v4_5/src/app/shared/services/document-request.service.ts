@@ -81,6 +81,16 @@ export class DocumentRequestService {
     );
   }
 
+  
+  DownloadDraftDocument(id: any) {
+    const uri = `${environment.baseUrl}/DMSDocumentRequest/download-draft-document/${id}`;
+    return this.http.get(uri, { 
+      observe: 'response',
+      responseType: 'blob' 
+    });
+  }
+  
+
   GetAllDocumentRequests(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

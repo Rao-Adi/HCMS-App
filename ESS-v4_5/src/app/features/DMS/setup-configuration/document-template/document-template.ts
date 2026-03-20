@@ -72,6 +72,7 @@ export class DocumentTemplate {
   selectedbusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   selectedTemplateType?: string = '';
+  selectedFile: File | null = null;
 
   templateTypes: any[] = [
     {
@@ -149,47 +150,58 @@ export class DocumentTemplate {
     });
   }
 
+  onFileSelected(event: any): void {
+    const fileList: FileList = event.target.files;
+    if (fileList && fileList.length > 0) {
+      this.selectedFile = fileList[0];
+    } else {
+      this.selectedFile = null;
+    }
+  }
+
   saveTemplate(data: any) { 
 
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
       this._notification.createNotification('warning', 'Document Type', 'Document Type required');
       return;
     }
-    if (!this.isDefaultTemplate) {
-      // if (this.selectedDivisions === undefined || this.selectedDivisions === '') {
-      //   this._notification.createNotification('warning', 'Division', 'Division required');
-      // } else
 
+    if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
+      this._notification.createNotification('warning', 'Template Type', 'Template Type required');
+      return;
+    }
+
+    if (!this.isDefaultTemplate) {
       if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
         this._notification.createNotification('warning', 'Department', 'Department required');
-        return;
-      } else if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
-        this._notification.createNotification(
-          'warning',
-          'Templeate Type',
-          'Template Type required',
-        );
         return;
       }
     }
 
-    const payload = {
-      id: '', // or generate if needed; usually backend handles this
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      documentTypeCode: this.selectedDocumentType,
-      templateName: this.templateName,
-      templateFileURL: this.randomUserUrl || '', // fallback empty string if no URL
-      templateType: this.selectedTemplateType,
-      divisionCode: this.selectedDivisions || null,
-      departmentCode: this.selectedDepartment || null,
-      subDepartmentCode: this.selectedSubDepartment || null,
-      businessDomainCode: this.selectedbusinessDomain || null,
-      isDefault: this.isDefaultTemplate,
-      templateContent: this.templateHtml,
-      // Plus fields from AuditableEntity if required or optional
-    };
+    if ((this.selectedTemplateType === '1' || this.selectedTemplateType === '2') && !this.selectedFile) {
+      this._notification.createNotification('warning', 'File Required', 'Please choose a file to upload');
+      return;
+    }
 
-    this.documentTemplateService.create(payload).subscribe({
+    const formData = new FormData();
+    formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID.toString());
+    formData.append('DocumentTypeCode', this.selectedDocumentType);
+    formData.append('TemplateName', this.templateName || 'Template'); 
+    formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : '');
+    formData.append('TemplateType', this.selectedTemplateType);
+    formData.append('IsDefault', String(this.isDefaultTemplate));
+
+    if (this.selectedDivisions) formData.append('DivisionCode', this.selectedDivisions);
+    if (this.selectedDepartment) formData.append('DepartmentCode', this.selectedDepartment);
+    if (this.selectedSubDepartment) formData.append('SubDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedbusinessDomain) formData.append('BusinessDomainCode', this.selectedbusinessDomain);
+    if (this.templateHtml) formData.append('TemplateContent', this.templateHtml);
+
+    if (this.selectedFile) {
+      formData.append('TemplateFile', this.selectedFile);
+    }
+
+    this.documentTemplateService.create(formData).subscribe({
       next: () => {
         this._notification.createNotification(
           'success',
