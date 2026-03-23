@@ -29,6 +29,7 @@ import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -60,6 +61,8 @@ export class MyApprovalDocument {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   templateHtml: string = '';
+  draftFileUrl: string = '';
+  documentName: string = '';
   hasSelectedRows = false;
   stepId: number = 0;
   documentId: number = 0;
@@ -176,6 +179,7 @@ export class MyApprovalDocument {
     private _userService: UserService,
     private _documentAttribute: DocumentAttributeService,
     private _documentAttributeService: DocumentAttributeService,
+    private _documentRequestService: DocumentRequestService
   ) {}
 
   ngOnInit() {
@@ -269,6 +273,7 @@ export class MyApprovalDocument {
               // ──────────────────────────────────────────────
 
               proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+              draftFileUrl: get(['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'], ''),
 
               // ──────────────────────────────────────────────
               // Audit / History fields
@@ -351,6 +356,8 @@ export class MyApprovalDocument {
 
   onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';
+    this.draftFileUrl = event.data?.draftFileUrl || '';
+    this.documentName = event.data?.documentName || '';
     this.documentId = event.data?.Id;
     this.GetDocumentAttributeByDocumentId(this.documentId);
     this.GetDocumentAttributes(event.data?.documentTypeCode);
@@ -359,6 +366,8 @@ export class MyApprovalDocument {
   onSelectionChange(selectedRows: any): void {
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     this.templateHtml = selectedRows[0]?.proposedContent || '';
+    this.draftFileUrl = selectedRows[0]?.draftFileUrl || '';
+    this.documentName = selectedRows[0]?.documentName || '';
     this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
     this.documentId = selectedRows[0]?.Id || 0;
     this.executionId = selectedRows[0]?.ExecutionId || 0;
@@ -415,6 +424,7 @@ export class MyApprovalDocument {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.emptyAllFileds();
   }
 
   onEmployeeChange(value: string): void {
@@ -435,6 +445,11 @@ export class MyApprovalDocument {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
     this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.documentName = '';
+    this.documentId = 0;
+    this.documentAttributeValues = [];
+    this.attributes = [];
   }
 
   approveDocument() {
@@ -615,6 +630,77 @@ export class MyApprovalDocument {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+
+    if (!idToDownload) {
+      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      return;
+    }
+
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text: string) => {
+              try {
+                const res = JSON.parse(text);
+                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+              } catch {
+                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.documentName || idToDownload}`;
+          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+        }
+      },
+      error: (err: any) => {
+        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+            } catch {
+              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+        }
+      }
     });
   }
 }

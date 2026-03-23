@@ -87,6 +87,8 @@ export class DocumentService {
       payload,
     );
   }
+
+
   GetAllDocument(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
@@ -130,4 +132,13 @@ export class DocumentService {
       `${environment.baseUrl}/DMSDocument/delete-document/${code}`,
     );
   }
+
+    DownloadDocumentTemplate(id: any) {
+    const uri = `${environment.baseUrl}/DMSDocument/download-submitted-document-template/${id}`;
+    return this.http.get(uri, { 
+      observe: 'response',
+      responseType: 'blob' 
+    });
+  }
+  
 }

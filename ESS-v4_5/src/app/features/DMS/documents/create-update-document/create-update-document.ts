@@ -267,6 +267,29 @@ export class CreateUpdateDocument {
     });
   }
 
+  get isSubmitDisabled(): boolean {
+    if (!this.selectedRequestType || !this.selectedDocumentType) {
+      return true;
+    }
+
+    if (this.selectedRequestType === 'DRT-0001') {
+      if (!this.selectedRequestId) {
+        return true;
+      }
+      
+      if (this.attributes && this.attributes.length > 0) {
+        if (!this.dynamicForm || this.dynamicForm.invalid) {
+          return true;
+        }
+      }
+
+      if (this.trainingContent && !this.selectedTrainingMode) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   onRequestTypeChange(code: string): void {
     // this.selectedRequestType = value;
     this.selectedRequestType = code;
@@ -606,6 +629,12 @@ export class CreateUpdateDocument {
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification('success', 'Document', response.Message);
+          this.emptyFields();
+          this.selectedRequestType = '';
+          this.attributes = [];
+          if (this.dynamicForm) {
+            this.dynamicForm.reset();
+          }
         }
       },
       error: (err) => {
@@ -844,6 +873,9 @@ export class CreateUpdateDocument {
     this.documentName = '';
     this.requestId = 0;
     this.selectedRequestId = '';
+    this.approvalSequenceData = [];
+    this.trainingUsersData = [];
+    this.selectedTrainingMode = '';
   }
 
   downloadDraft(): void {
