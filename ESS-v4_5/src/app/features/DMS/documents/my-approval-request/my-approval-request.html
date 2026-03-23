@@ -215,15 +215,35 @@
           </div>
         </div>
 
-        <div class="row mb-4">
+        <div class="row mt-10" *ngIf="requestId">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <h3 class="PnlHeader">Document Content</h3>
             <br />
-            <app-dmsrich-text-edit
-              [editorStyle]="{ width: '100%', height: '350px' }"
-              [contentHtml]="templateHtml"
-              (contentHtmlChange)="templateHtml = $event"
-            ></app-dmsrich-text-edit>
+            
+            <!-- HTML Template Editor -->
+            <ng-container *ngIf="!draftFileUrl">
+              <app-dmsrich-text-edit
+                [editorStyle]="{ width: '100%', height: '350px' }"
+                [contentHtml]="templateHtml"
+                (contentHtmlChange)="templateHtml = $event"
+              ></app-dmsrich-text-edit>
+            </ng-container>
+
+            <!-- Word/PDF File Download -->
+            <ng-container *ngIf="draftFileUrl">
+              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px;">
+                <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                <div>
+                  <strong>Instructions:</strong> Please download and review the drafted document attached to this request.
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center gap-3 mb-4"> 
+                <button type="button" class="btn btn-outline-success" (click)="downloadDraft()">
+                  <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Drafted Document
+                </button>
+              </div>
+            </ng-container>
           </div>
         </div>
       </div>

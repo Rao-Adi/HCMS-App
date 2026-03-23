@@ -53,6 +53,10 @@ export class MyApprovalRequest {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   templateHtml: string = '';
+  draftFileUrl: string = '';
+  requestId: number = 0;
+  documentName: string = '';
+  selectedDocumentTypeCode: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -86,7 +90,7 @@ export class MyApprovalRequest {
   documentColumnDefs = [
     {
       field: 'documentType',
-      headerName: 'Document Type',
+      headerName: 'Document Type'
     },
     {
       field: 'requestId',
@@ -242,6 +246,10 @@ export class MyApprovalRequest {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
     this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.requestId = 0;
+    this.documentName = '';
+    this.selectedDocumentTypeCode = '';
   }
 
   async onDocumentTypeChange(value: string) {
@@ -302,6 +310,9 @@ export class MyApprovalRequest {
               subdepartment: item.SubDepartment,
               justification: item.Justification,
               businessdomainId: item.BusinessDomainCode,
+              documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
+              templateType: item.TemplateType || item.templateType,
+              draftFileUrl: item.DraftFileUrl || item.draftFileUrl || ((String(item.TemplateType || item.templateType) === '1' || String(item.TemplateType || item.templateType) === '2') ? item.ProposedContent : ''),
               requestCreatedBy: item.createdBy || item.CreatedBy || '',
               dateOfCreation: new CustomDateFormatPipe().transform(
                 item.createdAt || item.CreatedAt || '',
@@ -389,13 +400,33 @@ export class MyApprovalRequest {
   // Handle selection changes
   onSelectionChange(selectedRows: any): void {
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
-    this.templateHtml = selectedRows[0]?.proposedContent || '';
-    this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
-    this.selectedRow = selectedRows[0] || null;
+    const row = selectedRows[0];
+    if (row) {
+      this.templateHtml = row.proposedContent || '';
+      this.stepId = row.stepId || 0; // Assuming stepId is part of rowData
+      this.selectedRow = row;
+      this.draftFileUrl = row.draftFileUrl || '';
+      this.requestId = row.requestId || row.Id || row.id;
+      this.documentName = row.documentName || '';
+      this.selectedDocumentTypeCode = row.documentTypeCode || '';
+    } else {
+      this.templateHtml = '';
+      this.draftFileUrl = '';
+      this.requestId = 0;
+      this.documentName = '';
+      this.selectedDocumentTypeCode = '';
+      this.stepId = 0;
+      this.selectedRow = null;
+    }
   }
 
   onCellClicked(event: any): void {
-    this.templateHtml = event.data?.proposedContent || '';
+    const row = event.data;
+    this.templateHtml = row?.proposedContent || '';
+    this.draftFileUrl = row?.draftFileUrl || '';
+    this.requestId = row?.requestId || row?.Id || row?.id;
+    this.documentName = row?.documentName || '';
+    this.selectedDocumentTypeCode = row?.documentTypeCode || '';
   }
 
   openWorkflowDeatilsModal(rowData: any) {
@@ -503,6 +534,75 @@ export class MyApprovalRequest {
     modalRef.afterClose.subscribe((result) => {
       if (!result) return;
       this.observation = result.observation;
+    });
+  }
+
+  downloadDraft(): void {
+    if (!this.requestId) {
+      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      return;
+    }
+
+    this._doumentRequestService.DownloadDraftDocument(this.requestId).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then(text => {
+              try {
+                const res = JSON.parse(text);
+                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+              } catch {
+                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.documentName || this.requestId}`;
+          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+        }
+      },
+      error: (err: any) => {
+        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+            } catch {
+              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+        }
+      }
     });
   }
 }
