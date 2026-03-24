@@ -62,9 +62,9 @@ export class DocumentRequestService {
     );
   }
 
-  getMyDraftDocumentRequest(companyId: string, userId: any): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-my-draft-request?companyId=${companyId}&userId=${userId}`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  getMyDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    const uri = `${environment.baseUrl}/DMSDocumentRequest/get-my-draft-request`;
+    return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
   }
 
   GetMyRequestsPendingApproval(payload: any): Observable<ApiResponse<any>> {

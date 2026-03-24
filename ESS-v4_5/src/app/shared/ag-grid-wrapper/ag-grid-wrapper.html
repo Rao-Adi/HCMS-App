@@ -9,7 +9,7 @@
             nz-input
             placeholder="Search"
             [(ngModel)]="searchValue"
-            (input)="onFilterTextBoxChanged()"
+            (input)="onSearchEnter()"
           />
         </div>
       </div>
@@ -60,18 +60,18 @@
     <ag-grid-angular
       class="ag-theme-alpine"
       [ngStyle]="gridStyle"
-      [rowData]="rowData"
+      [rowModelType]="isServerSide ? 'infinite' : 'clientSide'"
+      [rowData]="isServerSide ? undefined : rowData"
       [gridOptions]="gridOptions"
       [columnDefs]="finalColumnDefs"
       [defaultColDef]="defaultColDef"
+      [cacheBlockSize]="pageSize"
       [context]="{ componentParent: this }"
       [pagination]="true"
       [rowHeight]="config.rowHeight"
       [headerHeight]="config.headerHeight"
-      [pagination]="config.enablePagination"
-      [context]="gridContext"
-      [paginationPageSize]="config.pageSize"
-      [paginationPageSizeSelector]="config.pageSizeOptions"
+      [paginationPageSize]="pageSize"
+      [paginationPageSizeSelector]="pageSizeOptions"
       [suppressCellFocus]="config.suppressCellFocus"
       (gridReady)="onGridReady($event)"
       (sortChanged)="onSortChanged()"
@@ -80,6 +80,7 @@
       (cellClicked)="onCellClicked($event)"
       (selectionChanged)="onSelectionChanged()"
       (rowSelected)="onRowSelected($event)"
+      (paginationChanged)="onPaginationChanged($event)"
     >
     </ag-grid-angular>
   </div>

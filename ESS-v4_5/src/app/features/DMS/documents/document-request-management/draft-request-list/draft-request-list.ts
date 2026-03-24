@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
@@ -43,6 +43,8 @@ export enum DocumentRequestStatus {
   styleUrl: './draft-request-list.css',
 })
 export class DraftRequestList {
+  @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -75,13 +77,19 @@ export class DraftRequestList {
   draftFileUrl: string = '';
   draftFile: File | null = null;
 
-  selectedPageSize = 1; // default value
-
   requestId: number = 0;
   submittedby: number = 0;
-  pageSize = 10;
+  pageSize = 1;
   totalRows = 0;
   totalUsers = 0;
+
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 1,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: ''
+  };
 
   DocumentRequestStatusOptions = [
     { value: DocumentRequestStatus.Draft, label: 'Draft' },
@@ -148,15 +156,49 @@ export class DraftRequestList {
     this.getAllUsersList();
   }
 
-  GetAllDraftDocuments() {
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
-    const employeeCode = this.selectedEmployee;
+  GetAllDraftDocuments(query?: any) {
+    if (!this.selectedEmployee) {
+      this.documentRequestsData = [];
+      this.totalRows = 0;
+      return;
+    }
 
-    this._doumentRequestService.getMyDraftDocumentRequest(companyId, employeeCode).subscribe({
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      employeeCode: this.selectedEmployee,
+      status: this.selectedStatus,
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
+    };
+
+    this._doumentRequestService.getMyDraftDocumentRequest(payload).subscribe({
       next: (response) => {
-        if (response?.Data) {
-          this.totalRows = response.Data.TotalCount;
-          this.documentRequestsData = response.Data.map((item: any) => ({
+        if (response?.Success || response?.Data) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+          
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
             companyId : item.companyId || item.CompanyId,
             requestNumber: item.RequestNumber || item.requestNumber,
@@ -200,9 +242,13 @@ export class DraftRequestList {
             distributionUserList: item.UserList,
           }));
         } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
+        this.documentRequestsData = [];
+        this.totalRows = 0;
         this._notification.createNotification(
           'error',
           'Error',
@@ -225,8 +271,6 @@ export class DraftRequestList {
     });
   };
 
-  GetAllDocuments(query: any) {}
-
   onHierarchyChange(values: CabinetSelection[]) {
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
@@ -235,7 +279,10 @@ export class DraftRequestList {
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
+    if (event && event.pageSize) {
+      this.pageSize = event.pageSize;
+      this.currentGridQuery.pageSize = this.pageSize;
+    }
   }
 
   onDistributionChanged(list: any[]) {
@@ -245,12 +292,20 @@ export class DraftRequestList {
 
   onEmployeeChange(value: string): void {
     this.selectedEmployee = value;
-    if (value != null) {
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
       this.GetAllDraftDocuments();
     }
   }
+  
   onStatusChange(value: number): void {
     this.selectedStatus = value;
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
+      this.GetAllDraftDocuments();
+    }
   }
 
   onSelectionChange(selectedRows: any): void {

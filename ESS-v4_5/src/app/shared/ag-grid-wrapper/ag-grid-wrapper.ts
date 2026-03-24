@@ -9,6 +9,7 @@ import {
   Output,
   signal,
   SimpleChanges,
+  NgZone,
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -94,6 +95,7 @@ export class AgGridWrapper implements OnInit {
     pageSize: number;
     sortModel: any;
     filterModel: any;
+    searchTerm?: string;
   }>();
 
   @Output() gridReady = new EventEmitter<GridReadyEvent>();
@@ -105,14 +107,17 @@ export class AgGridWrapper implements OnInit {
   gridApi!: GridApi;
 
   private isGridInitialized = false;
+  isServerSide = false;
+  private getRowsParams: any = null;
 
   pageNumber = 1;
   //pageSize!: number;
   totalPages = 0;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef, private ngZone: NgZone) {}
 
   ngOnInit(): void {
+    this.isServerSide = this.serverQuery.observed;
     this.buildFinalColumnDefs();
   }
 
@@ -158,36 +163,13 @@ export class AgGridWrapper implements OnInit {
   };
 
   ngOnChanges(changes: SimpleChanges) {
-    //console.log('ngOnChanges - totalRows:', this.totalRows, 'pageSize:', this.pageSize);
-    if (changes['totalRows'] || changes['pageSize']) {
-      this.totalPages = Math.max(1, Math.ceil(this.totalRows / this.pageSize));
-      if (this.pageNumber > this.totalPages) {
-        this.pageNumber = this.totalPages;
+    if (this.isServerSide && this.getRowsParams) {
+      if (changes['rowData'] || changes['totalRows']) {
+        const rows = this.rowData || [];
+        this.getRowsParams.successCallback(rows, this.totalRows);
+        this.getRowsParams = null; // Consume it so we don't double call
       }
-      //console.log('Updated totalPages:', this.totalPages, 'pageNumber:', this.pageNumber);
-      this.cdr.detectChanges();
     }
-  }
-
-  onSelectionChanged() {
-    const selectedRows = this.gridApi.getSelectedRows();
-    // console.log('Selected rows:', selectedRows);
-  }
-
-  goToPage(page: number) {
-    //console.log('goToPage called:', page, 'totalPages:', this.totalPages);
-    if (page < 1 || page > this.totalPages) return;
-    this.pageNumber = page;
-    this.emitQuery();
-    this.cdr.detectChanges();
-  }
-
-  onPageSizeChange(value: any) {
-    this.pageSize = Number(value);
-    this.pageNumber = 1;
-
-    this.pageSizeChange.emit({ gridId: this.gridId, pageSize: this.pageSize }); // <-- emit page size to parent
-    this.emitQuery();
   }
 
   onGridReady(event: GridReadyEvent) {
@@ -195,16 +177,39 @@ export class AgGridWrapper implements OnInit {
     this.gridReady.emit(event);
     this.syncColumnState();
 
+    if (this.isServerSide) {
+      const dataSource = {
+        getRows: (params: any) => {
+          this.getRowsParams = params;
+          this.pageNumber = Math.floor(params.startRow / this.pageSize) + 1;
+          
+          this.ngZone.run(() => {
+            this.serverQuery.emit({
+              pageNumber: this.pageNumber,
+              pageSize: this.pageSize,
+              sortModel: params.sortModel.map((c: any) => ({ colId: c.colId, sort: c.sort })),
+              filterModel: params.filterModel,
+              searchTerm: this.searchValue()
+            });
+          });
+        }
+      };
+      this.gridApi.setGridOption('datasource', dataSource);
+    }
+
     // Subscribe to selection changes
     this.gridApi.addEventListener('selectionChanged', () => {
       const selectedRows = this.gridApi.getSelectedRows();
       this.selectionChange.emit(selectedRows);
     });
-    // Delay first emit to allow grid to stabilize
-    // setTimeout(() => {
-    //   this.isGridInitialized = true;
-    //   this.emitQuery();
-    // });
+    
+    setTimeout(() => {
+      this.isGridInitialized = true;
+    });
+  }
+
+  onSelectionChanged() {
+    const selectedRows = this.gridApi.getSelectedRows();
   }
 
   saveColumnPrefs() {
@@ -237,12 +242,14 @@ export class AgGridWrapper implements OnInit {
 
   onSortChanged() {
     if (!this.isGridInitialized) return;
+    if (this.isServerSide) return; // AG Grid Infinite model automatically triggers getRows
     this.pageNumber = 1;
     this.emitQuery();
   }
 
   onFilterChanged() {
     if (!this.isGridInitialized) return;
+    if (this.isServerSide) return; // AG Grid Infinite model automatically triggers getRows
     this.pageNumber = 1;
     this.emitQuery();
   }
@@ -259,6 +266,7 @@ export class AgGridWrapper implements OnInit {
         .filter((c) => c.sort)
         .map((c) => ({ colId: c.colId, sort: c.sort })),
       filterModel: this.gridApi.getFilterModel(),
+      searchTerm: this.searchValue()
     });
   }
 
@@ -319,10 +327,30 @@ export class AgGridWrapper implements OnInit {
   }
 
   readonly searchValue = signal('');
-  onFilterTextBoxChanged() {
-    this.gridApi.setGridOption(
-      'quickFilterText',
-      (document.getElementById('filter-text-box') as HTMLInputElement).value,
-    );
+  onSearchEnter() {
+    this.refresh();
+  }
+
+  refresh() {
+    this.pageNumber = 1;
+    if (this.isServerSide && this.gridApi) {
+      this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
+      this.gridApi.refreshInfiniteCache();
+    } else {
+      this.emitQuery();
+    }
+  }
+
+  onPaginationChanged(event: any): void {
+    if (!this.gridApi || !this.isServerSide) return;
+
+    const newPageSize = this.gridApi.paginationGetPageSize();
+    if (newPageSize !== this.pageSize) {
+      this.pageSize = newPageSize;
+      this.pageSizeChange.emit({ gridId: this.gridId, pageSize: this.pageSize });
+      
+      this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
+      this.gridApi.refreshInfiniteCache();
+    }
   }
 }
