@@ -99,9 +99,12 @@ export class CreateUpdateDocument {
   selectedCompany?: string = '';
   selectedRequestId: string = '';
   templateHtml: string = '';
+  draftFileUrl: string = '';
   trainingContent: boolean = false;
   showDocumentContent: boolean = false;
   documentId: string = '';
+  documentName: string = '';
+  requestId: number = 0;
 
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
@@ -239,6 +242,7 @@ export class CreateUpdateDocument {
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _documentService: DocumentService,
     private documentTemplateService: TemplateService,
+    private _documentRequestService: DocumentRequestService
   ) {}
 
   ngOnInit() {
@@ -261,6 +265,29 @@ export class CreateUpdateDocument {
         this.requestTypes = [];
       }
     });
+  }
+
+  get isSubmitDisabled(): boolean {
+    if (!this.selectedRequestType || !this.selectedDocumentType) {
+      return true;
+    }
+
+    if (this.selectedRequestType === 'DRT-0001') {
+      if (!this.selectedRequestId) {
+        return true;
+      }
+      
+      if (this.attributes && this.attributes.length > 0) {
+        if (!this.dynamicForm || this.dynamicForm.invalid) {
+          return true;
+        }
+      }
+
+      if (this.trainingContent && !this.selectedTrainingMode) {
+        return true;
+      }
+    }
+    return false;
   }
 
   onRequestTypeChange(code: string): void {
@@ -295,6 +322,9 @@ export class CreateUpdateDocument {
 
   onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';
+    this.draftFileUrl = event.data?.draftFileUrl || '';
+    this.requestId = event.data?.requestId || event.data?.Id || event.data?.id || 0;
+    this.documentName = event.data?.documentName || '';
     this.showDocumentContent = true;
   }
 
@@ -433,9 +463,13 @@ export class CreateUpdateDocument {
       if (res) {
         if (!res?.Data) return;
         this.documentId = res.Data[0].documentid;
-        this.templateHtml = res.Data[0].content;
+        this.templateHtml = res.Data[0].content || '';
+        this.draftFileUrl = res.Data[0].draftfileurl || res.Data[0].draftFileUrl || '';
+        this.documentName = res.Data[0].title || '';
       } else {
         this.templateHtml = '';
+        this.draftFileUrl = '';
+        this.documentName = '';
       }
     });
   }
@@ -595,6 +629,12 @@ export class CreateUpdateDocument {
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification('success', 'Document', response.Message);
+          this.emptyFields();
+          this.selectedRequestType = '';
+          this.attributes = [];
+          if (this.dynamicForm) {
+            this.dynamicForm.reset();
+          }
         }
       },
       error: (err) => {
@@ -768,6 +808,7 @@ export class CreateUpdateDocument {
               // ──────────────────────────────────────────────
 
               proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+              draftFileUrl: get(['DraftFileUrl', 'draftfileurl', 'draftFileUrl'], ''),
 
               // ──────────────────────────────────────────────
               // Audit / History fields
@@ -828,5 +869,83 @@ export class CreateUpdateDocument {
     this.selectedSubDepartment = '';
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.documentName = '';
+    this.requestId = 0;
+    this.selectedRequestId = '';
+    this.approvalSequenceData = [];
+    this.trainingUsersData = [];
+    this.selectedTrainingMode = '';
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.selectedRequestId ? Number(this.selectedRequestId) : this.requestId;
+
+    if (!idToDownload) {
+      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      return;
+    }
+
+    this._documentRequestService.DownloadDraftDocument(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text: string) => {
+              try {
+                const res = JSON.parse(text);
+                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+              } catch {
+                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.documentName || idToDownload}`;
+          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+        }
+      },
+      error: (err: any) => {
+        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+            } catch {
+              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+        }
+      }
+    });
   }
 }

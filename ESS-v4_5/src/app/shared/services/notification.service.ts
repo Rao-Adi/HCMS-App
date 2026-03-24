@@ -80,4 +80,11 @@ export class NotificationService {
       `${environment.baseUrl}/DMSNotification/delete-notification/${code}`
     );
   }
+
+  sendTestNotification(payload: any): Observable<any> {
+    return this.http.post<any>(
+      `${environment.baseUrl}/DMSNotification/SendTestNotification`, 
+      payload, { headers: this.getHeaders() }
+    );
+  }
 }

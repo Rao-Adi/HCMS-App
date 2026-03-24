@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -29,6 +29,7 @@ import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -52,6 +53,8 @@ import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynami
   styleUrl: './my-approval-document.css',
 })
 export class MyApprovalDocument {
+  @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
   selectedTab: string = 'Pending';
 
   selectedDivisions?: string = '';
@@ -60,6 +63,8 @@ export class MyApprovalDocument {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   templateHtml: string = '';
+  draftFileUrl: string = '';
+  documentName: string = '';
   hasSelectedRows = false;
   stepId: number = 0;
   documentId: number = 0;
@@ -72,6 +77,15 @@ export class MyApprovalDocument {
   documentRequestsData: any[] = [];
   documentAttributeValues: any[] = [];
   attributes: DocumentAttribute[] = [];
+  
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 1,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: ''
+  };
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -79,7 +93,7 @@ export class MyApprovalDocument {
     editable: true,
   };
 
-  pageSize = 10;
+  pageSize = 1;
   totalPendingDocuments = 0;
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
@@ -118,12 +132,13 @@ export class MyApprovalDocument {
       headerName: 'Observation',
       editable: false,
       cellRenderer: (params: any) => {
+        if (!params.data) return '';
         return `
         <span 
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          ${params.value ? 'Observation' : 'Observation'}
+          Observation
         </span>
       `;
       },
@@ -140,7 +155,7 @@ export class MyApprovalDocument {
     { field: 'proposedVersionNumber', headerName: 'Proposed Version Number' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment ', headerName: 'Sub-Department' },
+    { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'dateOfCreation', headerName: 'Date of Creation' },
     { field: 'dateOfApproval', headerName: 'Date of Approval' },
     { field: 'requestedBy', headerName: 'Requested By' },
@@ -152,12 +167,13 @@ export class MyApprovalDocument {
       headerName: 'Approval History',
       editable: false,
       cellRenderer: (params: any) => {
+        if (!params.data) return '';
         return `
         <span 
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          ${params.value ? 'View' : 'View'}
+          View
         </span>
       `;
       },
@@ -176,6 +192,7 @@ export class MyApprovalDocument {
     private _userService: UserService,
     private _documentAttribute: DocumentAttributeService,
     private _documentAttributeService: DocumentAttributeService,
+    private _documentRequestService: DocumentRequestService
   ) {}
 
   ngOnInit() {
@@ -192,17 +209,34 @@ export class MyApprovalDocument {
     this.selectedSubDepartment = '';
   }
   onDocumentTypeChange(value: string): void {
-    // this.loading = true;
-    debugger;
     this.selectedDocumentType = value;
-    this.GetAllPendingDocuments('');
     this.emptyAllFileds();
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    }
   }
 
   GetAllPendingDocuments(query: any) {
-    if (this.selectedEmployee == "") {
+    if (!this.selectedEmployee) {
+      this.documentRequestsData = [];
+      this.totalRows = 0;
       return;
     }
+
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
     const payLoad = {
       companyId: 1,
       userId: 1,
@@ -213,13 +247,25 @@ export class MyApprovalDocument {
       documentTypeCode: this.selectedDocumentType,
       employeeCode: this.selectedEmployee,
       RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      // Map to satisfy backend validation
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this.totalRows = response.Data.TotalCount;
-          this.documentRequestsData = response.Data.map((item: any) => {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+          
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRequestsData = items.map((item: any) => {
             // Helper to get value with case-insensitive fallback
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
@@ -260,15 +306,16 @@ export class MyApprovalDocument {
               division: get(['Division']),
               department: get(['Department']),
               departmentId: get(['DepartmentCode', 'departmentCode']),
-              // subdepartment: get(['SubDepartment', 'subDepartment']),
-              subdepartmentId: get(['SubDepartment', 'subDepartment']),
-              businessdomain: get(['BusinessDomain', 'businessDomain']),
-              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
+              subDepartment: get(['SubDepartment', 'subDepartment']),
+              subDepartmentId: get(['SubDepartmentCode', 'subDepartmentCode']),
+              businessDomain: get(['BusinessDomain', 'businessDomain']),
+              businessDomainId: get(['BusinessDomainCode', 'businessDomainCode']),
               // ──────────────────────────────────────────────
               // Content / Justification
               // ──────────────────────────────────────────────
 
               proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+              draftFileUrl: get(['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'], ''),
 
               // ──────────────────────────────────────────────
               // Audit / History fields
@@ -327,7 +374,9 @@ export class MyApprovalDocument {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this.documentRequestsData = [];
+        this.totalRows = 0;
+        this._notification.createNotification('error', 'Error', 'Failed to fetch documents.');
       },
     });
   }
@@ -351,6 +400,8 @@ export class MyApprovalDocument {
 
   onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';
+    this.draftFileUrl = event.data?.draftFileUrl || '';
+    this.documentName = event.data?.documentName || '';
     this.documentId = event.data?.Id;
     this.GetDocumentAttributeByDocumentId(this.documentId);
     this.GetDocumentAttributes(event.data?.documentTypeCode);
@@ -359,54 +410,17 @@ export class MyApprovalDocument {
   onSelectionChange(selectedRows: any): void {
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     this.templateHtml = selectedRows[0]?.proposedContent || '';
+    this.draftFileUrl = selectedRows[0]?.draftFileUrl || '';
+    this.documentName = selectedRows[0]?.documentName || '';
     this.stepId = selectedRows[0]?.stepId || 0; // Assuming stepId is part of rowData
     this.documentId = selectedRows[0]?.Id || 0;
     this.executionId = selectedRows[0]?.ExecutionId || 0;
   }
 
-  GetAllApprovedDocuments(query: any) {}
-  GetAllDisApprovedDocuments(query: any) {}
-
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
-
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
-
-    switch (gridId) {
-      case 'pendingGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllPendingDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-
-      case 'approvedGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllApprovedDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'disapprovedGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDisApprovedDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
+    if (event && event.pageSize) {
+      this.pageSize = event.pageSize;
+      this.currentGridQuery.pageSize = this.pageSize;
     }
   }
 
@@ -415,19 +429,22 @@ export class MyApprovalDocument {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.emptyAllFileds();
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    }
   }
 
   onEmployeeChange(value: string): void {
     this.selectedEmployee = value;
     this.emptyAllFileds();
-    if (value != null) {
-      this.GetAllPendingDocuments(value);
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
     }
   }
 
   async onTabChange(status: string) {
     this.selectedTab = status;
-    await this.GetAllPendingDocuments('');
     this.emptyAllFileds();
   }
 
@@ -435,6 +452,11 @@ export class MyApprovalDocument {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
     this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.documentName = '';
+    this.documentId = 0;
+    this.documentAttributeValues = [];
+    this.attributes = [];
   }
 
   approveDocument() {
@@ -615,6 +637,77 @@ export class MyApprovalDocument {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+
+    if (!idToDownload) {
+      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      return;
+    }
+
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text: string) => {
+              try {
+                const res = JSON.parse(text);
+                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+              } catch {
+                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.documentName || idToDownload}`;
+          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+        }
+      },
+      error: (err: any) => {
+        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+            } catch {
+              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+        }
+      }
     });
   }
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
@@ -15,6 +15,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { TemplateService } from '@app/shared/services/template.service';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 
 export enum DocumentRequestStatus {
@@ -42,6 +43,8 @@ export enum DocumentRequestStatus {
   styleUrl: './draft-request-list.css',
 })
 export class DraftRequestList {
+  @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -65,17 +68,28 @@ export class DraftRequestList {
   selectedSubDepartment?: string = '';
   selectedBusinessDomain?: string = '';
   selectedDocumentType: string = '';
+  selectedDocumentTypeCode: string = '';
   inputJustificationValue?: string;
   documentName?: string = '';
   templateHtml: string = '';
-
-  selectedPageSize = 1; // default value
+  selectedTemplateType: string = '';
+  templateFileUrl: string = '';
+  draftFileUrl: string = '';
+  draftFile: File | null = null;
 
   requestId: number = 0;
   submittedby: number = 0;
-  pageSize = 10;
+  pageSize = 1;
   totalRows = 0;
   totalUsers = 0;
+
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 1,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: ''
+  };
 
   DocumentRequestStatusOptions = [
     { value: DocumentRequestStatus.Draft, label: 'Draft' },
@@ -135,21 +149,56 @@ export class DraftRequestList {
     private _doumentRequestService: DocumentRequestService,
     private _notification: NotificationService,
     private _userService: UserService,
+    private _documentTemplateService: TemplateService
   ) {}
 
   ngOnInit() {
     this.getAllUsersList();
   }
 
-  GetAllDraftDocuments() {
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
-    const employeeCode = this.selectedEmployee;
+  GetAllDraftDocuments(query?: any) {
+    if (!this.selectedEmployee) {
+      this.documentRequestsData = [];
+      this.totalRows = 0;
+      return;
+    }
 
-    this._doumentRequestService.getMyDraftDocumentRequest(companyId, employeeCode).subscribe({
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      employeeCode: this.selectedEmployee,
+      status: this.selectedStatus,
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
+    };
+
+    this._doumentRequestService.getMyDraftDocumentRequest(payload).subscribe({
       next: (response) => {
-        if (response?.Data) {
-          this.totalRows = response.Data.TotalCount;
-          this.documentRequestsData = response.Data.map((item: any) => ({
+        if (response?.Success || response?.Data) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+          
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
             companyId : item.companyId || item.CompanyId,
             requestNumber: item.RequestNumber || item.requestNumber,
@@ -167,6 +216,7 @@ export class DraftRequestList {
             subdepartment: item.SubDepartment,
             justification: item.Justification,
             businessdomainId: item.BusinessDomainCode,
+            documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
             sumbittedby: item.CreatedBy,
             createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
@@ -176,6 +226,9 @@ export class DraftRequestList {
             previousVersionCreatedOn:
               item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
             proposedVersionNumber: item.RowVersion || item.rowVersion,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            draftFileUrl: item.DraftFileUrl || item.draftFileUrl || ((String(item.TemplateType || item.templateType) === '1' || String(item.TemplateType || item.templateType) === '2') ? item.ProposedContent : ''),
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,
@@ -189,9 +242,13 @@ export class DraftRequestList {
             distributionUserList: item.UserList,
           }));
         } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
+        this.documentRequestsData = [];
+        this.totalRows = 0;
         this._notification.createNotification(
           'error',
           'Error',
@@ -214,8 +271,6 @@ export class DraftRequestList {
     });
   };
 
-  GetAllDocuments(query: any) {}
-
   onHierarchyChange(values: CabinetSelection[]) {
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
@@ -224,7 +279,10 @@ export class DraftRequestList {
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
+    if (event && event.pageSize) {
+      this.pageSize = event.pageSize;
+      this.currentGridQuery.pageSize = this.pageSize;
+    }
   }
 
   onDistributionChanged(list: any[]) {
@@ -234,12 +292,20 @@ export class DraftRequestList {
 
   onEmployeeChange(value: string): void {
     this.selectedEmployee = value;
-    if (value != null) {
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
       this.GetAllDraftDocuments();
     }
   }
+  
   onStatusChange(value: number): void {
     this.selectedStatus = value;
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
+      this.GetAllDraftDocuments();
+    }
   }
 
   onSelectionChange(selectedRows: any): void {
@@ -261,7 +327,11 @@ export class DraftRequestList {
     this.documentName = row.documentName;
     this.inputJustificationValue = row.justification;
     this.templateHtml = row.proposedContent;
+    this.selectedTemplateType = row.templateType?.toString() || '';
+    this.templateFileUrl = row.templateFileUrl || '';
+    this.draftFileUrl = row.draftFileUrl || '';
     this.selectedDocumentType = row.documentType;
+    this.selectedDocumentTypeCode = row.documentTypeCode || '';
     this.selectedDivisions = row.division;
     this.selectedDepartment = row.department;
     this.selectedSubDepartment = row.subdepartment;
@@ -275,6 +345,125 @@ export class DraftRequestList {
 
     console.log('Distribution:', this.distributionListPayload);
     console.log('Users:', this.distributionUserList);
+  }
+
+   downloadDraft(): void {
+    if (!this.requestId) {
+      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      return;
+    }
+
+    this._doumentRequestService
+      .DownloadDraftDocument(this.requestId)
+      .subscribe({
+        next: (response: any) => {
+          const body = response?.body || response;
+          let blob: Blob | null = null;
+
+          if (body instanceof Blob) {
+            blob = body;
+          } else if (body instanceof ArrayBuffer) {
+            blob = new Blob([body]);
+          }
+
+          if (blob) {
+            if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+              blob.text().then((text) => {
+                try {
+                  const res = JSON.parse(text);
+                  this._notification.createNotification(
+                    'warning',
+                    'Template',
+                    res.Message || 'Template not available.',
+                  );
+                } catch {
+                  this._notification.createNotification(
+                    'error',
+                    'Template',
+                    'Failed to read response.',
+                  );
+                }
+              });
+              return;
+            }
+
+            let filename = `Template_${this.selectedDocumentType}`;
+            const contentDisposition =
+              response?.headers?.get('content-disposition') ||
+              response?.headers?.get('Content-Disposition');
+            if (contentDisposition) {
+              const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+              if (matches != null && matches[1]) {
+                filename = matches[1].replace(/['"]/g, '');
+              }
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          } else {
+            const url =
+              typeof response?.Data === 'string'
+                ? response.Data
+                : response?.Data?.TemplateFileURL ||
+                  response?.Data?.templateFileUrl ||
+                  this.templateFileUrl;
+            if (url) {
+              window.open(url, '_blank');
+            } else {
+              this._notification.createNotification(
+                'warning',
+                'Template',
+                'No file template available for download.',
+              );
+            }
+          }
+        },
+        error: (err: any) => {
+          if (
+            err.error instanceof Blob &&
+            (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+          ) {
+            err.error.text().then((text: string) => {
+              try {
+                const res = JSON.parse(text);
+                this._notification.createNotification(
+                  'error',
+                  'Template',
+                  res.Message || 'Failed to download template.',
+                );
+              } catch {
+                this._notification.createNotification(
+                  'error',
+                  'Template',
+                  'Failed to download template.',
+                );
+              }
+            });
+          } else {
+            console.error('Error downloading template', err);
+            this._notification.createNotification(
+              'error',
+              'Template',
+              'Failed to download template.',
+            );
+          }
+        },
+      });
+  }
+ 
+  onDraftFileSelected(event: any): void {
+    const fileList: FileList = event.target.files;
+    if (fileList && fileList.length > 0) {
+      this.draftFile = fileList[0];
+    } else {
+      this.draftFile = null;
+    }
   }
 
   SubmiteDocumentRequests() { 
@@ -323,18 +512,28 @@ export class DraftRequestList {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    const payLoad = {
-      companyId: this.selectedCompany,
-      requestid:  this.requestId , 
-      documentname: this.documentName || '',
-      justification: this.inputJustificationValue || '',
-      proposedcontent: this.templateHtml || '', 
-      modifiedbyuserid: 1, // this will be bind with UserId
-      distributionlist: cleanDistributionList,
-      userlist: [],
-    };
+    const formData = new FormData();
+    formData.append('companyId', this.selectedCompany?.toString() || '');
+    formData.append('requestid', this.requestId?.toString() || '');
+    formData.append('documentname', this.documentName || '');
+    formData.append('justification', this.inputJustificationValue || '');
+    formData.append('proposedcontent', this.templateHtml || '');
+    formData.append('modifiedbyuserid', '1'); // this will be bind with UserId
 
-    this._doumentRequestService.UpdateDraftDocumentRequest(payLoad).subscribe({
+    cleanDistributionList.forEach((item: any, index: number) => {
+      if (item.divisionCode) formData.append(`distributionlist[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode) formData.append(`distributionlist[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode) formData.append(`distributionlist[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode) formData.append(`distributionlist[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`distributionlist[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId) formData.append(`distributionlist[${index}].distributionTypeId`, item.distributionTypeId.toString());
+    });
+
+    if (this.draftFile) {
+      formData.append('DraftFile', this.draftFile);
+    }
+
+    this._doumentRequestService.UpdateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification(

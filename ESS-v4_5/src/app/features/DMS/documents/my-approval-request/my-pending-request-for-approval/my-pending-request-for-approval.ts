@@ -47,6 +47,24 @@ export class MyPendingRequestForApproval {
       headerName: 'Document Name',
     },
     {
+      field: 'viewDocument',
+      headerName: 'Document Content',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          View
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.viewDocument(event.data);
+      },
+    },
+    {
       field: 'observation',
       headerName: 'Observation',
       editable: false,
@@ -104,6 +122,7 @@ export class MyPendingRequestForApproval {
     { field: 'documentTypeId', label: 'document Type', visible: true },
     { field: 'requestId', label: 'Request Id', visible: true },
     { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'viewDocument', label: 'Document Content', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
@@ -184,6 +203,23 @@ export class MyPendingRequestForApproval {
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });
+  }
+
+  viewDocument(rowData: any) {
+    // If the backend returns a document URL (e.g. uploaded Word/PDF draft)
+    if (rowData.documentUrl || rowData.draftFileUrl) {
+      window.open(rowData.documentUrl || rowData.draftFileUrl, '_blank');
+    } else if (rowData.proposedContent) {
+      // For HTML contents, open it in a new window/tab safely
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(rowData.proposedContent);
+        newWindow.document.close();
+      }
+    } else {
+      // Fallback
+      console.warn('No document content available to view', rowData);
+    }
   }
 
   approve() {}

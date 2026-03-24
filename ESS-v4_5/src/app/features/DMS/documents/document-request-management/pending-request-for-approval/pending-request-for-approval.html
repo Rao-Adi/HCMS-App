@@ -40,14 +40,14 @@
       [columnToggles]="columnToggles"
       [columnDefs]="documentColumnDefs"
       [defaultColDef]="defaultColDef"
-      [isSelectionRequired]="true"
+      [isSelectionRequired]="false"
       [showDisplayOption]="true"
       [rowData]="documentRequestsData"
       [pageSize]="pageSize"
+      [pageSizeOptions]="[1, 10, 20, 50]"
       [totalRows]="totalRows"
-      [pageSize]="selectedPageSize"
       gridId="documentGrid"
-      (serverQuery)="GetAllDocuments($event)"
+      (serverQuery)="GetAllPendingRequests($event)"
       (pageSizeChange)="onPageSizeChanged($event)"
       (selectionChange)="onSelectionChange($event)"
     >
@@ -71,4 +71,3 @@
     </app-ag-grid-wrapper>
   </div>
 </div>
-

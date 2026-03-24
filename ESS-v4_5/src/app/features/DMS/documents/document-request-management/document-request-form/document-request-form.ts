@@ -67,6 +67,9 @@ export class DocumentRequestForm {
   documentName?: string = '';
   templateHtml: string = '';
   originalContentHtml: string = '';
+  selectedTemplateType: string = '';
+  templateFileUrl: string = '';
+  draftFile: File | null = null;
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -218,7 +221,7 @@ export class DocumentRequestForm {
     private _documentTemplateService: TemplateService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
-    private _documentService: DocumentService
+    private _documentService: DocumentService,
   ) {}
 
   ngOnInit() {
@@ -259,12 +262,10 @@ export class DocumentRequestForm {
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
     };
-    this._workflowStepService
-      .getWorkflowStepByDocumentTypeCode(payLoad)
-      .subscribe((res) => {
-        this.showExclusionTable = true;
-        this.approvalSequenceData = res?.Data ? res.Data : [];
-      });
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+      this.showExclusionTable = true;
+      this.approvalSequenceData = res?.Data ? res.Data : [];
+    });
   }
 
   onDocumentTypeChange(value: string): void {
@@ -323,16 +324,140 @@ export class DocumentRequestForm {
   GetTemplate(value: string) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response) => {
-        this.templateHtml = response.Data.TemplateContent;
-        // Promise.resolve().then(() => {
-        //   this.templateHtml = response.Data.TemplateContent;
-        // });
+        this.selectedTemplateType =
+          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.templateFileUrl =
+          response.Data?.TemplateFileURL || response.Data?.templateFileUrl || '';
+        this.templateHtml = response.Data?.TemplateContent || response.Data?.templateContent || '';
       },
       error: (err) => console.error(err),
     });
 
     if (value === 'Select') {
       this.trainingContent = true;
+    }
+  }
+
+  downloadTemplate(): void { 
+    if (!this.selectedDocumentType) {
+      this._notification.createNotification(
+        'warning',
+        'Template',
+        'Please select a Document Type first.',
+      );
+      return;
+    }
+
+    this._documentTemplateService
+      .DownloadTemplateByDocumentTypeCode(this.selectedDocumentType)
+      .subscribe({
+        next: (response: any) => {
+          const body = response?.body || response;
+          let blob: Blob | null = null;
+
+          if (body instanceof Blob) {
+            blob = body;
+          } else if (body instanceof ArrayBuffer) {
+            blob = new Blob([body]);
+          }
+
+          if (blob) {
+            if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+              blob.text().then((text) => {
+                try {
+                  const res = JSON.parse(text);
+                  this._notification.createNotification(
+                    'warning',
+                    'Template',
+                    res.Message || 'Template not available.',
+                  );
+                } catch {
+                  this._notification.createNotification(
+                    'error',
+                    'Template',
+                    'Failed to read response.',
+                  );
+                }
+              });
+              return;
+            }
+
+            let filename = `Template_${this.selectedDocumentType}`;
+            const contentDisposition =
+              response?.headers?.get('content-disposition') ||
+              response?.headers?.get('Content-Disposition');
+            if (contentDisposition) {
+              const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+              if (matches != null && matches[1]) {
+                filename = matches[1].replace(/['"]/g, '');
+              }
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          } else {
+            const url =
+              typeof response?.Data === 'string'
+                ? response.Data
+                : response?.Data?.TemplateFileURL ||
+                  response?.Data?.templateFileUrl ||
+                  this.templateFileUrl;
+            if (url) {
+              window.open(url, '_blank');
+            } else {
+              this._notification.createNotification(
+                'warning',
+                'Template',
+                'No file template available for download.',
+              );
+            }
+          }
+        },
+        error: (err: any) => {
+          if (
+            err.error instanceof Blob &&
+            (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+          ) {
+            err.error.text().then((text: string) => {
+              try {
+                const res = JSON.parse(text);
+                this._notification.createNotification(
+                  'error',
+                  'Template',
+                  res.Message || 'Failed to download template.',
+                );
+              } catch {
+                this._notification.createNotification(
+                  'error',
+                  'Template',
+                  'Failed to download template.',
+                );
+              }
+            });
+          } else {
+            console.error('Error downloading template', err);
+            this._notification.createNotification(
+              'error',
+              'Template',
+              'Failed to download template.',
+            );
+          }
+        },
+      });
+  }
+
+  onDraftFileSelected(event: any): void {
+    const fileList: FileList = event.target.files;
+    if (fileList && fileList.length > 0) {
+      this.draftFile = fileList[0];
+    } else {
+      this.draftFile = null;
     }
   }
 
@@ -395,23 +520,44 @@ export class DocumentRequestForm {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    const payLoad = {
-      CompanyId: this.selectedCompany,
-      DocumentRequestTypeCode: this.selectedDocumentRequestType,
-      documentTypeCode: this.selectedDocumentType || null,
-      documentName: this.documentName || '',
-      justification: this.inputJustificationValue || '',
-      proposedContent: this.templateHtml || '',
-      divisionCode: this.selectedDivisions || null,
-      departmentCode: this.selectedDepartment || null,
-      subDepartmentCode: this.selectedSubDepartment || null,
-      businessDomainCode: this.selectedBusinessDomain || null,
-      CreatedByUserId: 1, // this will be bind with UserId
-      distributionList: cleanDistributionList,
-      userids: [],
-    };
+    const formData = new FormData();
+    formData.append('CompanyId', this.selectedCompany || '');
+    formData.append('DocumentRequestTypeCode', this.selectedDocumentRequestType || '');
+    if (this.selectedDocumentType) formData.append('documentTypeCode', this.selectedDocumentType);
+    if (this.documentName) formData.append('documentName', this.documentName);
+    if (this.inputJustificationValue)
+      formData.append('justification', this.inputJustificationValue);
+    if (this.templateHtml) formData.append('proposedContent', this.templateHtml);
+    if (this.selectedDivisions) formData.append('divisionCode', this.selectedDivisions);
+    if (this.selectedDepartment) formData.append('departmentCode', this.selectedDepartment);
+    if (this.selectedSubDepartment)
+      formData.append('subDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedBusinessDomain)
+      formData.append('businessDomainCode', this.selectedBusinessDomain);
+    formData.append('CreatedByUserId', '1'); // this will be bind with UserId
 
-    this._doumentRequestService.CreateDraftDocumentRequest(payLoad).subscribe({
+    cleanDistributionList.forEach((item: any, index: number) => {
+      if (item.divisionCode)
+        formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode)
+        formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode)
+        formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode)
+        formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId)
+        formData.append(
+          `DistributionList[${index}].distributionTypeId`,
+          item.distributionTypeId.toString(),
+        );
+    });
+
+    if (this.draftFile) {
+      formData.append('DraftFile', this.draftFile);
+    }
+
+    this._doumentRequestService.CreateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
           //clear all fields
@@ -432,7 +578,11 @@ export class DocumentRequestForm {
 
   SubmitDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Request Type.');
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Request Type.',
+      );
       return;
     }
     if (!this.selectedCompany) {
@@ -447,19 +597,31 @@ export class DocumentRequestForm {
     // UC-22: Revision Validation Checks
     if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       if (!this.selectedDocumentRow) {
-        this._notification.createNotification('warning', 'Validation', 'Please select an existing document to revise.');
+        this._notification.createNotification(
+          'warning',
+          'Validation',
+          'Please select an existing document to revise.',
+        );
         return;
       }
-      
+
       // Mandatory Justification
       if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
-        this._notification.createNotification('warning', 'Validation', 'Justification is mandatory for a document revision.');
+        this._notification.createNotification(
+          'warning',
+          'Validation',
+          'Justification is mandatory for a document revision.',
+        );
         return;
       }
 
       // Special Requirement: Document Content must be altered
       if (this.templateHtml === this.originalContentHtml) {
-        this._notification.createNotification('warning', 'Validation', 'Document Content must be altered from the original version before submission.');
+        this._notification.createNotification(
+          'warning',
+          'Validation',
+          'Document Content must be altered from the original version before submission.',
+        );
         return;
       }
     }
@@ -473,29 +635,61 @@ export class DocumentRequestForm {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    const payLoad = {
-      CompanyId: this.selectedCompany,
-      DocumentRequestTypeCode: this.selectedDocumentRequestType,
-      documentTypeCode: this.selectedDocumentType || null,
-      documentName: this.documentName || '',
-      justification: this.inputJustificationValue || '',
-      proposedContent: this.templateHtml || '',
-      divisionCode: this.selectedDivisions || null,
-      departmentCode: this.selectedDepartment || null,
-      subDepartmentCode: this.selectedSubDepartment || null,
-      businessDomainCode: this.selectedBusinessDomain || null,
-      CreatedByUserId: 1, 
-      DistributionList: cleanDistributionList,
-      userids: this.distributionUserList.map(u => u.employeeCode || u.userId) || [],
-    };
+    if (
+      (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
+      !this.draftFile
+    ) {
+      this._notification.createNotification(
+        'warning',
+        'Validation',
+        'Please upload your drafted document before submitting.',
+      );
+      return;
+    }
 
-    // const payLoad = {
-    //   CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-    //   requestId: this.selectedDocumentRequestType,
-    //   submittedBy: this.selectedDocumentType || null,
-    // };
+    const formData = new FormData();
+    formData.append('CompanyId', this.selectedCompany || '');
+    formData.append('DocumentRequestTypeCode', this.selectedDocumentRequestType || '');
+    if (this.selectedDocumentType) formData.append('documentTypeCode', this.selectedDocumentType);
+    if (this.documentName) formData.append('documentName', this.documentName);
+    if (this.inputJustificationValue)
+      formData.append('justification', this.inputJustificationValue);
+    if (this.templateHtml) formData.append('proposedContent', this.templateHtml);
+    if (this.selectedDivisions) formData.append('divisionCode', this.selectedDivisions);
+    if (this.selectedDepartment) formData.append('departmentCode', this.selectedDepartment);
+    if (this.selectedSubDepartment)
+      formData.append('subDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedBusinessDomain)
+      formData.append('businessDomainCode', this.selectedBusinessDomain);
+    formData.append('CreatedByUserId', '1');
 
-    this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
+    cleanDistributionList.forEach((item: any, index: number) => {
+      if (item.divisionCode)
+        formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode)
+        formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode)
+        formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode)
+        formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId)
+        formData.append(
+          `DistributionList[${index}].distributionTypeId`,
+          item.distributionTypeId.toString(),
+        );
+    });
+
+    const userids = this.distributionUserList.map((u) => u.employeeCode || u.userId) || [];
+    userids.forEach((id: any, index: number) => {
+      formData.append(`userids[${index}]`, id.toString());
+    });
+
+    if (this.draftFile) {
+      formData.append('DraftFile', this.draftFile);
+    }
+
+    this._doumentRequestService.SubmitDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
           //clear all fields
@@ -526,6 +720,9 @@ export class DocumentRequestForm {
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
     this.originalContentHtml = '';
+    this.selectedTemplateType = '';
+    this.templateFileUrl = '';
+    this.draftFile = null;
     this.distributionListPayload = [];
     this.distributionUserList = [];
     this.selectedDocumentRow = null;
@@ -555,7 +752,7 @@ export class DocumentRequestForm {
         if (response?.Success) {
           this.totalRows = response.Data.TotalCount;
           this.documentRevisionData = response.Data.map((item: any) => {
-            // Helper to get value with case-insensitive fallback 
+            // Helper to get value with case-insensitive fallback
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
                 if (item[key] !== undefined && item[key] !== null) return item[key];
@@ -634,9 +831,10 @@ export class DocumentRequestForm {
                 level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
                 level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
                 roleId: x.roleId || x.RoleId,
-                distributiontypeId: x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+                distributiontypeId:
+                  x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
               })),
-            distributionUserList: item.UserList,
+              distributionUserList: item.UserList,
             };
           });
         }
@@ -665,7 +863,7 @@ export class DocumentRequestForm {
   }
 
   onCellClicked(event: any): void {
-    const row = event.data; 
+    const row = event.data;
 
     this.selectedDocumentRow = row;
 
