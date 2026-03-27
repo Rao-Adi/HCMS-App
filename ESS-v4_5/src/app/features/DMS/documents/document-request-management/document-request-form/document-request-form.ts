@@ -751,7 +751,7 @@ export class DocumentRequestForm {
       next: (response) => {
         if (response?.Success) {
           this.totalRows = response.Data.TotalCount;
-          this.documentRevisionData = response.Data.map((item: any) => {
+          this.documentRevisionData = response.Data.Items.map((item: any) => {
             // Helper to get value with case-insensitive fallback
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
@@ -783,6 +783,7 @@ export class DocumentRequestForm {
               documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
               documentName: get(['Title', 'title']),
               company: get(['Company', 'company'], ''),
+              companyId: get(['CompanyId', 'companyId']),
               proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
               proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
 

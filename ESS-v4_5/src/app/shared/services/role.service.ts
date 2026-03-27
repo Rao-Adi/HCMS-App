@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, Role } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, Role } from '../interfaces/interfaces';
 export class RoleService {
   private _cabietStructureConfig = new ReplaySubject<Role[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<Role[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -28,12 +40,12 @@ export class RoleService {
   }
 
   getRoleList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSRole/get-all-role-list`;
+    const uri = `${this.apiUrl}/DMSRole/get-all-role-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getRoleById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSRole/get-role-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSRole/get-role-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +66,7 @@ export class RoleService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSRole/get-all-role`;
+    const uri = `${this.apiUrl}/DMSRole/get-all-role`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -62,14 +74,14 @@ export class RoleService {
   }
 
   create(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSRole/create-role`, payload);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSRole/create-role`, payload);
   }
 
   update(payload: any) {
-    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSRole/update-role`, payload);
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSRole/update-role`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSRole/delete-role/${code}`);
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSRole/delete-role/${code}`);
   }
 }

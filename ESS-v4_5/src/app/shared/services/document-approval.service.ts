@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentApproval } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +11,19 @@ import { ApiResponse, DocumentApproval } from '../interfaces/interfaces';
 export class DocumentApprovalService {
   private _cabietStructureConfig = new ReplaySubject<DocumentApproval[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   get cabietStructureConfig$(): Observable<DocumentApproval[]> {
     return this._cabietStructureConfig.asObservable();
@@ -28,12 +40,12 @@ export class DocumentApprovalService {
   }
 
   getAllDocumentApprovalsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentApproval/get-all-document-approval-list`;
+    const uri = `${this.apiUrl}/DMSDocumentApproval/get-all-document-approval-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDocumentApprovalById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentApproval/get-document-approval-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSDocumentApproval/get-document-approval-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +66,7 @@ export class DocumentApprovalService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSDocumentApproval/get-all-document-approval`;
+    const uri = `${this.apiUrl}/DMSDocumentApproval/get-all-document-approval`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,21 +75,21 @@ export class DocumentApprovalService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentApproval/create-document-approval`,
+      `${this.apiUrl}/DMSDocumentApproval/create-document-approval`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentApproval/update-document-approval`,
+      `${this.apiUrl}/DMSDocumentApproval/update-document-approval`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentApproval/delete-document-approval/${code}`
+      `${this.apiUrl}/DMSDocumentApproval/delete-document-approval/${code}`
     );
   }
  

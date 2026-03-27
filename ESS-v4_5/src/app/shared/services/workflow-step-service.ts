@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, WorkflowStep } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,12 +11,24 @@ import { ApiResponse, WorkflowStep } from '../interfaces/interfaces';
 export class WorkflowStepService {
   private _cabietStructureConfig = new ReplaySubject<WorkflowStep[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<WorkflowStep[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
+  
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
     const headers = new HttpHeaders({
@@ -28,20 +40,20 @@ export class WorkflowStepService {
   }
 
   getWorkflowStepList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-all-workflow-step-list`;
+    const uri = `${this.apiUrl}/DMSWorkflowStep/get-all-workflow-step-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getWorkflowStepByDocumentTypeCode(payload:any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/get-workflow-step-by-document-code`,
+      `${this.apiUrl}/DMSWorkflowStep/get-workflow-step-by-document-code`,
       payload
     );
   }
 
 
   getPendingApprovals(companyId: number, userId:number): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-pending-approvals/${companyId}/${userId}`;
+    const uri = `${this.apiUrl}/DMSWorkflowStep/get-pending-approvals/${companyId}/${userId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -62,7 +74,7 @@ export class WorkflowStepService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSWorkflowStep/get-all-workflow-step`;
+    const uri = `${this.apiUrl}/DMSWorkflowStep/get-all-workflow-step`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -71,21 +83,21 @@ export class WorkflowStepService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/create-workflow-step`,
+      `${this.apiUrl}/DMSWorkflowStep/create-workflow-step`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/update-workflow-step`,
+      `${this.apiUrl}/DMSWorkflowStep/update-workflow-step`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowStep/delete-workflow-step/${code}`
+      `${this.apiUrl}/DMSWorkflowStep/delete-workflow-step/${code}`
     );
   }
 }

@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, UserAccessLevel } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, UserAccessLevel } from '../interfaces/interfaces';
 export class UserAccesssLevelService {
   private _cabietStructureConfig = new ReplaySubject<UserAccessLevel[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<UserAccessLevel[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -29,7 +41,7 @@ export class UserAccesssLevelService {
  
 
   getCabietTabsById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSUserAccessLevel/get-user-access-level-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSUserAccessLevel/get-user-access-level-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -50,7 +62,7 @@ export class UserAccesssLevelService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSUserAccessLevel/get-all-user-access-levels`;
+    const uri = `${this.apiUrl}/DMSUserAccessLevel/get-all-user-access-levels`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -58,14 +70,14 @@ export class UserAccesssLevelService {
   }
 
   create(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUserAccessLevel/create-user-access-level`, payload);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSUserAccessLevel/create-user-access-level`, payload);
   }
 
   update(payload: any) {
-    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSUserAccessLevel/update-user-access-level`, payload);
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSUserAccessLevel/update-user-access-level`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSUserAccessLevel/delete-user-access-level/${code}`);
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSUserAccessLevel/delete-user-access-level/${code}`);
   }
 }

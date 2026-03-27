@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, AttributeMandatoryScope } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +11,18 @@ import { ApiResponse, AttributeMandatoryScope } from '../interfaces/interfaces';
 export class AttributeMandatoryScopeService {
   private _cabietStructureConfig = new ReplaySubject<AttributeMandatoryScope[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
 
   get cabietStructureConfig$(): Observable<AttributeMandatoryScope[]> {
     return this._cabietStructureConfig.asObservable();
@@ -28,17 +39,17 @@ export class AttributeMandatoryScopeService {
   }
 
   getAttributeMandatoryList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes-list`;
+    const uri = `${this.apiUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getAttributeMandatoryScopesById(Id: any): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-attribute-mandatory-scopes-by-id/${Id}`;
+    const uri = `${this.apiUrl}/DMSAttributeMandatoryScope/get-attribute-mandatory-scopes-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getAttributeMandatoryByDocumentTypeId(Id: any): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-mandatory-by-document-type-id/${Id}`;
+    const uri = `${this.apiUrl}/DMSAttributeMandatoryScope/get-mandatory-by-document-type-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -61,7 +72,7 @@ export class AttributeMandatoryScopeService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes`;
+    const uri = `${this.apiUrl}/DMSAttributeMandatoryScope/get-all-attribute-mandatory-scopes`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -70,21 +81,21 @@ export class AttributeMandatoryScopeService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSAttributeMandatoryScope/create-attribute-mandatory-scopes`,
+      `${this.apiUrl}/DMSAttributeMandatoryScope/create-attribute-mandatory-scopes`,
       payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSAttributeMandatoryScope/update-attribute-mandatory-scopes`,
+      `${this.apiUrl}/DMSAttributeMandatoryScope/update-attribute-mandatory-scopes`,
       payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSAttributeMandatoryScope/delete-attribute-mandatory-scopes/${code}`,
+      `${this.apiUrl}/DMSAttributeMandatoryScope/delete-attribute-mandatory-scopes/${code}`,
     );
   }
 }

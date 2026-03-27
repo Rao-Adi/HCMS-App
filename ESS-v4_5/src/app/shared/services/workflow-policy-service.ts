@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, WorkflowPolicy } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,12 +11,24 @@ import { ApiResponse, WorkflowPolicy } from '../interfaces/interfaces';
 export class WorkflowPolicyService {
   private _cabietStructureConfig = new ReplaySubject<WorkflowPolicy[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<WorkflowPolicy[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
+  
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
     const headers = new HttpHeaders({
@@ -28,12 +40,12 @@ export class WorkflowPolicyService {
   }
 
   getAllWorkflowPoliciesList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSWorkflowPolicy/get-all-workflow-policy-list`;
+    const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-all-workflow-policy-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getWorkflowPolicyById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSWorkflowPolicy/get-workflow-policy-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-workflow-policy-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +66,7 @@ export class WorkflowPolicyService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSWorkflowPolicy/get-all-workflow-policy`;
+    const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-all-workflow-policy`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,21 +75,21 @@ export class WorkflowPolicyService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowPolicy/create-workflow-policy`,
+      `${this.apiUrl}/DMSWorkflowPolicy/create-workflow-policy`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowPolicy/update-workflow-policy`,
+      `${this.apiUrl}/DMSWorkflowPolicy/update-workflow-policy`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSWorkflowPolicy/delete-workflow-policy/${code}`
+      `${this.apiUrl}/DMSWorkflowPolicy/delete-workflow-policy/${code}`
     );
   }
 }

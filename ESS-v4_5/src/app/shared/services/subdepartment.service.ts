@@ -1,19 +1,31 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
 import { ApiResponse, SubDepartment } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({ providedIn: 'root' })
 export class SubDepartmentService {
   private _departments: ReplaySubject<SubDepartment[]> = new ReplaySubject<SubDepartment[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get departments$(): Observable<SubDepartment[]> {
     return this._departments.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -26,17 +38,17 @@ export class SubDepartmentService {
   }
 
   getSubDepartmentList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSSubDepartment/get-all-subdepartment-list`;
+    const uri = `${this.apiUrl}/DMSSubDepartment/get-all-subdepartment-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getSubDepartmentsByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSSubDepartment/get-subdepartment-by-department-code/${departmentCode}`;
+    const uri = `${this.apiUrl}/DMSSubDepartment/get-subdepartment-by-department-code/${departmentCode}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getSubDepartmentCount(): Observable<GenericResponse<Number>> {
-    const uri = `${environment.baseUrl}/DMSSubDepartment/get-subdepartment-count`;
+    const uri = `${this.apiUrl}/DMSSubDepartment/get-subdepartment-count`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -57,7 +69,7 @@ export class SubDepartmentService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSSubDepartment/get-all-subdepartment`;
+    const uri = `${this.apiUrl}/DMSSubDepartment/get-all-subdepartment`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -66,21 +78,21 @@ export class SubDepartmentService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSSubDepartment/create-subdepartment`,
+      `${this.apiUrl}/DMSSubDepartment/create-subdepartment`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSSubDepartment/update-subdepartment`,
+      `${this.apiUrl}/DMSSubDepartment/update-subdepartment`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSSubDepartment/delete-subdepartment/${code}`
+      `${this.apiUrl}/DMSSubDepartment/delete-subdepartment/${code}`
     );
   }
 }

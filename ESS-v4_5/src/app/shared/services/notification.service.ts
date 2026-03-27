@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, Notification } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, Notification } from '../interfaces/interfaces';
 export class NotificationService {
   private _cabietStructureConfig = new ReplaySubject<Notification[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<Notification[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -28,12 +40,12 @@ export class NotificationService {
   }
 
   getAllNotificationsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSNotification/get-all-notification-list`;
+    const uri = `${this.apiUrl}/DMSNotification/get-all-notification-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getNotificationById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSNotification/get-notification-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSNotification/get-notification-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +66,7 @@ export class NotificationService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSNotification/get-all-notification`;
+    const uri = `${this.apiUrl}/DMSNotification/get-all-notification`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,27 +75,27 @@ export class NotificationService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSNotification/create-notification`,
+      `${this.apiUrl}/DMSNotification/create-notification`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSNotification/update-notification`,
+      `${this.apiUrl}/DMSNotification/update-notification`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSNotification/delete-notification/${code}`
+      `${this.apiUrl}/DMSNotification/delete-notification/${code}`
     );
   }
 
   sendTestNotification(payload: any): Observable<any> {
     return this.http.post<any>(
-      `${environment.baseUrl}/DMSNotification/SendTestNotification`, 
+      `${this.apiUrl}/DMSNotification/SendTestNotification`, 
       payload, { headers: this.getHeaders() }
     );
   }

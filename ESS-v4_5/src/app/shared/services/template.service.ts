@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, Template, TemplateCreateDto } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, Template, TemplateCreateDto } from '../interfaces/interfac
 export class TemplateService {
   private _cabietStructureConfig = new ReplaySubject<Template[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<Template[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -28,23 +40,23 @@ export class TemplateService {
   }
 
   getAllTemplateList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSTemplate/get-all-templates-list`;
+    const uri = `${this.apiUrl}/DMSTemplate/get-all-templates-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getTemplateByDocumentTypeCode(code?: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSTemplate/get-template-by-document-type/${code}`;
+    const uri = `${this.apiUrl}/DMSTemplate/get-template-by-document-type/${code}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getTemplateById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSTemplate/get-template-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSTemplate/get-template-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   DownloadTemplateByDocumentTypeCode(code: string) {
   return this.http.get(
-    `${environment.baseUrl}/DMSTemplate/download-template/${code}`,
+    `${this.apiUrl}/DMSTemplate/download-template/${code}`,
     {
       observe: 'response',
       responseType: 'blob' // ✅ CRITICAL FIX
@@ -69,7 +81,7 @@ export class TemplateService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSTemplate/get-all-template`;
+    const uri = `${this.apiUrl}/DMSTemplate/get-all-template`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -78,21 +90,21 @@ export class TemplateService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTemplate/create-template`,
+      `${this.apiUrl}/DMSTemplate/create-template`,
       payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTemplate/update-template`,
+      `${this.apiUrl}/DMSTemplate/update-template`,
       payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSTemplate/delete-template/${code}`,
+      `${this.apiUrl}/DMSTemplate/delete-template/${code}`,
     );
   }
 }

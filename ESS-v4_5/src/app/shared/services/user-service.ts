@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, User } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, User } from '../interfaces/interfaces';
 export class UserService {
   private _cabietStructureConfig = new ReplaySubject<User[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<User[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -28,17 +40,17 @@ export class UserService {
   }
 
   getUserList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSUser/get-all-users-list`;
+    const uri = `${this.apiUrl}/DMSUser/get-all-users-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getUserById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSUser/get-user-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSUser/get-user-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   GetUserByFilters(payload: any): Observable<ApiResponse<any>> { 
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/get-user-with-filters`, payload);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSUser/get-user-with-filters`, payload);
   }
 
   GetAllUser(
@@ -58,7 +70,7 @@ export class UserService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSUser/get-all-user`;
+    const uri = `${this.apiUrl}/DMSUser/get-all-user`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -66,14 +78,14 @@ export class UserService {
   }
 
   create(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/create-user`, payload);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSUser/create-user`, payload);
   }
 
   update(payload: any) {
-    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/update-user`, payload);
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSUser/update-user`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSUser/delete-user/${code}`);
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSUser/delete-user/${code}`);
   }
 }

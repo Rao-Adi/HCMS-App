@@ -64,16 +64,17 @@ export class MyApprovalRequest {
     cellDataType: false,
     editable: false,
   };
-
-  pageSize = 10;
+ 
   totalPendingDocuments = 0;
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
   rowData: any[] = [];
   public noRowsOverlay: string = '';
+  selectedPageSize = 1;
 
   documentRequestsData: any[] = [];
   totalRows = 0;
+  pageNumber = 1;
   // Track selection state
   hasSelectedRows = false;
   stepId: number = 0;
@@ -225,7 +226,7 @@ export class MyApprovalRequest {
     this.getAllUsersList();
     // this.GetAllPendingDocuments({
     //   pageNumber: 1,
-    //   pageSize: this.pageSize,
+    //   pageSize: this.selectedPageSize,
     //   sortModel: [],
     //   filterModel: {},
     // });
@@ -255,45 +256,71 @@ export class MyApprovalRequest {
   async onDocumentTypeChange(value: string) {
     // this.loading = true;
     this.selectedDocumentType = value;
-    await this.GetAllPendingDocuments('');
+    this.GetAllPendingDocuments();
     this.emptyAllFileds();
   }
 
   async onTabChange(status: string) {
     this.selectedTab = status;
-    await this.GetAllPendingDocuments('');
+    this.GetAllPendingDocuments();
     this.emptyAllFileds();
   }
 
   onEmployeeChange(value: string): void {
     this.selectedEmployee = value;
     this.emptyAllFileds();
-    if (value != null) {
-      this.GetAllPendingDocuments(value);
-    }
+    this.GetAllPendingDocuments();
   }
 
-  GetAllPendingDocuments(query: any) {
-    if(this.selectedEmployee == ""){
+  GetAllPendingDocuments(query?: any) {
+    if (!this.selectedEmployee) {
+      this.documentRequestsData = [];
+      this.totalRows = 0;
       return;
     }
+
+    let searchText = '';
+    let sortColumn = '';
+    let sortBy = 'DESC';
+
+    // If grid triggers the query, extract pagination parameters
+    if (query && typeof query === 'object') {
+      if (query.pageNumber) this.pageNumber = query.pageNumber;
+      if (query.pageSize) this.selectedPageSize = query.pageSize;
+      searchText = query.searchText || '';
+      if (query.sortModel && query.sortModel.length > 0) {
+        sortColumn = query.sortModel[0].colId;
+        sortBy = query.sortModel[0].sort;
+      }
+    } else {
+      // Otherwise, reset to page 1 for fresh filters
+      this.pageNumber = 1;
+    }
+
     const payload = {
-      companyId: 1,
-      userId: 1,
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType,
-      employeeCode: this.selectedEmployee,
-      RequestStatus: this.selectedTab,
+      searchtext: searchText,
+      sortby: sortBy,
+      sortcolumn: sortColumn,
+      isactive: true,
+      pagenumber: this.pageNumber,
+      pagesize: this.selectedPageSize || 10,
+      companyid: 1,
+      userid: 1,
+      divisioncode: this.selectedDivisions || '',
+      departmentcode: this.selectedDepartment || '',
+      subdepartmentcode: this.selectedSubDepartment || '',
+      businessdomaincode: this.selectedBusinessDomain || '',
+      documenttypecode: this.selectedDocumentType || '',
+      employeecode: this.selectedEmployee || '',
+      requeststatus: this.selectedTab || ''
     };
+
     this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
-      next: (response) => {
+      next: (response) => { 
         if (response?.Success) {
           if (response?.Data) {
             this.totalRows = response.Data.TotalCount;
-            this.documentRequestsData = response.Data.map((item: any) => ({
+            this.documentRequestsData = response.Data.Items.map((item: any) => ({
               Id: item.id || item.Id,
               requestId: item.Id || item.id,
               documentType: item.DocumentType || item.documentType,
@@ -314,21 +341,23 @@ export class MyApprovalRequest {
               templateType: item.TemplateType || item.templateType,
               draftFileUrl: item.DraftFileUrl || item.draftFileUrl || ((String(item.TemplateType || item.templateType) === '1' || String(item.TemplateType || item.templateType) === '2') ? item.ProposedContent : ''),
               requestCreatedBy: item.createdBy || item.CreatedBy || '',
-              dateOfCreation: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              requestCreatedOn: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              previousVersionCreatedOn:
-                item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+              dateOfCreation: this.formatDate(item.createdAt || item.CreatedAt),
+              requestCreatedOn: this.formatDate(item.createdAt || item.CreatedAt),
+              previousVersionCreatedOn: this.formatDate(item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt),
               proposedVersionNumber: item.RowVersion || item.rowVersion,
             }));
           } else {
+            this.documentRequestsData = [];
+            this.totalRows = 0;
           }
+        } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
+        this.documentRequestsData = [];
+        this.totalRows = 0;
         this._notification.createNotification(
           'error',
           'Error',
@@ -337,50 +366,21 @@ export class MyApprovalRequest {
       },
     });
   }
-  GetAllApprovedDocuments(query: any) {}
-  GetAllDisApprovedDocuments(query: any) {}
-  GetAllDocuments(query: any) {}
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
+
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
 
-    switch (gridId) {
-      case 'pendingGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllPendingDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-
-      case 'approvedGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllApprovedDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'disapprovedGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDisApprovedDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
+    if (gridId === 'documentGrid') {
+      if (this.selectedPageSize === pageSize) return;
+      this.selectedPageSize = pageSize;
+      this.GetAllPendingDocuments({
+        pageNumber: 1,
+        pageSize: pageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
     }
   }
 
@@ -488,7 +488,7 @@ export class MyApprovalRequest {
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification('success', 'Request', response.Message);
-          this.GetAllPendingDocuments('');
+          this.GetAllPendingDocuments();
         }
       },
       error: (err) => {
@@ -499,6 +499,18 @@ export class MyApprovalRequest {
         );
       },
     });
+  }
+
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '';
+    try {
+      const [datePart, timePart = ''] = value.split(' ');
+      const [month, day, year] = datePart.split('/');
+      if (!year || !month || !day) return value;
+      return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year} ${timePart.trim()}`.trim();
+    } catch {
+      return value;
+    }
   }
 
   export() {}

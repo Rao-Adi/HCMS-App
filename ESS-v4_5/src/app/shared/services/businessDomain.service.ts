@@ -1,10 +1,10 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { ApiResponse, BusinessDomain, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs'; 
+import { AppConfigService } from '@app/core/services/app-config';
 
 // import { Customer } from './customer';
 
@@ -12,8 +12,20 @@ import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 export class BusinessDomainService {
   private _departments: ReplaySubject<BusinessDomain[]> = new ReplaySubject<BusinessDomain[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this.apiUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.apiUrl;
+  }
+
+  
   get departments$(): Observable<BusinessDomain[]> {
     return this._departments.asObservable();
   }
@@ -29,17 +41,17 @@ export class BusinessDomainService {
   }
 
   getBusinessDomainList(): Observable<any> {
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-all-business-domain-list`;
+    const uri = `${this.apiUrl}/DMSBusinessDomain/get-all-business-domain-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getBusinessDomainsByDivisionCode(dCode: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-departments-by-division-code?dCode=${dCode}`;
+    const uri = `${this.apiUrl}/DMSBusinessDomain/get-departments-by-division-code?dCode=${dCode}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getBusinessDomainCount(): Observable<GenericResponse<Number>> {
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-business-domain-count`;
+    const uri = `${this.apiUrl}/DMSBusinessDomain/get-business-domain-count`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -60,7 +72,7 @@ export class BusinessDomainService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSBusinessDomain/get-all-business-domain`;
+    const uri = `${this.apiUrl}/DMSBusinessDomain/get-all-business-domain`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -69,21 +81,21 @@ export class BusinessDomainService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSBusinessDomain/create-business-domain`,
+      `${this.apiUrl}/DMSBusinessDomain/create-business-domain`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSBusinessDomain/update-business-domain`,
+      `${this.apiUrl}/DMSBusinessDomain/update-business-domain`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSBusinessDomain/delete-business-domain/${code}`
+      `${this.apiUrl}/DMSBusinessDomain/delete-business-domain/${code}`
     );
   }
  
