@@ -15,6 +15,7 @@ import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-l
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
   selector: 'app-people-partners-employee',
@@ -46,50 +47,89 @@ export class PeoplePartnersEmployee {
     cellDataType: false,
   };
 
+  //  columnToggles?: ColumnToggle[] = [
+  //   { field: 'EmployeeCode', label: 'Employee Code', visible: true },
+  //   { field: 'EmployeeName', label: 'Employee Name', visible: true },
+  //   { field: 'DivisionName', label: 'Division', visible: true },
+  //   { field: 'DepartmentName', label: 'Department', visible: true },
+  //   { field: 'SubDepartmentName', label: 'Sub-Department', visible: true },
+  //   { field: 'Designation', label: 'Designation', visible: true },
+  //   { field: 'Grade', label: 'Grade', visible: true },
+  //   { field: 'ReportingTo', label: 'Reporting To', visible: true },
+  //   { field: 'DateOfJoining', label: 'Date Of Joining', visible: true },
+  //   { field: 'accessLevel', label: 'AccessLevel', visible: true },
+  // ];
+
   columnToggles?: ColumnToggle[] = [
-    { field: 'EmployeeCode', label: 'Employee Code', visible: true },
-    { field: 'EmployeeName', label: 'Employee Name', visible: true },
-    { field: 'DivisionName', label: 'Division', visible: true },
-    { field: 'DepartmentName', label: 'Department', visible: true },
-    { field: 'SubDepartmentName', label: 'Sub-Department', visible: true },
-    { field: 'Designation', label: 'Designation', visible: true },
-    { field: 'Grade', label: 'Grade', visible: true },
-    { field: 'ReportingTo', label: 'Reporting To', visible: true },
-    { field: 'DateOfJoining', label: 'Date Of Joining', visible: true },
-    { field: 'accessLevel', label: 'AccessLevel', visible: true },
+    { field: 'empcode', label: 'Employee Code', visible: true },
+    { field: 'fname', label: 'Employee Name', visible: true },
+    { field: 'nicnew', label: 'CNIC', visible: true },
+    { field: 'mobile', label: 'Mobile', visible: true },
+    { field: 'email', label: 'Email', visible: true },
+    { field: 'datejoin', label: 'Date Of Joining', visible: true },
+    { field: 'accessLevel', label: 'Access Level', visible: true },
   ];
 
+
+  // documentColumnDefs = [
+  //   { field: 'EmployeeCode', headerName: 'Employee Code' },
+  //   { field: 'EmployeeName', headerName: 'Employee Name' },
+  //   {
+  //     field: 'DivisionName',
+  //     headerName: 'Division',
+  //   },
+  //   {
+  //     field: 'DepartmentName',
+  //     headerName: 'Department',
+  //   },
+  //   {
+  //     field: 'SubDepartmentName',
+  //     headerName: 'Sub-Department',
+  //   },
+  //   {
+  //     field: 'Designation',
+  //     headerName: 'Designation',
+  //   },
+  //   {
+  //     field: 'Grade',
+  //     headerName: 'Grade',
+  //   },
+  //   {
+  //     field: 'ReportingTo',
+  //     headerName: 'Reporting Manager',
+  //   },
+  //   {
+  //     field: 'DateOfJoining',
+  //     headerName: 'Date of Joining',
+  //   },
+  //   {
+  //     field: 'accessLevel',
+  //     headerName: 'Access Level', 
+  //     editable: false,
+  //     cellRenderer: (params: any) => {
+  //       return `
+  //       <span 
+  //         style="color:#1976d2; cursor:pointer; text-decoration:underline"
+  //         data-action="open"
+  //       >
+  //         ${params.value ? 'Access Level' : 'Access Level'}
+  //       </span>
+  //     `;
+  //     },
+  //     onCellClicked: (event: any) => {
+  //       this.openMandatoryCabinetModal(event.data);
+  //     },
+  //   },
+  // ];
+
+  
   documentColumnDefs = [
-    { field: 'EmployeeCode', headerName: 'Employee Code' },
-    { field: 'EmployeeName', headerName: 'Employee Name' },
-    {
-      field: 'DivisionName',
-      headerName: 'Division',
-    },
-    {
-      field: 'DepartmentName',
-      headerName: 'Department',
-    },
-    {
-      field: 'SubDepartmentName',
-      headerName: 'Sub-Department',
-    },
-    {
-      field: 'Designation',
-      headerName: 'Designation',
-    },
-    {
-      field: 'Grade',
-      headerName: 'Grade',
-    },
-    {
-      field: 'ReportingTo',
-      headerName: 'Reporting Manager',
-    },
-    {
-      field: 'DateOfJoining',
-      headerName: 'Date of Joining',
-    },
+    { field: 'empcode', headerName: 'Employee Code' },
+    { field: 'fname', headerName: 'Employee Name' },
+    { field: 'nicnew', headerName: 'CNIC' },
+    { field: 'mobile', headerName: 'Mobile' },
+    { field: 'email', headerName: 'Email' },
+    { field: 'datejoin', headerName: 'Date of Joining' },
     {
       field: 'accessLevel',
       headerName: 'Access Level', 
@@ -110,7 +150,7 @@ export class PeoplePartnersEmployee {
     },
   ];
 
-  pinnedTopRowDataPlanning: UsersColumns[] = [
+  pinnedTopRowDataPlanning: any[] = [
     {
       employeeCode: '',
       employeeName: '',
@@ -121,12 +161,19 @@ export class PeoplePartnersEmployee {
       grade: '',
       reportingTo: null,
       dateOfJoining: null,
+      empcode: '',
+      fname: '',
+      nicnew: '',
+      mobile: '',
+      email: '',
+      datejoin: null,
       isNewRow: true,
     },
   ];
 
   constructor(
     private _userService: UserService,
+    private _peoplePartnersEmployeeService: PeoplePartnersService,
     private modal: NzModalService,
   ) {}
 
@@ -139,16 +186,18 @@ export class PeoplePartnersEmployee {
     });
   }
 
-  GetAllIntegeratedPeoplepartners(query: any) {
+  GetAllIntegeratedPeoplepartners(query: any = {}) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
+    const pageSize = Number(query?.pageSize) || this.pageSize;
 
-    this._userService
-      .GetAllUser(
-        query?.filterModel?.Name?.filter || '',
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+    this._peoplePartnersEmployeeService
+      .GetAllEmployees(
+        searchText,
         sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
+        sort?.colId || 'fname',
         true,
         pageNumber,
         pageSize,
@@ -156,37 +205,24 @@ export class PeoplePartnersEmployee {
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
           this.totalIntergrated = res.Data.TotalCount;
+          this.totalRows = res.Data.TotalCount;
 
           this.integrationUserData = res.Data.Items.map((item: any) => ({
-            Id: item.id || item.Id,
-            EmployeeCode: item.employeeCode || item.EmployeeCode,
-            EmployeeName: item.employeeName || item.EmployeeName,
-            Grade: item.grade || item.Grade,
-            DivisionCode: item.divisionCode || item.DivisionCode,
-            DivisionName: item.division || item.Division,
-            DepartmentCode: item.departmentCode || item.DepartmentCode,
-            DepartmentName: item.department || item.Department,
-            SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            SubDepartmentName: item.subDepartment || item.SubDepartment,
-            DesignationCode: item.designationCode || item.DesignationCode,
-            Designation: item.designation || item.Designation,
-            ReportingTo:
-              item.ReportingTo + '-' + item.EmployeeName ||
-              item.ReportingTo + '-' + item.EmployeeName,
-            DateOfJoining: new CustomDateFormatPipe().transform(
-              item.dateOfJoining || item.DateOfJoining || '',
+            empid: item.empid,
+            empcode: item.empcode,
+            fname: item.fname,
+            nicnew: item.nicnew,
+            mobile: item.mobile,
+            email: item.email,
+            datejoin: new CustomDateFormatPipe().transform(
+              item.datejoin || '',
             ),
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            Description: item.description || item.Description,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+            accessLevel: true // Forces the cellRenderer link to show up
           }));
-          //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {
           this.integrationUserData = [];
+          this.totalRows = 0;
         }
-        //this.cdr.detectChanges(); // force update
       });
   }
 
@@ -214,10 +250,10 @@ export class PeoplePartnersEmployee {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
-      nzTitle: 'Access Level to ' + (rowData.employeeName || rowData.EmployeeName),
+      nzTitle: 'Access Level to ' + rowData.fname,
       nzContent: AccessLevelModalDialog,
       nzData: {
-        employeeCode: rowData.employeeCode || rowData.EmployeeCode
+        employeeCode: rowData.empcode
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
@@ -243,5 +279,12 @@ class UsersColumns {
   grade: string = '';
   reportingTo: any = null;
   dateOfJoining: string | null = null;
+
+  empcode: string = '';
+  fname: string = '';
+  nicnew: string = '';
+  mobile: string = '';
+  email: string = '';
+  datejoin: string | null = null;
   isNewRow: boolean = false;
 }

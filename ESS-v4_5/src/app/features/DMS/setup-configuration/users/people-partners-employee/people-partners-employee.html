@@ -20,13 +20,13 @@
   [columnDefs]="documentColumnDefs"
   [defaultColDef]="defaultColDef"
   [isSelectionRequired]="false"
-  [showDisplayOption]="true"
-  [rowData]="pinnedTopRowDataPlanning"
+  [showDisplayOption]="true" 
   [pageSize]="pageSize"
+  [pageSizeOptions]="[1, 10, 20, 50]"
   [totalRows]="totalRows"
-  [pageSize]="selectedPageSize"
   gridId="documentGrid"
   (pageSizeChange)="onPageSizeChanged($event)"
   (serverQuery)="GetAllIntegeratedPeoplepartners($event)"
 >
 </app-ag-grid-wrapper>
+ 
