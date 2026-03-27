@@ -1,10 +1,10 @@
 import { Injectable, inject, Injector } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest, HttpContext } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AppConfigService } from './app-config';
 import { HttpContextToken } from '@angular/common/http';
-import { throwError } from 'rxjs';
 export const BYPASS_INTERCEPTORS = new HttpContextToken(() => false);
 
 @Injectable({
@@ -37,14 +37,36 @@ export class DataService {
 
   // --- Core TYPE-SAFE HTTP Methods ---
 
+  // get<T>(url: string): Observable<T> {
+  //   const fullUrl = `${this.apiUrl}/${url}`; // <-- Uses the getter
+  //   return this._httpClient.get<T>(fullUrl, { withCredentials: true });
+  // }
+
+  // post<T>(url: string, model: any): Observable<T> {
+  //   const fullUrl = `${this.apiUrl}/${url}`;
+  //   return this._httpClient.post<T>(fullUrl, model, { withCredentials: true });
+  // }
+
   get<T>(url: string): Observable<T> {
-    const fullUrl = `${this.apiUrl}/${url}`; // <-- Uses the getter
-    return this._httpClient.get<T>(fullUrl, { withCredentials: true });
+    const fullUrl = `${this.apiUrl}/${url}`;
+    return this._httpClient.get<T>(fullUrl, { withCredentials: true }).pipe(
+      catchError(err => {
+        console.error(`[DataService] API GET request failed for URL: ${fullUrl}`, err);
+        this.router.navigate(['/error'], { queryParams: { message: 'A required API request failed. Please check the console for details.' } });
+        return throwError(() => err);
+      })
+    );
   }
 
   post<T>(url: string, model: any): Observable<T> {
     const fullUrl = `${this.apiUrl}/${url}`;
-    return this._httpClient.post<T>(fullUrl, model, { withCredentials: true });
+    return this._httpClient.post<T>(fullUrl, model, { withCredentials: true }).pipe(
+      catchError(err => {
+        console.error(`[DataService] API POST request failed for URL: ${fullUrl}`, err);
+        this.router.navigate(['/error'], { queryParams: { message: 'A required API request failed. Please check the console for details.' } });
+        return throwError(() => err);
+      })
+    );
   }
 
   put<T>(url: string, id: number | string, model: any): Observable<T> {

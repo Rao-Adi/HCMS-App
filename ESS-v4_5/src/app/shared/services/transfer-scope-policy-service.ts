@@ -21,11 +21,11 @@ export class TransferScopePolicyService {
 
    // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
-    if (!this.apiUrl) {
+    if (!this._config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
       return ''; // Failsafe
     }
-    return this.apiUrl;
+    return this._config.baseUrl;
   }
 
 
