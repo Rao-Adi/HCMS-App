@@ -186,14 +186,7 @@ export class AccessLevelModalDialog {
       const pageSize = Number(query?.pageSize) || 10;
   
       this._userAccessLevelService
-        .GetAllUser(
-          query?.filterModel?.Name?.filter || '',
-          sort?.sort?.toUpperCase() || 'ASC',
-          sort?.colId || 'Name',
-          true,
-          pageNumber,
-          pageSize,
-        )
+        .GetAccessLevelByEmployeeCode( this.modalData.employeeCode)
         .subscribe((res) => {
           if (res?.Success && res.Data?.Items) {
             this.totalManullayManageEmployees = res.Data.TotalCount;

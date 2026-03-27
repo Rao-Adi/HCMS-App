@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentTraining } from '../interfaces/interfaces';
@@ -11,15 +11,16 @@ import { AppConfigService } from '@app/core/services/app-config';
 export class DocumentTrainingService {
   private _cabietStructureConfig = new ReplaySubject<DocumentTraining[]>(1);
 
-  constructor(private http: HttpClient,
-    private _config: AppConfigService
+  constructor(
+    private http: HttpClient,
+    private _config: AppConfigService,
   ) {}
 
   get cabietStructureConfig$(): Observable<DocumentTraining[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
-   // We make apiUrl a getter. It's only called when needed.
+  // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
     if (!this._config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
@@ -27,7 +28,6 @@ export class DocumentTrainingService {
     }
     return this._config.baseUrl;
   }
-
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -49,13 +49,28 @@ export class DocumentTrainingService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetTrainingAssessmentDetails(
+    documentId: string,
+    companyId: string,
+  ): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}/${companyId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  AcknowledgeAndSendForAuthorization(
+    documentId: string,
+    companyId: string,
+  ): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentTraining/acknowledge-and-send-for-authorization/${documentId}/${companyId}`;
+    return this.http.post<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
   GetAllDocumentTrainings(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -76,20 +91,20 @@ export class DocumentTrainingService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentTraining/create-document-training`,
-      payload
+      payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentTraining/update-document-training`,
-      payload
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocumentTraining/delete-document-training/${code}`
+      `${this.apiUrl}/DMSDocumentTraining/delete-document-training/${code}`,
     );
   }
 }

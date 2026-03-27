@@ -8,11 +8,15 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
+import { DocumentTrainingService } from '@app/shared/services/document-training.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { NotificationService } from '@app/shared/notification/notification.service';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -30,6 +34,7 @@ import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-r
     CabinetStructureList,
     DocumentTypeList,
     MyPendingRequestForApproval,
+    NzModalModule,
   ],
   templateUrl: './sopdocument-training.html',
   styleUrl: './sopdocument-training.css',
@@ -43,15 +48,22 @@ export class SOPDocumentTraining {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
 
+  totalRows = 0;
   pageSize = 10;
-  rowData: any[] = [];
+  classRoomData: any[] = [];
+  onlineData: any[] = [];
   totalClassRoom = 0;
   totalOnline = 0;
 
-  constructor() {}
+  constructor(
+    private _documentTrainingService: DocumentTrainingService,
+    private modal: NzModalService,
+    private _notification: NotificationService,
+  ) {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
+    this.GetAllClassRooms({ pageNumber: 1, pageSize: this.pageSize });
+    this.GetAllOnline({ pageNumber: 1, pageSize: this.pageSize });
   }
 
   // Default Column Definitions: Apply configuration across all columns
@@ -114,6 +126,28 @@ export class SOPDocumentTraining {
     { field: 'uploadDocument', headerName: 'Upload Document' },
   ];
 
+  columnToggles?: ColumnToggle[] = [
+    { field: 'documentTypeId', label: 'document Type', visible: true },
+    { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'viewDocument', label: 'Document Content', visible: true },
+    { field: 'observation', label: 'Observation', visible: true },
+    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'department', label: 'Department', visible: true },
+    { field: 'subdepartment', label: 'Sub-Department', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
+    { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+    { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'approvalHistory', label: 'Approval History', visible: true },
+  ];
+
   onlineColumnDefs = [
     { field: 'documentId', headerName: 'Document ID' },
     { field: 'documentName', headerName: 'Document Name' },
@@ -122,44 +156,37 @@ export class SOPDocumentTraining {
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'nextReviewDate', headerName: 'Next Review Date' },
+    { field: 'lmsStatus', headerName: 'LMS Status' },
+    {
+      field: 'averageScore',
+      headerName: 'Average Score (%)',
+      cellRenderer: (params: any) => {
+        return `<span style="color:#1976d2; cursor:pointer; text-decoration:underline" data-action="view-score">${params.value != null ? params.value : 0}%</span>`;
+      },
+      onCellClicked: (event: any) => {
+        if (event.event.target.getAttribute('data-action') === 'view-score') {
+          this.viewAssessmentDetails(event.data);
+        }
+      },
+    },
+    {
+      field: 'action',
+      headerName: 'Action',
+      cellRenderer: (params: any) => {
+        return `<button class="ant-btn ant-btn-primary ant-btn-sm" data-action="acknowledge">Acknowledge & Send</button>`;
+      },
+      onCellClicked: (event: any) => {
+        if (event.event.target.getAttribute('data-action') === 'acknowledge') {
+          this.acknowledgeAndSend(event.data);
+        }
+      },
+    },
   ];
 
   companies: SelectList[] = [
     { CODE: '1', NAME: 'ATCO' },
     { CODE: '2', NAME: 'Softronic' },
   ];
-
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
-
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
-
-    this.rowData = allData.slice(start, end);
-    this.totalClassRoom = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
-  }
-
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
-  }
 
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
@@ -176,8 +203,139 @@ export class SOPDocumentTraining {
     this.selectedDocumentType = value;
   }
 
-  GetAllClassRooms(query: any) {}
-  GetAllOnline(query: any) {}
+  GetAllClassRooms(query: any = {}) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || this.divisionPageSize;
+    const searchText = query?.searchText || '';
+
+    this._documentTrainingService
+      .GetAllDocumentTrainings(
+        searchText,
+        sort?.sort?.toUpperCase() || 'DESC',
+        sort?.colId || 'Id',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        if (res?.Success && res.Data?.Items) {
+          this.totalClassRoom = res.Data.TotalCount;
+          this.classRoomData = res.Data.Items.map((item: any) => ({
+            ...item,
+            documentId: item.DocumentId || item.documentId,
+            companyId: item.CompanyId || item.companyId,
+            documentName: item.DocumentName || item.documentName,
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            documentType: item.DocumentType || item.documentType,
+            division: item.Division || item.division,
+            department: item.Department || item.department,
+            subDepartment: item.SubDepartment || item.subDepartment,
+          }));
+        } else {
+          this.classRoomData = [];
+          this.totalClassRoom = 0;
+        }
+      });
+  }
+
+  GetAllOnline(query: any = {}) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || this.employeePageSize;
+    const searchText = query?.searchText || '';
+
+    this._documentTrainingService
+      .GetAllDocumentTrainings(
+        searchText,
+        sort?.sort?.toUpperCase() || 'DESC',
+        sort?.colId || 'Id',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        if (res?.Success && res.Data?.Items) {
+          this.totalOnline = res.Data.TotalCount;
+          this.onlineData = res.Data.Items.map((item: any) => ({
+            ...item,
+            documentId: item.DocumentId || item.documentId || item.Id || item.id,
+            companyId: item.CompanyId || item.companyId,
+            documentName: item.DocumentName || item.documentName,
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            documentType: item.DocumentType || item.documentType,
+            division: item.Division || item.division,
+            department: item.Department || item.department,
+            subDepartment: item.SubDepartment || item.subDepartment,
+            lmsStatus: item.LmsStatus || item.lmsStatus || 'Completed',
+            averageScore: item.AverageScore || item.averageScore || 0,
+          }));
+        } else {
+          this.onlineData = [];
+          this.totalOnline = 0;
+        }
+      });
+  }
+
+  viewAssessmentDetails(data: any) {
+    const docId = data.documentId || data.DocumentId || data.Id;
+    const companyId = data.companyId || data.CompanyId || MASTER_DEFAULT_KEYS.COMPANYID;
+
+    this._documentTrainingService
+      .GetTrainingAssessmentDetails(docId, companyId)
+      .subscribe((res) => {
+        if (res?.Success) {
+          this.modal.info({
+            nzTitle: 'Assessment Details',
+            nzContent: `Average Score: ${res.Data?.AverageScore ?? data.averageScore}% <br/><br/> Users Attempted: ${res.Data?.UserCount ?? 'N/A'}`,
+            nzWidth: 500,
+          });
+        } else {
+          this._notification.createNotification(
+            'error',
+            'Error',
+            res?.Message || 'Failed to load assessment details.',
+          );
+        }
+      });
+  }
+
+  acknowledgeAndSend(data: any) {
+    const docId = data.documentId || data.DocumentId || data.Id;
+    const companyId = data.companyId || data.CompanyId || MASTER_DEFAULT_KEYS.COMPANYID;
+    const avgScore = Number(data.averageScore) || 0;
+
+    if (avgScore < 80) {
+      this.modal.confirm({
+        nzTitle: 'Warning',
+        nzContent: 'Average score is below 80%. Proceed to Authorization?',
+        nzOnOk: () => this.executeAcknowledge(docId, companyId),
+      });
+    } else {
+      this.executeAcknowledge(docId, companyId);
+    }
+  }
+
+  executeAcknowledge(docId: string, companyId: string) {
+    this._documentTrainingService
+      .AcknowledgeAndSendForAuthorization(docId, companyId)
+      .subscribe((res) => {
+        if (res?.Success) {
+          this._notification.createNotification(
+            'success',
+            'Success',
+            'Document training acknowledged and sent for authorization.',
+          );
+          this.GetAllOnline({});
+        } else {
+          this._notification.createNotification(
+            'error',
+            'Error',
+            res?.Message || 'Failed to send for authorization.',
+          );
+        }
+      });
+  }
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -200,7 +358,7 @@ export class SOPDocumentTraining {
         break;
       case 'onlineGrid':
         this.employeePageSize = pageSize;
-        this.GetAllClassRooms({
+        this.GetAllOnline({
           pageNumber: 1,
           pageSize: this.selectedPageSize,
           sortModel: [], // or your current sort/filter model
