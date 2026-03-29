@@ -53,6 +53,7 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-approved-request-for-document-creation`,
       payload,
+      { headers: this.getHeaders() }
     );
   }
 
@@ -68,6 +69,7 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/approve-document`,
       payload,
+      { headers: this.getHeaders() }
     );
   }
 
@@ -75,6 +77,7 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/submit-document`,
       payload,
+      { headers: this.getHeaders() }
     );
   }
 
@@ -82,6 +85,7 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/reject-document`,
       payload,
+      { headers: this.getHeaders() }
     );
   }
 
@@ -89,6 +93,23 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/send-back-for-rework`,
       payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  GetPendingAuthorizations(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-pending-authorizations`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  AuthorizeDocumentPostTraining(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/authorize-document-post-training`,
+      payload,
+      { headers: this.getHeaders() }
     );
   }
 
@@ -97,6 +118,7 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-document-by-status`,
       payload,
+      { headers: this.getHeaders() }
     );
   }
 
