@@ -55,6 +55,13 @@ export class SOPDocumentTraining {
   totalClassRoom = 0;
   totalOnline = 0;
 
+  
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
+
   constructor(
     private _documentTrainingService: DocumentTrainingService,
     private modal: NzModalService,
@@ -337,11 +344,6 @@ export class SOPDocumentTraining {
       });
   }
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;

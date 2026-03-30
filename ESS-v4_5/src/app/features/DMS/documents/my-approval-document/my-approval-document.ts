@@ -340,37 +340,7 @@ export class MyApprovalDocument {
               dateOfApproval: '', // ← not present
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
             };
-          });
-          // this.documentRequestsData = response.Data.map((item: any) => ({
-          //   observation : item.observation,
-          //   Id: item.id || item.Id,
-          //   requestId: item.Id || item.id,
-          //   documentType: item.DocumentType || item.documentType,
-          //   proposedDocumentNumber: item.DocumentNumber || item.documentNumber,
-          //   stepId: item.StepId || item.stepId,
-          //   stepOrder: item.StepOrder || item.stepOrder,
-          //   startedAt: item.StartedAt || item.startedAt,
-          //   division: item.Division,
-          //   documentId: item.DocumentNumber,
-          //   documentName: item.Title,
-          //   proposedContent: item.ProposedContent,
-          //   department: item.Department,
-          //   departmentId: item.DepartmentCode,
-          //   subdepartment: item.SubDepartment,
-          //   subdepartmentId :item.SubDepartmentCode,
-          //   justification: item.Justification,
-          //   businessdomainId: item.BusinessDomainCode,
-          //   requestCreatedBy: item.createdBy || item.CreatedBy || '',
-          //   dateOfCreation: new CustomDateFormatPipe().transform(
-          //     item.createdAt || item.CreatedAt || '',
-          //   ),
-          //   requestCreatedOn: new CustomDateFormatPipe().transform(
-          //     item.createdAt || item.CreatedAt || '',
-          //   ),
-          //   previousVersionCreatedOn:
-          //     item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-          //   proposedVersionNumber: item.RowVersion || item.rowVersion,
-          // }));
+          }); 
         }
       },
       error: (err) => {

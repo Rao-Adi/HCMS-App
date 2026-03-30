@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
@@ -13,6 +13,9 @@ import { SelectList } from '@app/shared/interfaces/interfaces';
 import { UserService } from '@app/shared/services/user-service';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzUploadChangeParam, NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzModalModule } from 'ng-zorro-antd/modal';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
@@ -31,11 +34,16 @@ import { ResponsibilityTransferService } from '@app/shared/services/responsibili
     AgGridWrapper,
     NzDatePickerModule,
     NzUploadModule,
+    NzCheckboxModule,
+    NzInputModule,
+    NzModalModule,
   ],
   templateUrl: './responsibility-transfer-form.html',
   styleUrl: './responsibility-transfer-form.css',
 })
 export class ResponsibilityTransferForm {
+  @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
   public noRowsOverlay: string = '';
   footerRender = (): string => 'extra footer';
   dateFormat = 'dd/MMM/yyyy';
@@ -56,14 +64,28 @@ export class ResponsibilityTransferForm {
   remarks?: any;
   // single state
   activeMode: 'manual' | 'integration' | null = null;
+  isPermanentTransfer: boolean = false;
 
-  totalPendingApprovals = 0;
-  selectedPageSize = 10;
+  totalPendingApprovals = 0; 
+
+  
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 1; // default value
 
   pageSize = 10;
   rowData: any[] = [];
   employees: any[] = [];
+  filteredEmployeesTo: any[] = [];
   totalRows = 0;
+
+  // Modal Action Variables
+  isActionModalVisible = false;
+  actionModalTitle = '';
+  actionObservation = '';
+  currentAction = '';
 
   uploading = false;
   statues: any[] = [
@@ -76,6 +98,8 @@ export class ResponsibilityTransferForm {
     { CODE: '2', NAME: 'Resignation' },
     { CODE: '3', NAME: 'Role Transition/Promotion' },
   ];
+
+  selectedStatus: string = '1';
 
   pendingRequestApprovalColumnDefs:ColDef[] = [
     { field: 'requestor', headerName: 'Requestor', flex: 1 },
@@ -94,22 +118,8 @@ export class ResponsibilityTransferForm {
     },
   ];
 
-  pendingApprovalData: any[] = [
-    {
-      requestor: 'REQ-001',
-      from: 'Marketing Division',
-      To: 'Marketing',
-      reason: 'Digital Marketing',
-      status: 'Approved',
-    },
-    {
-      requestor: 'REQ-002',
-      from: 'Software Division',
-      To: 'IT',
-      reason: 'Software Marketing',
-      status: 'Pending',
-    },
-  ];
+  pendingApprovalData: any[] = [];
+  pendingTotalCount=0;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -123,13 +133,12 @@ export class ResponsibilityTransferForm {
     private _responsibilityTransfer: ResponsibilityTransferService,
   ) {}
 
-  ngOnInit() {
-    this.loadData(this.pageSize);
+  ngOnInit() { 
     this.getAllUsersList();
+    this.GetAllClassRooms();
   }
 
-  onFileSelected(event: Event): void {
-    debugger;
+  onFileSelected(event: Event): void { 
     const input = event.target as HTMLInputElement;
 
     if (!input.files || input.files.length === 0) {
@@ -140,43 +149,48 @@ export class ResponsibilityTransferForm {
     this.attachment = input.files[0];
     console.log('Selected file:', this.attachment);
   }
-  selectedStatus: number | null = null;
 
-  selectStatus(value: number | null): void {
-    this.selectedStatus = value;
+  selectStatus(value: string): void {
+    this.selectedStatus = value || '1';
+    // TODO: Refresh your grid data based on selectedStatus
   }
 
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
+  
+  GetAllClassRooms(query: any = {}) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || this.divisionPageSize;
+    const searchText = query?.searchText || '';
 
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
-
-    this.rowData = allData.slice(start, end);
-    this.totalRows = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
+    this._responsibilityTransfer
+      .GetAllResponsibilityTransfers(
+        searchText,
+        sort?.sort?.toUpperCase() || 'DESC',
+        sort?.colId || 'Id',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        if (res?.Success && res.Data?.Items) {
+          this.pendingTotalCount = res.Data.TotalCount;
+          this.pendingApprovalData = res.Data.Items.map((item: any) => ({
+            ...item,
+            documentId: item.DocumentId || item.documentId,
+            companyId: item.CompanyId || item.companyId,
+            documentName: item.DocumentName || item.documentName,
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            documentType: item.DocumentType || item.documentType,
+            division: item.Division || item.division,
+            department: item.Department || item.department,
+            subDepartment: item.SubDepartment || item.subDepartment,
+          }));
+        } else {
+          this.pendingApprovalData = [];
+          this.pendingTotalCount = 0;
+        }
+      });
   }
-
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
-  }
-
   addExclusion() {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
@@ -187,9 +201,12 @@ export class ResponsibilityTransferForm {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
           NAME: d.Value,
+          DEPARTMENT: d.DepartmentCode || d.DepartmentId || 'Unknown', // Storing department for filtering
         }));
+        this.filteredEmployeesTo = [...this.employees];
       } else {
         this.employees = [];
+        this.filteredEmployeesTo = [];
       }
     });
   };
@@ -206,8 +223,30 @@ export class ResponsibilityTransferForm {
     // });
   }
 
-  saveTemplate(data: any) {
-    debugger;
+  onEmployeeFromChange(empCode: string): void {
+    this.selectedEmployeeTo = null; // Clear subsequent selection
+    if (!empCode) {
+      this.filteredEmployeesTo = [...this.employees];
+      return;
+    }
+
+    const fromEmp = this.employees.find(e => e.CODE === empCode);
+    if (fromEmp) {
+      // Filter to same department, excluding the "Employee From" themselves
+      this.filteredEmployeesTo = this.employees.filter(
+        e => e.DEPARTMENT === fromEmp.DEPARTMENT && e.CODE !== empCode
+      );
+    }
+  }
+
+  onPermanentTransferChange(checked: boolean): void {
+    this.isPermanentTransfer = checked;
+    if (checked) {
+      this.selectedEffectiveDateTo = null;
+    }
+  }
+
+  submitRequest(data: any) {
 
     if (this.selectedEmployeeFrom === undefined || this.selectedEmployeeFrom === '') {
       this._notification.createNotification(
@@ -261,15 +300,58 @@ export class ResponsibilityTransferForm {
     //formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
 
     // ✅ FILE
-    formData.append('Attachment', this.attachment!, this.attachment!.name);
+    if (this.attachment) {
+      formData.append('Attachment', this.attachment, this.attachment.name);
+    }
 
     this._responsibilityTransfer.create(formData).subscribe(() => {
       this._notification.createNotification(
         'success',
         'Document',
-        'Document created successfully!',
+        'Transfer request submitted successfully!',
       );
+      this.cancel();
     });
+  }
+
+  cancel(): void {
+    this.selectedEmployeeFrom = null;
+    this.selectedEmployeeTo = null;
+    this.selectedReasonForTransfer = null;
+    this.selectedEffectiveDateFrom = null;
+    this.selectedEffectiveDateTo = null;
+    this.isPermanentTransfer = false;
+    this.remarks = '';
+    this.attachment = null;
+    this.filteredEmployeesTo = [...this.employees];
+  }
+
+  openActionModal(action: string): void {
+    if (!this.agGridWrapper || !this.agGridWrapper.gridApi) return;
+    
+    const selectedRows = this.agGridWrapper.gridApi.getSelectedRows();
+    if (selectedRows.length === 0) {
+      this._notification.createNotification('warning', 'Selection Required', 'Please select at least one request.');
+      return;
+    }
+
+    this.currentAction = action;
+    this.actionModalTitle = `${action} Responsibility Transfer Request`;
+    this.actionObservation = '';
+    this.isActionModalVisible = true;
+  }
+
+  submitAction(): void {
+    if (!this.actionObservation || this.actionObservation.trim() === '') {
+      this._notification.createNotification('error', 'Validation Failed', 'Observation is required to submit action.');
+      return;
+    }
+
+    // TODO: Connect this to the actual workflow action API using the `currentAction` and `actionObservation`
+    console.log(`Executing ${this.currentAction} with Observation: ${this.actionObservation}`);
+    
+    this.isActionModalVisible = false;
+    this._notification.createNotification('success', 'Action Successful', `Request has been ${this.currentAction.toLowerCase()}ed.`);
   }
 
   export() {}

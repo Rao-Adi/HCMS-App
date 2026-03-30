@@ -44,6 +44,7 @@
                             style="width: 200px"
                             [nzPlaceHolder]="'Select Employee(From)'"
                             [(ngModel)]="selectedEmployeeFrom"
+                            (ngModelChange)="onEmployeeFromChange($event)"
                             nzAllowClear
                             nzShowSearch
                           >
@@ -71,7 +72,7 @@
                               nzShowSearch
                             >
                               <nz-option
-                                *ngFor="let dep of employees"
+                                *ngFor="let dep of filteredEmployeesTo"
                                 [nzValue]="dep.CODE"
                                 [nzLabel]="dep.NAME"
                               >
@@ -120,10 +121,21 @@
                         <nz-date-picker
                           [nzPlaceHolder]="'Select Date'"
                           [(ngModel)]="selectedEffectiveDateTo"
+                          [nzDisabled]="isPermanentTransfer"
                           style="width: 50%"
                           [nzFormat]="'dd/MMM/yyyy'"
                         >
                         </nz-date-picker>
+                      </div>
+
+                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10 pt-4">
+                        <label
+                          nz-checkbox
+                          [(ngModel)]="isPermanentTransfer"
+                          (ngModelChange)="onPermanentTransferChange($event)"
+                        >
+                          Permanent Transfer
+                        </label>
                       </div>
                     </div>
                     <div class="row pt-4">
@@ -142,7 +154,7 @@
                     </div>
                     <div class="row pt-4">
                       <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                        <span class="d-flex">Remarks</span>
+                        <span class="d-flex">Remarks <span class="text-danger ml-1">*</span></span>
                         <textarea
                           style="width: 50%"
                           rows="4"
@@ -155,10 +167,9 @@
                 </div>
               </div>
               <br />
-              <div class="justify-content-center pt-4">
-                <button class="" nz-button nzType="primary" (click)="saveTemplate($event)">
-                  Save
-                </button>
+              <div class="justify-content-center pt-4 d-flex gap-2">
+                <button nz-button nzType="primary" (click)="submitRequest($event)">Submit</button>
+                <button nz-button nzType="default" (click)="cancel()">Cancel</button>
               </div>
             </div>
 
@@ -209,18 +220,51 @@
                     (pageSizeChange)="onPageSizeChanged($event)"
                   >
                     <div grid-actions class="grid-action-icons">
+                      <button class="grid-icon-btn" title="Approve" (click)="openActionModal('Approve')">
+                        <i class="bi bi-check2-square"></i>
+                      </button>
+
                       <button
                         class="grid-icon-btn"
-                        title="Share with other Employees"
-                        (click)="export()"
+                        title="Disapprove"
+                        (click)="openActionModal('Reject')"
+                      >
+                        <i class="bi bi-x-square"></i>
+                      </button>
+
+                      <button
+                        class="grid-icon-btn"
+                        title="Reject"
+                        (click)="openActionModal('Revert')"
                       >
                         <i class="bi bi-reply"></i>
                       </button>
+ 
                     </div>
                   </app-ag-grid-wrapper>
                 </div>
               </div>
             </div>
+
+            <!-- Action Modal (Observation) -->
+            <nz-modal
+              [(nzVisible)]="isActionModalVisible"
+              [nzTitle]="actionModalTitle"
+              (nzOnCancel)="isActionModalVisible = false"
+              (nzOnOk)="submitAction()"
+            >
+              <ng-container *nzModalContent>
+                <div class="form-group">
+                  <label>Observation <span class="text-danger">*</span></label>
+                  <textarea
+                    rows="4"
+                    nz-input
+                    [(ngModel)]="actionObservation"
+                    placeholder="Mandatory Observation..."
+                  ></textarea>
+                </div>
+              </ng-container>
+            </nz-modal>
           </div>
         </div>
       </div>
