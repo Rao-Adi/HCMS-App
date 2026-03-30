@@ -66,13 +66,14 @@ export class DocumentTemplate {
   isDefaultTemplate = false;
   templateHtml: string = '';
 
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedbusinessDomain?: string = '';
-  selectedDocumentType?: string = '';
-  selectedTemplateType?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedbusinessDomain: string = '';
+  selectedDocumentType: string = '';
+  selectedTemplateType: string = '';
   selectedFile: File | null = null;
+  existingFileName: string = '';
 
   templateTypes: any[] = [
     {
@@ -142,12 +143,45 @@ export class DocumentTemplate {
     // this.loading = true;
     this.selectedDocumentType = value;
 
+    if (!value) {
+      this.resetTemplateDetails();
+      return;
+    }
+
     this.documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response) => {
-        this.templateHtml = response.Data.TemplateContent;
+        if (response?.Data) {
+          const data = response.Data;
+          this.templateHtml = data.TemplateContent || '';
+          this.selectedTemplateType = data.TemplateType ? String(data.TemplateType) : '';
+          this.isDefaultTemplate = data.IsDefault === true || String(data.IsDefault).toLowerCase() === 'true';
+          this.existingFileName = data.TemplateFileUrl || data.templateFileUrl || '';
+          this.selectedDivisions = data.DivisionCode || '';
+          this.selectedDepartment = data.DepartmentCode || '';
+          this.selectedSubDepartment = data.SubDepartmentCode || '';
+          this.selectedbusinessDomain = data.BusinessDomainCode || '';
+        } else {
+          this.resetTemplateDetails(false);
+        }
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        console.error(err);
+        this.resetTemplateDetails(false);
+      },
     });
+  }
+
+  private resetTemplateDetails(clearDocType: boolean = true) {
+    if (clearDocType) this.selectedDocumentType = '';
+    this.templateHtml = '';
+    this.selectedTemplateType = '';
+    this.isDefaultTemplate = false;
+    this.existingFileName = '';
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedbusinessDomain = '';
+    this.selectedFile = null;
   }
 
   onFileSelected(event: any): void {

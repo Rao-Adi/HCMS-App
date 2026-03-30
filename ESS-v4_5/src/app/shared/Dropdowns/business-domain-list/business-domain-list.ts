@@ -19,10 +19,17 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 @Component({
   selector: 'app-business-domain-list',
   imports: [CommonModule, FormsModule, NzSelectModule],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => BusinessDomainList),
+      multi: true,
+    },
+  ],
   templateUrl: './business-domain-list.html',
   styleUrl: './business-domain-list.css',
 })
-export class BusinessDomainList {
+export class BusinessDomainList implements ControlValueAccessor {
   @Input() subDepartment: string | undefined;
   @Input() valueKey!: string;
   @Input() labelKey!: string;

@@ -3,8 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
-import { BehaviorSubject } from 'rxjs';
-import { SelectList } from '@app/shared/interfaces/interfaces';
+import { BehaviorSubject } from 'rxjs'; 
 import { UserService } from '@app/shared/services/user-service';
 import {
   EditableAgGridWrapper,
@@ -13,7 +12,8 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
+import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service'; 
+import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
@@ -75,6 +75,7 @@ export class ResponsibilityTransferWorkflow {
     private _userService: UserService,
     private _notification: NotificationService,
     private _divisionServices: DivisionCacheService,
+    private _transferWorkflowPolicyService: TransferWorkflowPolicyService
   ) {}
 
   ngOnInit() {
@@ -108,6 +109,7 @@ export class ResponsibilityTransferWorkflow {
       },
     ];
   }
+
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
@@ -144,14 +146,12 @@ export class ResponsibilityTransferWorkflow {
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      divisionCode: rowData.level1Id || rowData.level1Id,
-      departmentCode: rowData.level2Id || rowData.level2Id,
-      subDepartmentCode: rowData.level3Id || rowData.level3Id,
-      businessDomainCode: rowData.level4Id || rowData.level4Id,
-      documentTypeId: rowData.documentTypeId || rowData.documentTypeId,
+      divisionCode: rowData.divisionName || rowData.divisionName,
+      approvalroleid: 1,
+      approvaluserid: 1
     };
 
-    this._userService.create(payLoad).subscribe(() => {
+    this._transferWorkflowPolicyService.create(payLoad).subscribe(() => {
       this._notification.createNotification(
         'success',
         'Access Level',

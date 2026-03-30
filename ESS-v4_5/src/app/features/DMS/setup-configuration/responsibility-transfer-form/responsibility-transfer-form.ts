@@ -19,6 +19,9 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -81,11 +84,10 @@ export class ResponsibilityTransferForm {
   filteredEmployeesTo: any[] = [];
   totalRows = 0;
 
-  // Modal Action Variables
-  isActionModalVisible = false;
-  actionModalTitle = '';
-  actionObservation = '';
-  currentAction = '';
+  // Approval Action Variables
+  hasSelectedRows = false;
+  selectedRow: any = null;
+  observation = '';
 
   uploading = false;
   statues: any[] = [
@@ -106,20 +108,23 @@ export class ResponsibilityTransferForm {
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
     { field: 'reason', headerName: 'Reason', flex: 1 },
+    { field: 'effectiveDateFrom', headerName: 'Effective From', flex: 1 },
+    { field: 'effectiveDateTo', headerName: 'Effective To', flex: 1 },
+    { field: 'remarks', headerName: 'Remarks', flex: 1 },
+    { field: 'actionDate', headerName: 'Action Date', flex: 1 },
     {
       field: 'status',
       headerName: 'Status',
       flex: 1,
        cellClassRules: {
-      'rag-green': params => params.value === 'Controlled',
-      'rag-blue': params => params.value === 'Approved',
+      'rag-green': params => params.value === 'Approved' || params.value === 'Controlled',
+      'rag-blue': params => params.value === 'Rejected',
       'rag-red': params => params.value === 'Pending',
     },
     },
   ];
 
   pendingApprovalData: any[] = [];
-  pendingTotalCount=0;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -131,11 +136,18 @@ export class ResponsibilityTransferForm {
     private _userService: UserService,
     private _notification: NotificationService,
     private _responsibilityTransfer: ResponsibilityTransferService,
+    private _utilityService: UtilitiesService
   ) {}
 
   ngOnInit() { 
     this.getAllUsersList();
-    this.GetAllClassRooms();
+  }
+
+  onTabChange(tab: string) {
+    this.selectedTab = tab;
+    if (tab === 'Approvals') {
+      this.GetAllResponsibilityTransferForms();
+    }
   }
 
   onFileSelected(event: Event): void { 
@@ -152,45 +164,58 @@ export class ResponsibilityTransferForm {
 
   selectStatus(value: string): void {
     this.selectedStatus = value || '1';
-    // TODO: Refresh your grid data based on selectedStatus
+    this.observation = '';
+    this.hasSelectedRows = false;
+    this.selectedRow = null;
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
+      this.GetAllResponsibilityTransferForms();
+    }
   }
 
   
-  GetAllClassRooms(query: any = {}) {
+  GetAllResponsibilityTransferForms(query: any = {}) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
     const pageSize = Number(query?.pageSize) || this.divisionPageSize;
     const searchText = query?.searchText || '';
 
-    this._responsibilityTransfer
-      .GetAllResponsibilityTransfers(
-        searchText,
-        sort?.sort?.toUpperCase() || 'DESC',
-        sort?.colId || 'Id',
-        true,
-        pageNumber,
-        pageSize,
-      )
-      .subscribe((res) => {
+    // DTO mapping based on FSD requirements (GetTransferApprovalsDto)
+    const payload = {
+      status: Number(this.selectedStatus),
+      userId: this._utilityService.GetUserEmpId() || '1',
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      searchText: searchText,
+      sortColumn: sort?.colId || 'Id',
+      sortBy: sort?.sort?.toUpperCase() || 'DESC'
+    };
+
+    this._responsibilityTransfer.GetAllResponsibilityTransfers(payload)
+      .subscribe((res:any) => {
         if (res?.Success && res.Data?.Items) {
-          this.pendingTotalCount = res.Data.TotalCount;
+          this.totalPendingApprovals = res.Data.TotalCount;
           this.pendingApprovalData = res.Data.Items.map((item: any) => ({
             ...item,
-            documentId: item.DocumentId || item.documentId,
-            companyId: item.CompanyId || item.companyId,
-            documentName: item.DocumentName || item.documentName,
-            version: item.Version || item.version || item.RowVersion || item.rowVersion,
-            documentType: item.DocumentType || item.documentType,
-            division: item.Division || item.division,
-            department: item.Department || item.department,
-            subDepartment: item.SubDepartment || item.subDepartment,
+            id: item.Id || item.id,
+            requestor: item.createdBy || item.CreatedBy || 'Unknown',
+            from: item.EmployeeFrom || item.EmployeeFrom || 'Unknown',
+            To: item.EmployeeTo || item.EmployeeTo || 'Unknown',
+            reason: item.reasonForTransfer || item.ReasonForTransfer || 'N/A',
+            effectiveDateFrom: new CustomDateFormatPipe().transform(item.effectiveDateFrom || item.EffectiveDateFrom || ''),
+            effectiveDateTo: new CustomDateFormatPipe().transform(item.effectiveDateTo || item.EffectiveDateTo || ''),
+            remarks: item.remarks || item.Remarks || '',
+            actionDate: new CustomDateFormatPipe().transform(item.actionDate || item.ActionDate || ''),
+            status: item.status || item.Status || 'Pending'
           }));
         } else {
           this.pendingApprovalData = [];
-          this.pendingTotalCount = 0;
+          this.totalPendingApprovals = 0;
         }
       });
   }
+  
   addExclusion() {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
@@ -204,6 +229,13 @@ export class ResponsibilityTransferForm {
           DEPARTMENT: d.DepartmentCode || d.DepartmentId || 'Unknown', // Storing department for filtering
         }));
         this.filteredEmployeesTo = [...this.employees];
+        
+        // FSD UC-16: Default Employee From to logged-in user
+        const currentUserCode = this._utilityService.GetUserEmpId();
+        if (currentUserCode && this.employees.some(e => e.CODE === currentUserCode)) {
+          this.selectedEmployeeFrom = currentUserCode;
+          this.onEmployeeFromChange(currentUserCode);
+        }
       } else {
         this.employees = [];
         this.filteredEmployeesTo = [];
@@ -221,6 +253,11 @@ export class ResponsibilityTransferForm {
     //   sortModel: [], // or your current sort/filter model
     //   filterModel: {},
     // });
+  }
+
+  onSelectionChange(selectedRows: any[]) {
+    this.hasSelectedRows = selectedRows && selectedRows.length > 0;
+    this.selectedRow = selectedRows && selectedRows.length > 0 ? selectedRows[0] : null;
   }
 
   onEmployeeFromChange(empCode: string): void {
@@ -279,7 +316,8 @@ export class ResponsibilityTransferForm {
       );
       return;
     } else if (this.remarks === undefined || this.remarks === '') {
-      this._notification.createNotification('warning', 'Responsibity Transfer', 'Remarks required');
+      this._notification.createNotification('warning', 'Responsibility Transfer', 'Remarks field is mandatory.');
+      return;
     }
 
     const formData = new FormData();
@@ -325,33 +363,32 @@ export class ResponsibilityTransferForm {
     this.attachment = null;
     this.filteredEmployeesTo = [...this.employees];
   }
+ 
 
-  openActionModal(action: string): void {
-    if (!this.agGridWrapper || !this.agGridWrapper.gridApi) return;
-    
-    const selectedRows = this.agGridWrapper.gridApi.getSelectedRows();
-    if (selectedRows.length === 0) {
-      this._notification.createNotification('warning', 'Selection Required', 'Please select at least one request.');
-      return;
-    }
+  submitWorkflowAction(actionType: string, observation: string): void {
+    if (!this.selectedRow) return;
 
-    this.currentAction = action;
-    this.actionModalTitle = `${action} Responsibility Transfer Request`;
-    this.actionObservation = '';
-    this.isActionModalVisible = true;
-  }
+    // DTO mapping based on FSD requirements (ResponsibilityTransferActionDto)
+    const payload = {
+      transferId: this.selectedRow.id || this.selectedRow.Id,
+      action: actionType,
+      observation: observation.trim(),
+      userId: this._utilityService.GetUserEmpId() || '1'
+    };
 
-  submitAction(): void {
-    if (!this.actionObservation || this.actionObservation.trim() === '') {
-      this._notification.createNotification('error', 'Validation Failed', 'Observation is required to submit action.');
-      return;
-    }
-
-    // TODO: Connect this to the actual workflow action API using the `currentAction` and `actionObservation`
-    console.log(`Executing ${this.currentAction} with Observation: ${this.actionObservation}`);
-    
-    this.isActionModalVisible = false;
-    this._notification.createNotification('success', 'Action Successful', `Request has been ${this.currentAction.toLowerCase()}ed.`);
+    (this._responsibilityTransfer as any).submitTransferAction(payload).subscribe({
+      next: (res: any) => {
+        if (res?.Success || res?.success) {
+          this._notification.createNotification('success', 'Action Successful', `Request has been ${actionType.toLowerCase()}ed.`);
+          this.selectStatus(this.selectedStatus); // Automatically refresh Grid
+        } else {
+          this._notification.createNotification('error', 'Error', res?.Message || 'Action failed.');
+        }
+      },
+      error: (err: any) => {
+        this._notification.createNotification('error', 'Error', err?.Message || 'Action failed.');
+      }
+    });
   }
 
   export() {}

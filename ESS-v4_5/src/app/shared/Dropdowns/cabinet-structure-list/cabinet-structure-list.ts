@@ -31,6 +31,13 @@ interface CabinetLevel {
 })
 export class CabinetStructureList {
   @Input() hierarchy: CabinetSelection[] | null = null;
+  
+  @Input() divisionCode: string | null = '';
+  @Input() departmentCode: string | null = '';
+  @Input() subDepartmentCode: string | null = '';
+  @Input() businessDomainCode: string | null = '';
+  @Input() disabled: boolean = false;
+
   @Output() hierarchyChange = new EventEmitter<CabinetSelection[]>();
 
   selectedValues: Record<number, any> = {};
@@ -53,6 +60,19 @@ export class CabinetStructureList {
   ngOnChanges(changes: SimpleChanges) {
     if ('hierarchy' in changes) {
       this.applyHierarchy(changes['hierarchy'].currentValue as CabinetSelection[] | null);
+    }
+
+    // Support mapping individual level inputs 
+    let updated = false;
+    const newValues = { ...this.selectedValues };
+    
+    if ('divisionCode' in changes) { newValues[1] = this.divisionCode; updated = true; }
+    if ('departmentCode' in changes) { newValues[2] = this.departmentCode; updated = true; }
+    if ('subDepartmentCode' in changes) { newValues[3] = this.subDepartmentCode; updated = true; }
+    if ('businessDomainCode' in changes) { newValues[4] = this.businessDomainCode; updated = true; }
+
+    if (updated) {
+      this.selectedValues = newValues;
     }
   }
 

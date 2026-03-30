@@ -49,21 +49,14 @@ export class ResponsibilityTransferService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllResponsibilityTransfers(
-    searchText: string,
-    sortBy: 'ASC' | 'DESC',
-    sortColumn: string,
-    isActive: boolean,
-    pageNumber: number,
-    pageSize: number
-  ): Observable<any> {
+  GetAllResponsibilityTransfers(payload: any): Observable<any> { 
     const body = {
-      searchText,
-      sortBy,
-      sortColumn,
-      isActive,
-      pageNumber,
-      pageSize,
+      searchText: payload.searchText,
+      sortBy: payload.sortBy,
+      sortColumn: payload.sortColumn,
+      isActive: payload.isActive,
+      pageNumber: payload.pageNumber,
+      pageSize: payload.pageSize,
     };
 
     const uri = `${this.apiUrl}/DMSResponsibilityTransfer/get-all-responsibility-transfer`;

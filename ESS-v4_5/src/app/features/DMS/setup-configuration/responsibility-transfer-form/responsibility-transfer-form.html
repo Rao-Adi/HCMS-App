@@ -17,7 +17,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Request' }"
-                (click)="selectedTab = 'Request'"
+                (click)="onTabChange('Request')"
               >
                 Request
               </button>
@@ -25,7 +25,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Approvals' }"
-                (click)="selectedTab = 'Approvals'"
+                (click)="onTabChange('Approvals')"
               >
                 Approvals
               </button>
@@ -181,28 +181,19 @@
                   </div>
                 </div>
               </div>
-              <div class="row">
-                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+              <div class="row mb-4">
+                <div class="col-lg-3 col-md-3 col-sm-6">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.Status' | safeTranslate }} </label>
+                    <label>Status</label>
                   </div>
-                  <div>
-                    <nz-select
-                      style="width: 250px"
-                      [(ngModel)]="selectedStatus"
-                      nzPlaceHolder="Select Status"
-                      (ngModelChange)="selectStatus($event)"
-                      nzAllowClear
-                      nzShowSearch
-                    >
-                      <nz-option
-                        *ngFor="let dep of statues"
-                        [nzValue]="dep.id"
-                        [nzLabel]="dep.text"
-                      >
-                      </nz-option>
-                    </nz-select>
-                  </div>
+                  <nz-select
+                    style="width: 100%"
+                    [(ngModel)]="selectedStatus"
+                    (ngModelChange)="selectStatus($event)"
+                    nzPlaceHolder="Select Status"
+                  >
+                    <nz-option *ngFor="let s of statues" [nzValue]="s.id" [nzLabel]="s.text"></nz-option>
+                  </nz-select>
                 </div>
               </div>
               <div class="row">
@@ -212,59 +203,31 @@
                     [columnDefs]="pendingRequestApprovalColumnDefs"
                     [defaultColDef]="defaultColDef"
                     [rowData]="pendingApprovalData"
-                    [isSelectionRequired]="true"
-                    [showDisplayOption]="false"
+                    [isSelectionRequired]="selectedStatus === '1'"
+                    [showDisplayOption]="true"
                     [totalRows]="totalPendingApprovals"
                     [pageSize]="selectedPageSize"
                     gridId="myRequestPendingApprovalGrid"
                     (pageSizeChange)="onPageSizeChanged($event)"
+                    (serverQuery)="GetAllResponsibilityTransferForms($event)"
+                    (selectionChange)="onSelectionChange($event)"
                   >
-                    <div grid-actions class="grid-action-icons">
-                      <button class="grid-icon-btn" title="Approve" (click)="openActionModal('Approve')">
+                    <div grid-actions class="grid-action-icons" *ngIf="selectedStatus === '1'">
+                      <button class="grid-icon-btn" title="Approve" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" >
                         <i class="bi bi-check2-square"></i>
                       </button>
-
-                      <button
-                        class="grid-icon-btn"
-                        title="Disapprove"
-                        (click)="openActionModal('Reject')"
-                      >
+                      <button class="grid-icon-btn" title="Reject" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows"  >
                         <i class="bi bi-x-square"></i>
                       </button>
-
-                      <button
-                        class="grid-icon-btn"
-                        title="Reject"
-                        (click)="openActionModal('Revert')"
-                      >
+                      <button class="grid-icon-btn" title="Revert" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" >
                         <i class="bi bi-reply"></i>
                       </button>
- 
                     </div>
                   </app-ag-grid-wrapper>
                 </div>
               </div>
             </div>
 
-            <!-- Action Modal (Observation) -->
-            <nz-modal
-              [(nzVisible)]="isActionModalVisible"
-              [nzTitle]="actionModalTitle"
-              (nzOnCancel)="isActionModalVisible = false"
-              (nzOnOk)="submitAction()"
-            >
-              <ng-container *nzModalContent>
-                <div class="form-group">
-                  <label>Observation <span class="text-danger">*</span></label>
-                  <textarea
-                    rows="4"
-                    nz-input
-                    [(ngModel)]="actionObservation"
-                    placeholder="Mandatory Observation..."
-                  ></textarea>
-                </div>
-              </ng-container>
-            </nz-modal>
           </div>
         </div>
       </div>
