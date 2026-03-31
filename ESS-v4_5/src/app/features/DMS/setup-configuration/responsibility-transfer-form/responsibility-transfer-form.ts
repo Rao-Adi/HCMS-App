@@ -22,6 +22,7 @@ import { ResponsibilityTransferService } from '@app/shared/services/responsibili
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -321,7 +322,7 @@ export class ResponsibilityTransferForm {
     }
 
     const formData = new FormData();
-
+    formData.append('companyId', MASTER_DEFAULT_KEYS.COMPANYID);
     formData.append('employeeFrom', this.selectedEmployeeFrom);
     formData.append('employeeTo', this.selectedEmployeeTo);
     formData.append('reasonForTransfer', this.selectedReasonForTransfer);

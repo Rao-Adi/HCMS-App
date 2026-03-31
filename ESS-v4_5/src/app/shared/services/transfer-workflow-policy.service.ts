@@ -44,7 +44,7 @@ export class TransferWorkflowPolicyService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetAllTransferScopePolicies(
+  GetAllTransferWorkflowPolicies(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,

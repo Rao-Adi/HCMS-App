@@ -13,8 +13,7 @@ import { SpinnerService } from '@app/core/services/spinner.service';
 import { NotificationService as NotificationHttpService } from '@app/shared/services/notification.service';
 import { NotificationSignalrService, AppNotification } from '@app/shared/services/notification-signalr.service';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
-import { environment } from '@app/core/environments/environment';
-
+ 
 // 2. DEFINE THE API RESPONSE
 // This interface fixes all the 'unknown' type errors
 interface HeaderDetailsResponse {
@@ -72,6 +71,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   isNotificationOpen: boolean = false;
   // --- END of properties ---
 
+     // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
+
+
   constructor(
     private _utilityService: UtilitiesService,
     private _dataService: DataService,
@@ -97,7 +106,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
 
     // Start SignalR Connection using the backend URL
-    let hubBaseUrl = environment.baseUrl;
+    let hubBaseUrl = this.apiUrl;
     if (hubBaseUrl.endsWith('/api')) {
       hubBaseUrl = hubBaseUrl.substring(0, hubBaseUrl.length - 4);
     }

@@ -14,6 +14,7 @@ import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service'; 
 import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
@@ -22,6 +23,12 @@ import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-wor
   styleUrl: './responsibility-transfer-workflow.css',
 })
 export class ResponsibilityTransferWorkflow {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'DMS-RTW'; // Example FormId for this page
+
   public noRowsOverlay: string = '';
   gridConfig: GridConfig = {} as GridConfig;
   manualUserData: any[] = [];
@@ -74,12 +81,21 @@ export class ResponsibilityTransferWorkflow {
   constructor(
     private _userService: UserService,
     private _notification: NotificationService,
+    private _utilities: UtilitiesService, // Inject UtilitiesService
     private _divisionServices: DivisionCacheService,
     private _transferWorkflowPolicyService: TransferWorkflowPolicyService
   ) {}
 
   ngOnInit() {
+   this.checkPermissions();
    this.getAllDivisionList();
+   this.GetAllResponsibilityTransferWorkflows();
+  }
+
+  private checkPermissions(): void {
+    this._utilities.CanInsert(this.formId).subscribe(res => this.canAdd = res);
+    this._utilities.CanEdit(this.formId).subscribe(res => this.canEdit = res);
+    this._utilities.CanDelete(this.formId).subscribe(res => this.canDelete = res);
   }
 
   private getColumns(): GridColumn[] {
@@ -118,8 +134,10 @@ export class ResponsibilityTransferWorkflow {
       pageSizeOptions: [10, 20, 50, 100],
       enableSorting: true,
       enableFiltering: true,
+      enableFiltering: false, // Set to false as per your request
       enableSelection: true,
       enableInlineAdd: true,
+      enableInlineAdd: this.canAdd,
       enableInlineEdit: true,
       enableInlineDelete: true,
       rowHeight: 47,
@@ -222,6 +240,36 @@ export class ResponsibilityTransferWorkflow {
     const option = options.find((opt) => opt.id == id);
     return option ? option.text : '';
   }
+
+  GetAllResponsibilityTransferWorkflows(query: any = {}) {
+      const sort = query.sortModel?.[0];
+      const pageNumber = Number(query?.pageNumber) || 1;
+      const pageSize = Number(query?.pageSize) || this.pageSize;
+  
+      const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+  
+      this._transferWorkflowPolicyService
+        .GetAllTransferWorkflowPolicies(
+          searchText,
+          sort?.sort?.toUpperCase() || 'ASC',
+          sort?.colId || 'fname',
+          true,
+          pageNumber,
+          pageSize,
+        )
+        .subscribe((res:any) => {
+          if (res?.Success && res.Data?.Items) { 
+  
+            this.manualUserData = res.Data.Items.map((item: any) => ({
+              id: item.Id,
+              divisionName: item.DivisionCode,
+              approvalAuthority: item.ApprovalRoleId ? item.ApprovalRoleId.toString() : null
+            }));
+          } else {
+            this.manualUserData = []; 
+          }
+        });
+    }
 
   getAllDivisionList = () => {
     this._divisionServices.getDivisions().subscribe((res) => {
