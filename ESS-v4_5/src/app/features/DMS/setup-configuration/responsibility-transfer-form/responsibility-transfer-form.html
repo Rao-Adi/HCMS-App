@@ -213,15 +213,18 @@
                     (selectionChange)="onSelectionChange($event)"
                   >
                     <div grid-actions class="grid-action-icons" *ngIf="selectedStatus === '1'">
-                      <button class="grid-icon-btn" title="Approve" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" >
+                      <button class="grid-icon-btn" title="Approve" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" 
+                      (click)="approveDocument('Approved')">
                         <i class="bi bi-check2-square"></i>
                       </button>
-                      <button class="grid-icon-btn" title="Reject" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows"  >
+                      <button class="grid-icon-btn" title="Reject" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows"  
+                      (click)="approveDocument('Rejected')">
                         <i class="bi bi-x-square"></i>
                       </button>
-                      <button class="grid-icon-btn" title="Revert" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" >
+                      <!-- <button class="grid-icon-btn" title="Revert" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" 
+                      (click)="approveDocument('Reverted')">
                         <i class="bi bi-reply"></i>
-                      </button>
+                      </button> -->
                     </div>
                   </app-ag-grid-wrapper>
                 </div>

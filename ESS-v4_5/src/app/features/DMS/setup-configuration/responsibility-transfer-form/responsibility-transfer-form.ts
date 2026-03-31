@@ -20,8 +20,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 
 @Component({
@@ -144,11 +143,29 @@ export class ResponsibilityTransferForm {
     this.getAllUsersList();
   }
 
+  private getStatusText(statusId: any): string {
+    const statusMap: { [key: string]: string } = {
+      '1': 'Pending',
+      '2': 'Approved',
+      '3': 'Rejected',
+      '4': 'Reverted',
+    };
+    // Using `String()` to handle both number and string IDs from the API
+    return statusMap[String(statusId)] || 'Unknown';
+  }
+
+  private getReasonText(reasonId: any): string {
+    const reason = this.reasonForTransfer.find(r => r.CODE === String(reasonId));
+    return reason ? reason.NAME : 'N/A';
+  }
+
   onTabChange(tab: string) {
     this.selectedTab = tab;
-    if (tab === 'Approvals') {
-      this.GetAllResponsibilityTransferForms();
-    }
+    // The AgGridWrapper will automatically trigger its data-loading event 
+    // when it is rendered into the DOM. Calling the API manually here causes a duplicate request.
+    // if (tab === 'Approvals') {
+    //   this.GetAllResponsibilityTransferForms();
+    // }
   }
 
   onFileSelected(event: Event): void { 
@@ -182,33 +199,33 @@ export class ResponsibilityTransferForm {
     const pageSize = Number(query?.pageSize) || this.divisionPageSize;
     const searchText = query?.searchText || '';
 
-    // DTO mapping based on FSD requirements (GetTransferApprovalsDto)
     const payload = {
+      searchtext: searchText,
+      sortby: sort?.sort?.toUpperCase() || 'DESC',
+      sortcolumn: sort?.colId || 'Id',
+      isactive: true,
+      pagenumber: pageNumber,
+      pagesize: pageSize,
       status: Number(this.selectedStatus),
-      userId: this._utilityService.GetUserEmpId() || '1',
-      pageNumber: pageNumber,
-      pageSize: pageSize,
-      searchText: searchText,
-      sortColumn: sort?.colId || 'Id',
-      sortBy: sort?.sort?.toUpperCase() || 'DESC'
+      userid: this._utilityService.GetUserEmpId() || '1'
     };
 
-    this._responsibilityTransfer.GetAllResponsibilityTransfers(payload)
+    this._responsibilityTransfer.GetMyResponsibilityTransfersApprovals(payload)
       .subscribe((res:any) => {
         if (res?.Success && res.Data?.Items) {
           this.totalPendingApprovals = res.Data.TotalCount;
           this.pendingApprovalData = res.Data.Items.map((item: any) => ({
             ...item,
             id: item.Id || item.id,
-            requestor: item.createdBy || item.CreatedBy || 'Unknown',
-            from: item.EmployeeFrom || item.EmployeeFrom || 'Unknown',
-            To: item.EmployeeTo || item.EmployeeTo || 'Unknown',
-            reason: item.reasonForTransfer || item.ReasonForTransfer || 'N/A',
-            effectiveDateFrom: new CustomDateFormatPipe().transform(item.effectiveDateFrom || item.EffectiveDateFrom || ''),
-            effectiveDateTo: new CustomDateFormatPipe().transform(item.effectiveDateTo || item.EffectiveDateTo || ''),
+            requestor: item.createdby || item.CreatedBy || 'Unknown',
+            from: item.employeefromname || item.employeefromname || 'Unknown',
+            To: item.employeetoname || item.employeetoname || 'Unknown',
+            reason: this.getReasonText(item.reasonfortransfer || item.ReasonForTransfer),
+            effectiveDateFrom: new CustomDateFormatPipe().transform(item.effectivedatefrom || item.EffectiveDateFrom || ''),
+            effectiveDateTo: new CustomDateFormatPipe().transform(item.effectivedateto || item.EffectiveDateTo || ''),
             remarks: item.remarks || item.Remarks || '',
             actionDate: new CustomDateFormatPipe().transform(item.actionDate || item.ActionDate || ''),
-            status: item.status || item.Status || 'Pending'
+            status: this.getStatusText(item.status || item.Status)
           }));
         } else {
           this.pendingApprovalData = [];
@@ -366,22 +383,32 @@ export class ResponsibilityTransferForm {
   }
  
 
-  submitWorkflowAction(actionType: string, observation: string): void {
-    if (!this.selectedRow) return;
+  submitWorkflowAction(actionType: string): void {
+    if (!this.selectedRow) {
+      this._notification.createNotification('warning', 'Warning', 'Please select a row first.');
+      return;
+    }
 
-    // DTO mapping based on FSD requirements (ResponsibilityTransferActionDto)
+    if (!this.observation || this.observation.trim() === '') {
+      this._notification.createNotification('error', 'Error', 'Observation is required');
+      return;
+    }
+
     const payload = {
+      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       transferId: this.selectedRow.id || this.selectedRow.Id,
       action: actionType,
-      observation: observation.trim(),
+      observation: this.observation.trim(),
       userId: this._utilityService.GetUserEmpId() || '1'
     };
 
-    (this._responsibilityTransfer as any).submitTransferAction(payload).subscribe({
+    this._responsibilityTransfer.takeAction(payload).subscribe({
       next: (res: any) => {
         if (res?.Success || res?.success) {
-          this._notification.createNotification('success', 'Action Successful', `Request has been ${actionType.toLowerCase()}ed.`);
-          this.selectStatus(this.selectedStatus); // Automatically refresh Grid
+          this._notification.createNotification('success', 'Action Successful', res?.Message || `Request has been ${actionType.toLowerCase()}d.`);
+          this.GetAllResponsibilityTransferForms(); // Automatically refresh Grid
+          this.observation = '';
+          this.selectedRow = null;
         } else {
           this._notification.createNotification('error', 'Error', res?.Message || 'Action failed.');
         }
@@ -393,4 +420,14 @@ export class ResponsibilityTransferForm {
   }
 
   export() {}
+
+  
+  approveDocument(action:string = 'Approved') {
+    this.submitWorkflowAction('Approve');
+  }
+
+  disapprove(action: string = 'Rejected') {
+    this.submitWorkflowAction('Rejected');
+  }
+ 
 }

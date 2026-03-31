@@ -282,7 +282,7 @@ export class MenuComponent implements OnDestroy {
       //   ],
       // },
     ];
-    this.getMenuData();
+    //this.getMenuData();
   }
 
   getMenuData(): void {

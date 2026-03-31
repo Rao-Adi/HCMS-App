@@ -133,10 +133,8 @@ export class ResponsibilityTransferWorkflow {
       pageSize: 10,
       pageSizeOptions: [10, 20, 50, 100],
       enableSorting: true,
-      enableFiltering: true,
       enableFiltering: false, // Set to false as per your request
       enableSelection: true,
-      enableInlineAdd: true,
       enableInlineAdd: this.canAdd,
       enableInlineEdit: true,
       enableInlineDelete: true,

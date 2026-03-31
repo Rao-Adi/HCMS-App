@@ -113,10 +113,7 @@ export class DocumentAuthorizationPostTraining {
     },
     {
       field: 'trainingMode',
-      headerName: 'Training Mode',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
+      headerName: 'Training Mode' 
     },
     { field: 'userAssinged', headerName: 'User Assinged' },
     {
@@ -134,24 +131,15 @@ export class DocumentAuthorizationPostTraining {
     },
     {
       field: 'division',
-      headerName: 'Division',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
+      headerName: 'Division' 
     },
     {
       field: 'department',
-      headerName: 'Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
+      headerName: 'Department' 
     },
     {
       field: 'subDepartment',
-      headerName: 'Sub-Department',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
+      headerName: 'Sub-Department' 
     },
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
@@ -245,6 +233,8 @@ export class DocumentAuthorizationPostTraining {
   GetAllDocuments(query: any) {
     const sort = query.sortModel?.[0];
     const payload = {
+      companyid:MASTER_DEFAULT_KEYS.COMPANYID,
+      documentcategoryfilter: Number(this.selectedAuthorizationStatus),
       searchText: query?.searchTerm || '',
       sortBy: sort?.sort?.toUpperCase() || 'DESC',
       sortColumn: sort?.colId || 'Id',
@@ -261,13 +251,19 @@ export class DocumentAuthorizationPostTraining {
           this.totalRows = data.TotalCount ?? items.length;
           this.pendingAuthorizationData = items.map((item: any) => ({
             ...item,
-            documentId: item.DocumentId || item.documentId || item.Id || item.id,
-            documentName: item.DocumentName || item.documentName,
-            version: item.Version || item.version || item.RowVersion || item.rowVersion,
-            documentType: item.DocumentType || item.documentType,
-            division: item.Division || item.division,
-            department: item.Department || item.department,
-            subDepartment: item.SubDepartment || item.subDepartment,
+            documentId: item.documentid || item.DocumentId || item.documentId || item.Id || item.id,
+            documentNumber: item.documentnumber,
+            documentName: item.title || item.DocumentName || item.documentName,
+            version: item.version || item.Version || item.RowVersion || item.rowVersion,
+            documentType: item.documenttype || item.DocumentType || item.documentType,
+            documentTypeCode: item.documenttypecode,
+            trainingProof: item.trainingproofurl,
+            division: item.divisionname || item.Division || item.division,
+            department: item.departmentname || item.Department || item.department,
+            subDepartment: item.subdepartmentname || item.SubDepartment || item.subDepartment,
+            businessDomain: item.businessdomain,
+            requestCreatedBy: item.initiator,
+            requestCreatedOn: this.formatDate(item.createdat)
           }));
         } else {
           this.pendingAuthorizationData = [];
@@ -284,6 +280,23 @@ export class DocumentAuthorizationPostTraining {
         );
       },
     });
+  }
+
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '';
+    try {
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return value;
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+    } catch {
+      return value;
+    }
   }
 
   GetAllUploadedDocuments(query: any) {}

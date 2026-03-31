@@ -49,6 +49,23 @@ export class ResponsibilityTransferService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetMyResponsibilityTransfersApprovals(payload: any): Observable<any> { 
+    const uri = `${this.apiUrl}/DMSResponsibilityTransfer/get-my-approvals`;
+
+    return this.http.post(uri, payload, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  takeAction(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSResponsibilityTransfer/take-action`,
+      payload
+    );
+  }
+
+
+
   GetAllResponsibilityTransfers(payload: any): Observable<any> { 
     const body = {
       searchText: payload.searchText,
