@@ -93,11 +93,11 @@ export class UploadDocuments {
     return [
       {
         field: 'documentId',
-        headerName: 'Document Id',
-        type: 'readonly',
+        headerName: 'Document Number',
+        type: 'text',
         minWidth: 150,
         pinned: 'left',
-        required: false,
+        required: true,
       },
       {
         field: 'documentName',
@@ -436,9 +436,11 @@ export class UploadDocuments {
     const formData = new FormData();
 
     formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID);
+    formData.append('DocumentNumber', rowData.documentId);
     formData.append('DocumentName', rowData.documentName);
     formData.append('DocumentTypeCode', rowData.documentTypeId);
-    formData.append('Status', rowData.version);
+    formData.append('Version', rowData.version);
+    formData.append('Status', 'Approved'); // Assuming legacy docs are active/approved. Adjust as per your API rules.
     formData.append('DivisionCode', rowData.level1Id);
     formData.append('DepartmentCode', rowData.level2Id);
     formData.append('SubDepartmentCode', rowData.level3Id);

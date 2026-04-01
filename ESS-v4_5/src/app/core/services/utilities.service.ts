@@ -107,7 +107,7 @@ export class UtilitiesService {
 
   // --- Permission Checks (Wrapper around DataService calls) ---
   // (Unchanged, this logic is good)
-  private checkPermission(apiMethod: string, FormId: string, applicationCode: string = 'ESSv4.5'): Observable<boolean> {
+  private checkPermission(apiMethod: string, FormId: string, applicationCode: string = 'DMS-b'): Observable<boolean> {
     return new Observable((observer: Observer<boolean>) => {
       this._UserService.get(`Utilities/${apiMethod}/${FormId}/${applicationCode}`).subscribe({
         next: (response: any) => {

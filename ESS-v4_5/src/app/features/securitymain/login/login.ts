@@ -72,7 +72,7 @@ export class login implements OnInit {
 
   Login(): void {
     
-    this._userService.get<string>('Security/GetLogin/ESSv4.5').subscribe((users: string) => {
+    this._userService.get<string>('Security/GetLogin/DMS-b').subscribe((users: string) => {
       console.log(users.substring(0, 5));
 
       if (users == "ErrorPageUnSuccessfulMapping") {

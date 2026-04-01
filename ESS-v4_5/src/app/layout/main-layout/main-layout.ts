@@ -161,7 +161,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const applicationCode = 'ESSv4.5'; //
+    const applicationCode = 'DMS-b'; //
     let FormId = this.activatedRoute.snapshot.queryParamMap.get('FormId') || '';
 
     this._dataService.get<HeaderDetailsResponse>(`Security/GetHeaderDetails?_URL=${Url}&FormId=${FormId}&applicationCode=${applicationCode}`)
