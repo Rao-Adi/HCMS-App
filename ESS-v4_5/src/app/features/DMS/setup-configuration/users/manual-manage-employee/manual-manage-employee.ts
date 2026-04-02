@@ -377,8 +377,7 @@ export class ManualManageEmployee {
     const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
       employeeName: rowData.EmployeeName || rowData.employeeName,
       divisionCode: rowData.level1Id || rowData.level1Id,

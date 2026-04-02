@@ -160,8 +160,7 @@ export class ResponsibilityTransferWorkflow {
     const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       divisionCode: rowData.divisionName || rowData.divisionName,
       approvalroleid: 1,
       approvaluserid: 1

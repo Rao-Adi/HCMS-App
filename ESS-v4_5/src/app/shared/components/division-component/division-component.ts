@@ -193,8 +193,7 @@ export class DivisionComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     debugger;
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       Name: rowData.Name,
       IsActive: true,
       IsDeleted: false,
@@ -230,8 +229,7 @@ export class DivisionComponent {
 
   onRowUpdated(event: { rowData: any }): void {
     const { rowData } = event;
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       IsActive: true,

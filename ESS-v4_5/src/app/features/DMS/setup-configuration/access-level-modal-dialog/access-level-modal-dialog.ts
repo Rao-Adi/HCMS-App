@@ -231,8 +231,6 @@ export class AccessLevelModalDialog {
   
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      employeeCode: this.modalData.employeeCode,
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,
       subDepartmentCode: rowData.level3Id || rowData.level3Id,

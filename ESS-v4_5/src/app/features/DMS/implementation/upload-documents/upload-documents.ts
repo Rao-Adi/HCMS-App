@@ -434,8 +434,7 @@ export class UploadDocuments {
     }
 
     const formData = new FormData();
-
-    formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID);
+ 
     formData.append('DocumentNumber', rowData.documentId);
     formData.append('DocumentName', rowData.documentName);
     formData.append('DocumentTypeCode', rowData.documentTypeId);

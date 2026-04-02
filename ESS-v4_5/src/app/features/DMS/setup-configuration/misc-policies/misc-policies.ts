@@ -225,8 +225,7 @@ export class MiscPolicies {
     const { rowData } = event; 
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       documentTypeCode: rowData.documentType || rowData.documentType,
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,

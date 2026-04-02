@@ -385,7 +385,6 @@ export class DocumentRequestManagement {
 
   SubmiteDocumentRequests() {
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       requestId: this.selectedDocumentRequestType,
       submittedBy: this.selectedDocumentType || null,
     };

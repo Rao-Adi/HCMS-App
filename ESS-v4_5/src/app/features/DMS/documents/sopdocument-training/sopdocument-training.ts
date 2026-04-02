@@ -285,11 +285,10 @@ export class SOPDocumentTraining {
   }
 
   viewAssessmentDetails(data: any) {
-    const docId = data.documentId || data.DocumentId || data.Id;
-    const companyId = data.companyId || data.CompanyId || MASTER_DEFAULT_KEYS.COMPANYID;
+    const docId = data.documentId || data.DocumentId || data.Id;     
 
     this._documentTrainingService
-      .GetTrainingAssessmentDetails(docId, companyId)
+      .GetTrainingAssessmentDetails(docId)
       .subscribe((res) => {
         if (res?.Success) {
           this.modal.info({
@@ -308,24 +307,23 @@ export class SOPDocumentTraining {
   }
 
   acknowledgeAndSend(data: any) {
-    const docId = data.documentId || data.DocumentId || data.Id;
-    const companyId = data.companyId || data.CompanyId || MASTER_DEFAULT_KEYS.COMPANYID;
+    const docId = data.documentId || data.DocumentId || data.Id; 
     const avgScore = Number(data.averageScore) || 0;
 
     if (avgScore < 80) {
       this.modal.confirm({
         nzTitle: 'Warning',
         nzContent: 'Average score is below 80%. Proceed to Authorization?',
-        nzOnOk: () => this.executeAcknowledge(docId, companyId),
+        nzOnOk: () => this.executeAcknowledge(docId),
       });
     } else {
-      this.executeAcknowledge(docId, companyId);
+      this.executeAcknowledge(docId);
     }
   }
 
-  executeAcknowledge(docId: string, companyId: string) {
+  executeAcknowledge(docId: string) {
     this._documentTrainingService
-      .AcknowledgeAndSendForAuthorization(docId, companyId)
+      .AcknowledgeAndSendForAuthorization(docId)
       .subscribe((res) => {
         if (res?.Success) {
           this._notification.createNotification(

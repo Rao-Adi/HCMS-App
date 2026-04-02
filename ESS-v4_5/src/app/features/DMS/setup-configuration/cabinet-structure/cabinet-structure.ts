@@ -202,8 +202,7 @@ export class CabinetStructure {
   }
 
   saveTabTitle(): void {
-    const payload = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payload = { 
       Id: this.selectedTabLevel,
       Name: this.selectedTabTitle,
       IsActive: true,

@@ -308,13 +308,11 @@ export class DRUsersComponent {
     const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,
       subDepartmentCode: rowData.level3Id || rowData.level3Id,
-      businessDomainCode: rowData.level4Id || rowData.level4Id,
-      userId: rowData.userId || rowData.userId,
+      businessDomainCode: rowData.level4Id || rowData.level4Id, 
     };
 
     this._userService.create(payLoad).subscribe(() => {
@@ -336,12 +334,10 @@ export class DRUsersComponent {
     console.log('Row updated:', event);
     debugger;
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       divisionCode: event.rowData.level1Id || event.rowData.level1Id,
       departmentCode: event.rowData.level2Id || event.rowData.level2Id,
       subDepartmentCode: event.rowData.level3Id || event.rowData.level3Id,
       businessDomainCode: event.rowData.level4Id || event.rowData.level4Id,
-      userId: event.rowData.userId || event.rowData.userId,
     };
 
     this._userService.update(payLoad).subscribe(() => {

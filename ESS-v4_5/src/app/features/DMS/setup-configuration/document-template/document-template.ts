@@ -217,8 +217,7 @@ export class DocumentTemplate {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID.toString());
+    const formData = new FormData(); 
     formData.append('DocumentTypeCode', this.selectedDocumentType);
     formData.append('TemplateName', this.templateName || 'Template'); 
     formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : '');

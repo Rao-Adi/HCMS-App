@@ -246,7 +246,6 @@ export class DRDistributionList {
     debugger;
     // Add logic to generate IDs, validate, etc.
     // const payLoad = {
-    //   CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
     //   distributionType: rowData.DistributiontypeId || rowData.distributiontypeId,
     //   divisionCode: rowData.level1Id || rowData.level1Id,
     //   departmentCode: rowData.level2Id || rowData.level2Id,

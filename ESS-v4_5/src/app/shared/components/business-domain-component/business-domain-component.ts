@@ -222,8 +222,7 @@ export class BusinessDomainComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     debugger;
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       Code: rowData.Code,
       Name: rowData.Name,
       SubDepartmentCode: rowData.SubDepartment,
@@ -262,8 +261,7 @@ export class BusinessDomainComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
 
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.SubDepartment,

@@ -50,18 +50,16 @@ export class DocumentTrainingService {
   }
 
   GetTrainingAssessmentDetails(
-    documentId: string,
-    companyId: string,
+    documentId: string
   ): Observable<ApiResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}/${companyId}`;
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   AcknowledgeAndSendForAuthorization(
     documentId: string,
-    companyId: string,
   ): Observable<ApiResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentTraining/acknowledge-and-send-for-authorization/${documentId}/${companyId}`;
+    const uri = `${this.apiUrl}/DMSDocumentTraining/acknowledge-and-send-for-authorization/${documentId}`;
     return this.http.post<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
   GetAllDocumentTrainings(

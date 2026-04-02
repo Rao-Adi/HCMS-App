@@ -243,7 +243,6 @@ export class DocumentAuthorizationPostTraining {
   GetAllDocuments(query: any) {
     const sort = query.sortModel?.[0];
     const payload = {
-      companyid: MASTER_DEFAULT_KEYS.COMPANYID,
       documentcategoryfilter: Number(this.selectedAuthorizationStatus),
       searchText: query?.searchTerm || '',
       sortBy: sort?.sort?.toUpperCase() || 'DESC',

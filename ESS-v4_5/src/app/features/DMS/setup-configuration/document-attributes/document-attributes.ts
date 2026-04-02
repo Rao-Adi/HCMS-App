@@ -232,8 +232,7 @@ export class DocumentAttributes {
       );
       return;
     }
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
       ControlTypeId: event.rowData.ControlTypeId,

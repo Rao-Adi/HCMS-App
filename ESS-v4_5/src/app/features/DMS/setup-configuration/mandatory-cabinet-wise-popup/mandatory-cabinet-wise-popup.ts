@@ -178,8 +178,7 @@ export class MandatoryCabinetWisePopup {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     debugger;
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       documentAttributeId: this.cabinetId,
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,

@@ -250,8 +250,7 @@ export class SubDepartmentComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
 
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       Name: rowData.Name,
       DepartmentCode: rowData.Department,
       IsActive: true,
@@ -289,8 +288,7 @@ export class SubDepartmentComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
 
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.Department,
