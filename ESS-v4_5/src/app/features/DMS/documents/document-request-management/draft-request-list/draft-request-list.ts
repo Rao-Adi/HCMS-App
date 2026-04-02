@@ -177,8 +177,6 @@ export class DraftRequestList {
     }
 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      employeeCode: this.selectedEmployee,
       status: this.selectedStatus,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,

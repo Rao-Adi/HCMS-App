@@ -75,213 +75,213 @@ export class MenuComponent implements OnDestroy {
   ) {}
 
   public ngOnInit() {
-    //this.RootItems = [];
-    this.RootItems = [
-      {
-        Text: 'Dashboard',
-        Value: 'dashboard',
-        NavigateUrl: '/dashboard',
-        Class: 'menu-l1',
-      },
-      {
-        Text: 'Impelementation',
-        Value: 'impelementation',
-        Class: 'menu-l1',
-        child: [
-          {
-            Text: 'Upload Old Documents',
-            Value: 'upload-old-documents',
-            NavigateUrl: '/implementation/upload-old-documents',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'AG-Grid inline edit test',
-            Value: 'aggridinlineediting',
-            NavigateUrl: '/implementation/aggridinlineediting',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Upload Old Documents Edit',
-            Value: 'upload-old-documents-edit',
-            NavigateUrl: '/implementation/upload-old-documents-edit',
-            Class: 'menu-l2',
-          },
-        ],
-      },
-      {
-        Text: 'Setups And Configurations',
-        Value: 'setups-and-configurations',
-        Class: 'menu-l1',
-        child: [
-          {
-            Text: 'Cabinet Structure',
-            Value: 'Cabinet-Structure',
-            NavigateUrl: '/setups-configurations/cabinet-structure',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Document Attributes',
-            Value: 'Document-Attributes',
-            NavigateUrl: '/setups-configurations/document-attributes',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Template',
-            Value: 'Template',
-            NavigateUrl: '/setups-configurations/document-template',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Users',
-            Value: 'Users',
-            NavigateUrl: '/setups-configurations/users',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Approval Workflow Policy Management',
-            Value: 'Approval-Workflow-Policy-Management',
-            NavigateUrl: '/setups-configurations/approval-workflow-policy-management',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Approval Workflow Policy(External Users)',
-            Value: 'Approval-Workflow-Policy(External-Users)',
-            NavigateUrl: '/setups-configurations/approval-workflow-policy-external-users',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Misc Policies',
-            Value: 'Misc-Policies',
-            NavigateUrl: '/setups-configurations/misc-policies',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'E-Signature',
-            Value: 'ESignature',
-            NavigateUrl: '/setups-configurations/esignature',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Responsibility Transfer Form',
-            Value: 'responsibility-transfer-form',
-            NavigateUrl: '/setups-configurations/responsibility-transfer-form',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Responsibility Transfer Workflow',
-            Value: 'responsibility-transfer-workflow',
-            NavigateUrl: '/setups-configurations/responsibility-transfer-workflow',
-            Class: 'menu-l2',
-          },
-        ],
-      },
-      {
-        Text: 'Documents',
-        Value: 'documents',
-        Class: 'menu-l1',
-        child: [
-          {
-            Text: 'Request for Document Creation/Update',
-            Value: 'Reuest-for-Document-Creation-Update',
-            NavigateUrl: '/documents/request-for-document-creation-update',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'My Approvals – Request for Document Creation/Update',
-            Value: 'My-Approvals-Reuest-for-Document-Creation-Update',
-            NavigateUrl: '/documents/my-approvals-request',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Create/Update Document',
-            Value: 'Document-Creation-Update',
-            NavigateUrl: '/documents/create-update-document',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'My Approvals-Documents',
-            Value: 'My-Approvals-Documents',
-            NavigateUrl: '/documents/my-approvals-documents',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'SOP Documents Training',
-            Value: 'SOP-Documents-Training',
-            NavigateUrl: 'documents/sop-training',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Document Authorization-Post Training',
-            Value: 'Document-Authorization-Post-Training',
-            NavigateUrl: '/documents/authorization-post-training',
-            Class: 'menu-l2',
-          },
-        ],
-      },
-      {
-        Text: 'Reports',
-        Value: 'reports',
-        Class: 'menu-l1',
-        child: [
-          {
-            Text: 'Approval Documents',
-            Value: 'Approval-Documents',
-            NavigateUrl: '/reports/view-document',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'Personalized Email Alerts',
-            Value: 'personalized-Email-Alerts',
-            NavigateUrl: '/reports/personalized-email-alerts',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'AI Report',
-            Value: 'Ai-Report',
-            NavigateUrl: '/reports/ai-report',
-            Class: 'menu-l2',
-          },
-          {
-            Text: 'View Documents(Pending Apprvovals)',
-            Value: 'View-Documents-Pending-Apprvovals',
-            NavigateUrl: '/reports/pending-approval',
-            Class: 'menu-l2',
-          },
-        ],
-      },
-      // {
-      //   Text: 'Documents',
-      //   Value: 'documents',
-      //   Class: 'menu-l1',
-      //   child: [
-      //     {
-      //       Text: 'All Documents',
-      //       Value: 'all-docs',
-      //       NavigateUrl: '/documents/all',
-      //       Class: 'menu-l2',
-      //     },
-      //     {
-      //       Text: 'Workflows',
-      //       Value: 'workflows',
-      //       Class: 'menu-l2',
-      //       subChild: [
-      //         {
-      //           Text: 'Pending',
-      //           Value: 'pending-workflows',
-      //           NavigateUrl: '/documents/workflows/pending',
-      //           Class: 'menu-l3',
-      //         },
-      //         {
-      //           Text: 'Approved',
-      //           Value: 'approved-workflows',
-      //           NavigateUrl: '/documents/workflows/approved',
-      //           Class: 'menu-l3',
-      //         },
-      //       ],
-      //     },
-      //   ],
-      // },
-    ];
+    this.RootItems = [];
+    // this.RootItems = [
+    //   {
+    //     Text: 'Dashboard',
+    //     Value: 'dashboard',
+    //     NavigateUrl: '/dashboard',
+    //     Class: 'menu-l1',
+    //   },
+    //   {
+    //     Text: 'Impelementation',
+    //     Value: 'impelementation',
+    //     Class: 'menu-l1',
+    //     child: [
+    //       {
+    //         Text: 'Upload Old Documents',
+    //         Value: 'upload-old-documents',
+    //         NavigateUrl: '/implementation/upload-old-documents',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'AG-Grid inline edit test',
+    //         Value: 'aggridinlineediting',
+    //         NavigateUrl: '/implementation/aggridinlineediting',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Upload Old Documents Edit',
+    //         Value: 'upload-old-documents-edit',
+    //         NavigateUrl: '/implementation/upload-old-documents-edit',
+    //         Class: 'menu-l2',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     Text: 'Setups And Configurations',
+    //     Value: 'setups-and-configurations',
+    //     Class: 'menu-l1',
+    //     child: [
+    //       {
+    //         Text: 'Cabinet Structure',
+    //         Value: 'Cabinet-Structure',
+    //         NavigateUrl: '/setups-configurations/cabinet-structure',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Document Attributes',
+    //         Value: 'Document-Attributes',
+    //         NavigateUrl: '/setups-configurations/document-attributes',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Template',
+    //         Value: 'Template',
+    //         NavigateUrl: '/setups-configurations/document-template',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Users',
+    //         Value: 'Users',
+    //         NavigateUrl: '/setups-configurations/users',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Approval Workflow Policy Management',
+    //         Value: 'Approval-Workflow-Policy-Management',
+    //         NavigateUrl: '/setups-configurations/approval-workflow-policy-management',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Approval Workflow Policy(External Users)',
+    //         Value: 'Approval-Workflow-Policy(External-Users)',
+    //         NavigateUrl: '/setups-configurations/approval-workflow-policy-external-users',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Misc Policies',
+    //         Value: 'Misc-Policies',
+    //         NavigateUrl: '/setups-configurations/misc-policies',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'E-Signature',
+    //         Value: 'ESignature',
+    //         NavigateUrl: '/setups-configurations/esignature',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Responsibility Transfer Form',
+    //         Value: 'responsibility-transfer-form',
+    //         NavigateUrl: '/setups-configurations/responsibility-transfer-form',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Responsibility Transfer Workflow',
+    //         Value: 'responsibility-transfer-workflow',
+    //         NavigateUrl: '/setups-configurations/responsibility-transfer-workflow',
+    //         Class: 'menu-l2',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     Text: 'Documents',
+    //     Value: 'documents',
+    //     Class: 'menu-l1',
+    //     child: [
+    //       {
+    //         Text: 'Request for Document Creation/Update',
+    //         Value: 'Reuest-for-Document-Creation-Update',
+    //         NavigateUrl: '/documents/request-for-document-creation-update',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'My Approvals – Request for Document Creation/Update',
+    //         Value: 'My-Approvals-Reuest-for-Document-Creation-Update',
+    //         NavigateUrl: '/documents/my-approvals-request',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Create/Update Document',
+    //         Value: 'Document-Creation-Update',
+    //         NavigateUrl: '/documents/create-update-document',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'My Approvals-Documents',
+    //         Value: 'My-Approvals-Documents',
+    //         NavigateUrl: '/documents/my-approvals-documents',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'SOP Documents Training',
+    //         Value: 'SOP-Documents-Training',
+    //         NavigateUrl: 'documents/sop-training',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Document Authorization-Post Training',
+    //         Value: 'Document-Authorization-Post-Training',
+    //         NavigateUrl: '/documents/authorization-post-training',
+    //         Class: 'menu-l2',
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     Text: 'Reports',
+    //     Value: 'reports',
+    //     Class: 'menu-l1',
+    //     child: [
+    //       {
+    //         Text: 'Approval Documents',
+    //         Value: 'Approval-Documents',
+    //         NavigateUrl: '/reports/view-document',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'Personalized Email Alerts',
+    //         Value: 'personalized-Email-Alerts',
+    //         NavigateUrl: '/reports/personalized-email-alerts',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'AI Report',
+    //         Value: 'Ai-Report',
+    //         NavigateUrl: '/reports/ai-report',
+    //         Class: 'menu-l2',
+    //       },
+    //       {
+    //         Text: 'View Documents(Pending Apprvovals)',
+    //         Value: 'View-Documents-Pending-Apprvovals',
+    //         NavigateUrl: '/reports/pending-approval',
+    //         Class: 'menu-l2',
+    //       },
+    //     ],
+    //   },
+    //   // {
+    //   //   Text: 'Documents',
+    //   //   Value: 'documents',
+    //   //   Class: 'menu-l1',
+    //   //   child: [
+    //   //     {
+    //   //       Text: 'All Documents',
+    //   //       Value: 'all-docs',
+    //   //       NavigateUrl: '/documents/all',
+    //   //       Class: 'menu-l2',
+    //   //     },
+    //   //     {
+    //   //       Text: 'Workflows',
+    //   //       Value: 'workflows',
+    //   //       Class: 'menu-l2',
+    //   //       subChild: [
+    //   //         {
+    //   //           Text: 'Pending',
+    //   //           Value: 'pending-workflows',
+    //   //           NavigateUrl: '/documents/workflows/pending',
+    //   //           Class: 'menu-l3',
+    //   //         },
+    //   //         {
+    //   //           Text: 'Approved',
+    //   //           Value: 'approved-workflows',
+    //   //           NavigateUrl: '/documents/workflows/approved',
+    //   //           Class: 'menu-l3',
+    //   //         },
+    //   //       ],
+    //   //     },
+    //   //   ],
+    //   // },
+    // ];
     this.getMenuData();
   }
 

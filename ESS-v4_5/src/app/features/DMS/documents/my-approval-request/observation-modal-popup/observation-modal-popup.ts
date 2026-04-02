@@ -82,11 +82,10 @@ export class ObservationModalPopup {
 
   GetAllPendingDocuments(query: any) { 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       requestId: this.modalData.data,
     };
     this._doumentRequestService
-      .GetWorkflowObservationDetails(payload.companyId, payload.requestId,'')
+      .GetWorkflowObservationDetails(payload.requestId,'')
       .subscribe({
         next: (response) => { 
           if (response  && response.Data) {

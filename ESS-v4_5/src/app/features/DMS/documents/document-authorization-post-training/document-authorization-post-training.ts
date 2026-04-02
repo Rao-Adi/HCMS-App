@@ -19,9 +19,10 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
-import { DocumentService } from '@app/shared/services/document.service'; 
+import { DocumentService } from '@app/shared/services/document.service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { NotificationService } from '@app/shared/notification/notification.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -29,7 +30,7 @@ import { NotificationService } from '@app/shared/notification/notification.servi
     CommonModule,
     FormsModule,
     SafeTranslatePipe,
-    NzSelectModule, 
+    NzSelectModule,
     NzIconModule,
     NzSwitchModule,
     NzRadioModule,
@@ -38,7 +39,7 @@ import { NotificationService } from '@app/shared/notification/notification.servi
     DocumentTypeList,
     MyPendingRequestForApproval,
     CabinetStructureList,
-    AgGridWrapper
+    AgGridWrapper,
   ],
   templateUrl: './document-authorization-post-training.html',
   styleUrl: './document-authorization-post-training.css',
@@ -53,6 +54,8 @@ export class DocumentAuthorizationPostTraining {
   selectedbusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   selectedAuthorizationStatus: string = '1'; // Default to '1' (SOP)
+
+  loginEmpId: string = '';
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -113,7 +116,7 @@ export class DocumentAuthorizationPostTraining {
     },
     {
       field: 'trainingMode',
-      headerName: 'Training Mode' 
+      headerName: 'Training Mode',
     },
     { field: 'userAssinged', headerName: 'User Assinged' },
     {
@@ -131,15 +134,15 @@ export class DocumentAuthorizationPostTraining {
     },
     {
       field: 'division',
-      headerName: 'Division' 
+      headerName: 'Division',
     },
     {
       field: 'department',
-      headerName: 'Department' 
+      headerName: 'Department',
     },
     {
       field: 'subDepartment',
-      headerName: 'Sub-Department' 
+      headerName: 'Sub-Department',
     },
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
@@ -191,12 +194,19 @@ export class DocumentAuthorizationPostTraining {
     { CODE: '2', NAME: 'Softronic' },
   ];
 
-  constructor(private modal: NzModalService,
+  constructor(
+    private modal: NzModalService,
     private _documentService: DocumentService,
-    private _notification: NotificationService
+    private _notification: NotificationService,
+    private _UtilitiesService: UtilitiesService,
   ) {}
 
-  ngOnInit() { 
+  ngOnInit() {
+    this.GetLoginEmpId();
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   onGridReady(event: GridReadyEvent) {
@@ -233,7 +243,7 @@ export class DocumentAuthorizationPostTraining {
   GetAllDocuments(query: any) {
     const sort = query.sortModel?.[0];
     const payload = {
-      companyid:MASTER_DEFAULT_KEYS.COMPANYID,
+      companyid: MASTER_DEFAULT_KEYS.COMPANYID,
       documentcategoryfilter: Number(this.selectedAuthorizationStatus),
       searchText: query?.searchTerm || '',
       sortBy: sort?.sort?.toUpperCase() || 'DESC',
@@ -263,7 +273,7 @@ export class DocumentAuthorizationPostTraining {
             subDepartment: item.subdepartmentname || item.SubDepartment || item.subDepartment,
             businessDomain: item.businessdomain,
             requestCreatedBy: item.initiator,
-            requestCreatedOn: this.formatDate(item.createdat)
+            requestCreatedOn: this.formatDate(item.createdat),
           }));
         } else {
           this.pendingAuthorizationData = [];
@@ -300,7 +310,7 @@ export class DocumentAuthorizationPostTraining {
   }
 
   GetAllUploadedDocuments(query: any) {}
-  
+
   onAuthorizationStatusChange(statusId: string): void {
     this.selectedAuthorizationStatus = statusId;
     if (this.gridApi) {
@@ -342,13 +352,17 @@ export class DocumentAuthorizationPostTraining {
 
   approve(): void {
     if (!this.gridApi) return;
-    
+
     const selectedRows = this.gridApi.getSelectedRows();
     if (selectedRows.length === 0) {
-      this._notification.createNotification('warning', 'Selection Required', 'Please select at least one document to approve.');
+      this._notification.createNotification(
+        'warning',
+        'Selection Required',
+        'Please select at least one document to approve.',
+      );
       return;
     }
-    
+
     const documentToApprove = selectedRows[0]; // Processes one document at a time
 
     this.modal.confirm({
@@ -356,24 +370,35 @@ export class DocumentAuthorizationPostTraining {
       nzContent: `Are you sure you want to authorize the document: ${documentToApprove.documentName}?`,
       nzOnOk: () => {
         const payload = {
-          documentId: documentToApprove.documentId,
-          companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-          userId: '1', // TODO: Make dynamic based on the logged-in user
-          observation: 'Authorized via post-training screen' // TODO: Collect via a form/modal wrapper if required by BL-011
+          documentId: documentToApprove.documentId, 
+          observation: 'Authorized via post-training screen', // TODO: Collect via a form/modal wrapper if required by BL-011
         };
 
         this._documentService.AuthorizeDocumentPostTraining(payload).subscribe({
           next: (res) => {
             if (res?.Success) {
-              this._notification.createNotification('success', 'Success', 'Document authorized successfully.');
+              this._notification.createNotification(
+                'success',
+                'Success',
+                'Document authorized successfully.',
+              );
               this.GetAllDocuments({ pageNumber: 1, pageSize: this.pageSize });
             } else {
-              this._notification.createNotification('error', 'Error', res?.Message || 'Failed to authorize document.');
+              this._notification.createNotification(
+                'error',
+                'Error',
+                res?.Message || 'Failed to authorize document.',
+              );
             }
           },
-          error: () => this._notification.createNotification('error', 'Error', 'Failed to authorize document.')
+          error: () =>
+            this._notification.createNotification(
+              'error',
+              'Error',
+              'Failed to authorize document.',
+            ),
         });
-      }
+      },
     });
   }
 
@@ -420,9 +445,9 @@ export class DocumentAuthorizationPostTraining {
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
-      this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-      this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-      this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-      this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
-    }
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
 }

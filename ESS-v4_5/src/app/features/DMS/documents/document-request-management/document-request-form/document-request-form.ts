@@ -29,6 +29,7 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
 import { DocumentService } from '@app/shared/services/document.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-document-request-form',
@@ -115,6 +116,7 @@ export class DocumentRequestForm {
   selectedPageSize = 10;
   requestId: number = 0;
   submittedby: number = 0;
+  loginEmpId: string = '';
 
   documentColumnDefs: ColDef[] = [
     {
@@ -222,11 +224,16 @@ export class DocumentRequestForm {
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
     private _documentService: DocumentService,
+    private _UtilitiesService: UtilitiesService,
   ) {}
 
   ngOnInit() {
     this.getAllDocumentRequestTypes();
     this.getAllCompanies();
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   onRequestTypeChange(value: string | null): void {
@@ -254,7 +261,6 @@ export class DocumentRequestForm {
 
   loadWorkflowAuthorities(documentType: string) {
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       EntityType: 'Request',
       documentTypeCode: documentType,
       divisionCode: this.selectedDivisions,
@@ -338,7 +344,7 @@ export class DocumentRequestForm {
     }
   }
 
-  downloadTemplate(): void { 
+  downloadTemplate(): void {
     if (!this.selectedDocumentType) {
       this._notification.createNotification(
         'warning',
@@ -736,14 +742,11 @@ export class DocumentRequestForm {
 
   GetAllApprovedDocuments(query: any) {
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      userId: 1,
-      // divisionCode: this.selectedDivisions,
-      // departmentCode: this.selectedDepartment,
-      // subDepartmentCode: this.selectedSubDepartment,
-      // businessDomainCode: this.selectedBusinessDomain,
-      // documentTypeCode: this.selectedDocumentType,
-      employeeCode: 'EMP-0001',
+      DivisionCode: this.selectedDivisions || '',
+      DepartmentCode: this.selectedDepartment || '',
+      SubDepartmentCode: this.selectedSubDepartment || '',
+      BusinessDomainCode: this.selectedBusinessDomain || '',
+      DocumentTypeCode: this.selectedDocumentType || '',
       RequestStatus: 'Approved',
     };
 

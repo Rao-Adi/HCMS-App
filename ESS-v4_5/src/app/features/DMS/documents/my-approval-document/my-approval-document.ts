@@ -30,6 +30,7 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -73,6 +74,7 @@ export class MyApprovalDocument {
   employees: any[] = [];
   selectedEmployee?: string = '';
   observation: string = '';
+  loginEmpId: string = '';
 
   documentRequestsData: any[] = [];
   documentAttributeValues: any[] = [];
@@ -192,11 +194,17 @@ export class MyApprovalDocument {
     private _userService: UserService,
     private _documentAttribute: DocumentAttributeService,
     private _documentAttributeService: DocumentAttributeService,
-    private _documentRequestService: DocumentRequestService
+    private _documentRequestService: DocumentRequestService,
+    private _UtilitiesService: UtilitiesService
   ) {}
 
   ngOnInit() {
     this.getAllUsersList();
+    this.GetLoginEmpId();
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   onDivisionChange(value: string): void {
@@ -237,9 +245,7 @@ export class MyApprovalDocument {
       sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
     }
 
-    const payLoad = {
-      companyId: 1,
-      userId: 1,
+    const payLoad = { 
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
@@ -436,10 +442,8 @@ export class MyApprovalDocument {
       this._notification.createNotification('error', 'Error', 'Observation is required');
       return;
     }
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      documentid: this.documentId,
-      userId: 1,
+    const payLoad = { 
+      documentid: this.documentId, 
       executionid: this.executionId,
       action: 'APPROVE',
       observation: this.observation,
@@ -468,10 +472,8 @@ export class MyApprovalDocument {
       this._notification.createNotification('error', 'Error', 'Observation is required');
       return;
     }
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      documentid: this.documentId,
-      userId: 1,
+    const payLoad = { 
+      documentid: this.documentId, 
       executionid: this.executionId,
       action: 'Rejected',
       observation: this.observation,
@@ -500,10 +502,8 @@ export class MyApprovalDocument {
       this._notification.createNotification('error', 'Error', 'Observation is required');
       return;
     }
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      documentid: this.documentId,
-      userId: 1,
+    const payLoad = { 
+      documentid: this.documentId, 
       executionid: this.executionId,
       action: 'Rework',
       observation: this.observation,
@@ -540,10 +540,9 @@ export class MyApprovalDocument {
     });
   };
 
-  GetDocumentAttributeByDocumentId = (documentId: any) => {
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
+  GetDocumentAttributeByDocumentId = (documentId: any) => { 
     this._documentAttribute
-      .getDocumentAttributeByDocumentId(companyId, documentId)
+      .getDocumentAttributeByDocumentId(documentId)
       .subscribe((res) => {
         if (res?.Data) {
           this.documentAttributeValues = res.Data;

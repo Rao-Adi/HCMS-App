@@ -30,6 +30,7 @@ import { WorkflowStepService } from '@app/shared/services/workflow-step-service'
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestForm } from './document-request-form/document-request-form';
 import { DraftRequestList } from './draft-request-list/draft-request-list';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-document-request-management',
@@ -94,6 +95,7 @@ export class DocumentRequestManagement {
   selectedDocumentRequestType: string | null = null;
   showDocumentDiv: boolean = false;
   showDocumentCreationDiv: boolean = false;
+  loginEmpId: string = '';
 
   employees: any[] = [];
   selectedEmployee?: string = '';
@@ -158,11 +160,17 @@ export class DocumentRequestManagement {
     private _documentTemplateService: TemplateService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
+    private _UtilitiesService: UtilitiesService,
   ) {}
 
   ngOnInit() {
     this.getAllDocumentRequestTypes();
     this.getAllCompanies();
+    this.GetLoginEmpId();
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
  
   onRequestTypeChange(value: string | null): void {
@@ -206,8 +214,7 @@ export class DocumentRequestManagement {
       //Get Template
       this.GetTemplate(this.selectedDocumentType);
 
-      const payLoad = {
-        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      const payLoad = { 
         EntityType: 'Request',
         documentTypeCode: this.selectedDocumentType,
         divisionCode: this.selectedDivisions,
@@ -352,7 +359,7 @@ export class DocumentRequestManagement {
       departmentCode: this.selectedDepartment || null,
       subDepartmentCode: this.selectedSubDepartment || null,
       businessDomainCode: this.selectedBusinessDomain || null,
-      CreatedByUserId: 1, // this will be bind with UserId
+      CreatedByUserId: this.loginEmpId,
       distributionList: this.distributionListPayload,
       userids: [],
     };
@@ -410,8 +417,6 @@ export class DocumentRequestManagement {
 
   GetAllPendingDocuments(query: any) {
     const payload = {
-      companyId: 1,
-      userId: 1,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,

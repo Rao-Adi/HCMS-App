@@ -57,11 +57,10 @@ export class DocumentService {
     );
   }
 
-  GerFinalizedDocumentByRequestId(
-    companyId: string,
+  GerFinalizedDocumentByRequestId( 
     requestId: string,
   ): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocument/get-draft-by-request/${companyId}/${requestId}`;
+    const uri = `${this.apiUrl}/DMSDocument/get-draft-by-request/${requestId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

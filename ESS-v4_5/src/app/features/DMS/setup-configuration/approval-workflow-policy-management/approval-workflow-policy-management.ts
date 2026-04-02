@@ -197,8 +197,7 @@ export class ApprovalWorkflowPolicyManagement {
       return;
     }
 
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
@@ -313,8 +312,7 @@ export class ApprovalWorkflowPolicyManagement {
     if (value != null) {
       this.selectedDocumentType = value;
 
-      const payLoad = {
-        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      const payLoad = { 
         EntityType:
           this.selectedPolicyId == PolicyId.RequestForDocumentCreation
             ? 'Request'

@@ -20,7 +20,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 
 @Component({
@@ -69,9 +69,8 @@ export class ResponsibilityTransferForm {
   activeMode: 'manual' | 'integration' | null = null;
   isPermanentTransfer: boolean = false;
 
-  totalPendingApprovals = 0; 
+  totalPendingApprovals = 0;
 
-  
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -103,7 +102,7 @@ export class ResponsibilityTransferForm {
 
   selectedStatus: string = '1';
 
-  pendingRequestApprovalColumnDefs:ColDef[] = [
+  pendingRequestApprovalColumnDefs: ColDef[] = [
     { field: 'requestor', headerName: 'Requestor', flex: 1 },
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
@@ -116,11 +115,11 @@ export class ResponsibilityTransferForm {
       field: 'status',
       headerName: 'Status',
       flex: 1,
-       cellClassRules: {
-      'rag-green': params => params.value === 'Approved' || params.value === 'Controlled',
-      'rag-blue': params => params.value === 'Rejected',
-      'rag-red': params => params.value === 'Pending',
-    },
+      cellClassRules: {
+        'rag-green': (params) => params.value === 'Approved' || params.value === 'Controlled',
+        'rag-blue': (params) => params.value === 'Rejected',
+        'rag-red': (params) => params.value === 'Pending',
+      },
     },
   ];
 
@@ -136,10 +135,10 @@ export class ResponsibilityTransferForm {
     private _userService: UserService,
     private _notification: NotificationService,
     private _responsibilityTransfer: ResponsibilityTransferService,
-    private _utilityService: UtilitiesService
+    private _utilityService: UtilitiesService,
   ) {}
 
-  ngOnInit() { 
+  ngOnInit() {
     this.getAllUsersList();
   }
 
@@ -155,20 +154,20 @@ export class ResponsibilityTransferForm {
   }
 
   private getReasonText(reasonId: any): string {
-    const reason = this.reasonForTransfer.find(r => r.CODE === String(reasonId));
+    const reason = this.reasonForTransfer.find((r) => r.CODE === String(reasonId));
     return reason ? reason.NAME : 'N/A';
   }
 
   onTabChange(tab: string) {
     this.selectedTab = tab;
-    // The AgGridWrapper will automatically trigger its data-loading event 
+    // The AgGridWrapper will automatically trigger its data-loading event
     // when it is rendered into the DOM. Calling the API manually here causes a duplicate request.
     // if (tab === 'Approvals') {
     //   this.GetAllResponsibilityTransferForms();
     // }
   }
 
-  onFileSelected(event: Event): void { 
+  onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
 
     if (!input.files || input.files.length === 0) {
@@ -192,7 +191,6 @@ export class ResponsibilityTransferForm {
     }
   }
 
-  
   GetAllResponsibilityTransferForms(query: any = {}) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
@@ -207,11 +205,12 @@ export class ResponsibilityTransferForm {
       pagenumber: pageNumber,
       pagesize: pageSize,
       status: Number(this.selectedStatus),
-      userid: this._utilityService.GetUserEmpId() || '1'
+      userid: this._utilityService.GetUserEmpId() || '1',
     };
 
-    this._responsibilityTransfer.GetMyResponsibilityTransfersApprovals(payload)
-      .subscribe((res:any) => {
+    this._responsibilityTransfer
+      .GetMyResponsibilityTransfersApprovals(payload)
+      .subscribe((res: any) => {
         if (res?.Success && res.Data?.Items) {
           this.totalPendingApprovals = res.Data.TotalCount;
           this.pendingApprovalData = res.Data.Items.map((item: any) => ({
@@ -221,11 +220,17 @@ export class ResponsibilityTransferForm {
             from: item.employeefromname || item.employeefromname || 'Unknown',
             To: item.employeetoname || item.employeetoname || 'Unknown',
             reason: this.getReasonText(item.reasonfortransfer || item.ReasonForTransfer),
-            effectiveDateFrom: new CustomDateFormatPipe().transform(item.effectivedatefrom || item.EffectiveDateFrom || ''),
-            effectiveDateTo: new CustomDateFormatPipe().transform(item.effectivedateto || item.EffectiveDateTo || ''),
+            effectiveDateFrom: new CustomDateFormatPipe().transform(
+              item.effectivedatefrom || item.EffectiveDateFrom || '',
+            ),
+            effectiveDateTo: new CustomDateFormatPipe().transform(
+              item.effectivedateto || item.EffectiveDateTo || '',
+            ),
             remarks: item.remarks || item.Remarks || '',
-            actionDate: new CustomDateFormatPipe().transform(item.actionDate || item.ActionDate || ''),
-            status: this.getStatusText(item.status || item.Status)
+            actionDate: new CustomDateFormatPipe().transform(
+              item.actionDate || item.ActionDate || '',
+            ),
+            status: this.getStatusText(item.status || item.Status),
           }));
         } else {
           this.pendingApprovalData = [];
@@ -233,7 +238,7 @@ export class ResponsibilityTransferForm {
         }
       });
   }
-  
+
   addExclusion() {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
   }
@@ -247,10 +252,10 @@ export class ResponsibilityTransferForm {
           DEPARTMENT: d.DepartmentCode || d.DepartmentId || 'Unknown', // Storing department for filtering
         }));
         this.filteredEmployeesTo = [...this.employees];
-        
+
         // FSD UC-16: Default Employee From to logged-in user
         const currentUserCode = this._utilityService.GetUserEmpId();
-        if (currentUserCode && this.employees.some(e => e.CODE === currentUserCode)) {
+        if (currentUserCode && this.employees.some((e) => e.CODE === currentUserCode)) {
           this.selectedEmployeeFrom = currentUserCode;
           this.onEmployeeFromChange(currentUserCode);
         }
@@ -285,11 +290,11 @@ export class ResponsibilityTransferForm {
       return;
     }
 
-    const fromEmp = this.employees.find(e => e.CODE === empCode);
+    const fromEmp = this.employees.find((e) => e.CODE === empCode);
     if (fromEmp) {
       // Filter to same department, excluding the "Employee From" themselves
       this.filteredEmployeesTo = this.employees.filter(
-        e => e.DEPARTMENT === fromEmp.DEPARTMENT && e.CODE !== empCode
+        (e) => e.DEPARTMENT === fromEmp.DEPARTMENT && e.CODE !== empCode,
       );
     }
   }
@@ -302,7 +307,6 @@ export class ResponsibilityTransferForm {
   }
 
   submitRequest(data: any) {
-
     if (this.selectedEmployeeFrom === undefined || this.selectedEmployeeFrom === '') {
       this._notification.createNotification(
         'warning',
@@ -334,12 +338,15 @@ export class ResponsibilityTransferForm {
       );
       return;
     } else if (this.remarks === undefined || this.remarks === '') {
-      this._notification.createNotification('warning', 'Responsibility Transfer', 'Remarks field is mandatory.');
+      this._notification.createNotification(
+        'warning',
+        'Responsibility Transfer',
+        'Remarks field is mandatory.',
+      );
       return;
     }
 
     const formData = new FormData();
-    formData.append('companyId', MASTER_DEFAULT_KEYS.COMPANYID);
     formData.append('employeeFrom', this.selectedEmployeeFrom);
     formData.append('employeeTo', this.selectedEmployeeTo);
     formData.append('reasonForTransfer', this.selectedReasonForTransfer);
@@ -381,7 +388,6 @@ export class ResponsibilityTransferForm {
     this.attachment = null;
     this.filteredEmployeesTo = [...this.employees];
   }
- 
 
   submitWorkflowAction(actionType: string): void {
     if (!this.selectedRow) {
@@ -395,17 +401,19 @@ export class ResponsibilityTransferForm {
     }
 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       transferId: this.selectedRow.id || this.selectedRow.Id,
       action: actionType,
-      observation: this.observation.trim(),
-      userId: this._utilityService.GetUserEmpId() || '1'
+      observation: this.observation.trim(), 
     };
 
     this._responsibilityTransfer.takeAction(payload).subscribe({
       next: (res: any) => {
         if (res?.Success || res?.success) {
-          this._notification.createNotification('success', 'Action Successful', res?.Message || `Request has been ${actionType.toLowerCase()}d.`);
+          this._notification.createNotification(
+            'success',
+            'Action Successful',
+            res?.Message || `Request has been ${actionType.toLowerCase()}d.`,
+          );
           this.GetAllResponsibilityTransferForms(); // Automatically refresh Grid
           this.observation = '';
           this.selectedRow = null;
@@ -415,19 +423,17 @@ export class ResponsibilityTransferForm {
       },
       error: (err: any) => {
         this._notification.createNotification('error', 'Error', err?.Message || 'Action failed.');
-      }
+      },
     });
   }
 
   export() {}
 
-  
-  approveDocument(action:string = 'Approved') {
+  approveDocument(action: string = 'Approved') {
     this.submitWorkflowAction('Approve');
   }
 
   disapprove(action: string = 'Rejected') {
     this.submitWorkflowAction('Rejected');
   }
- 
 }

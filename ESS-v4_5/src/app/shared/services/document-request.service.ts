@@ -49,21 +49,19 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetWorkflowObservationDetails(
-    companyId: any,
+  GetWorkflowObservationDetails( 
     requestId: any,
     entityType: string,
   ): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-observation-details?companyId=${companyId}&requestId=${requestId}&entityType=${entityType}`;
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-observation-details?requestId=${requestId}&entityType=${entityType}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getWorkflowDeatils(
-    companyId: any,
+  getWorkflowDeatils( 
     requestId: any,
     entityType: string,
   ): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentRequest/get-workflow-details?companyId=${companyId}&requestId=${requestId}&entityType=${entityType}`;
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-workflow-details?requestId=${requestId}&entityType=${entityType}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

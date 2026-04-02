@@ -74,6 +74,7 @@ export class MyApprovalRequest {
   rowData: any[] = [];
   public noRowsOverlay: string = '';
   selectedPageSize = 10;
+  LoginEmpId: string = '';
 
   documentRequestsData: any[] = [];
   totalRows = 0;
@@ -84,7 +85,7 @@ export class MyApprovalRequest {
     pageSize: 10,
     sortModel: [],
     filterModel: {},
-    searchTerm: ''
+    searchTerm: '',
   };
 
   // Track selection state
@@ -232,7 +233,7 @@ export class MyApprovalRequest {
     private modal: NzModalService,
     private _notification: NotificationService,
     private _userService: UserService,
-    private _utilityService: UtilitiesService,
+    private _UtilitiesService: UtilitiesService,
   ) {}
 
   ngOnInit() {
@@ -245,6 +246,11 @@ export class MyApprovalRequest {
     // });
 
     this.hasSelectedRows = false;
+    this.GetLoginEmpId();
+  }
+
+  GetLoginEmpId() {
+    this.LoginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   onDivisionChange(value: string): void {
@@ -318,7 +324,7 @@ export class MyApprovalRequest {
       pagenumber: this.pageNumber,
       pagesize: this.selectedPageSize || 10,
       companyid: 1,
-      userid: 1,
+      userid: this.LoginEmpId,
       divisioncode: this.selectedDivisions || '',
       departmentcode: this.selectedDepartment || '',
       subdepartmentcode: this.selectedSubDepartment || '',
@@ -490,10 +496,8 @@ export class MyApprovalRequest {
       return;
     }
 
-    const payLoad = {
-      companyId: 1,
-      stepId: this.stepId,
-      userId: 1,
+    const payLoad = { 
+      stepId: this.stepId, 
       action: action,
       observation: observation,
     };
@@ -536,7 +540,7 @@ export class MyApprovalRequest {
           CODE: d.Code,
           NAME: d.Value,
         }));
-        const currentUserCode = this._utilityService.GetUserEmpId();
+        const currentUserCode = this._UtilitiesService.GetUserEmpId();
         if (currentUserCode && this.employees.some((e) => e.CODE === currentUserCode)) {
           this.selectedEmployee = currentUserCode;
         } else if (this.employees.length > 0) {

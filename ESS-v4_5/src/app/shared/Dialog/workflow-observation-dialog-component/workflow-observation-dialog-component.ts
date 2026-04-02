@@ -75,12 +75,11 @@ export class WorkflowObservationDialogComponent implements OnInit {
   }
 
   loadObservations() {
-    this.loading = true;
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
+    this.loading = true; 
     const entityId = this.modalData.id;
     const entityType = this.modalData.entityType;
     this._doumentRequestService
-      .GetWorkflowObservationDetails(companyId, entityId, entityType)
+      .GetWorkflowObservationDetails(entityId, entityType)
       .subscribe({
         next: (response) => {
           if (response && response.Data) {

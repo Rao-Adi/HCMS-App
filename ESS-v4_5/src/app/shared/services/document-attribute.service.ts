@@ -55,11 +55,10 @@ export class DocumentAttributeService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getDocumentAttributeByDocumentId(
-    companyId: string,
+  getDocumentAttributeByDocumentId( 
     documentId: number,
   ): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-document-attributes-by-documentId?companyId=${companyId}&documentId=${documentId}`;
+    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-document-attributes-by-documentId?documentId=${documentId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

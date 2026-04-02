@@ -37,10 +37,9 @@ export class WorkflowApprovalHistoryComponent {
 
   loadHistory() {
     this.loading = true;
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
     const entityId = this.modalData.id;
     const entityType = this.modalData.entityType;
-    this._doumentRequestService.getWorkflowDeatils(companyId, entityId, entityType).subscribe({
+    this._doumentRequestService.getWorkflowDeatils(entityId, entityType).subscribe({
       next: (response) => {
         if (response && response.Data) { 
           this.workflowHistory = response.Data.map((item: any) => ({

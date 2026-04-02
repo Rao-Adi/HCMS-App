@@ -43,6 +43,7 @@ import { ApprovalHistoryModal } from '../approval-history-modal/approval-history
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 // Define interface for request types
 interface RequestType {
@@ -105,6 +106,7 @@ export class CreateUpdateDocument {
   documentId: string = '';
   documentName: string = '';
   requestId: number = 0;
+  LoginEmpId: string = '';
 
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
@@ -190,7 +192,7 @@ export class CreateUpdateDocument {
       onCellClicked: (event: any) => {
         this.openWorkflowDeatilsModal(event.data);
       },
-    }
+    },
   ];
 
   DocumentObsoletionGridColumnDefs = [
@@ -242,12 +244,18 @@ export class CreateUpdateDocument {
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _documentService: DocumentService,
     private documentTemplateService: TemplateService,
-    private _documentRequestService: DocumentRequestService
+    private _documentRequestService: DocumentRequestService,
+    private _UtilitiesService: UtilitiesService,
   ) {}
 
   ngOnInit() {
     // this.getAllDocumentRequestTypes();
     this.loadRequestTypes();
+    this.GetLoginEmpId();
+  }
+
+  GetLoginEmpId() {
+    this.LoginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   loadRequestTypes() {
@@ -276,7 +284,7 @@ export class CreateUpdateDocument {
       if (!this.selectedRequestId) {
         return true;
       }
-      
+
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return true;
@@ -390,8 +398,7 @@ export class CreateUpdateDocument {
     this.GetAllApprovedRequests();
     this.GetDocumentTemplate();
 
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       EntityType: 'Document',
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
@@ -434,9 +441,7 @@ export class CreateUpdateDocument {
     if (this.selectedDocumentType == '' || this.selectedDocumentType == null) {
       return;
     }
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      UserId: 1,
+    const payLoad = { 
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -457,9 +462,8 @@ export class CreateUpdateDocument {
 
   onRequestIdChange(value: string): void {
     // this.loading = true;
-    const requestId = value;
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
-    this._documentService.GerFinalizedDocumentByRequestId(companyId, requestId).subscribe((res) => {
+    const requestId = value; 
+    this._documentService.GerFinalizedDocumentByRequestId(requestId).subscribe((res) => {
       if (res) {
         if (!res?.Data) return;
         this.documentId = res.Data[0].documentid;
@@ -618,10 +622,9 @@ export class CreateUpdateDocument {
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       documentid: this.documentId,
-      userid: 1,
+      userid: this.LoginEmpId,
       attributes: attributeValues,
     };
 
@@ -742,9 +745,7 @@ export class CreateUpdateDocument {
   }
 
   GetAllApprovedDocuments(query: any) {
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      userId: 1,
+    const payLoad = {  
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
@@ -859,10 +860,9 @@ export class CreateUpdateDocument {
     }
   }
 
-  
-  emptyFields() { 
+  emptyFields() {
     this.showDocumentContent = false;
-    this.selectedCompany = ''; 
+    this.selectedCompany = '';
     this.selectedDocumentType = '';
     this.selectedDivisions = '';
     this.selectedDepartment = '';
@@ -882,7 +882,11 @@ export class CreateUpdateDocument {
     const idToDownload = this.selectedRequestId ? Number(this.selectedRequestId) : this.requestId;
 
     if (!idToDownload) {
-      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      this._notification.createNotification(
+        'warning',
+        'Draft',
+        'No drafted file available for download.',
+      );
       return;
     }
 
@@ -902,7 +906,11 @@ export class CreateUpdateDocument {
             blob.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+                this._notification.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
               } catch {
                 this._notification.createNotification('error', 'Draft', 'Failed to read response.');
               }
@@ -911,7 +919,9 @@ export class CreateUpdateDocument {
           }
 
           let filename = `Draft_${this.documentName || idToDownload}`;
-          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
           if (contentDisposition) {
             const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
             if (matches != null && matches[1]) {
@@ -928,15 +938,26 @@ export class CreateUpdateDocument {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
         } else {
-          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+          this._notification.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
         }
       },
       error: (err: any) => {
-        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+              this._notification.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
             } catch {
               this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
             }
@@ -945,7 +966,7 @@ export class CreateUpdateDocument {
           console.error('Error downloading draft', err);
           this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
         }
-      }
+      },
     });
   }
 }

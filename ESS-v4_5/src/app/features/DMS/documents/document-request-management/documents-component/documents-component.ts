@@ -10,6 +10,7 @@ import { NotificationService } from '@app/shared/notification/notification.servi
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-documents-component',
@@ -27,6 +28,7 @@ export class DocumentsComponent {
   pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
+  loginEmpId: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -135,10 +137,16 @@ export class DocumentsComponent {
     private modal: NzModalService,
     private _notification: NotificationService,
     private _documentService: DocumentService,
+    private _UtilitiesService: UtilitiesService,
   ) {}
 
   ngOnInit() {
     this.GetAllApprovedDocuments('');
+    this.GetLoginEmpId();
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -146,15 +154,12 @@ export class DocumentsComponent {
   }
 
   GetAllApprovedDocuments(query: any) {
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      userId: 1,
+    const payLoad = { 
       // divisionCode: this.selectedDivisions,
       // departmentCode: this.selectedDepartment,
       // subDepartmentCode: this.selectedSubDepartment,
       // businessDomainCode: this.selectedBusinessDomain,
-      // documentTypeCode: this.selectedDocumentType,
-      employeeCode: 'EMP-0001',
+      // documentTypeCode: this.selectedDocumentType, 
       RequestStatus: 'Approved',
     };
 

@@ -20,6 +20,7 @@ import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
 import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-drusers-component',
@@ -49,6 +50,7 @@ export class DRUsersComponent {
 
   totalManullayManageEmployees = 0;
   loading = false;
+  loginEmpId: string = '';
 
   defaultColDef: ColDef = {
     filter: true,
@@ -69,33 +71,6 @@ export class DRUsersComponent {
     },
   ];
 
-  private loadSampleData(): void {
-    this.manualUserData = [
-      {
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        userId: '1',
-        UserName: 'Territory Sales Manager(TSM)',
-        isActive: true,
-      },
-      {
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        userId: '2',
-        documentTypeName: 'District Sales Manager(DSM)',
-        isActive: true,
-      },
-    ];
-  }
-
   constructor(
     private _userService: UserService,
     private _documentTypeService: DocumentTypeCacheService,
@@ -103,9 +78,8 @@ export class DRUsersComponent {
     private _notification: NotificationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
-  ) {
-    //this.loadSampleData();
-  }
+    private _UtilitiesService: UtilitiesService,
+  ) {}
 
   ngOnInit() {
     if (this.selectedUsers) {
@@ -129,6 +103,10 @@ export class DRUsersComponent {
     if (changes['selectedUsers']) {
       this.users = [...this.selectedUsers];
     }
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   private getRemainingColumns(): GridColumn[] {

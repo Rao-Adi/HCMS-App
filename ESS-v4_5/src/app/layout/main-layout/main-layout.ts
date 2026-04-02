@@ -346,6 +346,21 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
+  logout(): void {
+    // 1. Clear all local storage items (HRIS..., token, etc.)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.clear();
+    }
+
+    // 2. Clear the login cookie created by the Security component
+    if (typeof document !== 'undefined') {
+      document.cookie = encodeURIComponent('login') + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
+
+    // 3. Navigate back to the root/login screen
+    this.router.navigate(['/security']);
+  }
+
   // --- TEMPORARY METHOD FOR TESTING: Remove after SSO integration ---
   triggerTestNotification(): void {
     const payload = {

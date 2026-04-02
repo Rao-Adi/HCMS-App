@@ -140,7 +140,6 @@ export class PendingRequestForApproval {
     }
 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       initiator: this.selectedEmployee,
       divisionCode: null,
       departmentCode: null,

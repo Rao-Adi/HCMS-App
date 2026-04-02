@@ -156,8 +156,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
     if (value != null) {
       this.selectedDocumentType = value;
       debugger;
-      const payLoad = {
-        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+      const payLoad = { 
         EntityType: 'Request',
         documentTypeCode: this.selectedDocumentType,
         divisionCode: this.selectedDivisions,
@@ -189,8 +188,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
       return;
     }
 
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
+    const payLoad = { 
       WorkflowPolicyId: 4, // Approval Workflow Policy – for sharing Documents to External Users
       EntityType: 'REQUEST_FOR_DOCUMENT_SHARING_TO_EXTERNAL_USERS',
       StepType: 'Review',
