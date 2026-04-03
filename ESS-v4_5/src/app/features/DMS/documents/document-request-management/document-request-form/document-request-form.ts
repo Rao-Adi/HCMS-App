@@ -559,6 +559,15 @@ export class DocumentRequestForm {
         );
     });
 
+    const userids = this.distributionUserList
+      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`userids[${index}]`, id);
+    });
+
     if (this.draftFile) {
       formData.append('DraftFile', this.draftFile);
     }
@@ -686,9 +695,13 @@ export class DocumentRequestForm {
         );
     });
 
-    const userids = this.distributionUserList.map((u) => u.employeeCode || u.userId) || [];
-    userids.forEach((id: any, index: number) => {
-      formData.append(`userids[${index}]`, id.toString());
+    const userids = this.distributionUserList
+      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`userids[${index}]`, id);
     });
 
     if (this.draftFile) {

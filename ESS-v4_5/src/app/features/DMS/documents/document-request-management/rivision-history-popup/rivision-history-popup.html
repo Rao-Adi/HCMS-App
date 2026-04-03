@@ -11,6 +11,7 @@
   gridId="documentGrid"
   (pageSizeChange)="onPageSizeChanged($event)"
   (serverQuery)="GetAllDocuments($event)"
+  (selectionChange)="onSelectionChange($event)"
 >
   <!-- <div grid-actions class="grid-action-icons">
     <button class="grid-icon-btn" title="Approve" (click)="approve()">
@@ -32,6 +33,6 @@
 </app-ag-grid-wrapper>
 <div class="row mt-4">
     <div class="col-sm-12">
-        <button class="tab-button" tabindex="0" class="btn btn-primary">Save</button>
+        <button class="btn btn-primary tab-button" tabindex="0" (click)="save()">Save</button>
     </div>
 </div>

@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, User } from '../interfaces/interfaces';
@@ -11,15 +11,16 @@ import { AppConfigService } from '@app/core/services/app-config';
 export class PeoplePartnersService {
   private _cabietStructureConfig = new ReplaySubject<User[]>(1);
 
-  constructor(private http: HttpClient,
-    private _config: AppConfigService
+  constructor(
+    private http: HttpClient,
+    private _config: AppConfigService,
   ) {}
 
   get cabietStructureConfig$(): Observable<User[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
-   // We make apiUrl a getter. It's only called when needed.
+  // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
     if (!this._config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
@@ -27,7 +28,6 @@ export class PeoplePartnersService {
     }
     return this._config.baseUrl;
   }
-
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -39,31 +39,31 @@ export class PeoplePartnersService {
     return headers;
   }
 
-//   getUserList(): Observable<GenericResponse<any>> {
-//     const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-users-list`;
-//     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-//   }
+  GetAllRoles(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-roles`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
 
-//   getUserById(Id: string): Observable<GenericResponse<any>> {
-//     const uri = `${this.apiUrl}/DMSPeoplePartners/get-user-by-id/id=${Id}`;
-//     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-//   }
+  getUserByRoleId(roleId: string, payload: any): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-employees-by-role/${roleId}`;
+    return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
+  }
 
-//   GetUserByFilters(payload: any): Observable<ApiResponse<any>> { 
-//     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/get-user-with-filters`, payload);
-//   } 
+  //   GetUserByFilters(payload: any): Observable<ApiResponse<any>> {
+  //     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/get-user-with-filters`, payload);
+  //   }
 
-//   create(payload: any): Observable<ApiResponse<any>> {
-//     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/create-user`, payload);
-//   }
+  //   create(payload: any): Observable<ApiResponse<any>> {
+  //     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/create-user`, payload);
+  //   }
 
-//   update(payload: any) {
-//     return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/update-user`, payload);
-//   }
+  //   update(payload: any) {
+  //     return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/update-user`, payload);
+  //   }
 
-//   delete(code: string) {
-//     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/delete-user/${code}`);
-//   }
+  //   delete(code: string) {
+  //     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/delete-user/${code}`);
+  //   }
 
   GetAllSetupsDetails(
     searchText: string,
