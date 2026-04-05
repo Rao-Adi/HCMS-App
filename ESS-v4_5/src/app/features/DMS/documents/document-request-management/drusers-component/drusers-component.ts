@@ -84,9 +84,9 @@ export class DRUsersComponent {
     private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
-  ngOnInit() {
-    if (this.selectedUsers) {
-      this.userRoles = [...this.selectedUsers];
+  ngOnInit() { 
+    if (this.selectedUsers && this.selectedUsers.length > 0) {
+      this.selectedEmployeeList = [...this.selectedUsers];
     }
 
     this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
@@ -104,7 +104,7 @@ export class DRUsersComponent {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['selectedUsers']) {
-      this.userRoles = [...this.selectedUsers];
+      this.selectedEmployeeList = [...this.selectedUsers];
     }
   }
 
@@ -155,81 +155,7 @@ export class DRUsersComponent {
       ...this.getRemainingColumns(),
     ];
   }
-
-  // private buildGrid(): void {
-  //   this.gridConfig = {
-  //     columns: this.getColumns(),
-  //     enablePagination: true,
-  //     pageSize: 10,
-  //     pageSizeOptions: [10, 20, 50, 100],
-  //     enableSorting: true,
-  //     enableFiltering: true,
-  //     enableSelection: true,
-  //     enableInlineAdd: true,
-  //     enableInlineEdit: true,
-  //     enableInlineDelete: true,
-  //     rowHeight: 47,
-  //     headerHeight: 40,
-  //     domLayout: 'autoHeight',
-  //     theme: 'ag-theme-alpine',
-  //     suppressCellFocus: true,
-  //   };
-  // }
-
-  // private getColumns(): GridColumn[] {
-  //   return [
-  //     // ✅ DIVISION
-  //     {
-  //       field: 'divisionName',
-  //       headerName: 'Division',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.divisions,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DEPARTMENT
-  //     {
-  //       field: 'departmentName',
-  //       headerName: 'Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'divisionName',
-  //       dataSourceKey: 'departments',
-  //       filterKey: 'divisionId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // ✅ SUB DEPARTMENT
-  //     {
-  //       field: 'subDepartmentName',
-  //       headerName: 'Sub Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'departmentName',
-  //       dataSourceKey: 'subDepartments',
-  //       filterKey: 'departmentId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // DOCUMENT TYPES
-  //     {
-  //       field: 'userId',
-  //       headerName: 'User',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.userRoles,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //   ];
-  // }
-
+ 
   GetAllManuallyManageEmployee(query: any) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
@@ -277,7 +203,6 @@ export class DRUsersComponent {
   }
 
   handleGridAction(event: { action: string; rowData: any }) {
-    debugger;
     if (event.action === 'userId') {
       this.openCabinetModal(event.rowData);
     }
@@ -304,8 +229,7 @@ export class DRUsersComponent {
       nzWidth: 1200,
     });
 
-    modalRef.afterClose.subscribe((selectedUsers: any[]) => {
-      debugger;
+    modalRef.afterClose.subscribe((selectedUsers: any[]) => { 
       if (selectedUsers && selectedUsers.length > 0) {
         // Accumulate selected users and avoid duplicates
         selectedUsers.forEach(user => {
@@ -410,6 +334,11 @@ export class DRUsersComponent {
       // Handle regular value changes
       //console.log('Cell value changed:', event);
     }
+  }
+
+  removeUser(index: number) {
+    this.selectedEmployeeList.splice(index, 1);
+    this.usersChanged.emit(this.selectedEmployeeList);
   }
 
   private generateId(): number {

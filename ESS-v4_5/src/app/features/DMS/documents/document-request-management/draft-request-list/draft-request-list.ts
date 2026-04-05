@@ -473,12 +473,17 @@ export class DraftRequestList {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
+    const userids = this.distributionUserList
+      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
     const payLoad = {
       CompanyId: this.selectedCompany,
       requestid:  this.requestId ,
       submittedby: 1, // this will be bind with UserId
       distributionlist: cleanDistributionList,
-      userlist: [],
+      userids: userids,
     };
 
     this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
@@ -524,6 +529,15 @@ export class DraftRequestList {
       if (item.businessDomainCode) formData.append(`distributionlist[${index}].businessDomainCode`, item.businessDomainCode);
       if (item.roleId) formData.append(`distributionlist[${index}].roleId`, item.roleId.toString());
       if (item.distributionTypeId) formData.append(`distributionlist[${index}].distributionTypeId`, item.distributionTypeId.toString());
+    });
+
+    const userids = this.distributionUserList
+      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`userids[${index}]`, id);
     });
 
     if (this.draftFile) {
