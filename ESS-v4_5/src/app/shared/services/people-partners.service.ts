@@ -49,6 +49,11 @@ export class PeoplePartnersService {
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
   }
 
+  GetEmployeeList(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-employee-list`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   //   GetUserByFilters(payload: any): Observable<ApiResponse<any>> {
   //     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSPeoplePartners/get-user-with-filters`, payload);
   //   }
@@ -183,5 +188,12 @@ export class PeoplePartnersService {
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
+  }
+
+  createEmployee(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSPeoplePartners/create-employee`,
+      payload,
+    );
   }
 }

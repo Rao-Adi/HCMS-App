@@ -22,6 +22,7 @@ import { ResponsibilityTransferService } from '@app/shared/services/responsibili
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -136,6 +137,7 @@ export class ResponsibilityTransferForm {
     private _notification: NotificationService,
     private _responsibilityTransfer: ResponsibilityTransferService,
     private _utilityService: UtilitiesService,
+    private _peoplePartnerService: PeoplePartnersService
   ) {}
 
   ngOnInit() {
@@ -244,7 +246,7 @@ export class ResponsibilityTransferForm {
   }
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,

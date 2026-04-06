@@ -229,7 +229,7 @@ export class MandatoryCabinetWisePopup {
   onRowUpdated(event: { rowData: any }): void {
     const { rowData } = event;
 
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     // Update display names
     const payLoad = {
       documentAttributeId: this.cabinetId,
@@ -279,7 +279,7 @@ export class MandatoryCabinetWisePopup {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    // console.log('Row deleted at index:', rowIndex);
     this.mandatoryCabinetData.splice(rowIndex, 1);
     this.mandatoryCabinetData = [...this.mandatoryCabinetData];
   }

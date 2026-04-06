@@ -152,15 +152,16 @@ export class DraftRequestList {
   ) {}
 
   ngOnInit() {
-    this.getAllUsersList();
+    // this.getAllUsersList();
+    this.GetAllDraftDocuments();
   }
 
   GetAllDraftDocuments(query?: any) {
-    if (!this.selectedEmployee) {
-      this.documentRequestsData = [];
-      this.totalRows = 0;
-      return;
-    }
+    // if (!this.selectedEmployee) {
+    //   this.documentRequestsData = [];
+    //   this.totalRows = 0;
+    //   return;
+    // }
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -340,8 +341,8 @@ export class DraftRequestList {
     // ✅ Populate Users
     this.distributionUserList = row.distributionUserList || [];
 
-    console.log('Distribution:', this.distributionListPayload);
-    console.log('Users:', this.distributionUserList);
+    // console.log('Distribution:', this.distributionListPayload);
+    // console.log('Users:', this.distributionUserList);
   }
 
    downloadDraft(): void {
@@ -480,10 +481,10 @@ export class DraftRequestList {
 
     const payLoad = {
       CompanyId: this.selectedCompany,
-      requestid:  this.requestId ,
-      submittedby: 1, // this will be bind with UserId
-      distributionlist: cleanDistributionList,
-      userids: userids,
+      RequestId: this.requestId ,
+      SubmittedBy: 1, // this will be bind with UserId
+      DistributionList: cleanDistributionList,
+      UserIds: userids,
     };
 
     this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
@@ -515,20 +516,20 @@ export class DraftRequestList {
     }));
 
     const formData = new FormData();
-    formData.append('companyId', this.selectedCompany?.toString() || '');
-    formData.append('requestid', this.requestId?.toString() || '');
-    formData.append('documentname', this.documentName || '');
-    formData.append('justification', this.inputJustificationValue || '');
-    formData.append('proposedcontent', this.templateHtml || '');
-    formData.append('modifiedbyuserid', '1'); // this will be bind with UserId
+    formData.append('CompanyId', this.selectedCompany?.toString() || '');
+    formData.append('RequestId', this.requestId?.toString() || '');
+    formData.append('DocumentName', this.documentName || '');
+    formData.append('Justification', this.inputJustificationValue || '');
+    formData.append('ProposedContent', this.templateHtml || '');
+    formData.append('ModifiedByUserId', '1'); // this will be bind with UserId
 
     cleanDistributionList.forEach((item: any, index: number) => {
-      if (item.divisionCode) formData.append(`distributionlist[${index}].divisionCode`, item.divisionCode);
-      if (item.departmentCode) formData.append(`distributionlist[${index}].departmentCode`, item.departmentCode);
-      if (item.subDepartmentCode) formData.append(`distributionlist[${index}].subDepartmentCode`, item.subDepartmentCode);
-      if (item.businessDomainCode) formData.append(`distributionlist[${index}].businessDomainCode`, item.businessDomainCode);
-      if (item.roleId) formData.append(`distributionlist[${index}].roleId`, item.roleId.toString());
-      if (item.distributionTypeId) formData.append(`distributionlist[${index}].distributionTypeId`, item.distributionTypeId.toString());
+      if (item.divisionCode) formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode) formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode) formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode) formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId) formData.append(`DistributionList[${index}].distributionTypeId`, item.distributionTypeId.toString());
     });
 
     const userids = this.distributionUserList
@@ -537,7 +538,7 @@ export class DraftRequestList {
       .map(String);
 
     userids.forEach((id: string, index: number) => {
-      formData.append(`userids[${index}]`, id);
+      formData.append(`UserIds[${index}]`, id);
     });
 
     if (this.draftFile) {

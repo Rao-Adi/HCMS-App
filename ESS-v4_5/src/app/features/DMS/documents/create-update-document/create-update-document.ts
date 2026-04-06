@@ -556,7 +556,7 @@ export class CreateUpdateDocument {
     }
     const payload = this.buildPayload();
 
-    console.log(this.dynamicForm.value);
+    //console.log(this.dynamicForm.value);
   }
 
   buildPayload() {

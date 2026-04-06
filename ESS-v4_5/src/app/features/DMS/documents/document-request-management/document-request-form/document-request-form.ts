@@ -565,7 +565,7 @@ export class DocumentRequestForm {
       .map(String);
 
     userids.forEach((id: string, index: number) => {
-      formData.append(`userids[${index}]`, id);
+      formData.append(`UserIds[${index}]`, id);
     });
 
     if (this.draftFile) {
@@ -701,7 +701,7 @@ export class DocumentRequestForm {
       .map(String);
 
     userids.forEach((id: string, index: number) => {
-      formData.append(`userids[${index}]`, id);
+      formData.append(`UserIds[${index}]`, id);
     });
 
     if (this.draftFile) {

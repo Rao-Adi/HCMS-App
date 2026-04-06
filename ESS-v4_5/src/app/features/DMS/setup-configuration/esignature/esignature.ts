@@ -118,7 +118,7 @@ export class ESignature implements AfterViewInit {
   // =====================
   save(): void {
     const base64 = this.sig.toDataURL('image/png');
-    console.log('BASE64:', base64);
+    //console.log('BASE64:', base64);
 
     this.upload(base64);
   }

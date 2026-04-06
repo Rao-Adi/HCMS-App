@@ -287,7 +287,7 @@ export class MenuComponent implements OnDestroy {
 
   getMenuData(): void {
     this._dataService.get<any[]>('Menu/GetMenuDataThroughRedis/DMS-b').subscribe((data) => {
-      console.log(data);
+      // console.log(data);
       this.RootItems = data;
       //this._UtilitiesService.setActiveMenu();
     });

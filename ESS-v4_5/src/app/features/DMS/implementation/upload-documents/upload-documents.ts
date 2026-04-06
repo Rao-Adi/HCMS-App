@@ -482,7 +482,7 @@ export class UploadDocuments {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.level1Id);
@@ -502,7 +502,7 @@ export class UploadDocuments {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    //console.log('Row deleted at index:', rowIndex);
     this.uploadedDocumentsData.splice(rowIndex, 1);
     this.uploadedDocumentsData = [...this.uploadedDocumentsData];
   }

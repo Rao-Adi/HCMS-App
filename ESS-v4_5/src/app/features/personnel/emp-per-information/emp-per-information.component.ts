@@ -137,7 +137,7 @@ export class EmpPerInformationComponent implements OnInit {
     // this._spinnerService.showSpinner();
     this._userService.get('EmployeePersonalInformation/GetEmployeePersonalInfo/' + EmpId + '').subscribe({
       next: (data: any) => {
-        console.log(data);
+        // console.log(data);
         if (data.EmployeePersonalProfile && data.EmployeePersonalProfile.length > 0) {
           this.EmployeePerInformation = data.EmployeePersonalProfile[0];
         }

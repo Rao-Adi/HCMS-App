@@ -109,6 +109,7 @@ export class PendingRequestForApproval {
 
   ngOnInit() {
     this.getAllUsersList();
+    this.GetAllPendingRequests('');
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -119,11 +120,11 @@ export class PendingRequestForApproval {
   }
 
   GetAllPendingRequests(query?: any) {
-    if (!this.selectedEmployee) {
-      this.documentRequestsData = [];
-      this.totalRows = 0;
-      return;
-    }
+    // if (!this.selectedEmployee) {
+    //   this.documentRequestsData = [];
+    //   this.totalRows = 0;
+    //   return;
+    // }
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -140,7 +141,7 @@ export class PendingRequestForApproval {
     }
 
     const payload = {
-      initiator: this.selectedEmployee,
+      //initiator: this.selectedEmployee,
       divisionCode: null,
       departmentCode: null,
       status: this.selectedStatus,

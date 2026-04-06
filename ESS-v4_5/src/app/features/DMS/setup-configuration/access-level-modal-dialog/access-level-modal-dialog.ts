@@ -259,7 +259,7 @@ export class AccessLevelModalDialog {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
@@ -274,7 +274,7 @@ export class AccessLevelModalDialog {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    //console.log('Row deleted at index:', rowIndex);
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
   }

@@ -283,7 +283,7 @@ export class DRUsersComponent {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     debugger;
     const payLoad = {
       divisionCode: event.rowData.level1Id || event.rowData.level1Id,
@@ -309,7 +309,7 @@ export class DRUsersComponent {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    //console.log('Row deleted at index:', rowIndex);
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
   }

@@ -311,7 +311,7 @@ export class DRDistributionList {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
