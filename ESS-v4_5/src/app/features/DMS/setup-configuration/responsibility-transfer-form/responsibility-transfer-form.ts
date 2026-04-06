@@ -81,7 +81,8 @@ export class ResponsibilityTransferForm {
   pageSize = 10;
   rowData: any[] = [];
   employees: any[] = [];
-  filteredEmployeesTo: any[] = [];
+  employeeOptions: Array<{ label: string; value: string; department: string }> = [];
+  filteredEmployeeToOptions: Array<{ label: string; value: string; department: string }> = [];
   totalRows = 0;
 
   // Approval Action Variables
@@ -178,7 +179,7 @@ export class ResponsibilityTransferForm {
     }
 
     this.attachment = input.files[0];
-    console.log('Selected file:', this.attachment);
+    //console.log('Selected file:', this.attachment);
   }
 
   selectStatus(value: string): void {
@@ -253,9 +254,14 @@ export class ResponsibilityTransferForm {
           NAME: d.Value,
           DEPARTMENT: d.DepartmentCode || d.DepartmentId || 'Unknown', // Storing department for filtering
         }));
-        this.filteredEmployeesTo = [...this.employees];
+        
+        this.employeeOptions = this.employees.map(e => ({
+          label: e.NAME,
+          value: e.CODE,
+          department: e.DEPARTMENT
+        }));
+        this.filteredEmployeeToOptions = [...this.employeeOptions];
 
-        // FSD UC-16: Default Employee From to logged-in user
         const currentUserCode = this._utilityService.GetUserEmpId();
         if (currentUserCode && this.employees.some((e) => e.CODE === currentUserCode)) {
           this.selectedEmployeeFrom = currentUserCode;
@@ -263,7 +269,8 @@ export class ResponsibilityTransferForm {
         }
       } else {
         this.employees = [];
-        this.filteredEmployeesTo = [];
+        this.employeeOptions = [];
+        this.filteredEmployeeToOptions = [];
       }
     });
   };
@@ -288,15 +295,15 @@ export class ResponsibilityTransferForm {
   onEmployeeFromChange(empCode: string): void {
     this.selectedEmployeeTo = null; // Clear subsequent selection
     if (!empCode) {
-      this.filteredEmployeesTo = [...this.employees];
+      this.filteredEmployeeToOptions = [...this.employeeOptions];
       return;
     }
 
-    const fromEmp = this.employees.find((e) => e.CODE === empCode);
+    const fromEmp = this.employeeOptions.find((e) => e.value === empCode);
     if (fromEmp) {
       // Filter to same department, excluding the "Employee From" themselves
-      this.filteredEmployeesTo = this.employees.filter(
-        (e) => e.DEPARTMENT === fromEmp.DEPARTMENT && e.CODE !== empCode,
+      this.filteredEmployeeToOptions = this.employeeOptions.filter(
+        (e) => e.department === fromEmp.department && e.value !== empCode,
       );
     }
   }
@@ -322,6 +329,7 @@ export class ResponsibilityTransferForm {
         'Responsibity Transfer',
         'Employee To required',
       );
+      return;
     } else if (
       this.selectedReasonForTransfer === undefined ||
       this.selectedReasonForTransfer === ''
@@ -331,6 +339,7 @@ export class ResponsibilityTransferForm {
         'Responsibity Transfer',
         'Reason For Transfer required',
       );
+      return;
     }
     if (!this.selectedEffectiveDateFrom) {
       this._notification.createNotification(
@@ -344,6 +353,13 @@ export class ResponsibilityTransferForm {
         'warning',
         'Responsibility Transfer',
         'Remarks field is mandatory.',
+      );
+      return;
+    } else if (!this.attachment) {
+      this._notification.createNotification(
+        'warning',
+        'Responsibility Transfer',
+        'Attachment is mandatory.',
       );
       return;
     }
@@ -369,13 +385,18 @@ export class ResponsibilityTransferForm {
       formData.append('Attachment', this.attachment, this.attachment.name);
     }
 
-    this._responsibilityTransfer.create(formData).subscribe(() => {
-      this._notification.createNotification(
-        'success',
-        'Document',
-        'Transfer request submitted successfully!',
-      );
-      this.cancel();
+    this._responsibilityTransfer.create(formData).subscribe({
+      next: () => {
+        this._notification.createNotification(
+          'success',
+          'Document',
+          'Transfer request submitted successfully!',
+        );
+        this.cancel();
+      },
+      error: (err: any) => {
+        this._notification.createNotification('error', 'Error', err?.Message || 'Failed to submit transfer request.');
+      }
     });
   }
 
@@ -388,7 +409,7 @@ export class ResponsibilityTransferForm {
     this.isPermanentTransfer = false;
     this.remarks = '';
     this.attachment = null;
-    this.filteredEmployeesTo = [...this.employees];
+    this.filteredEmployeeToOptions = [...this.employeeOptions];
   }
 
   submitWorkflowAction(actionType: string): void {

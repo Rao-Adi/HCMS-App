@@ -10,6 +10,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -105,6 +106,7 @@ export class PendingRequestForApproval {
     private _doumentRequestService: DocumentRequestService,
     private _notification: NotificationService,
     private _userService: UserService,
+    private _peoplePartnerService: PeoplePartnersService
   ) {}
 
   ngOnInit() {
@@ -236,7 +238,7 @@ export class PendingRequestForApproval {
   }
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,

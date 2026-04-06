@@ -1,8 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
-import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { SelectList } from '@app/shared/interfaces/interfaces';
-import { UserService } from '@app/shared/services/user-service';
+import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms'; 
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { BehaviorSubject } from 'rxjs';
@@ -14,16 +13,17 @@ import { BehaviorSubject } from 'rxjs';
   // styleUrl: './employee-list.css'
   template: `<nz-select
     nzMode="multiple"
-    nzPlaceHolder="Select users"
+    [nzPlaceHolder]="placeholder"
     nzAllowClear
     nzShowSearch
-    nzServerSearch
+    [nzDisabled]="disabled"
     [style.width]="width"
     [(ngModel)]="selectedUser"
-    (nzOnSearch)="onSearch($event)"
     (ngModelChange)="onSelectionChange($event)"
+    nzVirtualHeight="300px"
+    nzVirtualItemSize="32"
+    [nzOptions]="options"
   >
-    <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
   </nz-select>`,
   styles: [
     `
@@ -53,35 +53,21 @@ export class EmployeeList {
   @Input() allowClear = true;
   @Input() showSearch = true;
 
-  data: SelectList[] = [];
+  options: Array<{ label: string; value: string }> = [];
   
   @Output() valueChange = new EventEmitter<any>();
 
   value: any;
   disabled = false;
 
-  // randomUserUrl = 'https://api.randomuser.me/?results=5';
-  searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];
   selectedUser: string[] = [];
-  loading = false;
 
-  constructor(private _userService: UserService) {}
+  constructor(private _peoplePartnerService: PeoplePartnersService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
-    // this.searchChange$
-    //   .pipe(
-    //     debounceTime(500),
-    //     switchMap((name) => this.getRandomNameList(name))
-    //   )
-    //   .subscribe((data) => {
-    //     this.optionList = data;
-    //     this.loading = false;
-    //   });
-
     this.getAllUsersList();
   }
 
@@ -114,20 +100,15 @@ export class EmployeeList {
   //   this.valueChange.emit(value);
   // }
 
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
-
-  getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+  getAllUsersList = () => { 
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
-        this.data = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+        this.options = (res.Data ?? []).map((d: any) => ({
+          value: d.Code,
+          label: d.Value,
         }));
       } else {
-        this.data = [];
+        this.options = [];
       }
     });
   };

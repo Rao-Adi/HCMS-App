@@ -17,6 +17,7 @@ import { RoleService } from '@app/shared/services/role.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -107,6 +108,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
     private _designationServices: DesignationService,
     private _roleService: RoleService,
     private _workflowStepService: WorkflowStepService,
+    private _peoplePartnerService: PeoplePartnersService
   ) {}
 
   ngOnInit() {
@@ -311,7 +313,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   };
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,

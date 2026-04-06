@@ -96,8 +96,7 @@ export class DocumentRequestManagement {
   showDocumentDiv: boolean = false;
   showDocumentCreationDiv: boolean = false;
   loginEmpId: string = '';
-
-  employees: any[] = [];
+ 
   selectedEmployee?: string = '';
   documentRequestsData: any[] = [];
 

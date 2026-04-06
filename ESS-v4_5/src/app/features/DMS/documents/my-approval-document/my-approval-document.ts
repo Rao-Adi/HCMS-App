@@ -198,8 +198,7 @@ export class MyApprovalDocument {
     private _UtilitiesService: UtilitiesService
   ) {}
 
-  ngOnInit() {
-    this.getAllUsersList();
+  ngOnInit() { 
     this.GetLoginEmpId();
   }
 
@@ -526,19 +525,7 @@ export class MyApprovalDocument {
     });
   }
   export() {}
-
-  getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
-      if (res?.Data) {
-        this.employees = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-        }));
-      } else {
-        this.employees = [];
-      }
-    });
-  };
+ 
 
   GetDocumentAttributeByDocumentId = (documentId: any) => { 
     this._documentAttribute

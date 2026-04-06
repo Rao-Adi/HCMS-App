@@ -47,13 +47,10 @@
                             (ngModelChange)="onEmployeeFromChange($event)"
                             nzAllowClear
                             nzShowSearch
+                            nzVirtualHeight="300px"
+                            nzVirtualItemSize="32"
+                            [nzOptions]="employeeOptions"
                           >
-                            <nz-option
-                              *ngFor="let dep of employees"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
                           </nz-select>
                         </div>
                       </div>
@@ -70,13 +67,10 @@
                               [(ngModel)]="selectedEmployeeTo"
                               nzAllowClear
                               nzShowSearch
+                              nzVirtualHeight="300px"
+                              nzVirtualItemSize="32"
+                              [nzOptions]="filteredEmployeeToOptions"
                             >
-                              <nz-option
-                                *ngFor="let dep of filteredEmployeesTo"
-                                [nzValue]="dep.CODE"
-                                [nzLabel]="dep.NAME"
-                              >
-                              </nz-option>
                             </nz-select>
                           </div>
                         </div>
@@ -139,17 +133,18 @@
                       </div>
                     </div>
                     <div class="row pt-4">
-                      <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                      <div class="col-lg-12 col-md-12 col-sm-6 mb-10"> 
+                        <div class="PnlHeading">
+                          <label>Upload Document (DOCX/PDF/PNG/JPG)</label>
+                        </div>
                         <input
                           type="file"
                           #fileInput
-                          hidden="true"
+                          class="form-control input-sm mt-2"
                           (change)="onFileSelected($event)"
-                          accept=".jpg,.png,.pdf"
+                          accept=".pdf,.doc,.docx,.png,.jpg"
+                          style="width: 350px"
                         />
-                        <button mat-raised-button color="primary" (click)="fileInput.click()">
-                          Choose File
-                        </button>
                       </div>
                     </div>
                     <div class="row pt-4">
@@ -192,7 +187,11 @@
                     (ngModelChange)="selectStatus($event)"
                     nzPlaceHolder="Select Status"
                   >
-                    <nz-option *ngFor="let s of statues" [nzValue]="s.id" [nzLabel]="s.text"></nz-option>
+                    <nz-option
+                      *ngFor="let s of statues"
+                      [nzValue]="s.id"
+                      [nzLabel]="s.text"
+                    ></nz-option>
                   </nz-select>
                 </div>
               </div>
@@ -213,12 +212,22 @@
                     (selectionChange)="onSelectionChange($event)"
                   >
                     <div grid-actions class="grid-action-icons" *ngIf="selectedStatus === '1'">
-                      <button class="grid-icon-btn" title="Approve" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" 
-                      (click)="approveDocument('Approved')">
+                      <button
+                        class="grid-icon-btn"
+                        title="Approve"
+                        [disabled]="!hasSelectedRows"
+                        [class.disabled]="!hasSelectedRows"
+                        (click)="approveDocument('Approved')"
+                      >
                         <i class="bi bi-check2-square"></i>
                       </button>
-                      <button class="grid-icon-btn" title="Reject" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows"  
-                      (click)="approveDocument('Rejected')">
+                      <button
+                        class="grid-icon-btn"
+                        title="Reject"
+                        [disabled]="!hasSelectedRows"
+                        [class.disabled]="!hasSelectedRows"
+                        (click)="approveDocument('Rejected')"
+                      >
                         <i class="bi bi-x-square"></i>
                       </button>
                       <!-- <button class="grid-icon-btn" title="Revert" [disabled]="!hasSelectedRows" [class.disabled]="!hasSelectedRows" 
@@ -230,7 +239,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>

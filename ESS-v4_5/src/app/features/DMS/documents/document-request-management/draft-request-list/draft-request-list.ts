@@ -16,6 +16,7 @@ import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { TemplateService } from '@app/shared/services/template.service';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -148,7 +149,8 @@ export class DraftRequestList {
     private _doumentRequestService: DocumentRequestService,
     private _notification: NotificationService,
     private _userService: UserService,
-    private _documentTemplateService: TemplateService
+    private _documentTemplateService: TemplateService,
+    private _peoplePartnerService: PeoplePartnersService
   ) {}
 
   ngOnInit() {
@@ -257,7 +259,7 @@ export class DraftRequestList {
   }
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
