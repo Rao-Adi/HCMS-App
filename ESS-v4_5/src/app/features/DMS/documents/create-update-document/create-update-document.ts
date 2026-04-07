@@ -699,9 +699,8 @@ export class CreateUpdateDocument {
     return result;
   }
 
-  GetDocumentTemplate() {
-    this.documentTemplateService
-      .getTemplateByDocumentTypeCode(this.selectedDocumentType)
+  GetDocumentTemplate() { 
+    this.documentTemplateService.getTemplateByDocumentTypeCode(this.selectedDocumentType)
       .subscribe({
         next: (response) => {
           this.templateHtml = response.Data.TemplateContent;

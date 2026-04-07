@@ -237,16 +237,16 @@ export class MyApprovalRequest {
   ) {}
 
   ngOnInit() {
-    this.getAllUsersList();
-    // this.GetAllPendingDocuments({
-    //   pageNumber: 1,
-    //   pageSize: this.selectedPageSize,
-    //   sortModel: [],
-    //   filterModel: {},
-    // });
+    // this.getAllUsersList();
+    this.GetAllPendingDocuments({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [],
+      filterModel: {},
+    });
 
     this.hasSelectedRows = false;
-    this.GetLoginEmpId();
+    // this.GetLoginEmpId();
   }
 
   GetLoginEmpId() {
@@ -292,11 +292,11 @@ export class MyApprovalRequest {
   }
 
   GetAllPendingDocuments(query?: any) {
-    if (!this.selectedEmployee) {
-      this.documentRequestsData = [];
-      this.totalRows = 0;
-      return;
-    }
+    // if (!this.selectedEmployee) {
+    //   this.documentRequestsData = [];
+    //   this.totalRows = 0;
+    //   return;
+    // }
 
     let searchText = '';
     let sortColumn = '';
@@ -322,15 +322,12 @@ export class MyApprovalRequest {
       sortcolumn: sortColumn,
       isactive: true,
       pagenumber: this.pageNumber,
-      pagesize: this.selectedPageSize || 10,
-      companyid: 1,
-      userid: this.LoginEmpId,
+      pagesize: this.selectedPageSize || 10, 
       divisioncode: this.selectedDivisions || '',
       departmentcode: this.selectedDepartment || '',
       subdepartmentcode: this.selectedSubDepartment || '',
       businessdomaincode: this.selectedBusinessDomain || '',
-      documenttypecode: this.selectedDocumentType || '',
-      employeecode: this.selectedEmployee || '',
+      documenttypecode: this.selectedDocumentType || '', 
       requeststatus: this.selectedTab || '',
     };
 
