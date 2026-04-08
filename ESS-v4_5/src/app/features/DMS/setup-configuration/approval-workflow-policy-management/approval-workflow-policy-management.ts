@@ -133,7 +133,7 @@ export class ApprovalWorkflowPolicyManagement {
     private _notification: NotificationService,
     private _designationServices: DesignationService,
     private _roleService: RoleService,
-    private _peoplePartnerService: PeoplePartnersService
+    private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
   ngOnInit() {}
@@ -148,7 +148,7 @@ export class ApprovalWorkflowPolicyManagement {
       this.getAllRoles();
     }
     if (value == 4) {
-      this.getAllDesignations();
+      this.getAllDesignationList();
     }
     this.selectedUser = '';
     this.selectedDesignationSingle = null;
@@ -199,7 +199,7 @@ export class ApprovalWorkflowPolicyManagement {
       return;
     }
 
-    const payLoad = { 
+    const payLoad = {
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
@@ -314,7 +314,7 @@ export class ApprovalWorkflowPolicyManagement {
     if (value != null) {
       this.selectedDocumentType = value;
 
-      const payLoad = { 
+      const payLoad = {
         EntityType:
           this.selectedPolicyId == PolicyId.RequestForDocumentCreation
             ? 'Request'
@@ -355,11 +355,25 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
 
-  getAllDesignations = () => {
-    this._designationServices.getDesignationList().subscribe((res) => {
+  // getAllDesignations = () => {
+  //   this._designationServices.getDesignationList().subscribe((res) => {
+  //     if (res?.Data) {
+  //       this.designations = (res.Data ?? []).map((d: any) => ({
+  //         CODE: d.Code,
+  //         NAME: d.Value,
+  //       }));
+  //     } else {
+  //       this.designations = [];
+  //     }
+  //     //this.cdr.detectChanges(); // force update
+  //   });
+  // };
+
+  getAllDesignationList = () => {
+    this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.designations = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
+          ID: d.Id,
           NAME: d.Value,
         }));
       } else {
@@ -370,7 +384,7 @@ export class ApprovalWorkflowPolicyManagement {
   };
 
   getAllRoles = () => {
-    this._roleService.getRoleList().subscribe((res) => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
         this.roles = (res.Data ?? []).map((d: any) => ({
           ID: d.Id,

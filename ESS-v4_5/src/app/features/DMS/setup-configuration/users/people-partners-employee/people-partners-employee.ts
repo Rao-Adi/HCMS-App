@@ -63,6 +63,8 @@ export class PeoplePartnersEmployee {
   columnToggles?: ColumnToggle[] = [
     { field: 'empcode', label: 'Employee Code', visible: true },
     { field: 'fname', label: 'Employee Name', visible: true },
+    { field: 'designation', label: 'Designation', visible: true },
+    { field: 'role', label: 'Role', visible: true },
     { field: 'nicnew', label: 'CNIC', visible: true },
     { field: 'mobile', label: 'Mobile', visible: true },
     { field: 'email', label: 'Email', visible: true },
@@ -126,6 +128,8 @@ export class PeoplePartnersEmployee {
   documentColumnDefs = [
     { field: 'empcode', headerName: 'Employee Code' },
     { field: 'fname', headerName: 'Employee Name' },
+    { field: 'designation', headerName: 'Designation'},
+    { field: 'role', headerName: 'Role' },
     { field: 'nicnew', headerName: 'CNIC' },
     { field: 'mobile', headerName: 'Mobile' },
     { field: 'email', headerName: 'Email' },
@@ -163,6 +167,8 @@ export class PeoplePartnersEmployee {
       dateOfJoining: null,
       empcode: '',
       fname: '',
+      designation: '',
+      role: '',
       nicnew: '',
       mobile: '',
       email: '',
@@ -211,6 +217,8 @@ export class PeoplePartnersEmployee {
             empid: item.empid,
             empcode: item.empcode,
             fname: item.firstname +" " +item.lastname,
+            designation: item.designation,
+            role: item.role,
             nicnew: item.nicnew,
             mobile: item.mobile,
             email: item.email,
@@ -247,8 +255,7 @@ export class PeoplePartnersEmployee {
   }
 
   openMandatoryCabinetModal(rowData: any) {
-    //console.log('Row clicked:', rowData);
-
+    //console.log('Row clicked:', rowData); 
     const modalRef = this.modal.create({
       nzTitle: 'Access Level to ' + rowData.fname,
       nzContent: AccessLevelModalDialog,

@@ -44,6 +44,11 @@ export class PeoplePartnersService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetAllDesignationList(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-designations`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   getUserByRoleId(roleId: string, payload: any): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSPeoplePartners/get-employees-by-role/${roleId}`;
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });

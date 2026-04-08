@@ -7,6 +7,7 @@ import { DesignationService } from '@app/shared/services/designation.service';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, debounceTime, map, switchMap } from 'rxjs/operators';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
   selector: 'app-designation-list',
@@ -24,14 +25,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
     (ngModelChange)="onSelectionChange($event)"
   >
     <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
-    <!-- @if (!loading) { @for (o of optionList; track o) {
-    <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-    } } @else {
-    <nz-option nzDisabled nzCustomContent>
-      <nz-icon nzType="loading" class="loading-icon" />
-      Loading Data...
-    </nz-option>
-    } -->
+     
   </nz-select>`,
   styles: [
     `
@@ -66,14 +60,15 @@ export class DesignationList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
-
-  // randomUserUrl = 'https://api.randomuser.me/?results=5';
+ 
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
   selectedUser: string[] = [];
   loading = false;
 
-  constructor(private _designationServices: DesignationService) {}
+  constructor(private _designationServices: DesignationService,
+    private _peoplePartnerService: PeoplePartnersService
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -122,10 +117,10 @@ export class DesignationList implements ControlValueAccessor {
   // }
 
   getAllDesignations = () => {
-    this._designationServices.getDesignationList().subscribe((res) => {
+    this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
+          CODE: d.Id,
           NAME: d.Value,
         }));
       } else {
@@ -133,6 +128,17 @@ export class DesignationList implements ControlValueAccessor {
       }
       //this.cdr.detectChanges(); // force update
     });
+    // this._designationServices.getDesignationList().subscribe((res) => {
+    //   if (res?.Data) {
+    //     this.data = (res.Data ?? []).map((d: any) => ({
+    //       CODE: d.Code,
+    //       NAME: d.Value,
+    //     }));
+    //   } else {
+    //     this.data = [];
+    //   }
+    //   //this.cdr.detectChanges(); // force update
+    // });
   };
 
   onSearch(value: string): void {

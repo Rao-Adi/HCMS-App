@@ -186,11 +186,11 @@ export class AccessLevelModalDialog {
       const pageSize = Number(query?.pageSize) || 10;
   
       this._userAccessLevelService
-        .GetAccessLevelByEmployeeCode( this.modalData.employeeCode)
+        .GetAccessLevelByEmployeeCode(this.modalData.employeeCode)
         .subscribe((res) => {
-          if (res?.Success && res.Data?.Items) {
-            this.totalManullayManageEmployees = res.Data.TotalCount;
-            this.manualUserData = res.Data.Items.map((item: any) => ({
+          if (res?.Success && res.Data) {
+            this.totalManullayManageEmployees = res.Data.length;
+            this.manualUserData = res.Data.map((item: any) => ({
               Id: item.id || item.Id, 
               divisionCode: item.divisionCode || item.DivisionCode,
               level1Id: item.division || item.Division,
@@ -236,6 +236,7 @@ export class AccessLevelModalDialog {
       subDepartmentCode: rowData.level3Id || rowData.level3Id,
       businessDomainCode: rowData.level4Id || rowData.level4Id,
       documentTypeCode: rowData.documentTypeId || rowData.documentTypeId,
+      employeeCode : this.modalData.employeeCode
     };
 
     this._userAccessLevelService.create(payLoad).subscribe(() => {

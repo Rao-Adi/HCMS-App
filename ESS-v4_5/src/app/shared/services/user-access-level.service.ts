@@ -45,7 +45,7 @@ export class UserAccesssLevelService {
   }
 
   GetAccessLevelByEmployeeCode(employeeCode: string): Observable<ApiResponse<any>> {
-    const uri = `${this.apiUrl}/DMSUserAccessLevel/get-user-access-level-by-employee/employeeCode=${employeeCode}`;
+    const uri = `${this.apiUrl}/DMSUserAccessLevel/get-user-access-level-by-employee/${employeeCode}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

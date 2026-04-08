@@ -69,107 +69,7 @@ export class ManualManageEmployee {
       isNewRow: true,
     },
   ];
-
-  // private getColumns2(): GridColumn[] {
-  //   const columns: GridColumn[] = [];
-
-  //   // ─────────────────────────────────────────────
-  //   // 1️⃣ FIXED (NON-CABINET) COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'employeeCode',
-  //       headerName: 'Employee Code',
-  //       type: 'readonly',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: false,
-  //     },
-  //     {
-  //       field: 'employeeName',
-  //       headerName: 'Employee Name',
-  //       type: 'text',
-  //       minWidth: 250,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //   );
-
-  //   // ─────────────────────────────────────────────
-  //   // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   this.cabinetHierarchy.forEach((level, index) => {
-  //     const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
-
-  //     columns.push({
-  //       field: `level${level.level}Id`,
-  //       headerName: level.title,
-  //       type: 'dropdown',
-
-  //       // 🔥 level-based data source
-  //       dropdownOptions: this.dropdownDataSources[level.level],
-
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-
-  //       // 🔥 dynamic parent dependency
-  //       dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
-  //       filterKey: parentLevel ? 'parentId' : undefined,
-
-  //       minWidth: 200,
-  //       required: true,
-  //     });
-  //   });
-
-  //   // ─────────────────────────────────────────────
-  //   // 3️⃣ REMAINING FIXED COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'designationId',
-  //       headerName: 'Designation',
-  //       type: 'text',
-  //       minWidth: 200,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'email',
-  //       headerName: 'Email',
-  //       type: 'text',
-  //       minWidth: 200,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'reportingTo',
-  //       headerName: 'Reporting To',
-  //       type: 'text',
-  //       required: true,
-  //       minWidth: 200,
-  //       pinned: 'left',
-  //     },
-  //     {
-  //       field: 'dateOfJoining',
-  //       headerName: 'Date Of Joining',
-  //       type: 'date',
-  //       required: true,
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //     },
-  //     {
-  //       field: 'accessLevel',
-  //       headerName: 'Access Level',
-  //       type: 'button',
-  //       required: false,
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //     },
-  //   );
-  //   //console.log(JSON.stringify(columns));
-
-  //   return columns;
-  // }
+ 
 
   constructor(
     private _userService: UserService,
@@ -187,12 +87,12 @@ export class ManualManageEmployee {
   ngOnInit() {
     this.loadDropdownsAndGrid();
 
-    this.GetAllManuallyManageEmployee({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
+    // this.GetAllManuallyManageEmployee({
+    //   pageNumber: 1,
+    //   pageSize: this.selectedPageSize,
+    //   sortModel: [], // or your current sort/filter model
+    //   filterModel: {},
+    // });
 
     this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
       this.cabinetHierarchy = levels;
@@ -488,7 +388,7 @@ export class ManualManageEmployee {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    // console.log('Row deleted at index:', rowIndex);
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
   }

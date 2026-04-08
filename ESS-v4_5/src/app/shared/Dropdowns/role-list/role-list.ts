@@ -5,6 +5,7 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 import { SelectList2 } from '@app/shared/interfaces/interfaces';
 import { RoleService } from '@app/shared/services/role.service';
 import { BehaviorSubject } from 'rxjs';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
   selector: 'app-role-list',
@@ -61,7 +62,9 @@ export class RoleList implements ControlValueAccessor {
   loading = false;
   searchChange$ = new BehaviorSubject('');
 
-  constructor(private _roleService: RoleService) {}
+  constructor(private _roleService: RoleService,
+    private _peoplePartnerService: PeoplePartnersService
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -104,7 +107,7 @@ export class RoleList implements ControlValueAccessor {
   }
 
   getAllRoles = () => {
-    this._roleService.getRoleList().subscribe((res) => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
           ID: d.Id,
