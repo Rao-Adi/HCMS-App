@@ -18,7 +18,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { TemplateService } from '@app/shared/services/template.service';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { CabinetSelection } from '@app/shared/interfaces/interfaces'; 
+import { CabinetSelection } from '@app/shared/interfaces/interfaces';
 import { PermissionService } from '@app/shared/services/permission.service';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
@@ -56,13 +56,12 @@ interface MockUser {
 export class DocumentTemplate {
   @ViewChild(CabinetStructureList)
   cabinetStructure!: CabinetStructureList;
-  
-    // --- PERMISSION FLAGS ---
+
+  // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
   canDelete = false;
   formId = 'templates';
-
 
   randomUserUrl = '';
   searchChange$ = new BehaviorSubject('');
@@ -98,11 +97,11 @@ export class DocumentTemplate {
   ];
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private iconService: NzIconService,
     private documentTemplateService: TemplateService,
     private _notification: NotificationService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {
     this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
@@ -113,20 +112,19 @@ export class DocumentTemplate {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
-    this.searchChange$
-      .pipe(
-        debounceTime(500),
-        switchMap((name) => this.getRandomNameList(name)),
-      )
-      .subscribe((data) => {
-        this.optionList = data;
-        this.loading = false;
-      });
- 
+      this.searchChange$
+        .pipe(
+          debounceTime(500),
+          switchMap((name) => this.getRandomNameList(name)),
+        )
+        .subscribe((data) => {
+          this.optionList = data;
+          this.loading = false;
+        });
+    });
   }
- 
+
   onfiscalYearchange() {}
 
   onSearch(value: string): void {

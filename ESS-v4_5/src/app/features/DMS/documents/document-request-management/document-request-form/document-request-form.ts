@@ -237,8 +237,9 @@ export class DocumentRequestForm {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.getAllDocumentRequestTypes(); 
     });
-    this.getAllDocumentRequestTypes(); 
   }
  
   GetLoginEmpId() {

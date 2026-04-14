@@ -39,7 +39,7 @@ export class BusinessDomainComponent {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'cabinet-structure';
+  formId = 'cabinetstructure';
 
   pinnedTopRowDataPlanning: BusinessDomainColumns[] = [
     {
@@ -66,9 +66,9 @@ export class BusinessDomainComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
-    this.getAllDepartmeList();
+      this.getAllDepartmeList();
+    });    
   }
 
   private buildGrid(): void {

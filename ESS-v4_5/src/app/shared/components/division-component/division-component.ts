@@ -27,7 +27,7 @@ export class DivisionComponent {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'cabinet-structure';
+  formId = 'cabinetstructure';
 
   selectedPageSize = 10;
   pageSize = 10;
@@ -63,8 +63,19 @@ export class DivisionComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
+      // Now that permissions are set, build the grid and fetch the initial data
+      this.buildGrid();
+      this.getAllDivisions({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
+    });
+  }
+
+  private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -82,13 +93,6 @@ export class DivisionComponent {
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
     };
-
-    this.getAllDivisions({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
-    });
   }
 
   private getColumns(): GridColumn[] {

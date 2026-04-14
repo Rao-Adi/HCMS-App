@@ -103,9 +103,9 @@ export class MiscPolicies {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.getDocumentTypeList();
     });
-
-    this.getDocumentTypeList();
   }
 
   private buildGrid(): void {

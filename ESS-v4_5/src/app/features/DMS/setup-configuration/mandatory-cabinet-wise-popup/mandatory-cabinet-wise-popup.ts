@@ -16,6 +16,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 
@@ -27,6 +28,12 @@ import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 })
 export class MandatoryCabinetWisePopup {
   @Input() data: any;
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure';
 
   cabinetId!: number;
 
@@ -67,45 +74,35 @@ export class MandatoryCabinetWisePopup {
     private _notification: NotificationService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService
   ) {
     this.cabinetId = modalData.data;
     //console.log('Received cabinet id:', this.cabinetId);
-
-    this.gridConfig = {
-      columns: this.getColumns(),
-      enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
-      enableSorting: true,
-      enableFiltering: true,
-      enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
-      rowHeight: 47,
-      headerHeight: 40,
-      domLayout: 'autoHeight',
-      theme: 'ag-theme-alpine',
-      suppressCellFocus: true,
-    };
+ 
   }
 
   ngOnInit() {
-    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
 
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
+      this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
 
-    this.GetAllAttributeMandatoryScopes({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      });
+
+      this.GetAllAttributeMandatoryScopes({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
+      // this.getAllDivisionList();
+      // this.getAllDepartmentList();
+      // this.getAllSubDepartmentList();
     });
-    // this.getAllDivisionList();
-    // this.getAllDepartmentList();
-    // this.getAllSubDepartmentList();
   }
 
   private getColumns(): GridColumn[] {
@@ -150,9 +147,9 @@ export class MandatoryCabinetWisePopup {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -178,7 +175,7 @@ export class MandatoryCabinetWisePopup {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     debugger;
-    const payLoad = { 
+    const payLoad = {
       documentAttributeId: this.cabinetId,
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -29,7 +29,7 @@ export class DepartmentComponent {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'cabinet-structure';
+  formId = 'cabinetstructure';
 
   currentTitle = '';
   parentTitle = '';
@@ -65,7 +65,7 @@ export class DepartmentComponent {
     private _masterCacheService: Mastercacheservice,
     private _divisionServices: DivisionService,
     private _notification: NotificationService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
@@ -73,14 +73,13 @@ export class DepartmentComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+
+      this.currentTitle = this.levelTitles[this.level]; // Department
+      this.parentTitle = this.levelTitles[this.level - 1]; // Division
+
+      this.getAllDivisionList();
     });
-
-    this.currentTitle = this.levelTitles[this.level]; // Department
-    this.parentTitle = this.levelTitles[this.level - 1]; // Division
-
-    this.getAllDivisionList(); 
   }
- 
 
   private buildGrid(): void {
     this.gridConfig = {

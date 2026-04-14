@@ -14,14 +14,14 @@ import { DepartmentCacheService } from '@app/shared/services/CacheServices/depar
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { BusinessDomainCacheService } from '@app/shared/services/CacheServices/business-domain-cache-service';
 import { DesignationService } from '@app/shared/services/designation.service';
-import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service'; 
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
@@ -40,7 +40,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 export class ManualManageEmployee {
   gridConfig: GridConfig = {} as GridConfig;
 
-   // --- PERMISSION FLAGS ---
+  // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
   canDelete = false;
@@ -75,7 +75,6 @@ export class ManualManageEmployee {
       isNewRow: true,
     },
   ];
- 
 
   constructor(
     private _userService: UserService,
@@ -88,7 +87,7 @@ export class ManualManageEmployee {
     private _designationServices: DesignationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
@@ -96,24 +95,24 @@ export class ManualManageEmployee {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
-    
-    this.loadDropdownsAndGrid();
-    // this.GetAllManuallyManageEmployee({
-    //   pageNumber: 1,
-    //   pageSize: this.selectedPageSize,
-    //   sortModel: [], // or your current sort/filter model
-    //   filterModel: {},
-    // });
 
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
-      this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
+      this.loadDropdownsAndGrid();
+      // this.GetAllManuallyManageEmployee({
+      //   pageNumber: 1,
+      //   pageSize: this.selectedPageSize,
+      //   sortModel: [], // or your current sort/filter model
+      //   filterModel: {},
+      // });
 
-      this.loadCabinetDropdownData(levels);
+      this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
+        this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
+
+        this.loadCabinetDropdownData(levels);
+      });
     });
   }
- 
+
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
@@ -289,7 +288,7 @@ export class ManualManageEmployee {
     const { rowData } = event;
     debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = { 
+    const payLoad = {
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
       employeeName: rowData.EmployeeName || rowData.employeeName,
       divisionCode: rowData.level1Id || rowData.level1Id,

@@ -256,10 +256,10 @@ export class CreateUpdateDocument {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      // this.getAllDocumentRequestTypes();
+      this.loadRequestTypes();
+      this.GetLoginEmpId();
     });
-    // this.getAllDocumentRequestTypes();
-    this.loadRequestTypes();
-    this.GetLoginEmpId();
   }
 
   GetLoginEmpId() {
@@ -654,8 +654,7 @@ export class CreateUpdateDocument {
     });
   }
 
-  private buildAttributePayload(): any[] {
-    debugger;
+  private buildAttributePayload(): any[] { 
     const result: any[] = [];
     const formValues = this.dynamicForm.value;
 

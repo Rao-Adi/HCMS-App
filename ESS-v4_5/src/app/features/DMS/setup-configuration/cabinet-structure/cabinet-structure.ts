@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { BusinessDomainComponent } from '@app/shared/components/business-domain-component/business-domain-component';
 import { DepartmentComponent } from '@app/shared/components/department-component/department-component';
 import { DivisionComponent } from '@app/shared/components/division-component/division-component';
@@ -55,7 +55,7 @@ export class CabinetStructure {
     private cdr: ChangeDetectorRef,
     private _cabietTabConfigService: CabinetStructureTabsConfigService,
     private readonly cabinetHierarchy: CabinetHierarchyService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
@@ -63,26 +63,25 @@ export class CabinetStructure {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+
+      this.cabinetHierarchy.loadDropdownHierarchy().subscribe((levels) => {
+        this.levelTitles = this.cabinetHierarchy.getLevelTitles();
+
+        this.tabs = levels.map((l) => ({
+          level: l.level,
+          title: l.title,
+          createdBy: l.createdBy,
+          createdAt: l.createdAt,
+          lastModifiedBy: l.lastModifiedBy,
+          lastModifiedAt: l.lastModifiedAt,
+        }));
+
+        if (this.tabs?.length) {
+          this.activateFirstTab();
+        }
+      });
     });
-
-    this.cabinetHierarchy.loadDropdownHierarchy().subscribe((levels) => {
-      this.levelTitles = this.cabinetHierarchy.getLevelTitles();
-
-      this.tabs = levels.map((l) => ({
-        level: l.level,
-        title: l.title,
-        createdBy: l.createdBy,
-        createdAt: l.createdAt,
-        lastModifiedBy: l.lastModifiedBy,
-        lastModifiedAt: l.lastModifiedAt,
-      }));
-
-      if (this.tabs?.length) {
-        this.activateFirstTab();
-      }
-    }); 
   }
- 
 
   ngAfterViewInit(): void {
     if (this.tabs?.length) {

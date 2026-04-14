@@ -162,9 +162,9 @@ export class DraftRequestList {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      // this.getAllUsersList();
+      this.GetAllDraftDocuments(); 
     });
-    // this.getAllUsersList();
-    this.GetAllDraftDocuments(); 
   }
  
 

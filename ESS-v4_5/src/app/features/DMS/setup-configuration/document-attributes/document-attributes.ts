@@ -86,9 +86,11 @@ export class DocumentAttributes {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+
+      this.getAllControlTypeList();
     });
 
-    this.getAllControlTypeList();
+    
     // this.getAllDocumentAttributes({
     //   pageNumber: 1,
     //   pageSize: this.pageSize,
@@ -116,9 +118,9 @@ export class DocumentAttributes {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -205,8 +207,8 @@ export class DocumentAttributes {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
       this._notification.createNotification(
         'warning',
-        'Document Type',
-        'Document Type is required',
+        'Document Attribute',
+        'Document Attribute is required',
       );
       return;
     }
@@ -242,7 +244,7 @@ export class DocumentAttributes {
       error: () => {
         this._notification.createNotification(
           'error',
-          'Document template',
+          'Document Attribute',
           'Server error. Please try again.',
         );
       },
@@ -253,8 +255,8 @@ export class DocumentAttributes {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
       this._notification.createNotification(
         'warning',
-        'Document Type',
-        'Document Type is required',
+        'Document Attribute',
+        'Document Attribute is required',
       );
       return;
     }
@@ -296,8 +298,8 @@ export class DocumentAttributes {
     this._documentAttribute.delete(row.Code).subscribe(() => {
       this._notification.createNotification(
         'sucess',
-        'Document template',
-        'Document template deleted successfully!',
+        'Document Attribute',
+        'Document Attribute deleted successfully!',
       );
     });
   }

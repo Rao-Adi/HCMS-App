@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -28,7 +28,7 @@ export class SubDepartmentComponent {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'cabinet-structure';
+  formId = 'cabinetstructure';
 
   selectedPageSize = 10;
   pageSize = 10;
@@ -90,7 +90,7 @@ export class SubDepartmentComponent {
     private _masterCacheService: Mastercacheservice,
     private _departmentService: DepartmentService,
     private _notification: NotificationService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
@@ -98,10 +98,11 @@ export class SubDepartmentComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+
+      this.getAllDepartmeList();
     });
-    this.getAllDepartmeList();
   }
- 
+
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),

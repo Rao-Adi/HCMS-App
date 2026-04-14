@@ -28,7 +28,7 @@
               <button
                 class="tab-button"
                 [ngClass]="{ 'active-tab': selectedPolicyId === PolicyId.DocumentCreation }"
-               (click)="selectTab(PolicyId.DocumentCreation)"
+                (click)="selectTab(PolicyId.DocumentCreation)"
               >
                 Document Creation
               </button>
@@ -128,15 +128,23 @@
                         >
                         </nz-option>
                       </nz-select>
-
                       <button
+                        class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                        [class.disabled]="!this.canAdd"
+                        title="Approve"
+                        (click)="addExclusion()"
+                        [disabled]="!this.canAdd"
+                      >
+                        <i class="bi bi-plus-square"></i>
+                      </button>
+                      <!-- <button
                         aria-label="Collapse Menu"
                         title="Collapse Menu"
                         (click)="addExclusion()"
                         class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       >
                         <i class="bi bi-plus-circle"></i>
-                      </button>
+                      </button> -->
                     </div>
                   </div>
                   <div class="row row-space">
@@ -323,7 +331,10 @@
                 *ngIf="showExclusionTable"
                 class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
               >
-                <table class="table" *ngIf="approvalSequenceData && approvalSequenceData.length > 0">
+                <table
+                  class="table"
+                  *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                >
                   <thead>
                     <th>Approval Sequence</th>
                     <th></th>

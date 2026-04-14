@@ -122,10 +122,10 @@ export class PendingRequestForApproval {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.getAllUsersList();
+      this.GetAllPendingRequests('');
     });
-
-    this.getAllUsersList();
-    this.GetAllPendingRequests('');
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {

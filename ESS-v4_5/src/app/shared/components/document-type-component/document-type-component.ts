@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -61,31 +61,31 @@ export class DocumentTypeComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
-    this.gridConfig = {
-      columns: this.getColumns(),
-      enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
-      enableSorting: true,
-      enableFiltering: true,
-      enableSelection: true,
-      enableInlineAdd: this.canAdd,
-      enableInlineEdit: this.canEdit,
-      enableInlineDelete: this.canDelete,
-      rowHeight: 47,
-      headerHeight: 40,
-      domLayout: 'autoHeight',
-      theme: 'ag-theme-alpine',
-      suppressCellFocus: true,
-    };
+      this.gridConfig = {
+        columns: this.getColumns(),
+        enablePagination: true,
+        pageSize: 10,
+        pageSizeOptions: [10, 20, 50, 100],
+        enableSorting: true,
+        enableFiltering: true,
+        enableSelection: true,
+        enableInlineAdd: this.canAdd,
+        enableInlineEdit: this.canEdit,
+        enableInlineDelete: this.canDelete,
+        rowHeight: 47,
+        headerHeight: 40,
+        domLayout: 'autoHeight',
+        theme: 'ag-theme-alpine',
+        suppressCellFocus: true,
+      };
 
-    this.getAllDocumentTypes({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
+      this.getAllDocumentTypes({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
   }
 

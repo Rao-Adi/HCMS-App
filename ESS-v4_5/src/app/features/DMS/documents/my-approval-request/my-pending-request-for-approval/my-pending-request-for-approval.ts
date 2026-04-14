@@ -158,9 +158,9 @@ export class MyPendingRequestForApproval {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.loadData(this.pageSize);
     });
-
-    this.loadData(this.pageSize);
   }
 
   GetAllDocuments(query: any) {}

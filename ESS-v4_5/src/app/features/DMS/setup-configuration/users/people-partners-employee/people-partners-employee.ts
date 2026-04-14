@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -14,7 +14,7 @@ import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-l
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
@@ -34,7 +34,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 export class PeoplePartnersEmployee {
   gridConfig: GridConfig = {} as GridConfig;
 
-   // --- PERMISSION FLAGS ---
+  // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
   canDelete = false;
@@ -78,11 +78,11 @@ export class PeoplePartnersEmployee {
     { field: 'datejoin', label: 'Date Of Joining', visible: true },
     { field: 'accessLevel', label: 'Access Level', visible: true },
   ];
- 
+
   documentColumnDefs = [
     { field: 'empcode', headerName: 'Employee Code' },
     { field: 'fname', headerName: 'Employee Name' },
-    { field: 'designation', headerName: 'Designation'},
+    { field: 'designation', headerName: 'Designation' },
     { field: 'role', headerName: 'Role' },
     { field: 'nicnew', headerName: 'CNIC' },
     { field: 'mobile', headerName: 'Mobile' },
@@ -90,7 +90,7 @@ export class PeoplePartnersEmployee {
     { field: 'datejoin', headerName: 'Date of Joining' },
     {
       field: 'accessLevel',
-      headerName: 'Access Level', 
+      headerName: 'Access Level',
       editable: false,
       cellRenderer: (params: any) => {
         return `
@@ -132,7 +132,7 @@ export class PeoplePartnersEmployee {
   ];
 
   constructor(
-    private _permissionService: PermissionService, 
+    private _permissionService: PermissionService,
     private _peoplePartnersEmployeeService: PeoplePartnersService,
     private modal: NzModalService,
   ) {}
@@ -142,17 +142,16 @@ export class PeoplePartnersEmployee {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
-    this.GetAllIntegeratedPeoplepartners({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
+      this.GetAllIntegeratedPeoplepartners({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
- 
   }
- 
+
   GetAllIntegeratedPeoplepartners(query: any = {}) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
@@ -177,16 +176,14 @@ export class PeoplePartnersEmployee {
           this.integrationUserData = res.Data.Items.map((item: any) => ({
             empid: item.empid,
             empcode: item.empcode,
-            fname: item.firstname +" " +item.lastname,
+            fname: item.firstname + ' ' + item.lastname,
             designation: item.designation,
             role: item.role,
             nicnew: item.nicnew,
             mobile: item.mobile,
             email: item.email,
-            datejoin: new CustomDateFormatPipe().transform(
-              item.datejoin || '',
-            ),
-            accessLevel: true // Forces the cellRenderer link to show up
+            datejoin: new CustomDateFormatPipe().transform(item.datejoin || ''),
+            accessLevel: true, // Forces the cellRenderer link to show up
           }));
         } else {
           this.integrationUserData = [];
@@ -216,17 +213,17 @@ export class PeoplePartnersEmployee {
   }
 
   openMandatoryCabinetModal(rowData: any) {
-    //console.log('Row clicked:', rowData); 
+    //console.log('Row clicked:', rowData);
     const modalRef = this.modal.create({
       nzTitle: 'Access Level to ' + rowData.fname,
       nzContent: AccessLevelModalDialog,
       nzData: {
-        employeeCode: rowData.empcode
+        employeeCode: rowData.empcode,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
-    }); 
- 
+    });
+
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });

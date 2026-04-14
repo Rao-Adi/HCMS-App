@@ -210,9 +210,9 @@ export class DocumentAuthorizationPostTraining {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.GetLoginEmpId();
     });
-     
-    this.GetLoginEmpId();
   }
  
   GetLoginEmpId() {

@@ -106,9 +106,9 @@ export class ViewDocumentPendingApproval {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.loadData(this.pageSize);
     });
-
-    this.loadData(this.pageSize);
   }
 
   public noRowsOverlay: string = '';

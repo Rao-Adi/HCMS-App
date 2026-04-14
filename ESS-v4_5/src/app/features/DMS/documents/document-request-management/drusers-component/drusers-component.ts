@@ -82,23 +82,23 @@ export class DRUsersComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+
+      if (this.selectedUsers && this.selectedUsers.length > 0) {
+        this.selectedEmployeeList = [...this.selectedUsers];
+      }
+
+      this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
+
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      });
+
+      this.GetAllUserRoles();
+      // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+      // this.getAllDivisionList();
+      // this.getAllDepartmentList();
+      // this.getAllSubDepartmentList();
     });
-
-    if (this.selectedUsers && this.selectedUsers.length > 0) {
-      this.selectedEmployeeList = [...this.selectedUsers];
-    }
-
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
-
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
-
-    this.GetAllUserRoles();
-    // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
-    // this.getAllDivisionList();
-    // this.getAllDepartmentList();
-    // this.getAllSubDepartmentList();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -137,9 +137,9 @@ export class DRUsersComponent {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: false,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',

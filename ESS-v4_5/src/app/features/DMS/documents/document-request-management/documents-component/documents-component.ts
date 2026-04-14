@@ -150,9 +150,10 @@ export class DocumentsComponent {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.GetAllApprovedDocuments('');
+      this.GetLoginEmpId(); 
     });
-    this.GetAllApprovedDocuments('');
-    this.GetLoginEmpId(); 
   }
  
   GetLoginEmpId() {

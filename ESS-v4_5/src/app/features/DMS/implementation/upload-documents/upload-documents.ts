@@ -80,27 +80,27 @@ export class UploadDocuments {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
-    this.getAllDocumentTypes();
-    // this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-    //   this.cabinetHierarchy = levels;
-    //   this.levelTitles = this.hierarchyService.getLevelTitles();
+      this.getAllDocumentTypes();
+      // this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      //   this.cabinetHierarchy = levels;
+      //   this.levelTitles = this.hierarchyService.getLevelTitles();
 
-    //   this.loadCabinetDropdownData(levels);
-    // });
+      //   this.loadCabinetDropdownData(levels);
+      // });
 
-    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
+      this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
 
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      });
 
-    this.GetAllUploadedDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+      this.GetAllUploadedDocuments({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
     });
   }
 
@@ -169,9 +169,9 @@ export class UploadDocuments {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: false,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',

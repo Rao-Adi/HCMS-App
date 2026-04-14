@@ -81,10 +81,10 @@ export class SOPDocumentTraining {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-    });
 
-    this.GetAllClassRooms({ pageNumber: 1, pageSize: this.pageSize });
-    this.GetAllOnline({ pageNumber: 1, pageSize: this.pageSize });
+      this.GetAllClassRooms({ pageNumber: 1, pageSize: this.pageSize });
+      this.GetAllOnline({ pageNumber: 1, pageSize: this.pageSize });
+    });
   }
 
   // Default Column Definitions: Apply configuration across all columns

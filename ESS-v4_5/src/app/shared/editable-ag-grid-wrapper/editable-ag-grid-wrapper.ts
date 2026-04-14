@@ -235,8 +235,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   private buildColumnDefs(): void {
     this.columnDefs = [];
 
-    // Add action column if inline edit/delete is enabled
-    if (this.config.enableInlineEdit || this.config.enableInlineDelete) {
+    // Add action column if inline add, edit or delete is enabled
+    if (this.config.enableInlineAdd || this.config.enableInlineEdit || this.config.enableInlineDelete) {
       if (this.isSelectionRequired) {
         this.columnDefs.push(this.createActionColumn());
       }

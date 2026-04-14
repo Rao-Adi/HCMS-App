@@ -249,17 +249,17 @@ export class MyApprovalRequest {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.GetAllPendingDocuments({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [],
+        filterModel: {},
+      });
+      
+      this.hasSelectedRows = false;
+      // this.GetLoginEmpId();
     });
-
-    this.GetAllPendingDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [],
-      filterModel: {},
-    });
-
-    this.hasSelectedRows = false;
-    // this.GetLoginEmpId();
   }
  
 

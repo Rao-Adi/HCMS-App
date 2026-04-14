@@ -101,8 +101,9 @@ export class DRDistributionList {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.loadDropdownsAndGrid();
     });
-    this.loadDropdownsAndGrid();
     // this.GetAllDistributionList({
     //   pageNumber: 1,
     //   pageSize: this.selectedPageSize,

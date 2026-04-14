@@ -151,8 +151,9 @@ export class ResponsibilityTransferForm {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      
+      this.getAllUsersList();
     });
-    this.getAllUsersList();
   }
  
   private getStatusText(statusId: any): string {
