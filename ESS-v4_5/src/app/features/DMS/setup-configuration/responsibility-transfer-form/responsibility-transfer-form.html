@@ -215,7 +215,7 @@
                       <button
                         class="grid-icon-btn"
                         title="Approve"
-                        [disabled]="!hasSelectedRows"
+                        [disabled]="(!hasSelectedRows || !this.canAdd)"
                         [class.disabled]="!hasSelectedRows"
                         (click)="approveDocument('Approved')"
                       >
@@ -224,7 +224,7 @@
                       <button
                         class="grid-icon-btn"
                         title="Reject"
-                        [disabled]="!hasSelectedRows"
+                        [disabled]="(!hasSelectedRows || !this.canAdd)"
                         [class.disabled]="!hasSelectedRows"
                         (click)="approveDocument('Rejected')"
                       >

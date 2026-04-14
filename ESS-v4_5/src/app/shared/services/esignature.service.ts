@@ -38,14 +38,9 @@ export class ESignatureService {
     });
     return headers;
   }
-
-  getAllESignaturesList(): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSESignature/get-all-esignatures-list`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
-
+ 
   getESignatureById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSESignature/get-esignatures-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSESignature/get-esignature-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -75,21 +70,21 @@ export class ESignatureService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/DMSESignature/create-esignatures`,
+      `${this.apiUrl}/DMSESignature/create-esignature`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${this.apiUrl}/DMSESignature/update-esignatures`,
+      `${this.apiUrl}/DMSESignature/update-esignature`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSESignature/delete-esignatures/${code}`
+      `${this.apiUrl}/DMSESignature/delete-esignature/${code}`
     );
   }
 }

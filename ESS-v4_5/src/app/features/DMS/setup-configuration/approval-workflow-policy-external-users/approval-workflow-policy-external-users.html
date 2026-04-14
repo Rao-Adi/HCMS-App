@@ -103,13 +103,23 @@
                   </nz-select>
 
                   <button
+                    class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                    [class.disabled]="!this.canAdd"
+                    title="Approve"
+                    (click)="addExclusion()"
+                    [disabled]="!this.canAdd"
+                  >
+                    <i class="bi bi-plus-square"></i>
+                  </button>
+
+                  <!-- <button
                     aria-label="Collapse Menu"
                     title="Collapse Menu"
                     (click)="addExclusion()"
                     class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                   >
                     <i class="bi bi-plus-circle"></i>
-                  </button>
+                  </button> -->
                 </div>
               </div>
               <div class="row row-space">

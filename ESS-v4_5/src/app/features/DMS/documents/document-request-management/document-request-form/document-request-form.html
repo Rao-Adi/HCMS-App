@@ -70,7 +70,7 @@
                   <h3 class="PnlHeader">Documents</h3>
                 </div>
                 <div class="mt-4">
-                    <app-ag-grid-wrapper
+                  <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
                     [columnDefs]="documentColumnDefs"
@@ -85,8 +85,8 @@
                     (pageSizeChange)="onPageSizeChanged($event)"
                     (serverQuery)="GetAllApprovedDocuments($event)"
                     (cellClicked)="onCellClicked($event)"
-                    > 
-                    </app-ag-grid-wrapper>
+                  >
+                  </app-ag-grid-wrapper>
                   <!-- <app-documents-component></app-documents-component> -->
                 </div>
               </div>
@@ -282,7 +282,7 @@
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <h3 class="PnlHeader">Document Content</h3>
                 <br />
-                
+
                 <!-- HTML Template Editor -->
                 <ng-container *ngIf="selectedTemplateType === '3' || !selectedTemplateType">
                   <app-dmsrich-text-edit
@@ -294,15 +294,23 @@
 
                 <!-- Word/PDF File Upload/Download -->
                 <ng-container *ngIf="selectedTemplateType === '1' || selectedTemplateType === '2'">
-                  <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px;">
+                  <div
+                    class="alert alert-info d-flex align-items-center mb-4"
+                    style="font-size: 14px"
+                  >
                     <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                     <div>
-                      <strong>Instructions:</strong> Download the standard template, fill in the required details offline, and upload your finalized draft below.
+                      <strong>Instructions:</strong> Download the standard template, fill in the
+                      required details offline, and upload your finalized draft below.
                     </div>
                   </div>
-                  
+
                   <div class="d-flex align-items-center gap-3 mb-4">
-                    <button type="button" class="btn btn-outline-primary" (click)="downloadTemplate()">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      (click)="downloadTemplate()"
+                    >
                       <i class="bi bi-download me-1"></i> Download Standard Template
                     </button>
                   </div>
@@ -310,7 +318,13 @@
                   <div class="PnlHeading">
                     <label>Upload Drafted Document (DOCX/PDF)</label>
                   </div>
-                  <input type="file" class="form-control input-sm mt-2" (change)="onDraftFileSelected($event)" accept=".pdf,.doc,.docx" style="width: 350px" />
+                  <input
+                    type="file"
+                    class="form-control input-sm mt-2"
+                    (change)="onDraftFileSelected($event)"
+                    accept=".pdf,.doc,.docx"
+                    style="width: 350px"
+                  />
                 </ng-container>
               </div>
             </div>

@@ -239,6 +239,7 @@ export class DocumentRequestForm {
       this.canDelete = permissions.canDelete;
       
       this.getAllDocumentRequestTypes(); 
+      this.getAllCompanies();
     });
   }
  

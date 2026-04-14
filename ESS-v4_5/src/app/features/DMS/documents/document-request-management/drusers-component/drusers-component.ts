@@ -34,7 +34,7 @@ export class DRUsersComponent {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'create-update-document';
+  formId = 'requestdocumentcreation';
 
   manualUserData: any[] = [];
   divisions: any[] = [];

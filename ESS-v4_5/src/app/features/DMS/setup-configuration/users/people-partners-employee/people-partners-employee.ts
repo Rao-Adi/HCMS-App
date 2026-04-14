@@ -176,7 +176,7 @@ export class PeoplePartnersEmployee {
           this.integrationUserData = res.Data.Items.map((item: any) => ({
             empid: item.empid,
             empcode: item.empcode,
-            fname: item.firstname + ' ' + item.lastname,
+            fname: item.firstname + ' ' + item.midname + ' ' + item.lastname,
             designation: item.designation,
             role: item.role,
             nicnew: item.nicnew,

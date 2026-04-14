@@ -11,6 +11,7 @@ import { NzColor, NzColorPickerModule } from 'ng-zorro-antd/color-picker';
 import SignaturePad from 'signature_pad';
 import { HttpClient } from '@angular/common/http';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { ESignatureService } from '@app/shared/services/esignature.service';
 
 @Component({
   selector: 'app-esignature',
@@ -57,6 +58,7 @@ export class ESignature implements AfterViewInit {
     private http: HttpClient,
     private messageService: NzMessageService,
     private _utilities: UtilitiesService,
+    private _esignatureService : ESignatureService
   ) {}
 
   ngOnInit() {
@@ -93,14 +95,24 @@ export class ESignature implements AfterViewInit {
   }
 
   // 🔥 COLOR FIX
-  onColorChange(color: NzColor): void {
-    const hex = color.toHexString();
+  onColorChange(color: any): void {
+    let hex = '#000000';
+
+    // Safely extract the hex string regardless of what ng-zorro emits
+    if (typeof color === 'string') {
+      hex = color;
+    } else if (typeof color?.toHexString === 'function') {
+      hex = color.toHexString();
+    } else if (typeof color?.color?.toHexString === 'function') {
+      hex = color.color.toHexString();
+    } else if (color?.hex) {
+      hex = color.hex;
+    }
 
     this.penColor = hex;
 
     if (this.sig) {
       this.sig.penColor = hex;
-      (this.sig as any)._ctx.strokeStyle = hex; // 🔥 REQUIRED
     }
   }
 
@@ -144,11 +156,21 @@ export class ESignature implements AfterViewInit {
   }
 
   upload(base64: string): void {
-    this.http
-      .post('/api/signature/upload', {
-        imageBase64: base64,
-      })
-      .subscribe();
+    const payload = {
+      // Note: You may need to adjust "SignatureBase64" to match your exact C# backend DTO property
+      SignatureBase64: base64,
+      IsActive: true,
+    };
+
+    this._esignatureService.create(payload).subscribe({
+      next: (res) => {
+        this.messageService.success('Signature saved successfully!');
+      },
+      error: (err) => {
+        console.error('Failed to save signature:', err);
+        this.messageService.error(err?.error?.Message || 'Something went wrong. Please try again.');
+      },
+    });
   }
 
   load(base64: string): void {

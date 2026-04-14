@@ -34,7 +34,7 @@ export class MiscPolicies {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'miscpolicies';
+  formId = 'trainingpolicy';
 
   gridConfig: GridConfig = {} as GridConfig;
   selectedTab: string = 'TrainingPoliciy';
@@ -103,7 +103,7 @@ export class MiscPolicies {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       this.getDocumentTypeList();
     });
   }
@@ -148,7 +148,7 @@ export class MiscPolicies {
       },
       {
         field: 'traningRequired',
-        headerName: 'traningRequired',
+        headerName: 'Traning Required',
         type: 'switch',
         required: false,
         minWidth: 150,
@@ -156,7 +156,7 @@ export class MiscPolicies {
       },
       {
         field: 'minimumscoreforpassing',
-        headerName: 'minimumscoreforpassing',
+        headerName: 'Minimum Score for Passing',
         type: 'number',
         minWidth: 150,
         pinned: 'left',
@@ -236,7 +236,7 @@ export class MiscPolicies {
     debugger;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      documentTypeCode: rowData.documentType || rowData.documentType,
+      documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
@@ -261,7 +261,7 @@ export class MiscPolicies {
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     console.log('Row updated:', event);
-    debugger;
+
     // Update display names
     // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     // event.rowData.departmentName = this.getDisplayName(

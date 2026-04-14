@@ -48,7 +48,7 @@ export class DRDistributionList {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'create-update-document';
+  formId = 'requestdocumentcreation';
 
   private isInternalUpdate = false;
 
@@ -101,7 +101,7 @@ export class DRDistributionList {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       this.loadDropdownsAndGrid();
     });
     // this.GetAllDistributionList({
@@ -183,9 +183,9 @@ export class DRDistributionList {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
