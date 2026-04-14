@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -14,6 +15,7 @@ import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-g
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DistributionListService } from '@app/shared/services/distribution-list.service';
 import { DistributionTypeService } from '@app/shared/services/distribution-type.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { RoleService } from '@app/shared/services/role.service';
 import { ColDef } from 'ag-grid-community';
 import { forkJoin } from 'rxjs';
@@ -41,6 +43,12 @@ export class DRDistributionList {
   @Input() DocumentTypeCode: string | null = null;
   @Input() selectedDistributionList: any[] = [];
   @Output() distributionChanged = new EventEmitter<any[]>();
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
 
   private isInternalUpdate = false;
 
@@ -83,11 +91,17 @@ export class DRDistributionList {
     private _notification: NotificationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService
   ) {
     //this.loadSampleData();
   }
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     this.loadDropdownsAndGrid();
     // this.GetAllDistributionList({
     //   pageNumber: 1,
@@ -102,8 +116,9 @@ export class DRDistributionList {
     //   this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
     // });
   }
+ 
 
-  ngOnChanges(changes: SimpleChanges) { 
+  ngOnChanges(changes: SimpleChanges) {
     if (changes['selectedDistributionList']) {
       if (this.isInternalUpdate) {
         this.isInternalUpdate = false;
@@ -114,7 +129,7 @@ export class DRDistributionList {
     }
   }
 
-  private setGridData() { 
+  private setGridData() {
     if (!this.selectedDistributionList.length) return;
     // console.log(JSON.stringify(this.selectedDistributionList));
     this.distributionListData = this.selectedDistributionList.map((item: any) => ({

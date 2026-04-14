@@ -6,11 +6,12 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -34,7 +35,12 @@ export class BusinessDomainComponent {
     cellDataType: false,
   };
 
- 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinet-structure';
+
   pinnedTopRowDataPlanning: BusinessDomainColumns[] = [
     {
       Code: '',
@@ -52,9 +58,16 @@ export class BusinessDomainComponent {
     private _masterCacheService: Mastercacheservice,
     private _subDepartmentServices: SubDepartmentService,
     private _notification: NotificationService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.getAllDepartmeList();
   }
 
@@ -63,9 +76,9 @@ export class BusinessDomainComponent {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: 10,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -222,7 +235,7 @@ export class BusinessDomainComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     debugger;
-    const payLoad = { 
+    const payLoad = {
       Code: rowData.Code,
       Name: rowData.Name,
       SubDepartmentCode: rowData.SubDepartment,
@@ -261,7 +274,7 @@ export class BusinessDomainComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
 
-    const payLoad = { 
+    const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.SubDepartment,

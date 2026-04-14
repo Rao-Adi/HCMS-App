@@ -9,12 +9,11 @@ import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service'; 
-import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
-import { UtilitiesService } from '@app/core/services/utilities.service';
+import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
@@ -27,7 +26,7 @@ export class ResponsibilityTransferWorkflow {
   canAdd = false;
   canEdit = false;
   canDelete = false;
-  formId = 'DMS-RTW'; // Example FormId for this page
+  formId = 'responsibilitiestransferpolicy';
 
   public noRowsOverlay: string = '';
   gridConfig: GridConfig = {} as GridConfig;
@@ -78,26 +77,24 @@ export class ResponsibilityTransferWorkflow {
     cellDataType: false,
   };
 
-  constructor(
-    private _userService: UserService,
+  constructor( 
     private _notification: NotificationService,
-    private _utilities: UtilitiesService, // Inject UtilitiesService
+    private _permissionService: PermissionService,
     private _divisionServices: DivisionCacheService,
     private _transferWorkflowPolicyService: TransferWorkflowPolicyService
   ) {}
 
   ngOnInit() {
-   this.checkPermissions();
+   this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
    this.getAllDivisionList();
    this.GetAllResponsibilityTransferWorkflows();
   }
-
-  private checkPermissions(): void {
-    this._utilities.CanInsert(this.formId).subscribe(res => this.canAdd = res);
-    this._utilities.CanEdit(this.formId).subscribe(res => this.canEdit = res);
-    this._utilities.CanDelete(this.formId).subscribe(res => this.canDelete = res);
-  }
-
+ 
   private getColumns(): GridColumn[] {
     return [
       // ✅ DIVISION
@@ -136,8 +133,8 @@ export class ResponsibilityTransferWorkflow {
       enableFiltering: false, // Set to false as per your request
       enableSelection: true,
       enableInlineAdd: this.canAdd,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',

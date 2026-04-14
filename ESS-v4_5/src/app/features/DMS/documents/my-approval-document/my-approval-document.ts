@@ -31,6 +31,7 @@ import { DocumentAttributeService } from '@app/shared/services/document-attribut
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -56,6 +57,12 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 export class MyApprovalDocument {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'myapprovals';
+
   selectedTab: string = 'Pending';
 
   selectedDivisions?: string = '';
@@ -79,13 +86,13 @@ export class MyApprovalDocument {
   documentRequestsData: any[] = [];
   documentAttributeValues: any[] = [];
   attributes: DocumentAttribute[] = [];
-  
+
   currentGridQuery: any = {
     pageNumber: 1,
     pageSize: 1,
     sortModel: [],
     filterModel: {},
-    searchTerm: ''
+    searchTerm: '',
   };
 
   // Default Column Definitions: Apply configuration across all columns
@@ -101,11 +108,6 @@ export class MyApprovalDocument {
   totalDisApprovedDocuments = 0;
   rowData: any[] = [];
   public noRowsOverlay: string = '';
-
-  companies: SelectList[] = [
-    { CODE: '1', NAME: 'ATCO' },
-    { CODE: '2', NAME: 'Softronic' },
-  ];
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
@@ -191,14 +193,19 @@ export class MyApprovalDocument {
     private modal: NzModalService,
     private _documentService: DocumentService,
     private _notification: NotificationService,
-    private _userService: UserService,
     private _documentAttribute: DocumentAttributeService,
     private _documentAttributeService: DocumentAttributeService,
-    private _documentRequestService: DocumentRequestService,
-    private _UtilitiesService: UtilitiesService
+    private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService,
   ) {}
 
-  ngOnInit() { 
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.GetLoginEmpId();
   }
 
@@ -244,7 +251,7 @@ export class MyApprovalDocument {
       sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
     }
 
-    const payLoad = { 
+    const payLoad = {
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
@@ -268,7 +275,7 @@ export class MyApprovalDocument {
         if (response?.Success) {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
-          
+
           this.totalRows = data?.TotalCount ?? items.length;
           this.documentRequestsData = items.map((item: any) => {
             // Helper to get value with case-insensitive fallback
@@ -320,7 +327,10 @@ export class MyApprovalDocument {
               // ──────────────────────────────────────────────
 
               proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
-              draftFileUrl: get(['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'], ''),
+              draftFileUrl: get(
+                ['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'],
+                '',
+              ),
 
               // ──────────────────────────────────────────────
               // Audit / History fields
@@ -345,7 +355,7 @@ export class MyApprovalDocument {
               dateOfApproval: '', // ← not present
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
             };
-          }); 
+          });
         }
       },
       error: (err) => {
@@ -441,8 +451,8 @@ export class MyApprovalDocument {
       this._notification.createNotification('error', 'Error', 'Observation is required');
       return;
     }
-    const payLoad = { 
-      documentid: this.documentId, 
+    const payLoad = {
+      documentid: this.documentId,
       executionid: this.executionId,
       action: 'APPROVE',
       observation: this.observation,
@@ -471,8 +481,8 @@ export class MyApprovalDocument {
       this._notification.createNotification('error', 'Error', 'Observation is required');
       return;
     }
-    const payLoad = { 
-      documentid: this.documentId, 
+    const payLoad = {
+      documentid: this.documentId,
       executionid: this.executionId,
       action: 'Rejected',
       observation: this.observation,
@@ -501,8 +511,8 @@ export class MyApprovalDocument {
       this._notification.createNotification('error', 'Error', 'Observation is required');
       return;
     }
-    const payLoad = { 
-      documentid: this.documentId, 
+    const payLoad = {
+      documentid: this.documentId,
       executionid: this.executionId,
       action: 'Rework',
       observation: this.observation,
@@ -525,18 +535,15 @@ export class MyApprovalDocument {
     });
   }
   export() {}
- 
 
-  GetDocumentAttributeByDocumentId = (documentId: any) => { 
-    this._documentAttribute
-      .getDocumentAttributeByDocumentId(documentId)
-      .subscribe((res) => {
-        if (res?.Data) {
-          this.documentAttributeValues = res.Data;
-        } else {
-          this.documentAttributeValues = [];
-        }
-      });
+  GetDocumentAttributeByDocumentId = (documentId: any) => {
+    this._documentAttribute.getDocumentAttributeByDocumentId(documentId).subscribe((res) => {
+      if (res?.Data) {
+        this.documentAttributeValues = res.Data;
+      } else {
+        this.documentAttributeValues = [];
+      }
+    });
   };
 
   GetDocumentAttributes(value: string) {
@@ -600,7 +607,11 @@ export class MyApprovalDocument {
     const idToDownload = this.documentId;
 
     if (!idToDownload) {
-      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      this._notification.createNotification(
+        'warning',
+        'Draft',
+        'No drafted file available for download.',
+      );
       return;
     }
 
@@ -620,7 +631,11 @@ export class MyApprovalDocument {
             blob.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+                this._notification.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
               } catch {
                 this._notification.createNotification('error', 'Draft', 'Failed to read response.');
               }
@@ -629,7 +644,9 @@ export class MyApprovalDocument {
           }
 
           let filename = `Draft_${this.documentName || idToDownload}`;
-          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
           if (contentDisposition) {
             const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
             if (matches != null && matches[1]) {
@@ -646,15 +663,26 @@ export class MyApprovalDocument {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
         } else {
-          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+          this._notification.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
         }
       },
       error: (err: any) => {
-        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+              this._notification.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
             } catch {
               this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
             }
@@ -663,7 +691,7 @@ export class MyApprovalDocument {
           console.error('Error downloading draft', err);
           this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
         }
-      }
+      },
     });
   }
 }

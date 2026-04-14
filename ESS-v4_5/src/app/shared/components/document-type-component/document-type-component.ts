@@ -1,17 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-document-type-component',
@@ -20,6 +21,12 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './document-type-component.css',
 })
 export class DocumentTypeComponent {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure';
+
   gridConfig: GridConfig = {} as GridConfig;
   selectedPageSize = 10;
   pageSize = 10;
@@ -46,9 +53,16 @@ export class DocumentTypeComponent {
     private cdr: ChangeDetectorRef,
     private _masterCacheService: Mastercacheservice,
     private _notification: NotificationService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -57,9 +71,9 @@ export class DocumentTypeComponent {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -133,7 +147,9 @@ export class DocumentTypeComponent {
           CreatedBy: item.createdBy || item.CreatedBy || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: new CustomDateFormatPipe().transform(item.lastModifiedAt || item.LastModifiedAt || '')
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {
@@ -190,7 +206,7 @@ export class DocumentTypeComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
 
-    const payLoad = { 
+    const payLoad = {
       Name: rowData.Name,
       Description: rowData.Description,
       IsActive: true,
@@ -227,7 +243,7 @@ export class DocumentTypeComponent {
 
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
-    const payLoad = { 
+    const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       Description: event.rowData.Description,

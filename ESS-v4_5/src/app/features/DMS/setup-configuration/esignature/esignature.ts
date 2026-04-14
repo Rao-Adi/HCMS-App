@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { NzColor, NzColorPickerModule } from 'ng-zorro-antd/color-picker';
 import SignaturePad from 'signature_pad';
 import { HttpClient } from '@angular/common/http';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 
 @Component({
   selector: 'app-esignature',
@@ -30,6 +31,13 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ESignature implements AfterViewInit {
   selectedTab: string = 'TrainingPoliciy';
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'esignature';
+
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
@@ -48,7 +56,19 @@ export class ESignature implements AfterViewInit {
   constructor(
     private http: HttpClient,
     private messageService: NzMessageService,
+    private _utilities: UtilitiesService,
   ) {}
+
+  ngOnInit() {
+    this.checkPermissions();
+    //this.sig = new SignaturePad(this.canvas.nativeElement);
+  }
+
+  private checkPermissions(): void {
+    this._utilities.CanInsert(this.formId).subscribe((res) => (this.canAdd = res));
+    this._utilities.CanEdit(this.formId).subscribe((res) => (this.canEdit = res));
+    this._utilities.CanDelete(this.formId).subscribe((res) => (this.canDelete = res));
+  }
 
   ngAfterViewInit(): void {
     this.initSignaturePad();
@@ -143,10 +163,6 @@ export class ESignature implements AfterViewInit {
 
   isEmpty(): boolean {
     return this.sig.isEmpty();
-  }
-
-  ngOnInit() {
-    //this.sig = new SignaturePad(this.canvas.nativeElement);
   }
 
   loadSignatureFromFile(file: File): void {

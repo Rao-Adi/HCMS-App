@@ -11,6 +11,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -33,12 +35,18 @@ export class PendingRequestForApproval {
   totalRows = 0;
   totalUsers = 0;
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   currentGridQuery: any = {
     pageNumber: 1,
     pageSize: 1,
     sortModel: [],
     filterModel: {},
-    searchTerm: ''
+    searchTerm: '',
   };
 
   // Default Column Definitions: Apply configuration across all columns
@@ -87,7 +95,7 @@ export class PendingRequestForApproval {
     { field: 'justification', headerName: 'Justification' },
     { field: 'createdOn', headerName: 'Created On' },
     { field: 'pendingWith', headerName: 'Pending with' },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide:true },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
   ];
 
   columnToggles?: ColumnToggle[] = [
@@ -105,11 +113,17 @@ export class PendingRequestForApproval {
   constructor(
     private _doumentRequestService: DocumentRequestService,
     private _notification: NotificationService,
-    private _userService: UserService,
-    private _peoplePartnerService: PeoplePartnersService
+    private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.getAllUsersList();
     this.GetAllPendingRequests('');
   }
@@ -162,7 +176,7 @@ export class PendingRequestForApproval {
         if (response?.Success || response?.Data) {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
-          
+
           this.totalRows = data?.TotalCount ?? items.length;
           this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
@@ -220,7 +234,6 @@ export class PendingRequestForApproval {
   }
 
   onSelectionChange(selectedRows: any): void {
-
     this.requestId = selectedRows[0].requestId;
     this.submittedby = selectedRows[0].sumbittedby;
     // this.hasSelectedRows = selectedRows && selectedRows.length > 0;

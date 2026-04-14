@@ -6,6 +6,8 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { ObservationModalPopup } from '../observation-modal-popup/observation-modal-popup';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-my-pending-request-for-approval',
@@ -14,6 +16,12 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
   styleUrl: './my-pending-request-for-approval.css',
 })
 export class MyPendingRequestForApproval {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -140,9 +148,18 @@ export class MyPendingRequestForApproval {
     { field: 'approvalHistory', label: 'Approval History', visible: true },
   ];
 
-  constructor(private modal: NzModalService) {}
+  constructor(
+    private modal: NzModalService,
+    private _permissionService: PermissionService,
+  ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.loadData(this.pageSize);
   }
 

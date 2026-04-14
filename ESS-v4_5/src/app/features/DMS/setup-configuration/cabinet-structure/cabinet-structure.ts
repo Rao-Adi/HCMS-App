@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'; 
 import { BusinessDomainComponent } from '@app/shared/components/business-domain-component/business-domain-component';
 import { DepartmentComponent } from '@app/shared/components/department-component/department-component';
 import { DivisionComponent } from '@app/shared/components/division-component/division-component';
 import { DocumentTypeComponent } from '@app/shared/components/document-type-component/document-type-component';
 import { SubDepartmentComponent } from '@app/shared/components/sub-department-component/sub-department-component';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { CabinetStructureTabsConfig, CabinetTabVM } from '@app/shared/interfaces/interfaces';
+import { CabinetTabVM } from '@app/shared/interfaces/interfaces';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { CabinetStructureTabsConfigService } from '@app/shared/services/CabinetStructureTabsConfig.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-cabinet-structure',
@@ -19,7 +19,6 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
     CommonModule,
     FormsModule,
     SafeTranslatePipe,
-    CustomDateFormatPipe,
     DivisionComponent,
     BusinessDomainComponent,
     DepartmentComponent,
@@ -30,6 +29,12 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
   styleUrl: './cabinet-structure.css',
 })
 export class CabinetStructure {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure'; // Example FormId for this page
+
   readonly MAX_LEVEL = 4;
   level1Title: string = 'Level 1';
   level2Title: string = 'Level 2';
@@ -50,9 +55,16 @@ export class CabinetStructure {
     private cdr: ChangeDetectorRef,
     private _cabietTabConfigService: CabinetStructureTabsConfigService,
     private readonly cabinetHierarchy: CabinetHierarchyService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.cabinetHierarchy.loadDropdownHierarchy().subscribe((levels) => {
       this.levelTitles = this.cabinetHierarchy.getLevelTitles();
 
@@ -68,8 +80,9 @@ export class CabinetStructure {
       if (this.tabs?.length) {
         this.activateFirstTab();
       }
-    });
+    }); 
   }
+ 
 
   ngAfterViewInit(): void {
     if (this.tabs?.length) {
@@ -150,42 +163,6 @@ export class CabinetStructure {
       });
   }
 
-  // loadTabs(): void {
-  //   this._cabietTabConfigService
-  //     .GetAllCabietStructureTabs('', 'ASC', 'Id', true, 1, 10)
-  //     .subscribe((res) => {
-  //       if (res?.Data) {
-  //         this.tabs = (res.Data.Items ?? []).map((d: any) => ({
-  //           Id: Number(d.Id), // 🔥 FIX
-  //           Name: d.Name,
-  //           CreatedBy: d.CreatedBy,
-  //           CreatedAt: new CustomDateFormatPipe().transform(d.CreatedAt || ''),
-  //           LastModifiedBy: d.LastModifiedBy,
-  //           LastModifiedAt: new CustomDateFormatPipe().transform(d.LastModifiedAt || ''),
-  //         }));
-
-  //         this.levelTitles = (res.Data.Items ?? []).map((d: any) => ({
-  //           Id: Number(d.Id), // 🔥 FIX
-  //           Name: d.Name,
-  //         }));
-  //         console.log(this.levelTitles);
-  //       } else {
-  //         this.tabs = [];
-  //       }
-
-  //       // select first tab by default
-  //       if (this.tabs.length > 0) {
-  //         this.onTabChange(this.tabs[0]);
-  //       }
-  //     });
-  // }
-
-  // onTabChange(tab: CabinetStructureTabsConfig): void {
-  //   this.cabinetConfigStructure = tab;
-  //   this.selectedTabId = tab.Id;
-  //   this.selectedTabTitle = tab.Name;
-  // }
-
   selectedTabLevel!: number;
   cabinetConfigStructure!: CabinetTabVM;
 
@@ -202,7 +179,7 @@ export class CabinetStructure {
   }
 
   saveTabTitle(): void {
-    const payload = { 
+    const payload = {
       Id: this.selectedTabLevel,
       Name: this.selectedTabTitle,
       IsActive: true,

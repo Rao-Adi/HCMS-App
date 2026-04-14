@@ -9,10 +9,9 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { SelectList } from '@app/shared/interfaces/interfaces';
-import { UserService } from '@app/shared/services/user-service';
+import { SelectList } from '@app/shared/interfaces/interfaces'; 
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
-import { NzUploadChangeParam, NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
@@ -20,9 +19,9 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -47,6 +46,12 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
 })
 export class ResponsibilityTransferForm {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'responsibilitiestransfer';
 
   public noRowsOverlay: string = '';
   footerRender = (): string => 'extra footer';
@@ -134,17 +139,22 @@ export class ResponsibilityTransferForm {
   };
 
   constructor(
-    private _userService: UserService,
     private _notification: NotificationService,
     private _responsibilityTransfer: ResponsibilityTransferService,
     private _utilityService: UtilitiesService,
-    private _peoplePartnerService: PeoplePartnersService
+    private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     this.getAllUsersList();
   }
-
+ 
   private getStatusText(statusId: any): string {
     const statusMap: { [key: string]: string } = {
       '1': 'Pending',

@@ -21,15 +21,14 @@ import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
 import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { DocumentsComponent } from '../documents-component/documents-component';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { TemplateService } from '@app/shared/services/template.service';
-import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
-import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { TemplateService } from '@app/shared/services/template.service'; 
+import { WorkflowStepService } from '@app/shared/services/workflow-step-service'; 
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
 import { DocumentService } from '@app/shared/services/document.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-document-request-form',
@@ -58,6 +57,12 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 export class DocumentRequestForm {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() draftData: any;
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'requestdocumentcreation';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -220,18 +225,22 @@ export class DocumentRequestForm {
     private _companyService: CompanyService,
     private _notification: NotificationService,
     private _doumentRequestService: DocumentRequestService,
-    private _documentTemplateService: TemplateService,
-    private _documentAttributeService: DocumentAttributeService,
+    private _documentTemplateService: TemplateService, 
     private _workflowStepService: WorkflowStepService,
     private _documentService: DocumentService,
     private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
-    this.getAllDocumentRequestTypes();
-    this.getAllCompanies();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+    this.getAllDocumentRequestTypes(); 
   }
-
+ 
   GetLoginEmpId() {
     this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }

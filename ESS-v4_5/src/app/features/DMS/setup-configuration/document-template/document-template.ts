@@ -18,8 +18,8 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { TemplateService } from '@app/shared/services/template.service';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { CabinetSelection } from '@app/shared/interfaces/interfaces';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CabinetSelection } from '@app/shared/interfaces/interfaces'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 
@@ -56,6 +56,13 @@ interface MockUser {
 export class DocumentTemplate {
   @ViewChild(CabinetStructureList)
   cabinetStructure!: CabinetStructureList;
+  
+    // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'templates';
+
 
   randomUserUrl = '';
   searchChange$ = new BehaviorSubject('');
@@ -91,18 +98,23 @@ export class DocumentTemplate {
   ];
 
   constructor(
-    private http: HttpClient,
-    private datePipe: DatePipe,
-    private decimalPipe: DecimalPipe,
+    private http: HttpClient, 
     private iconService: NzIconService,
     private documentTemplateService: TemplateService,
     private _notification: NotificationService,
+    private _permissionService: PermissionService
   ) {
     this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
   }
 
   ngOnInit(): void {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.searchChange$
       .pipe(
         debounceTime(500),
@@ -112,8 +124,9 @@ export class DocumentTemplate {
         this.optionList = data;
         this.loading = false;
       });
+ 
   }
-
+ 
   onfiscalYearchange() {}
 
   onSearch(value: string): void {
@@ -154,7 +167,8 @@ export class DocumentTemplate {
           const data = response.Data;
           this.templateHtml = data.TemplateContent || '';
           this.selectedTemplateType = data.TemplateType ? String(data.TemplateType) : '';
-          this.isDefaultTemplate = data.IsDefault === true || String(data.IsDefault).toLowerCase() === 'true';
+          this.isDefaultTemplate =
+            data.IsDefault === true || String(data.IsDefault).toLowerCase() === 'true';
           this.existingFileName = data.TemplateFileUrl || data.templateFileUrl || '';
           this.selectedDivisions = data.DivisionCode || '';
           this.selectedDepartment = data.DepartmentCode || '';
@@ -193,8 +207,7 @@ export class DocumentTemplate {
     }
   }
 
-  saveTemplate(data: any) { 
-
+  saveTemplate(data: any) {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
       this._notification.createNotification('warning', 'Document Type', 'Document Type required');
       return;
@@ -212,22 +225,31 @@ export class DocumentTemplate {
       }
     }
 
-    if ((this.selectedTemplateType === '1' || this.selectedTemplateType === '2') && !this.selectedFile) {
-      this._notification.createNotification('warning', 'File Required', 'Please choose a file to upload');
+    if (
+      (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
+      !this.selectedFile
+    ) {
+      this._notification.createNotification(
+        'warning',
+        'File Required',
+        'Please choose a file to upload',
+      );
       return;
     }
 
-    const formData = new FormData(); 
+    const formData = new FormData();
     formData.append('DocumentTypeCode', this.selectedDocumentType);
-    formData.append('TemplateName', this.templateName || 'Template'); 
+    formData.append('TemplateName', this.templateName || 'Template');
     formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : '');
     formData.append('TemplateType', this.selectedTemplateType);
     formData.append('IsDefault', String(this.isDefaultTemplate));
 
     if (this.selectedDivisions) formData.append('DivisionCode', this.selectedDivisions);
     if (this.selectedDepartment) formData.append('DepartmentCode', this.selectedDepartment);
-    if (this.selectedSubDepartment) formData.append('SubDepartmentCode', this.selectedSubDepartment);
-    if (this.selectedbusinessDomain) formData.append('BusinessDomainCode', this.selectedbusinessDomain);
+    if (this.selectedSubDepartment)
+      formData.append('SubDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedbusinessDomain)
+      formData.append('BusinessDomainCode', this.selectedbusinessDomain);
     if (this.templateHtml) formData.append('TemplateContent', this.templateHtml);
 
     if (this.selectedFile) {

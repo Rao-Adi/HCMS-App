@@ -9,15 +9,14 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
-import { UserService } from '@app/shared/services/user-service';
+import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list'; 
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DesignationService } from '@app/shared/services/designation.service';
 import { RoleService } from '@app/shared/services/role.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { NotificationService } from '@app/shared/notification/notification.service'; 
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -60,6 +59,14 @@ export enum PolicyId {
   ],
 })
 export class ApprovalWorkflowPolicyExternalUsers {
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'workflowdocument';
+
+
   radioValue = '';
   showExclusionTable = false;
   selectedDivisions?: string = '';
@@ -91,7 +98,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   employees: any[] = [];
   designations: any[] = [];
   roles: any[] = [];
-  approvalSequenceData: any[] = [];
+  approvalSequenceData: any[] = []; 
 
   workflowExclude: SelectList[] = [
     { CODE: '1', NAME: 'Designation' },
@@ -103,7 +110,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   selectedWorkflowExclude: number | null = null;
 
   constructor(
-    private _userService: UserService,
+    private _permissionService: PermissionService, 
     private _notification: NotificationService,
     private _designationServices: DesignationService,
     private _roleService: RoleService,
@@ -112,10 +119,16 @@ export class ApprovalWorkflowPolicyExternalUsers {
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     //this.loadData(this.pageSize);
-    this.getAllUsersList();
+    this.getAllUsersList(); 
   }
 
+   
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;
     if (value == 2) {

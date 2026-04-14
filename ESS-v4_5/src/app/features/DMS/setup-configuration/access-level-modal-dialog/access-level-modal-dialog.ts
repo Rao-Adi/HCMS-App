@@ -5,8 +5,7 @@ import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -76,61 +75,7 @@ export class AccessLevelModalDialog {
       },
     ];
   }
-
-  // private getColumns(): GridColumn[] {
-  //   return [
-  //     // ✅ DIVISION
-  //     {
-  //       field: 'divisionName',
-  //       headerName: 'Division',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.divisions,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DEPARTMENT
-  //     {
-  //       field: 'departmentName',
-  //       headerName: 'Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'divisionName',
-  //       dataSourceKey: 'departments',
-  //       filterKey: 'divisionId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // ✅ SUB DEPARTMENT
-  //     {
-  //       field: 'subDepartmentName',
-  //       headerName: 'Sub Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'departmentName',
-  //       dataSourceKey: 'subDepartments',
-  //       filterKey: 'departmentId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // DOCUMENT TYPES
-  //     {
-  //       field: 'documentTypeName',
-  //       headerName: 'Document Type',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.documentTypes,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //   ];
-  // }
-
+ 
   constructor( 
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _documentTypeService: DocumentTypeCacheService,

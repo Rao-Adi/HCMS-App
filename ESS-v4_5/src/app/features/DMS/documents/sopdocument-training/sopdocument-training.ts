@@ -17,6 +17,8 @@ import { DocumentTrainingService } from '@app/shared/services/document-training.
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -42,6 +44,12 @@ import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 export class SOPDocumentTraining {
   selectedTab: string = 'Class Room';
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'trainingsop';
+
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
@@ -55,7 +63,6 @@ export class SOPDocumentTraining {
   totalClassRoom = 0;
   totalOnline = 0;
 
-  
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -66,9 +73,16 @@ export class SOPDocumentTraining {
     private _documentTrainingService: DocumentTrainingService,
     private modal: NzModalService,
     private _notification: NotificationService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.GetAllClassRooms({ pageNumber: 1, pageSize: this.pageSize });
     this.GetAllOnline({ pageNumber: 1, pageSize: this.pageSize });
   }
@@ -285,29 +299,27 @@ export class SOPDocumentTraining {
   }
 
   viewAssessmentDetails(data: any) {
-    const docId = data.documentId || data.DocumentId || data.Id;     
+    const docId = data.documentId || data.DocumentId || data.Id;
 
-    this._documentTrainingService
-      .GetTrainingAssessmentDetails(docId)
-      .subscribe((res) => {
-        if (res?.Success) {
-          this.modal.info({
-            nzTitle: 'Assessment Details',
-            nzContent: `Average Score: ${res.Data?.AverageScore ?? data.averageScore}% <br/><br/> Users Attempted: ${res.Data?.UserCount ?? 'N/A'}`,
-            nzWidth: 500,
-          });
-        } else {
-          this._notification.createNotification(
-            'error',
-            'Error',
-            res?.Message || 'Failed to load assessment details.',
-          );
-        }
-      });
+    this._documentTrainingService.GetTrainingAssessmentDetails(docId).subscribe((res) => {
+      if (res?.Success) {
+        this.modal.info({
+          nzTitle: 'Assessment Details',
+          nzContent: `Average Score: ${res.Data?.AverageScore ?? data.averageScore}% <br/><br/> Users Attempted: ${res.Data?.UserCount ?? 'N/A'}`,
+          nzWidth: 500,
+        });
+      } else {
+        this._notification.createNotification(
+          'error',
+          'Error',
+          res?.Message || 'Failed to load assessment details.',
+        );
+      }
+    });
   }
 
   acknowledgeAndSend(data: any) {
-    const docId = data.documentId || data.DocumentId || data.Id; 
+    const docId = data.documentId || data.DocumentId || data.Id;
     const avgScore = Number(data.averageScore) || 0;
 
     if (avgScore < 80) {
@@ -322,26 +334,23 @@ export class SOPDocumentTraining {
   }
 
   executeAcknowledge(docId: string) {
-    this._documentTrainingService
-      .AcknowledgeAndSendForAuthorization(docId)
-      .subscribe((res) => {
-        if (res?.Success) {
-          this._notification.createNotification(
-            'success',
-            'Success',
-            'Document training acknowledged and sent for authorization.',
-          );
-          this.GetAllOnline({});
-        } else {
-          this._notification.createNotification(
-            'error',
-            'Error',
-            res?.Message || 'Failed to send for authorization.',
-          );
-        }
-      });
+    this._documentTrainingService.AcknowledgeAndSendForAuthorization(docId).subscribe((res) => {
+      if (res?.Success) {
+        this._notification.createNotification(
+          'success',
+          'Success',
+          'Document training acknowledged and sent for authorization.',
+        );
+        this.GetAllOnline({});
+      } else {
+        this._notification.createNotification(
+          'error',
+          'Error',
+          res?.Message || 'Failed to send for authorization.',
+        );
+      }
+    });
   }
-
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;

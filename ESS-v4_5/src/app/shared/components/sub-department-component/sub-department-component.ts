@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -22,6 +23,12 @@ import { ColDef } from 'ag-grid-community';
 })
 export class SubDepartmentComponent {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinet-structure';
 
   selectedPageSize = 10;
   pageSize = 10;
@@ -83,20 +90,26 @@ export class SubDepartmentComponent {
     private _masterCacheService: Mastercacheservice,
     private _departmentService: DepartmentService,
     private _notification: NotificationService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     this.getAllDepartmeList();
   }
-
+ 
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: 10,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -235,7 +248,9 @@ export class SubDepartmentComponent {
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: new CustomDateFormatPipe().transform(item.lastModifiedAt || item.LastModifiedAt || '')
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {
@@ -250,7 +265,7 @@ export class SubDepartmentComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
 
-    const payLoad = { 
+    const payLoad = {
       Name: rowData.Name,
       DepartmentCode: rowData.Department,
       IsActive: true,
@@ -288,7 +303,7 @@ export class SubDepartmentComponent {
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
 
-    const payLoad = { 
+    const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.Department,

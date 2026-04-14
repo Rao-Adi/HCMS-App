@@ -23,6 +23,7 @@ import { DocumentService } from '@app/shared/services/document.service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -47,6 +48,12 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 export class DocumentAuthorizationPostTraining {
   gridApi!: GridApi;
   selectedTab: string = 'Pending Authorization';
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'trainingauthorization';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -188,23 +195,26 @@ export class DocumentAuthorizationPostTraining {
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
-
-  companies: SelectList[] = [
-    { CODE: '1', NAME: 'ATCO' },
-    { CODE: '2', NAME: 'Softronic' },
-  ];
+ 
 
   constructor(
     private modal: NzModalService,
     private _documentService: DocumentService,
     private _notification: NotificationService,
     private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+     
     this.GetLoginEmpId();
   }
-
+ 
   GetLoginEmpId() {
     this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }

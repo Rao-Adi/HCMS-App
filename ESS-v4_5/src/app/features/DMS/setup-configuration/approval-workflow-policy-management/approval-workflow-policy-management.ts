@@ -13,15 +13,12 @@ import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces'
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
-import { UserService } from '@app/shared/services/user-service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
-import { DesignationService } from '@app/shared/services/designation.service';
-import { RoleService } from '@app/shared/services/role.service';
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -66,6 +63,11 @@ export enum PolicyId {
 })
 export class ApprovalWorkflowPolicyManagement {
   public noRowsOverlay: string = '';
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'approvalworkflow';
 
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
@@ -128,15 +130,19 @@ export class ApprovalWorkflowPolicyManagement {
   };
 
   constructor(
-    private _userService: UserService,
+    private _permissionService: PermissionService,
     private _workflowStepService: WorkflowStepService,
     private _notification: NotificationService,
-    private _designationServices: DesignationService,
-    private _roleService: RoleService,
     private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+  }
 
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;

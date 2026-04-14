@@ -1,4 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -12,6 +13,7 @@ import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-g
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
 import { DocumentService } from '@app/shared/services/document.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
@@ -22,6 +24,12 @@ import { ColDef } from 'ag-grid-community';
 })
 export class UploadDocuments {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'uploadolddocument';
 
   uploadedDocumentsData: any[] = [];
 
@@ -64,9 +72,16 @@ export class UploadDocuments {
     private _notification: NotificationService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.getAllDocumentTypes();
     // this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
     //   this.cabinetHierarchy = levels;
@@ -165,191 +180,6 @@ export class UploadDocuments {
     };
   }
 
-  // private getColumns(): GridColumn[] {
-  //   const columns: GridColumn[] = [];
-
-  //   // ─────────────────────────────────────────────
-  //   // 1️⃣ FIXED (NON-CABINET) COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'documentId',
-  //       headerName: 'Document Id',
-  //       type: 'readonly',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: false,
-  //     },
-  //     {
-  //       field: 'documentName',
-  //       headerName: 'Document Name',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'version',
-  //       headerName: 'Version',
-  //       type: 'text',
-  //       minWidth: 120,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'documentTypeId',
-  //       headerName: 'Document Type',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.documentTypes,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //   );
-
-  //   // ─────────────────────────────────────────────
-  //   // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   this.cabinetHierarchy.forEach((level, index) => {
-  //     const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
-
-  //     columns.push({
-  //       field: `level${level.level}Id`,
-  //       headerName: level.title,
-  //       type: 'dropdown',
-
-  //       // 🔥 level-based data source
-  //       dropdownOptions: this.dropdownDataSources[level.level],
-
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-
-  //       // 🔥 dynamic parent dependency
-  //       dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
-  //       filterKey: parentLevel ? 'parentId' : undefined,
-
-  //       minWidth: 180,
-  //       required: true,
-  //     });
-  //   });
-
-  //   // ─────────────────────────────────────────────
-  //   // 3️⃣ REMAINING FIXED COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'nextReviewDate',
-  //       headerName: 'Next Review Date',
-  //       type: 'date',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'uploadDocument',
-  //       headerName: 'Upload Document',
-  //       type: 'file',
-  //       required: true,
-  //     },
-  //   );
-  //   //console.log(JSON.stringify(columns));
-
-  //   return columns;
-  // }
-
-  // private getColumns(): GridColumn[] {
-
-  //   return [
-  //     {
-  //       field: 'documentId',
-  //       headerName: 'Document Id',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'documentName',
-  //       headerName: 'Document Name',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'version',
-  //       headerName: 'Version',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     // DOCUMENT TYPES
-  //     {
-  //       field: 'documentTypeId',
-  //       headerName: 'Document Type',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.documentTypes,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DIVISION
-  //     {
-  //       field: 'divisionName',
-  //       headerName: 'Division',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.divisions,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DEPARTMENT
-  //     {
-  //       field: 'departmentName',
-  //       headerName: 'Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'divisionName',
-  //       dataSourceKey: 'departments',
-  //       filterKey: 'divisionId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // ✅ SUB DEPARTMENT
-  //     {
-  //       field: 'subDepartmentName',
-  //       headerName: 'Sub Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'departmentName',
-  //       dataSourceKey: 'subDepartments',
-  //       filterKey: 'departmentId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     {
-  //       field: 'nextReviewDate',
-  //       headerName: 'Next Review Date',
-  //       type: 'date',
-  //       required: true,
-  //     },
-
-  //     {
-  //       field: 'uploadDocument',
-  //       headerName: 'Upload Document',
-  //       type: 'file',
-  //       required: true,
-  //     },
-  //   ];
-  // }
-
   private getColumns(): GridColumn[] {
     return [
       ...this.getFixedColumns(),
@@ -434,7 +264,7 @@ export class UploadDocuments {
     }
 
     const formData = new FormData();
- 
+
     formData.append('DocumentNumber', rowData.documentId);
     formData.append('DocumentName', rowData.documentName);
     formData.append('DocumentTypeCode', rowData.documentTypeId);

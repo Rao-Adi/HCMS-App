@@ -1,16 +1,14 @@
 import { Component } from '@angular/core';
-import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
-import { ApprovalHistoryModal } from '../../approval-history-modal/approval-history-modal';
+import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal'; 
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { NotificationService } from '@app/shared/notification/notification.service'; 
 import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-documents-component',
@@ -19,6 +17,12 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
   styleUrl: './documents-component.css',
 })
 export class DocumentsComponent {
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -138,13 +142,19 @@ export class DocumentsComponent {
     private _notification: NotificationService,
     private _documentService: DocumentService,
     private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     this.GetAllApprovedDocuments('');
-    this.GetLoginEmpId();
+    this.GetLoginEmpId(); 
   }
-
+ 
   GetLoginEmpId() {
     this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }

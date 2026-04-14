@@ -14,15 +14,15 @@ import { DepartmentCacheService } from '@app/shared/services/CacheServices/depar
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { BusinessDomainCacheService } from '@app/shared/services/CacheServices/business-domain-cache-service';
 import { DesignationService } from '@app/shared/services/designation.service';
-import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-manual-manage-employee',
@@ -39,6 +39,12 @@ import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-g
 })
 export class ManualManageEmployee {
   gridConfig: GridConfig = {} as GridConfig;
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'users';
 
   manualUserData: any[] = [];
   divisions: any[] = [];
@@ -82,11 +88,17 @@ export class ManualManageEmployee {
     private _designationServices: DesignationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+    
     this.loadDropdownsAndGrid();
-
     // this.GetAllManuallyManageEmployee({
     //   pageNumber: 1,
     //   pageSize: this.selectedPageSize,
@@ -101,7 +113,7 @@ export class ManualManageEmployee {
       this.loadCabinetDropdownData(levels);
     });
   }
-
+ 
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
@@ -111,9 +123,9 @@ export class ManualManageEmployee {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',

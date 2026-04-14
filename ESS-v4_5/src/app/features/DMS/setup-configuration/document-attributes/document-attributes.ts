@@ -15,9 +15,9 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { ControlTypeService } from '@app/shared/services/control-type.service';
+import { NotificationService } from '@app/shared/notification/notification.service'; 
+import { ControlTypeService } from '@app/shared/services/control-type.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 @Component({
   selector: 'app-document-attributes',
   imports: [
@@ -35,6 +35,12 @@ import { ControlTypeService } from '@app/shared/services/control-type.service';
 })
 export class DocumentAttributes {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'documentattributes';
 
   selectedPageSize = 10;
   pageSize = 10;
@@ -59,6 +65,7 @@ export class DocumentAttributes {
     //   text: 'List',
     // },
   ]; // for dropdowns
+
   selectedDocumentType?: string = '';
 
   defaultColDef: ColDef = {
@@ -71,9 +78,16 @@ export class DocumentAttributes {
     private modal: NzModalService,
     private _notification: NotificationService,
     private _controlTypeService: ControlTypeService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.getAllControlTypeList();
     // this.getAllDocumentAttributes({
     //   pageNumber: 1,
@@ -152,42 +166,6 @@ export class DocumentAttributes {
     ];
   }
 
-  // getAllDocumentAttributes = (query: any) => {
-  //   const sort = query.sortModel?.[0];
-  //   const pageNumber = Number(query?.pageNumber) || 1;
-  //   const pageSize = Number(query?.pageSize) || 10;
-
-  //   this._documentAttribute
-  //     .GetAllDocumentAttribute(
-  //       query?.filterModel?.Name?.filter || '',
-  //       sort?.sort?.toUpperCase() || 'ASC',
-  //       sort?.colId || 'Name',
-  //       true,
-  //       pageNumber,
-  //       pageSize,
-  //     )
-  //     .subscribe((res) => {
-  //       const items = res?.Data?.Items;
-
-  //       if (Array.isArray(items)) {
-  //         this.documentAttributeData = items.map((item: any) => ({
-  //           Id: item.Id,
-  //           DocumentTypeCode: item.DocumentTypeCode,
-  //           ControlLabel: item.ControlLabel,
-  //           ControlTypeId:
-  //             this.controlTypes.find((ct) => ct.id === String(item.ControlTypeId))?.id ||
-  //             item.ControlTypeId, // ✅ matches column
-  //           ListValue: item.ListValues, // ✅ plural in API
-  //           Mandatory: item.IsMandatory, // ✅ boolean
-  //         }));
-  //       } else {
-  //         this.documentAttributeData = [];
-  //       }
-
-  //       //console.log('RowData length:', this.documentAttributeData.length);
-  //     });
-  // };
-
   getAllDocumentAttributesByDocumentType = (documentType: any) => {
     this._documentAttribute.getDocumentAttributeByDocumentType(documentType).subscribe((res) => {
       const items = res?.Data;
@@ -215,12 +193,12 @@ export class DocumentAttributes {
     this.selectedDocumentType = value;
     this.getAllDocumentAttributesByDocumentType(value);
   }
- 
+
   onGridReady(gridApi: any): void {
     //console.log('Grid ready:', gridApi);
     // Store grid API if needed for external operations
   }
- 
+
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
@@ -232,7 +210,7 @@ export class DocumentAttributes {
       );
       return;
     }
-    const payLoad = { 
+    const payLoad = {
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
       ControlTypeId: event.rowData.ControlTypeId,
@@ -272,7 +250,6 @@ export class DocumentAttributes {
   }
 
   onRowUpdated(event: { rowData: any }): void {
- 
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
       this._notification.createNotification(
         'warning',
@@ -325,7 +302,7 @@ export class DocumentAttributes {
     });
   }
 
-  onCellValueChanged(event: any): void { 
+  onCellValueChanged(event: any): void {
     if (!event?.data) return;
 
     event.data.ControlTypeId =
@@ -336,7 +313,7 @@ export class DocumentAttributes {
     event.node.setData(event.data);
   }
 
-  onRowValueChanged(event: any): void { 
+  onRowValueChanged(event: any): void {
     // normalize dropdown
     event.data.ControlTypeId =
       this.controlTypes.find((ct) => ct.text === event.data.ControlTypeId)?.id ??

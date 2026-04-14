@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { UserService } from '@app/shared/services/user-service';
+import { FormsModule } from '@angular/forms'; 
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -15,7 +14,8 @@ import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-l
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-people-partners-employee',
@@ -33,6 +33,13 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
 })
 export class PeoplePartnersEmployee {
   gridConfig: GridConfig = {} as GridConfig;
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'users';
+
   employeeData: any[] = [];
   loading = false;
   integrationUserData: any[] = [];
@@ -71,60 +78,7 @@ export class PeoplePartnersEmployee {
     { field: 'datejoin', label: 'Date Of Joining', visible: true },
     { field: 'accessLevel', label: 'Access Level', visible: true },
   ];
-
-
-  // documentColumnDefs = [
-  //   { field: 'EmployeeCode', headerName: 'Employee Code' },
-  //   { field: 'EmployeeName', headerName: 'Employee Name' },
-  //   {
-  //     field: 'DivisionName',
-  //     headerName: 'Division',
-  //   },
-  //   {
-  //     field: 'DepartmentName',
-  //     headerName: 'Department',
-  //   },
-  //   {
-  //     field: 'SubDepartmentName',
-  //     headerName: 'Sub-Department',
-  //   },
-  //   {
-  //     field: 'Designation',
-  //     headerName: 'Designation',
-  //   },
-  //   {
-  //     field: 'Grade',
-  //     headerName: 'Grade',
-  //   },
-  //   {
-  //     field: 'ReportingTo',
-  //     headerName: 'Reporting Manager',
-  //   },
-  //   {
-  //     field: 'DateOfJoining',
-  //     headerName: 'Date of Joining',
-  //   },
-  //   {
-  //     field: 'accessLevel',
-  //     headerName: 'Access Level', 
-  //     editable: false,
-  //     cellRenderer: (params: any) => {
-  //       return `
-  //       <span 
-  //         style="color:#1976d2; cursor:pointer; text-decoration:underline"
-  //         data-action="open"
-  //       >
-  //         ${params.value ? 'Access Level' : 'Access Level'}
-  //       </span>
-  //     `;
-  //     },
-  //     onCellClicked: (event: any) => {
-  //       this.openMandatoryCabinetModal(event.data);
-  //     },
-  //   },
-  // ];
-
-  
+ 
   documentColumnDefs = [
     { field: 'empcode', headerName: 'Employee Code' },
     { field: 'fname', headerName: 'Employee Name' },
@@ -178,20 +132,27 @@ export class PeoplePartnersEmployee {
   ];
 
   constructor(
-    private _userService: UserService,
+    private _permissionService: PermissionService, 
     private _peoplePartnersEmployeeService: PeoplePartnersService,
     private modal: NzModalService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.GetAllIntegeratedPeoplepartners({
       pageNumber: 1,
       pageSize: this.pageSize,
       sortModel: [],
       filterModel: {},
     });
+ 
   }
-
+ 
   GetAllIntegeratedPeoplepartners(query: any = {}) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;

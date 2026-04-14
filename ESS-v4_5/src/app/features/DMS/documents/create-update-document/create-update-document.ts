@@ -21,14 +21,11 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { DivisionService } from '@app/shared/services/division.services';
-import { DepartmentService } from '@app/shared/services/department.service';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { CompanyList } from '@app/shared/Dropdowns/company-list/company-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
@@ -39,11 +36,11 @@ import { NotificationService } from '@app/shared/notification/notification.servi
 import { DocumentService } from '@app/shared/services/document.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
-import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 // Define interface for request types
 interface RequestType {
@@ -66,7 +63,6 @@ interface RequestType {
     DocumentTypeList,
     CompanyList,
     DMSRichTextEdit,
-    MyPendingRequestForApproval,
     CabinetStructureList,
     ReactiveFormsModule,
     DynamicFormByDocumentAttribute,
@@ -83,6 +79,12 @@ interface RequestType {
   ],
 })
 export class CreateUpdateDocument {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'uploadorcreate';
+
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
@@ -246,9 +248,15 @@ export class CreateUpdateDocument {
     private documentTemplateService: TemplateService,
     private _documentRequestService: DocumentRequestService,
     private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     // this.getAllDocumentRequestTypes();
     this.loadRequestTypes();
     this.GetLoginEmpId();
@@ -398,7 +406,7 @@ export class CreateUpdateDocument {
     this.GetAllApprovedRequests();
     this.GetDocumentTemplate();
 
-    const payLoad = { 
+    const payLoad = {
       EntityType: 'Document',
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
@@ -441,7 +449,7 @@ export class CreateUpdateDocument {
     if (this.selectedDocumentType == '' || this.selectedDocumentType == null) {
       return;
     }
-    const payLoad = { 
+    const payLoad = {
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -462,7 +470,7 @@ export class CreateUpdateDocument {
 
   onRequestIdChange(value: string): void {
     // this.loading = true;
-    const requestId = value; 
+    const requestId = value;
     this._documentService.GerFinalizedDocumentByRequestId(requestId).subscribe((res) => {
       if (res) {
         if (!res?.Data) return;
@@ -622,7 +630,7 @@ export class CreateUpdateDocument {
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
-    const payLoad = { 
+    const payLoad = {
       documentid: this.documentId,
       userid: this.LoginEmpId,
       attributes: attributeValues,
@@ -699,8 +707,9 @@ export class CreateUpdateDocument {
     return result;
   }
 
-  GetDocumentTemplate() { 
-    this.documentTemplateService.getTemplateByDocumentTypeCode(this.selectedDocumentType)
+  GetDocumentTemplate() {
+    this.documentTemplateService
+      .getTemplateByDocumentTypeCode(this.selectedDocumentType)
       .subscribe({
         next: (response) => {
           this.templateHtml = response.Data.TemplateContent;
@@ -744,7 +753,7 @@ export class CreateUpdateDocument {
   }
 
   GetAllApprovedDocuments(query: any) {
-    const payLoad = {  
+    const payLoad = {
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,

@@ -10,10 +10,11 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection } from '@app/shared/interfaces/interfaces';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -38,6 +39,12 @@ export class ViewDocumentPendingApproval {
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'pendingapproval';
+
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
@@ -61,28 +68,6 @@ export class ViewDocumentPendingApproval {
   optionList: string[] = [];
   selectedUser?: string;
   documentTypeData: any[] = [];
-
-  authorityTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Reporting to Levels' },
-    { CODE: '2', NAME: 'Employee' },
-    { CODE: '3', NAME: 'Role' },
-    { CODE: '4', NAME: 'Designation' },
-    { CODE: '5', NAME: 'Head of Division' },
-    { CODE: '6', NAME: 'Head of Department' },
-    { CODE: '7', NAME: 'Head of Sub-Department' },
-  ];
-
-  employees: SelectList[] = [
-    { CODE: '1', NAME: 'John Doe' },
-    { CODE: '2', NAME: 'Jane Smith' },
-    { CODE: '3', NAME: 'Alice Johnson' },
-  ];
-
-  workflowExclude: SelectList[] = [
-    { CODE: '1', NAME: 'Designation' },
-    { CODE: '2', NAME: 'Role' },
-    { CODE: '3', NAME: 'Specific Employee' },
-  ];
 
   documentsColumnDefs = [
     { field: 'DocumentType', headerName: 'DocumentType' },
@@ -114,9 +99,15 @@ export class ViewDocumentPendingApproval {
 
   radioValue = '';
 
-  constructor() {}
+  constructor(private _permissionService: PermissionService) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.loadData(this.pageSize);
   }
 

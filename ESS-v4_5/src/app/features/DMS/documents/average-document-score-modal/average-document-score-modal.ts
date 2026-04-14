@@ -10,6 +10,7 @@ import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
   styleUrl: './average-document-score-modal.css',
 })
 export class AverageDocumentScoreModal {
+  
   averateDocumentScoreData: any[] = [];
   pageSize = 10;
   selectedPageSize = 10;

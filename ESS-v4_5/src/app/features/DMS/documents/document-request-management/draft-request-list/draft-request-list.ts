@@ -1,22 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper'; 
 import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { UserService } from '@app/shared/services/user-service';
+import { DocumentRequestService } from '@app/shared/services/document-request.service'; 
 import { ColDef } from 'ag-grid-community';
 import { NzSelectModule } from 'ng-zorro-antd/select'; 
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { TemplateService } from '@app/shared/services/template.service';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit'; 
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -44,6 +43,12 @@ export enum DocumentRequestStatus {
 })
 export class DraftRequestList {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -147,16 +152,21 @@ export class DraftRequestList {
 
   constructor(
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
-    private _userService: UserService,
-    private _documentTemplateService: TemplateService,
-    private _peoplePartnerService: PeoplePartnersService
+    private _notification: NotificationService, 
+    private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
     // this.getAllUsersList();
-    this.GetAllDraftDocuments();
+    this.GetAllDraftDocuments(); 
   }
+ 
 
   GetAllDraftDocuments(query?: any) {
     // if (!this.selectedEmployee) {

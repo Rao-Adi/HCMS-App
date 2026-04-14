@@ -6,22 +6,18 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
-import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
-import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
 import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-drusers-component',
@@ -34,6 +30,11 @@ export class DRUsersComponent {
   @Output() usersChanged = new EventEmitter<any[]>();
 
   gridConfig: GridConfig = {} as GridConfig;
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
 
   manualUserData: any[] = [];
   divisions: any[] = [];
@@ -41,15 +42,6 @@ export class DRUsersComponent {
   subDepartments: any[] = [];
   userRoles: any[] = [];
   selectedEmployeeList: any[] = [];
-
-  // userRoles: any[] = [
-  //   {
-  //     id: '1',
-  //     text: 'Territory Sales Manager(TSM)',
-  //   },
-  //   { id: '2', text: 'District Sales Manager(DSM)' },
-  //   { id: '3', text: 'Regional Sales Manager(RSM)' },
-  // ];
 
   totalManullayManageEmployees = 0;
   loading = false;
@@ -82,9 +74,16 @@ export class DRUsersComponent {
     private cabinetGridService: CabinetGridService,
     private _UtilitiesService: UtilitiesService,
     private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService,
   ) {}
 
-  ngOnInit() { 
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     if (this.selectedUsers && this.selectedUsers.length > 0) {
       this.selectedEmployeeList = [...this.selectedUsers];
     }
@@ -155,7 +154,7 @@ export class DRUsersComponent {
       ...this.getRemainingColumns(),
     ];
   }
- 
+
   GetAllManuallyManageEmployee(query: any) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
@@ -210,13 +209,19 @@ export class DRUsersComponent {
 
   openCabinetModal(rowData: any): void {
     if (!rowData.userId) {
-      this._notification.createNotification('warning', 'Warning', 'Please select a User Role first.');
+      this._notification.createNotification(
+        'warning',
+        'Warning',
+        'Please select a User Role first.',
+      );
       return;
     }
 
     // Since rowData.userId might contain the display text (due to getDisplayName in onRowAdded),
     // we look up the actual Role ID from the userRoles list.
-    const selectedRole = this.userRoles.find(r => r.id == rowData.userId || r.text == rowData.userId);
+    const selectedRole = this.userRoles.find(
+      (r) => r.id == rowData.userId || r.text == rowData.userId,
+    );
     const roleId = selectedRole ? selectedRole.id : rowData.userId;
 
     const modalRef = this.modal.create({
@@ -229,17 +234,19 @@ export class DRUsersComponent {
       nzWidth: 1200,
     });
 
-    modalRef.afterClose.subscribe((selectedUsers: any[]) => { 
+    modalRef.afterClose.subscribe((selectedUsers: any[]) => {
       if (selectedUsers && selectedUsers.length > 0) {
         // Accumulate selected users and avoid duplicates
-        selectedUsers.forEach(user => {
+        selectedUsers.forEach((user) => {
           const code = user.employeeCode || user.EmployeeCode || user.empcode || user.empid;
-          const exists = this.selectedEmployeeList.some(u => (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code);
+          const exists = this.selectedEmployeeList.some(
+            (u) => (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code,
+          );
           if (!exists) {
             this.selectedEmployeeList.push(user);
           }
         });
-        
+
         // Emit the updated list to the parent component (document-request-management.ts)
         this.usersChanged.emit(this.selectedEmployeeList);
       }

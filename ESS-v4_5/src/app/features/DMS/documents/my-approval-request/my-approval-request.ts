@@ -23,6 +23,7 @@ import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -49,6 +50,12 @@ export class MyApprovalRequest {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
   selectedTab: string = 'Pending';
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'myapprovalrequest';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -234,10 +241,16 @@ export class MyApprovalRequest {
     private _notification: NotificationService,
     private _userService: UserService,
     private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
-    // this.getAllUsersList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.GetAllPendingDocuments({
       pageNumber: 1,
       pageSize: this.selectedPageSize,
@@ -248,6 +261,7 @@ export class MyApprovalRequest {
     this.hasSelectedRows = false;
     // this.GetLoginEmpId();
   }
+ 
 
   GetLoginEmpId() {
     this.LoginEmpId = this._UtilitiesService.GetEmpid() || '';

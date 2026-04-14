@@ -1,18 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { DivisionService } from '@app/shared/services/division.services';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
+
 @Component({
   selector: 'app-department-component',
   imports: [CommonModule, FormsModule, EditableAgGridWrapper],
@@ -22,6 +24,13 @@ import { ColDef } from 'ag-grid-community';
 export class DepartmentComponent {
   @Input() level!: number;
   @Input() levelTitles!: Record<number, string>;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinet-structure';
+
   currentTitle = '';
   parentTitle = '';
 
@@ -56,23 +65,31 @@ export class DepartmentComponent {
     private _masterCacheService: Mastercacheservice,
     private _divisionServices: DivisionService,
     private _notification: NotificationService,
+    private _permissionService: PermissionService
   ) {}
 
-  ngOnInit() { 
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+
     this.currentTitle = this.levelTitles[this.level]; // Department
     this.parentTitle = this.levelTitles[this.level - 1]; // Division
 
-    this.getAllDivisionList();
+    this.getAllDivisionList(); 
   }
+ 
 
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: 10,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -234,7 +251,7 @@ export class DepartmentComponent {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
 
-    const payLoad = { 
+    const payLoad = {
       Name: rowData.Name,
       DivisionCode: rowData.Division,
       IsActive: true,
@@ -271,7 +288,7 @@ export class DepartmentComponent {
 
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
-    const payLoad = { 
+    const payLoad = {
       Name: event.rowData.Name,
       DivisionCode: event.rowData.DivisionCode,
       IsActive: true,

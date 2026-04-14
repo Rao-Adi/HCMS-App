@@ -90,6 +90,7 @@
                     <button
                       aria-label="Save tabs name"
                       title="Save tabs name"
+                      [disabled]="!(this.canAdd || this.canEdit)"
                       (click)="saveTabTitle()"
                       class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                     >
