@@ -412,61 +412,6 @@ export class DocumentRequestManagement {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
-
-  GetAllPendingDocuments(query: any) {
-    const payload = {
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
-      employeeCode: this.selectedEmployee,
-    };
-    this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          if (response?.Data) {
-            this.totalRows = response.Data.TotalCount;
-            this.documentRequestsData = response.Data.map((item: any) => ({
-              Id: item.id || item.Id,
-              requestId: item.Id || item.id,
-              documentType: item.DocumentType || item.documentType,
-              proposedDocumentNumber: item.RequestNumber || item.requestNumber,
-              stepId: item.StepId || item.stepId,
-              stepOrder: item.StepOrder || item.stepOrder,
-              startedAt: item.StartedAt || item.startedAt,
-              division: item.Division,
-              documentId: item.DocumentNumber,
-              documentName: item.DocumentName,
-              proposedContent: item.ProposedContent,
-              department: item.Department,
-              departmentId: item.DepartmentCode,
-              subdepartment: item.SubDepartment,
-              justification: item.Justification,
-              businessdomainId: item.BusinessDomainCode,
-              requestCreatedBy: item.createdBy || item.CreatedBy || '',
-              dateOfCreation: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              requestCreatedOn: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              previousVersionCreatedOn:
-                item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-              proposedVersionNumber: item.RowVersion || item.rowVersion,
-            }));
-          } else {
-          }
-        }
-      },
-      error: (err) => {
-        this._notification.createNotification(
-          'error',
-          'Error',
-          err?.Message || 'Failed to fetch pending documents.',
-        );
-      },
-    });
-  }
  
 
   emptyFields() {

@@ -11,13 +11,10 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list'; 
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { ObservationModalPopup } from './observation-modal-popup/observation-modal-popup';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
@@ -37,8 +34,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    DocumentTypeList,
-    MyPendingRequestForApproval,
+    DocumentTypeList, 
     CabinetStructureList,
     DMSRichTextEdit,
     NzSelectModule,
@@ -67,6 +63,9 @@ export class MyApprovalRequest {
   requestId: number = 0;
   documentName: string = '';
   selectedDocumentTypeCode: string = '';
+  
+  // Tracks the last requested payload to completely eliminate duplicate API calls
+  private lastFetchPayload: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -250,6 +249,9 @@ export class MyApprovalRequest {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       
+      this.hasSelectedRows = false;
+      this.GetLoginEmpId();
+
       this.GetAllPendingDocuments({
         pageNumber: 1,
         pageSize: this.selectedPageSize,
@@ -257,14 +259,12 @@ export class MyApprovalRequest {
         filterModel: {},
       });
       
-      this.hasSelectedRows = false;
-      // this.GetLoginEmpId();
     });
   }
  
 
-  GetLoginEmpId() {
-    this.LoginEmpId = this._UtilitiesService.GetEmpid() || '';
+  GetLoginEmpId() {  
+    this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   onDivisionChange(value: string): void {
@@ -289,14 +289,14 @@ export class MyApprovalRequest {
   async onDocumentTypeChange(value: string) {
     // this.loading = true;
     this.selectedDocumentType = value;
-    this.GetAllPendingDocuments();
     this.emptyAllFileds();
+    this.GetAllPendingDocuments();
   }
 
   async onTabChange(status: string) {
     this.selectedTab = status;
-    this.GetAllPendingDocuments();
     this.emptyAllFileds();
+    this.GetAllPendingDocuments();
   }
 
   onEmployeeChange(value: string): void {
@@ -343,7 +343,15 @@ export class MyApprovalRequest {
       businessdomaincode: this.selectedBusinessDomain || '',
       documenttypecode: this.selectedDocumentType || '', 
       requeststatus: this.selectedTab || '',
+      empId : this.LoginEmpId || ''
     };
+
+    // 2. The deduplication magic: Block duplicate API calls for identical parameters
+    const payloadString = JSON.stringify(payload);
+    if (this.lastFetchPayload === payloadString) {
+      return; // Silently drop identical concurrent requests
+    }
+    this.lastFetchPayload = payloadString;
 
     this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
       next: (response) => {
@@ -492,7 +500,7 @@ export class MyApprovalRequest {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 850,
+      nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -508,6 +516,7 @@ export class MyApprovalRequest {
     }
 
     const payLoad = { 
+      empId : this.LoginEmpId,
       stepId: this.stepId, 
       action: action,
       observation: observation,

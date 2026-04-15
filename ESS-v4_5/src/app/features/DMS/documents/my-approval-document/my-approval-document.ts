@@ -17,19 +17,16 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
-import { DocumentService } from '@app/shared/services/document.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list'; 
+import { DocumentService } from '@app/shared/services/document.service'; 
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { UserService } from '@app/shared/services/user-service';
+import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper'; 
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
-import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute'; 
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
@@ -44,12 +41,12 @@ import { PermissionService } from '@app/shared/services/permission.service';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    DocumentTypeList,
-    MyPendingRequestForApproval,
+    DocumentTypeList, 
     DMSRichTextEdit,
     CabinetStructureList,
     AgGridWrapper,
     DynamicFormByDocumentAttribute,
+    NzModalModule,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -230,13 +227,8 @@ export class MyApprovalDocument {
     }
   }
 
-  GetAllPendingDocuments(query: any) {
-    if (!this.selectedEmployee) {
-      this.documentRequestsData = [];
-      this.totalRows = 0;
-      return;
-    }
-
+  GetAllPendingDocuments(query?: any) {
+    
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
     } else {
@@ -270,6 +262,7 @@ export class MyApprovalDocument {
       searchText: this.currentGridQuery.searchTerm || '',
     };
 
+   
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {

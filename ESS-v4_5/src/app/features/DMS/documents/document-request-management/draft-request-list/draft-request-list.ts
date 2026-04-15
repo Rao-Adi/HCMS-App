@@ -300,6 +300,10 @@ export class DraftRequestList {
     this.distributionListPayload = list;
   }
 
+  onUsersChanged(users: any[]) {
+    this.distributionUserList = users;
+  }
+
   onEmployeeChange(value: string): void {
     this.selectedEmployee = value;
     if (this.agGridWrapper) {
@@ -487,19 +491,20 @@ export class DraftRequestList {
     }));
 
     const userids = this.distributionUserList
-      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
+      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId || u.UserId || u.id || u.Id)
       .filter((code) => code != null && code !== '')
       .map(String);
 
-    const payLoad = {
+    // Reverted back to JSON to resolve 415 Unsupported Media Type
+    const payload = {
       CompanyId: this.selectedCompany,
-      RequestId: this.requestId ,
+      RequestId: this.requestId,
       SubmittedBy: 1, // this will be bind with UserId
       DistributionList: cleanDistributionList,
       UserIds: userids,
     };
 
-    this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
+    this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
       next: (response) => {
         if (response?.Success) {
           this._notification.createNotification(
@@ -545,7 +550,7 @@ export class DraftRequestList {
     });
 
     const userids = this.distributionUserList
-      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
+      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId || u.UserId || u.id || u.Id)
       .filter((code) => code != null && code !== '')
       .map(String);
 
