@@ -47,7 +47,7 @@ interface ColumnToggle {
     NzAlertModule,
     NzSpinModule,
     NzSwitchModule,
-    NzIconModule,
+    NzIconModule    
   ],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',

@@ -59,6 +59,9 @@ export class MyApprovalDocument {
   canDelete = false;
   formId = 'myapprovals';
 
+  // Tracks the last requested payload to completely eliminate duplicate API calls
+  private lastFetchPayload: string = '';
+
   selectedTab: string = 'Pending';
 
   selectedDivisions?: string = '';
@@ -158,10 +161,10 @@ export class MyApprovalDocument {
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'dateOfCreation', headerName: 'Date of Creation' },
     { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestedBy', headerName: 'Requested By' },
-    { field: 'requestedOn', headerName: 'Requested On' },
-    { field: 'previsousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previsousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Requested By' },
+    { field: 'requestCreatedOn', headerName: 'Requested On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -173,7 +176,7 @@ export class MyApprovalDocument {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          View
+          Approval History
         </span>
       `;
       },
@@ -265,10 +268,17 @@ export class MyApprovalDocument {
       empid : this.loginEmpId
     };
 
+    // The deduplication magic: Block duplicate API calls for identical parameters
+    const payloadString = JSON.stringify(payLoad);
+    if (this.lastFetchPayload === payloadString) {
+      return; // Silently drop identical concurrent requests
+    }
+    this.lastFetchPayload = payloadString;
    
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
+          
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
 
@@ -352,6 +362,9 @@ export class MyApprovalDocument {
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
             };
           });
+        } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {

@@ -93,63 +93,64 @@
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                       <app-ag-grid-wrapper
-                        [gridStyle]="{ width: '100%', height: '450px' }"
-                        [columnToggles]="columnToggles"
-                        [columnDefs]="documentColumnDefs"
-                        [defaultColDef]="defaultColDef"
-                        [isSelectionRequired]="true"
-                        [showDisplayOption]="true"
-                        [rowData]="documentRequestsData"
-                        [totalRows]="totalRows"
-                        [pageSize]="selectedPageSize"
-                        gridId="documentGrid"
-                        (pageSizeChange)="onPageSizeChanged($event)"
-                        (selectionChange)="onSelectionChange($event)"
-                        (serverQuery)="GetAllPendingDocuments($event)"
-                        (cellClicked)="onCellClicked($event)"
-                      >
-                        <div grid-actions class="grid-action-icons">
-                          <button
-                            class="grid-icon-btn"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Approve"
-                            (click)="promptAction('APPROVE')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-check2-square"></i>
-                          </button>
+                          [gridStyle]="{ width: '100%', height: '450px' }"
+                          [columnToggles]="columnToggles"
+                          [columnDefs]="documentColumnDefs"
+                          [defaultColDef]="defaultColDef"
+                          [isSelectionRequired]="true"
+                          [showDisplayOption]="true"
+                          [rowData]="documentRequestsData"
+                          [pageSize]="selectedPageSize"
+                          [pageSizeOptions]="[1, 10, 20, 50]"
+                          [totalRows]="totalRows"
+                      gridId="documentGridPending"
+                          (pageSizeChange)="onPageSizeChanged($event)"
+                          (selectionChange)="onSelectionChange($event)"
+                          (serverQuery)="GetAllPendingDocuments($event)"
+                          (cellClicked)="onCellClicked($event)"
+                        >
+                          <div grid-actions class="grid-action-icons">
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Approve"
+                              (click)="promptAction('APPROVE')"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-check2-square"></i>
+                            </button>
 
-                          <button
-                            class="grid-icon-btn"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Disapprove"
-                            (click)="promptAction('REJECT')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-x-square"></i>
-                          </button>
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Disapprove"
+                              (click)="promptAction('REJECT')"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-x-square"></i>
+                            </button>
 
-                          <button
-                            class="grid-icon-btn"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Revert"
-                            (click)="promptAction('REVERT')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-reply"></i>
-                          </button>
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Revert"
+                              (click)="promptAction('REVERT')"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-reply"></i>
+                            </button>
 
-                          <button
-                            class="grid-icon-btn"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Export"
-                            (click)="export()"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-filetype-xls"></i>
-                          </button>
-                        </div>
-                      </app-ag-grid-wrapper>
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Export"
+                              (click)="export()"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-filetype-xls"></i>
+                            </button>
+                          </div>
+                        </app-ag-grid-wrapper>
                     </div>
                   </div>
                 </div>
@@ -161,7 +162,6 @@
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
                   <br />
-                  <!-- <app-my-pending-request-for-approval> </app-my-pending-request-for-approval> -->
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -172,7 +172,8 @@
                     [rowData]="documentRequestsData"
                     [totalRows]="totalRows"
                     [pageSize]="selectedPageSize"
-                    gridId="documentGrid"
+                    gridId="documentGridApproved"
+                    gridId="documentGridDisapproved"
                     (pageSizeChange)="onPageSizeChanged($event)"
                     (selectionChange)="onSelectionChange($event)"
                     (serverQuery)="GetAllPendingDocuments($event)"
@@ -188,7 +189,6 @@
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
                   <br />
-                  <!-- <app-my-pending-request-for-approval> </app-my-pending-request-for-approval> -->
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
