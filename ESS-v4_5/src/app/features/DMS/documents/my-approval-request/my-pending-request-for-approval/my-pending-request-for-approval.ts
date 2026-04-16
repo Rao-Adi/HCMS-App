@@ -5,8 +5,7 @@ import { ColDef } from 'ag-grid-community';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { ObservationModalPopup } from '../observation-modal-popup/observation-modal-popup';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { NzIconModule } from 'ng-zorro-antd/icon';
-import { UtilitiesService } from '@app/core/services/utilities.service';
+import { NzIconModule } from 'ng-zorro-antd/icon'; 
 import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({

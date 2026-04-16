@@ -226,10 +226,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     this.gridContext = this.getContextData();
-    this.buildColumnDefs();
-    // if (changes['config'] || changes['rowData']) {
-    //   this.buildColumnDefs();
-    // }
+    if (changes['config'] || changes['isSelectionRequired']) {
+      this.buildColumnDefs();
+    }
   }
 
   private buildColumnDefs(): void {

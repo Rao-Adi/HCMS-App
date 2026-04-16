@@ -21,7 +21,6 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { DocumentService } from '@app/shared/services/document.service'; 
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper'; 
-import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
@@ -70,12 +69,12 @@ export class MyApprovalDocument {
   templateHtml: string = '';
   draftFileUrl: string = '';
   documentName: string = '';
+  // Track selection state
   hasSelectedRows = false;
   stepId: number = 0;
   documentId: number = 0;
   executionId: number = 0;
-  totalRows = 0;
-  employees: any[] = [];
+  totalRows = 0; 
   selectedEmployee?: string = '';
   observation: string = '';
   loginEmpId: string = '';
@@ -197,17 +196,20 @@ export class MyApprovalDocument {
   ) {}
 
   ngOnInit() {
+    this.hasSelectedRows = false;
+    this.GetLoginEmpId();
+
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
-      this.GetLoginEmpId();
+       
+      this.GetAllPendingDocuments();
     });
   }
 
-  GetLoginEmpId() {
-    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
+  GetLoginEmpId() { 
+    this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   onDivisionChange(value: string): void {
@@ -260,6 +262,7 @@ export class MyApprovalDocument {
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: this.currentGridQuery.searchTerm || '',
+      empid : this.loginEmpId
     };
 
    
@@ -412,14 +415,7 @@ export class MyApprovalDocument {
       this.agGridWrapper.refresh();
     }
   }
-
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    this.emptyAllFileds();
-    if (this.agGridWrapper) {
-      this.agGridWrapper.refresh();
-    }
-  }
+ 
 
   async onTabChange(status: string) {
     this.selectedTab = status;

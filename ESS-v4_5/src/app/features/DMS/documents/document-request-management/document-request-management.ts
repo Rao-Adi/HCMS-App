@@ -22,12 +22,10 @@ import { DocumentRequestTypeService } from '@app/shared/services/document-reques
 import { CompanyService } from '@app/shared/services/company.service';
 import { PendingRequestForApproval } from './pending-request-for-approval/pending-request-for-approval';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { NotificationService } from '@app/shared/notification/notification.service'; 
 import { TemplateService } from '@app/shared/services/template.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
-import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { WorkflowStepService } from '@app/shared/services/workflow-step-service'; 
 import { DocumentRequestForm } from './document-request-form/document-request-form';
 import { DraftRequestList } from './draft-request-list/draft-request-list';
 import { UtilitiesService } from '@app/core/services/utilities.service';

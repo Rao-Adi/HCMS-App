@@ -19,8 +19,7 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
-import { DocumentService } from '@app/shared/services/document.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { DocumentService } from '@app/shared/services/document.service'; 
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';

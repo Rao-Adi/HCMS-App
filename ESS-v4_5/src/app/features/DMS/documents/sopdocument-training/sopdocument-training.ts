@@ -15,9 +15,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DocumentTrainingService } from '@app/shared/services/document-training.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { UtilitiesService } from '@app/core/services/utilities.service';
+import { NotificationService } from '@app/shared/notification/notification.service'; 
 import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({

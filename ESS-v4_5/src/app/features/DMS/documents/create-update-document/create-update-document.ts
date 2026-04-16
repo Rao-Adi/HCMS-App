@@ -37,7 +37,7 @@ import { DocumentService } from '@app/shared/services/document.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -66,6 +66,7 @@ interface RequestType {
     CabinetStructureList,
     ReactiveFormsModule,
     DynamicFormByDocumentAttribute,
+    NzModalModule,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',

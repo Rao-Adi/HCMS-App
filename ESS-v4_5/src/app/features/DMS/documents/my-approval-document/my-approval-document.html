@@ -9,21 +9,7 @@
           </div>
         </div>
         <br />
-        <hr />
-        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-          <span class="d-flex">Employee</span>
-          <nz-select
-            style="width: 250px"
-            [(ngModel)]="selectedEmployee"
-            nzPlaceHolder="Select Employee"
-            (ngModelChange)="onEmployeeChange($event)"
-            nzAllowClear
-            nzShowSearch
-          >
-            <nz-option *ngFor="let dep of employees" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
-            </nz-option>
-          </nz-select>
-        </div>
+        <hr /> 
         <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
           <h3 class="PnlHeader">
             {{ 'labels.Filters' | safeTranslate }}

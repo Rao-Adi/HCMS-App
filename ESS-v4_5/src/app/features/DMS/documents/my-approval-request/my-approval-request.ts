@@ -11,10 +11,10 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list'; 
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
@@ -34,10 +34,10 @@ import { PermissionService } from '@app/shared/services/permission.service';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    DocumentTypeList, 
+    DocumentTypeList,
     CabinetStructureList,
     DMSRichTextEdit,
-    NzSelectModule,
+    NzModalModule,
   ],
   templateUrl: './my-approval-request.html',
   styleUrl: './my-approval-request.css',
@@ -47,7 +47,7 @@ export class MyApprovalRequest {
 
   selectedTab: string = 'Pending';
 
-   // --- PERMISSION FLAGS ---
+  // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
   canDelete = false;
@@ -63,7 +63,7 @@ export class MyApprovalRequest {
   requestId: number = 0;
   documentName: string = '';
   selectedDocumentTypeCode: string = '';
-  
+
   // Tracks the last requested payload to completely eliminate duplicate API calls
   private lastFetchPayload: string = '';
 
@@ -240,17 +240,18 @@ export class MyApprovalRequest {
     private _notification: NotificationService,
     private _userService: UserService,
     private _UtilitiesService: UtilitiesService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    // 1. Fetch synchronous data BEFORE any UI component can trigger an API call
+    this.hasSelectedRows = false;
+    this.GetLoginEmpId();
+
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
-      this.hasSelectedRows = false;
-      this.GetLoginEmpId();
 
       this.GetAllPendingDocuments({
         pageNumber: 1,
@@ -258,12 +259,10 @@ export class MyApprovalRequest {
         sortModel: [],
         filterModel: {},
       });
-      
     });
   }
- 
 
-  GetLoginEmpId() {  
+  GetLoginEmpId() {
     this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
@@ -284,6 +283,9 @@ export class MyApprovalRequest {
     this.requestId = 0;
     this.documentName = '';
     this.selectedDocumentTypeCode = '';
+
+    this.documentRequestsData = [];
+    this.totalRows = 0;
   }
 
   async onDocumentTypeChange(value: string) {
@@ -306,12 +308,6 @@ export class MyApprovalRequest {
   }
 
   GetAllPendingDocuments(query?: any) {
-    // if (!this.selectedEmployee) {
-    //   this.documentRequestsData = [];
-    //   this.totalRows = 0;
-    //   return;
-    // }
-
     let searchText = '';
     let sortColumn = '';
     let sortBy = 'DESC';
@@ -336,14 +332,14 @@ export class MyApprovalRequest {
       sortcolumn: sortColumn,
       isactive: true,
       pagenumber: this.pageNumber,
-      pagesize: this.selectedPageSize || 10, 
+      pagesize: this.selectedPageSize || 10,
       divisioncode: this.selectedDivisions || '',
       departmentcode: this.selectedDepartment || '',
       subdepartmentcode: this.selectedSubDepartment || '',
       businessdomaincode: this.selectedBusinessDomain || '',
-      documenttypecode: this.selectedDocumentType || '', 
+      documenttypecode: this.selectedDocumentType || '',
       requeststatus: this.selectedTab || '',
-      empId : this.LoginEmpId || ''
+      empId: this.LoginEmpId || '',
     };
 
     // 2. The deduplication magic: Block duplicate API calls for identical parameters
@@ -355,46 +351,72 @@ export class MyApprovalRequest {
 
     this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
       next: (response) => {
-        const success = response?.Success ?? response?.Success;
-        const data = response?.Data ?? response?.Data;
+        const success = response?.Success ?? true;
+        const data = response?.Data ?? response;
 
-        if (success && data.Items.length > 0) {
-          const items = data.Items ?? data.items ?? (Array.isArray(data) ? data : []);
-          this.totalRows = data.TotalCount ?? data.totalCount ?? items.length;
-          this.documentRequestsData = items.map((item: any) => ({
-            Id: item.Id ?? item.id,
-            requestId: item.Id ?? item.id,
-            documentType: item.DocumentType ?? item.documentType,
-            proposedDocumentNumber: item.RequestNumber ?? item.requestNumber,
-            stepId: item.StepId ?? item.stepId,
-            stepOrder: item.StepOrder ?? item.stepOrder,
-            startedAt: item.StartedAt ?? item.startedAt,
-            division: item.Division ?? item.division,
-            documentId: item.DocumentNumber ?? item.documentNumber,
-            documentName: item.DocumentName ?? item.documentName,
-            proposedContent: item.ProposedContent ?? item.proposedContent,
-            department: item.Department ?? item.department,
-            departmentId: item.DepartmentCode ?? item.departmentCode,
-            subdepartment: item.SubDepartment ?? item.subDepartment,
-            justification: item.Justification ?? item.justification,
-            businessdomainId: item.BusinessDomainCode ?? item.businessDomainCode,
-            documentTypeCode: item.DocumentTypeCode ?? item.documentTypeCode,
-            templateType: item.TemplateType ?? item.templateType,
-            draftFileUrl:
-              item.DraftFileUrl ??
-              item.draftFileUrl ??
-              (String(item.TemplateType ?? item.templateType) === '1' ||
-              String(item.TemplateType ?? item.templateType) === '2'
-                ? (item.ProposedContent ?? item.proposedContent)
-                : ''),
-            requestCreatedBy: item.CreatedBy ?? item.createdBy ?? '',
-            dateOfCreation: this.formatDate(item.CreatedAt ?? item.createdAt),
-            requestCreatedOn: this.formatDate(item.CreatedAt ?? item.createdAt),
-            previousVersionCreatedOn: this.formatDate(
-              item.DraftContentLastModifiedAt ?? item.draftContentLastModifiedAt,
-            ),
-            proposedVersionNumber: item.RowVersion ?? item.rowVersion,
-          }));
+        if (!success) {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
+          return;
+        }
+
+        let items = data?.Items ?? data?.items ?? (Array.isArray(data) ? data : []);
+
+        // Filter out any null/undefined or empty objects from the backend
+        items = items.filter((item: any) => item && Object.keys(item).length > 0);
+
+        if (items.length > 0) {
+          this.totalRows = data?.TotalCount ?? data?.totalCount ?? items.length;
+          this.documentRequestsData = items.map((item: any) => {
+            // Create a lowercase map of the item's keys for completely case-insensitive lookup
+            const itemKeys = Object.keys(item);
+            const lowerCaseItem: any = {};
+            itemKeys.forEach(k => {
+              lowerCaseItem[k.toLowerCase()] = item[k];
+            });
+
+            const get = (keys: string[], defaultValue: any = ''): any => {
+              for (const key of keys) {
+                const lower = key.toLowerCase();
+                if (lowerCaseItem[lower] !== undefined && lowerCaseItem[lower] !== null) {
+                  return lowerCaseItem[lower];
+                }
+              }
+              return defaultValue;
+            };
+
+            return {
+              Id: get(['Id', 'id', 'RequestId', 'requestId']),
+              requestId: get(['Id', 'id', 'RequestId', 'requestId']),
+              documentType: get(['DocumentType', 'documentType', 'DocumentTypeName']),
+              proposedDocumentNumber: get(['RequestNumber', 'requestNumber', 'DocumentNumber', 'documentNumber']),
+              stepId: get(['StepId', 'stepId']),
+              stepOrder: get(['StepOrder', 'stepOrder']),
+              startedAt: get(['StartedAt', 'startedAt']),
+              division: get(['Division', 'division', 'DivisionName']),
+              documentId: get(['DocumentNumber', 'documentNumber', 'DocumentId']),
+              documentName: get(['DocumentName', 'documentName', 'Title', 'title']),
+              proposedContent: get(['ProposedContent', 'proposedContent', 'VersionContent', 'Content']),
+              department: get(['Department', 'department', 'DepartmentName']),
+              departmentId: get(['DepartmentCode', 'departmentCode']),
+              subdepartment: get(['SubDepartment', 'subDepartment', 'SubDepartmentName']),
+              justification: get(['Justification', 'justification']),
+              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
+              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
+              templateType: get(['TemplateType', 'templateType']),
+              draftFileUrl: get(['DraftFileUrl', 'draftFileUrl', 'DraftFileURL', 'draftFileURL']) || (
+                ['1', '2'].includes(String(get(['TemplateType', 'templateType'])))
+                  ? get(['ProposedContent', 'proposedContent', 'VersionContent', 'Content'])
+                  : ''
+              ),
+              requestCreatedBy: get(['CreatedBy', 'createdBy', 'RequestCreatedBy']),
+              dateOfCreation: this.formatDate(get(['CreatedAt', 'createdAt', 'RequestCreatedAt'])),
+              dateOfApproval: this.formatDate(get(['ApprovedAt', 'approvedAt', 'DateOfApproval', 'dateOfApproval'])),
+              requestCreatedOn: this.formatDate(get(['CreatedAt', 'createdAt', 'RequestCreatedAt'])),
+              previousVersionCreatedOn: this.formatDate(get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt'])),
+              proposedVersionNumber: get(['RowVersion', 'rowVersion', 'ProposedVersionNumber', 'Version']),
+            };
+          });
         } else {
           this.documentRequestsData = [];
           this.totalRows = 0;
@@ -515,9 +537,9 @@ export class MyApprovalRequest {
       return;
     }
 
-    const payLoad = { 
-      empId : this.LoginEmpId,
-      stepId: this.stepId, 
+    const payLoad = {
+      empId: this.LoginEmpId,
+      stepId: this.stepId,
       action: action,
       observation: observation,
     };
