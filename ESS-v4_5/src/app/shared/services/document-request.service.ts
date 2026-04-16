@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentRequest } from '../interfaces/interfaces';
@@ -11,11 +11,12 @@ import { AppConfigService } from '@app/core/services/app-config';
 export class DocumentRequestService {
   private _cabietStructureConfig = new ReplaySubject<DocumentRequest[]>(1);
 
-  constructor(private http: HttpClient,
-    private _config: AppConfigService
+  constructor(
+    private http: HttpClient,
+    private _config: AppConfigService,
   ) {}
 
-   // We make apiUrl a getter. It's only called when needed.
+  // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
     if (!this._config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
@@ -23,7 +24,6 @@ export class DocumentRequestService {
     }
     return this._config.baseUrl;
   }
-
 
   get cabietStructureConfig$(): Observable<DocumentRequest[]> {
     return this._cabietStructureConfig.asObservable();
@@ -49,7 +49,7 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetWorkflowObservationDetails( 
+  GetWorkflowObservationDetails(
     requestId: any,
     entityType: string,
   ): Observable<GenericResponse<any>> {
@@ -57,10 +57,7 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getWorkflowDeatils( 
-    requestId: any,
-    entityType: string,
-  ): Observable<GenericResponse<any>> {
+  getWorkflowDeatils(requestId: any, entityType: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-workflow-details?requestId=${requestId}&entityType=${entityType}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
@@ -91,15 +88,13 @@ export class DocumentRequestService {
     );
   }
 
-  
   DownloadDraftDocument(id: any) {
     const uri = `${this.apiUrl}/DMSDocumentRequest/download-draft-document/${id}`;
-    return this.http.get(uri, { 
+    return this.http.get(uri, {
       observe: 'response',
-      responseType: 'blob' 
+      responseType: 'blob',
     });
   }
-  
 
   GetAllDocumentRequests(
     searchText: string,
@@ -134,6 +129,13 @@ export class DocumentRequestService {
   SubmitDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/submit-draft-document-request`,
+      payload,
+    );
+  }
+
+  CreateAndSubmitDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocumentRequest/create-and-submit-document-request`,
       payload,
     );
   }

@@ -99,10 +99,7 @@ export class ApprovalWorkflowPolicyManagement {
   selectedRoleSingle: any = null; // For single select
   // single state
   activeMode: 'manual' | 'integration' | null = null;
-
-  pageSize = 10;
-  rowData: any[] = [];
-  totalRows = 0;
+  
   designations: any[] = [];
   roles: any[] = [];
   employees: any[] = [];
@@ -245,12 +242,33 @@ export class ApprovalWorkflowPolicyManagement {
     // 1. Update the selected tab
     this.selectedPolicyId = policyId;
 
-    this.approvalSequenceData = [];
-    this.selectedDocumentType = '';
-    this.showExclusionTable = false;
+    this.resetAllFields();
+  }
 
-    // If you are using Reactive Forms, use:
-    // this.yourForm.reset();
+  resetAllFields() {
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.selectedDocumentType = '';
+    this.emptyInnerFields();
+  }
+
+  emptyInnerFields() {
+    this.approvalSequenceData = [];
+    this.showExclusionTable = false;
+    this.selectedAuthorityType = null;
+    this.selectedWorkflowExclude = null;
+    this.approvalPolicy = null;
+    this.selectedEmployeeSingle = null;
+    this.selectedDesignationSingle = null;
+    this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
+    this.selectedUser = '';
+    this.radioValue = '';
+    this.activeMode = null;
   }
 
   private getEmployeeCodes(): string[] {
@@ -317,6 +335,7 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onDocumentTypeChange(value: string): void {
+    this.emptyInnerFields();
     if (value != null) {
       this.selectedDocumentType = value;
 
@@ -339,9 +358,7 @@ export class ApprovalWorkflowPolicyManagement {
         this.approvalSequenceData = res?.Data ? res.Data : [];
       });
     } else {
-      this.approvalSequenceData = [];
       this.selectedDocumentType = '';
-      this.showExclusionTable = false;
     }
   }
 

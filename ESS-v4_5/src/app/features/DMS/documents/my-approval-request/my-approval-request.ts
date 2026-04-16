@@ -98,7 +98,6 @@ export class MyApprovalRequest {
   employees: any[] = [];
   selectedEmployee?: string = '';
   observation: string = '';
- 
 
   documentColumnDefs = [
     {
@@ -333,63 +332,96 @@ export class MyApprovalRequest {
       subdepartmentcode: this.selectedSubDepartment || '',
       businessdomaincode: this.selectedBusinessDomain || '',
       documenttypecode: this.selectedDocumentType || '',
-      requeststatus: this.selectedTab === 'Disapproved' ? 'Rejected' : (this.selectedTab || ''),
+      requeststatus: this.selectedTab === 'Disapproved' ? 'Rejected' : this.selectedTab || '',
       empId: this.LoginEmpId || '',
     };
 
     this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
-        next: (response) => {
-            if (response?.Success) {
-                const data = response?.Data;
-                const items = data?.Items || (Array.isArray(data) ? data : []);
+      next: (response) => {
+        if (response?.Success) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
 
-                this.totalRows = data?.TotalCount ?? items.length;
-                
-                this.documentRequestsData = items.map((item: any) => {
-                    // Case-insensitive helper to match backend keys
-                    const get = (keys: string[], defaultValue: any = ''): any => {
-                        for (const key of keys) {
-                            if (item[key] !== undefined && item[key] !== null) return item[key];
-                            const lower = key.toLowerCase();
-                            if (item[lower] !== undefined && item[lower] !== null) return item[lower];
-                        }
-                        return defaultValue;
-                    };
+          this.totalRows = data?.TotalCount ?? items.length;
+          if (this.totalRows > 0) {
+            this.documentRequestsData = items.map((item: any) => {
+              // Case-insensitive helper to match backend keys
+              const get = (keys: string[], defaultValue: any = ''): any => {
+                for (const key of keys) {
+                  if (item[key] !== undefined && item[key] !== null) return item[key];
+                  const lower = key.toLowerCase();
+                  if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+                }
+                return defaultValue;
+              };
 
-                    return {
-                          id: get(['Id', 'id']),
-                          documentRequestId: get(['RequestNumber', 'requestNumber', 'Id', 'id']),
-                          documentType: get(['DocumentType', 'documentType']),
-                          documentName: get(['DocumentName', 'documentName', 'Title', 'title']),
-                        observation: '', 
-                          justification: get(['Justification', 'justification']),
-                          proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
-                          proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber', 'RowVersion', 'rowVersion'], '1.0'),
-                          division: get(['Division', 'division']),
-                          department: get(['Department', 'department']),
-                          subdepartment: get(['SubDepartment', 'subdepartment', 'subDepartment']),
-                        dateOfCreation: this.formatDate(get(['CreatedAt', 'createdAt'])),
-                          requestCreatedBy: get(['CreatedBy', 'createdBy', 'RequestCreatedBy', 'requestCreatedBy']),
-                          requestCreatedOn: this.formatDate(get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt'])),
-                          previousVersionCreatedOn: this.formatDate(get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt', 'LastModifiedAt', 'lastModifiedAt'])),
-                          previousVersionCreatedBy: get(['DraftContentLastModifiedBy', 'draftContentLastModifiedBy', 'LastModifiedBy', 'lastModifiedBy']),
-                          stepId: get(['StepId', 'stepId']),
-                          stepOrder: get(['StepOrder', 'stepOrder']),
-                          startedAt: get(['StartedAt', 'startedAt']),
-                          proposedContent: get(['ProposedContent', 'proposedContent', 'VersionContent', 'versionContent', 'Content', 'content']),
-                          draftFileUrl: get(['DraftFileUrl', 'draftFileUrl', 'draftfileurl', 'DraftFileURL'])
-                    };
-                });
-            } else {
-                this.documentRequestsData = [];
-                this.totalRows = 0;
-            }
-        },
-        error: (err) => {
+              return {
+                id: get(['Id', 'id']),
+                documentRequestId: get(['RequestNumber', 'requestNumber', 'Id', 'id']),
+                documentType: get(['DocumentType', 'documentType']),
+                documentName: get(['DocumentName', 'documentName', 'Title', 'title']),
+                observation: '',
+                justification: get(['Justification', 'justification']),
+                proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+                proposedVersionNumber: get(
+                  ['ProposedVersionNumber', 'proposedVersionNumber', 'RowVersion', 'rowVersion'],
+                  '1.0',
+                ),
+                division: get(['Division', 'division']),
+                department: get(['Department', 'department']),
+                subdepartment: get(['SubDepartment', 'subdepartment', 'subDepartment']),
+                dateOfCreation: this.formatDate(get(['CreatedAt', 'createdAt'])),
+                requestCreatedBy: get([
+                  'CreatedBy',
+                  'createdBy',
+                  'RequestCreatedBy',
+                  'requestCreatedBy',
+                ]),
+                requestCreatedOn: this.formatDate(
+                  get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
+                ),
+                previousVersionCreatedOn: this.formatDate(
+                  get([
+                    'DraftContentLastModifiedAt',
+                    'draftContentLastModifiedAt',
+                    'LastModifiedAt',
+                    'lastModifiedAt',
+                  ]),
+                ),
+                previousVersionCreatedBy: get([
+                  'DraftContentLastModifiedBy',
+                  'draftContentLastModifiedBy',
+                  'LastModifiedBy',
+                  'lastModifiedBy',
+                ]),
+                stepId: get(['StepId', 'stepId']),
+                stepOrder: get(['StepOrder', 'stepOrder']),
+                startedAt: get(['StartedAt', 'startedAt']),
+                proposedContent: get([
+                  'ProposedContent',
+                  'proposedContent',
+                  'VersionContent',
+                  'versionContent',
+                  'Content',
+                  'content',
+                ]),
+                draftFileUrl: get(['DraftFileUrl', 'draftFileUrl', 'draftfileurl', 'DraftFileURL']),
+              };
+            });
+          } else {
             this.documentRequestsData = [];
             this.totalRows = 0;
-            this._notification.createNotification('error', 'Error', 'Failed to fetch documents.');
+          }
+        } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
         }
+      },
+      error: (err) => {
+        this.documentRequestsData = [];
+        this.totalRows = 0;
+        this._notification.createNotification('error', 'Error', 'Failed to fetch documents.');
+      },
     });
   }
 
@@ -423,7 +455,7 @@ export class MyApprovalRequest {
     const row = selectedRows[0];
     if (row) {
       this.templateHtml = row.proposedContent || '';
-        this.stepId = row.stepId || 0;
+      this.stepId = row.stepId || 0;
       this.selectedRow = row;
       this.draftFileUrl = row.draftFileUrl || '';
       this.requestId = row.requestId || row.Id || row.id;
@@ -447,8 +479,8 @@ export class MyApprovalRequest {
     this.requestId = row?.requestId || row?.Id || row?.id;
     this.currentDocumentName = row?.documentName || '';
     this.selectedDocumentTypeCode = row?.documentTypeCode || '';
-      this.stepId = row?.stepId || 0;
-      this.selectedRow = row;
+    this.stepId = row?.stepId || 0;
+    this.selectedRow = row;
   }
 
   openWorkflowDeatilsModal(rowData: any) {
@@ -458,7 +490,7 @@ export class MyApprovalRequest {
       nzTitle: 'Workflow History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        id: rowData.Id,
+        id: rowData.id,
         entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
@@ -508,6 +540,7 @@ export class MyApprovalRequest {
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
+          debugger;
           this._notification.createNotification('success', 'Request', response.Message);
           this.GetAllPendingDocuments();
         }
@@ -567,7 +600,7 @@ export class MyApprovalRequest {
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
-        id: rowData.Id,
+        id: rowData.id,
         entityType: 'Request',
         mode: 'view',
         action: 'Approver',

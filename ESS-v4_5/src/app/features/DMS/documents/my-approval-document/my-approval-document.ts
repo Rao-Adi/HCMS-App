@@ -17,15 +17,15 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list'; 
-import { DocumentService } from '@app/shared/services/document.service'; 
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { DocumentService } from '@app/shared/services/document.service';
 import { NotificationService } from '@app/shared/notification/notification.service';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper'; 
+import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
-import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute'; 
+import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
@@ -40,7 +40,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
     NzSwitchModule,
     NzRadioModule,
     NzButtonModule,
-    DocumentTypeList, 
+    DocumentTypeList,
     DMSRichTextEdit,
     CabinetStructureList,
     AgGridWrapper,
@@ -59,9 +59,6 @@ export class MyApprovalDocument {
   canDelete = false;
   formId = 'myapprovals';
 
-  // Tracks the last requested payload to completely eliminate duplicate API calls
-  private lastFetchPayload: string = '';
-
   selectedTab: string = 'Pending';
 
   selectedDivisions?: string = '';
@@ -77,7 +74,7 @@ export class MyApprovalDocument {
   stepId: number = 0;
   documentId: number = 0;
   executionId: number = 0;
-  totalRows = 0; 
+  totalRows = 0;
   selectedEmployee?: string = '';
   observation: string = '';
   loginEmpId: string = '';
@@ -206,12 +203,12 @@ export class MyApprovalDocument {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-       
+
       this.GetAllPendingDocuments();
     });
   }
 
-  GetLoginEmpId() { 
+  GetLoginEmpId() {
     this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
@@ -233,7 +230,6 @@ export class MyApprovalDocument {
   }
 
   GetAllPendingDocuments(query?: any) {
-    
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
     } else {
@@ -253,8 +249,7 @@ export class MyApprovalDocument {
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType,
-      employeeCode: this.selectedEmployee,
+      documentTypeCode: this.selectedDocumentType, 
       RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
@@ -265,20 +260,12 @@ export class MyApprovalDocument {
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: this.currentGridQuery.searchTerm || '',
-      empid : this.loginEmpId
+      empid: this.loginEmpId,
     };
 
-    // The deduplication magic: Block duplicate API calls for identical parameters
-    const payloadString = JSON.stringify(payLoad);
-    if (this.lastFetchPayload === payloadString) {
-      return; // Silently drop identical concurrent requests
-    }
-    this.lastFetchPayload = payloadString;
-   
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
 
@@ -392,7 +379,7 @@ export class MyApprovalDocument {
     }
   }
 
-  onCellClicked(event: any): void {
+  onCellClicked(event: any): void { 
     this.templateHtml = event.data?.proposedContent || '';
     this.draftFileUrl = event.data?.draftFileUrl || '';
     this.documentName = event.data?.documentName || '';
@@ -428,7 +415,6 @@ export class MyApprovalDocument {
       this.agGridWrapper.refresh();
     }
   }
- 
 
   async onTabChange(status: string) {
     this.selectedTab = status;
@@ -446,96 +432,71 @@ export class MyApprovalDocument {
     this.attributes = [];
   }
 
-  approveDocument() {
-    //alert('Approve action triggered for selected rows');
-    debugger;
-    if (this.observation == '' || this.observation == null) {
-      this._notification.createNotification('error', 'Error', 'Observation is required');
-      return;
-    }
-    const payLoad = {
-      documentid: this.documentId,
-      executionid: this.executionId,
-      action: 'APPROVE',
-      observation: this.observation,
-      employeeCode: this.selectedEmployee,
-    };
+  promptAction(action: string) {
+    if (!this.documentId) return;
 
-    this._documentService.approveDocument(payLoad).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          this._notification.createNotification('success', 'Workflow', response.Message);
-        }
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: this.documentId,
+        entityType: 'Document',
+        mode: 'input',
+        action: 'Approver',
       },
-      error: (err) => {
-        this._notification.createNotification(
-          'error',
-          'Document Approve',
-          'Failed to create workflow step.',
-        );
-      },
+      nzFooter: null,
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      if (!result || !result.observation) return;
+      this.submitWorkflowAction(action, result.observation);
     });
   }
 
-  disapprove() {
-    debugger;
-    if (this.observation == '' || this.observation == null) {
-      this._notification.createNotification('error', 'Error', 'Observation is required');
+  submitWorkflowAction(action: string, observation: string) {
+    if (!observation || observation.trim() === '') {
+      this._notification.createNotification('error', 'Validation', 'Observation is required');
       return;
     }
+
     const payLoad = {
       documentid: this.documentId,
       executionid: this.executionId,
-      action: 'Rejected',
-      observation: this.observation,
-      employeeCode: this.selectedEmployee,
+      action: action,
+      observation: observation,
+      empid: this.loginEmpId,
     };
 
-    this._documentService.rejectDocument(payLoad).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          this._notification.createNotification('success', 'Workflow', response.Message);
-        }
-      },
-      error: (err) => {
-        this._notification.createNotification(
-          'error',
-          'Document Rejected',
-          'Failed to create workflow step.',
-        );
-      },
-    });
-  }
-
-  revert() {
-    debugger;
-    if (this.observation == '' || this.observation == null) {
-      this._notification.createNotification('error', 'Error', 'Observation is required');
-      return;
+    let actionObservable;
+    if (action === 'APPROVE') {
+      actionObservable = this._documentService.approveDocument(payLoad);
+    } else if (action === 'Rejected') {
+      actionObservable = this._documentService.rejectDocument(payLoad);
+    } else if (action === 'Rework') {
+      actionObservable = this._documentService.revertDocument(payLoad);
     }
-    const payLoad = {
-      documentid: this.documentId,
-      executionid: this.executionId,
-      action: 'Rework',
-      observation: this.observation,
-      employeeCode: this.selectedEmployee,
-    };
 
-    this._documentService.revertDocument(payLoad).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          this._notification.createNotification('success', 'Workflow', response.Message);
-        }
-      },
-      error: (err) => {
-        this._notification.createNotification(
-          'error',
-          'Document Rework',
-          'Failed to create workflow step.',
-        );
-      },
-    });
+    if (actionObservable) {
+      actionObservable.subscribe({
+        next: (response: any) => {
+          if (response?.Success) {
+            this._notification.createNotification('success', 'Workflow', response.Message);
+            this.GetAllPendingDocuments();
+          }
+        },
+        error: (err: any) => {
+          this._notification.createNotification(
+            'error',
+            'Workflow',
+            'Failed to execute workflow action.',
+          );
+        },
+      });
+    }
   }
+
+
   export() {}
 
   GetDocumentAttributeByDocumentId = (documentId: any) => {
@@ -565,15 +526,14 @@ export class MyApprovalDocument {
   }
 
   openObservationModal(rowData: any) {
-    //console.log('Row clicked:', rowData);
-
+    //console.log('Row clicked:', rowData); 
     const modalRef = this.modal.create({
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
         id: rowData.Id,
         entityType: 'Document',
-        mode: this.selectedTab === 'Pending' ? 'input' : 'view',
+        mode: 'view',
         action: 'Approver',
       },
       nzFooter: null,

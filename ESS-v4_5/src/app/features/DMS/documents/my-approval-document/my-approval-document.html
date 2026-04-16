@@ -142,7 +142,7 @@
                           [pageSize]="pageSize"
                           [pageSizeOptions]="[1, 10, 20, 50]"
                           [totalRows]="totalRows"
-                          gridId="documentGrid"
+                          gridId="documentGridPending"
                           (pageSizeChange)="onPageSizeChanged($event)"
                           (selectionChange)="onSelectionChange($event)"
                           (serverQuery)="GetAllPendingDocuments($event)"
@@ -153,7 +153,7 @@
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
                               title="Approve"
-                              (click)="approveDocument()"
+                              (click)="promptAction('APPROVE')"
                               [disabled]="hasSelectedRows === false"
                             >
                               <i class="bi bi-check2-square"></i>
@@ -163,7 +163,7 @@
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
                               title="Disapprove"
-                              (click)="disapprove()"
+                              (click)="promptAction('Rejected')"
                               [disabled]="hasSelectedRows === false"
                             >
                               <i class="bi bi-x-square"></i>
@@ -173,7 +173,7 @@
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
                               title="Revert"
-                              (click)="revert()"
+                              (click)="promptAction('Rework')"
                               [disabled]="hasSelectedRows === false"
                             >
                               <i class="bi bi-reply"></i>
@@ -213,7 +213,7 @@
                     [pageSize]="pageSize"
                     [pageSizeOptions]="[1, 10, 20, 50]"
                     [totalRows]="totalRows"
-                    gridId="documentGrid"
+                    gridId="documentGridApproved"
                     (pageSizeChange)="onPageSizeChanged($event)"
                     (selectionChange)="onSelectionChange($event)"
                     (serverQuery)="GetAllPendingDocuments($event)"
@@ -240,7 +240,7 @@
                     [pageSize]="pageSize"
                     [pageSizeOptions]="[1, 10, 20, 50]"
                     [totalRows]="totalRows"
-                    gridId="documentGrid"
+                    gridId="documentGridDisapproved"
                     (pageSizeChange)="onPageSizeChanged($event)"
                     (selectionChange)="onSelectionChange($event)"
                     (serverQuery)="GetAllPendingDocuments($event)"

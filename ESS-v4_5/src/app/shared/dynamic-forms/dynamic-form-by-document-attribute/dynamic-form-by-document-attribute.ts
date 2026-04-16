@@ -133,8 +133,12 @@ export class DynamicFormByDocumentAttribute {
     this.form.disable();
   }
 
-  GetDocumentTemplate() {
+  GetDocumentTemplate() { 
     var _documentTypeCode = this.documentTypeCode ? this.documentTypeCode : '';
+    if (_documentTypeCode === '') {
+      console.warn('No document type code provided, skipping template fetch.');
+      return;
+    }
     this.documentTemplateService.getTemplateByDocumentTypeCode(_documentTypeCode).subscribe({
       next: (response) => {
         this.templateHtml = response.Data.TemplateContent;

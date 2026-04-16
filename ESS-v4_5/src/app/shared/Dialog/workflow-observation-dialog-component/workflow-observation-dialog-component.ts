@@ -60,7 +60,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  ngOnInit(): void { 
     this.isViewMode = this.modalData.mode === 'view';
     this.isInputMode = this.modalData.mode === 'input';
 
@@ -75,7 +75,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
 
   loadObservations() {
     this.loading = true; 
-    const entityId = this.modalData.id;
+    const entityId = this.modalData.id || this.modalData.Id;
     const entityType = this.modalData.entityType;
     this._doumentRequestService
       .GetWorkflowObservationDetails(entityId, entityType)

@@ -603,6 +603,7 @@ export class DocumentRequestForm {
   }
 
   SubmitDocumentRequests() {
+    
     if (!this.selectedDocumentRequestType) {
       this._notification.createNotification(
         'warning',
@@ -719,7 +720,7 @@ export class DocumentRequestForm {
       formData.append('DraftFile', this.draftFile);
     }
 
-    this._doumentRequestService.SubmitDraftDocumentRequest(formData).subscribe({
+    this._doumentRequestService.CreateAndSubmitDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
           //clear all fields
