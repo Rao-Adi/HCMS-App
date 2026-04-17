@@ -1,18 +1,3 @@
-<!-- <app-editable-ag-grid-wrapper
-  [gridStyle]="{ width: '100%', height: '500px' }"
-  class="ag-theme-alpine"
-  [gridId]="'employee-planning-grid'"
-  [config]="gridConfig"
-  [rowData]="integrationUserData"
-  [isSelectionRequired]="true"
-  [pinnedTopRowData]="pinnedTopRowDataPlanning"
-  (selectionChanged)="onSelectionChanged($event)" 
-  (selectionChanged)="onSelectionChanged($event)"
-  (gridReady)="onGridReady($event)"
-  (actionClicked)="handleGridAction($event)"
->
-</app-editable-ag-grid-wrapper> -->
-
 <app-ag-grid-wrapper
   [gridStyle]="{ width: '100%', height: '450px' }"
   [rowData]="integrationUserData"
@@ -22,7 +7,7 @@
   [isSelectionRequired]="false"
   [showDisplayOption]="true" 
   [pageSize]="pageSize"
-  [pageSizeOptions]="[1, 10, 20, 50]"
+  [pageSizeOptions]="[10, 20, 50, 100]"
   [totalRows]="totalRows"
   gridId="documentGrid"
   (pageSizeChange)="onPageSizeChanged($event)"

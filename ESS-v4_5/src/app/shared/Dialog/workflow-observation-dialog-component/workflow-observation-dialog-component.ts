@@ -93,7 +93,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
               EmployeeCode: item.EmployeeCode,
               Division: item.Division,
               Department: item.Department,
-              SubDepartment: item.SubDepartment,
+              roleName: item.RoleName,
               Designation: item.Designation,
               Decision: item.Decision,
               Observation: item.Observation,

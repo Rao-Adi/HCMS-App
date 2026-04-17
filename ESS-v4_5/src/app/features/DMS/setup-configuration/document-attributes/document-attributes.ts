@@ -344,7 +344,6 @@ export class DocumentAttributes {
   }
 
   openCabinetModal(rowData: any): void {
-    debugger;
     const modalRef = this.modal.create({
       nzTitle: 'Mandatory (Cabinet Wise)',
       nzContent: MandatoryCabinetWisePopup,

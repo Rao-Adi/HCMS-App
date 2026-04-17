@@ -144,7 +144,7 @@ export class PeoplePartnersEmployee {
       this.canDelete = permissions.canDelete;
 
       this.GetAllIntegeratedPeoplepartners({
-        pageNumber: 1,
+        pageNumber: 10,
         pageSize: this.pageSize,
         sortModel: [],
         filterModel: {},

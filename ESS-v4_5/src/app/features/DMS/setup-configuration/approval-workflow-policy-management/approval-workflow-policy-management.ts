@@ -246,11 +246,11 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   resetAllFields() {
-    this.selectedDivisions = '';
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-    this.selectedBusinessDomain = '';
-    this.selectedDocumentType = '';
+    // this.selectedDivisions = '';
+    // this.selectedDepartment = '';
+    // this.selectedSubDepartment = '';
+    // this.selectedBusinessDomain = '';
+    // this.selectedDocumentType = '';
     this.emptyInnerFields();
   }
 
@@ -269,6 +269,13 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedUser = '';
     this.radioValue = '';
     this.activeMode = null;
+
+    //Cabinet Fields
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.selectedDocumentType = '';
   }
 
   private getEmployeeCodes(): string[] {

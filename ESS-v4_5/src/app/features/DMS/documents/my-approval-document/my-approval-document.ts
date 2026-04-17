@@ -26,7 +26,6 @@ import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
-import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
@@ -191,7 +190,6 @@ export class MyApprovalDocument {
     private _notification: NotificationService,
     private _documentAttribute: DocumentAttributeService,
     private _documentAttributeService: DocumentAttributeService,
-    private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -249,7 +247,7 @@ export class MyApprovalDocument {
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType, 
+      documentTypeCode: this.selectedDocumentType,
       RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
@@ -379,7 +377,7 @@ export class MyApprovalDocument {
     }
   }
 
-  onCellClicked(event: any): void { 
+  onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';
     this.draftFileUrl = event.data?.draftFileUrl || '';
     this.documentName = event.data?.documentName || '';
@@ -483,6 +481,9 @@ export class MyApprovalDocument {
           if (response?.Success) {
             this._notification.createNotification('success', 'Workflow', response.Message);
             this.GetAllPendingDocuments();
+            if (this.agGridWrapper) {
+              this.agGridWrapper.refresh();
+            }
           }
         },
         error: (err: any) => {
@@ -495,7 +496,6 @@ export class MyApprovalDocument {
       });
     }
   }
-
 
   export() {}
 
@@ -526,7 +526,7 @@ export class MyApprovalDocument {
   }
 
   openObservationModal(rowData: any) {
-    //console.log('Row clicked:', rowData); 
+    //console.log('Row clicked:', rowData);
     const modalRef = this.modal.create({
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,

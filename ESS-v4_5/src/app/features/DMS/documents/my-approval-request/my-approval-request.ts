@@ -258,14 +258,7 @@ export class MyApprovalRequest {
     this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
-  onDivisionChange(value: string): void {
-    this.selectedDivisions = value;
-    this.emptyAllFileds();
-  }
-  onDepartmentsChange(value: string): void {
-    this.selectedDepartment = value;
-    this.emptyAllFileds();
-  }
+
 
   emptyAllFileds() {
     this.selectedDepartment = '';
@@ -284,7 +277,12 @@ export class MyApprovalRequest {
     // this.loading = true;
     this.selectedDocumentType = value;
     this.emptyAllFileds();
-    this.GetAllPendingDocuments();
+    this.pageNumber = 1;
+    this.currentGridQuery.pageNumber = 1;
+    // this.GetAllPendingDocuments();
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    }
   }
 
   async onTabChange(status: string) {
@@ -293,13 +291,9 @@ export class MyApprovalRequest {
     this.pageNumber = 1;
     this.currentGridQuery.pageNumber = 1;
     this.GetAllPendingDocuments();
+    
   }
 
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    this.emptyAllFileds();
-    this.GetAllPendingDocuments();
-  }
 
   GetAllPendingDocuments(query?: any) {
     let searchText = '';
@@ -433,11 +427,13 @@ export class MyApprovalRequest {
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
+    this.emptyAllFileds();
+    
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
-    this.emptyAllFileds();
+    
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     }
@@ -606,7 +602,7 @@ export class MyApprovalRequest {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 850,
+      nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
