@@ -201,8 +201,7 @@ export class MyApprovalDocument {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-
-      this.GetAllPendingDocuments();
+      // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
     });
   }
 

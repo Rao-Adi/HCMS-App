@@ -215,8 +215,7 @@ export class AccessLevelModalDialog {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    //console.log('Row updated:', event);
-    debugger;
+    //console.log('Row updated:', event); 
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     event.rowData.departmentName = this.getDisplayName(

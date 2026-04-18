@@ -285,8 +285,7 @@ export class ManualManageEmployee {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
@@ -342,8 +341,7 @@ export class ManualManageEmployee {
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     // Update display names
     const payLoad = {
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
@@ -362,7 +360,7 @@ export class ManualManageEmployee {
     this._userService.update(payLoad).subscribe({
       next: () => {
         this._notification.createNotification('success', 'User', 'User Updated successfully!');
-        debugger;
+        
         const rowWithId = {
           ...rowData,
           id: this.generateId(),

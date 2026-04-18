@@ -648,7 +648,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
               params: {
                 value: params.data?.[column.field],
                 onValueChange: (value: any, data: any) => {
-                  debugger;
+                  // debugger;
                   data[column.field] = value;
                   this.emitCellValueChanged(column.field, value, data, params.rowIndex);
                 },

@@ -550,8 +550,7 @@ export class DocumentRequestForm {
     if (this.selectedSubDepartment)
       formData.append('subDepartmentCode', this.selectedSubDepartment);
     if (this.selectedBusinessDomain)
-      formData.append('businessDomainCode', this.selectedBusinessDomain);
-    formData.append('CreatedByUserId', '1'); // this will be bind with UserId
+      formData.append('businessDomainCode', this.selectedBusinessDomain); 
 
     cleanDistributionList.forEach((item: any, index: number) => {
       if (item.divisionCode)
@@ -687,8 +686,7 @@ export class DocumentRequestForm {
     if (this.selectedSubDepartment)
       formData.append('subDepartmentCode', this.selectedSubDepartment);
     if (this.selectedBusinessDomain)
-      formData.append('businessDomainCode', this.selectedBusinessDomain);
-    formData.append('CreatedByUserId', '1');
+      formData.append('businessDomainCode', this.selectedBusinessDomain); 
 
     cleanDistributionList.forEach((item: any, index: number) => {
       if (item.divisionCode)

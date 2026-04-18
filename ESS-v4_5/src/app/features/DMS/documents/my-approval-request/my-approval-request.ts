@@ -535,8 +535,7 @@ export class MyApprovalRequest {
 
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
-        if (response?.Success) {
-          debugger;
+        if (response?.Success) { 
           this._notification.createNotification('success', 'Request', response.Message);
           this.GetAllPendingDocuments();
         }

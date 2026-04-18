@@ -233,8 +233,7 @@ export class BusinessDomainComponent {
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     const payLoad = {
       Code: rowData.Code,
       Name: rowData.Name,

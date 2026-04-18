@@ -208,8 +208,7 @@ export class DivisionComponent {
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     const payLoad = {
       Name: rowData.Name,
       IsActive: true,

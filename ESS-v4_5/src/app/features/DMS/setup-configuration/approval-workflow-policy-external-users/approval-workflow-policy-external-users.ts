@@ -192,7 +192,6 @@ export class ApprovalWorkflowPolicyExternalUsers {
   }
 
   addExclusion() {
-    debugger;
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
     if (!this.approvalPolicy) {
       this._notification.createNotification(

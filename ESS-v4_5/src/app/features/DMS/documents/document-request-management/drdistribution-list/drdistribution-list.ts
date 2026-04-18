@@ -259,7 +259,7 @@ export class DRDistributionList {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     // console.log('Row added:', rowData);
-    debugger;
+    // debugger;
     // Add logic to generate IDs, validate, etc.
     // const payLoad = {
     //   distributionType: rowData.DistributiontypeId || rowData.distributiontypeId,
@@ -328,7 +328,7 @@ export class DRDistributionList {
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     //console.log('Row updated:', event);
-    debugger;
+    // debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     event.rowData.departmentName = this.getDisplayName(

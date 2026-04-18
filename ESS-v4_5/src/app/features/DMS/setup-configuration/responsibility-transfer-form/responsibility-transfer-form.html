@@ -37,11 +37,11 @@
                     <div class="row">
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>{{ 'labels.Employee (From)' | safeTranslate }} </label>
+                          <label>{{ 'labels.Employee (From)' | safeTranslate }} <span class="text-danger ml-1">*</span></label>
                         </div>
                         <div>
                           <nz-select
-                            style="width: 200px"
+                            style="width: 300px"
                             [nzPlaceHolder]="'Select Employee(From)'"
                             [(ngModel)]="selectedEmployeeFrom"
                             (ngModelChange)="onEmployeeFromChange($event)"
@@ -57,12 +57,12 @@
 
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>{{ 'labels.Employee (To)' | safeTranslate }} </label>
+                          <label>{{ 'labels.Employee (To)' | safeTranslate }} <span class="text-danger ml-1">*</span></label>
                         </div>
                         <div class="Divtxtemployeeschright" style="width: 250px">
                           <div>
                             <nz-select
-                              style="width: 200px"
+                              style="width: 300px"
                               [nzPlaceHolder]="'Select Employee(To)'"
                               [(ngModel)]="selectedEmployeeTo"
                               nzAllowClear
@@ -78,11 +78,11 @@
 
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>{{ 'labels.Reason For Transfer' | safeTranslate }}</label>
+                          <label>{{ 'labels.Reason For Transfer' | safeTranslate }}<span class="text-danger ml-1">*</span></label>
                         </div>
                         <div>
                           <nz-select
-                            style="width: 200px"
+                            style="width: 300px"
                             [nzPlaceHolder]="'Select Reason For Transfer'"
                             [(ngModel)]="selectedReasonForTransfer"
                             nzAllowClear
@@ -100,7 +100,7 @@
                     </div>
                     <div class="row pt-4">
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <span class="d-flex">Effective Date (From)</span>
+                        <span class="d-flex">Effective Date (From)<span class="text-danger ml-1">*</span></span>
                         <nz-date-picker
                           [nzPlaceHolder]="'Select Date'"
                           [(ngModel)]="selectedEffectiveDateFrom"
@@ -111,7 +111,7 @@
                       </div>
 
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <span class="d-flex">Effective Date (To)</span>
+                        <span class="d-flex">Effective Date (To)<span class="text-danger ml-1">*</span></span>
                         <nz-date-picker
                           [nzPlaceHolder]="'Select Date'"
                           [(ngModel)]="selectedEffectiveDateTo"
@@ -135,7 +135,7 @@
                     <div class="row pt-4">
                       <div class="col-lg-12 col-md-12 col-sm-6 mb-10"> 
                         <div class="PnlHeading">
-                          <label>Upload Document (DOCX/PDF/PNG/JPG)</label>
+                          <label>Upload Document (DOCX/PDF/PNG/JPG)<span class="text-danger ml-1">*</span></label>
                         </div>
                         <input
                           type="file"

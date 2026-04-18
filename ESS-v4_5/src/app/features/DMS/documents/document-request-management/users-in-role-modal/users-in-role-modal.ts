@@ -58,7 +58,7 @@ export class UsersInRoleModal {
   ) {}
 
   ngOnInit() {
-    this.loadData();
+    // Removed this.loadData(); to prevent double API call. AgGridWrapper triggers GetAllDocuments() automatically on init.
   }
 
   GetAllDocuments(query: any) {
@@ -81,8 +81,8 @@ export class UsersInRoleModal {
     const sort = query.sortModel?.[0];
     const payload = {
       searchtext: query.searchTerm || query.searchText || '',
-      sortby: sort?.sort?.toUpperCase() || '',
-      sortcolumn: sort?.colId || '',
+      sortby: sort?.sort?.toUpperCase() || 'ASC',
+      sortcolumn: sort?.colId || 'empid', // Fallback to ensure query works smoothly
       isactive: true,
       pagenumber: Number(query.pageNumber) || 1,
       pagesize: Number(query.pageSize) || this.pageSize,
@@ -96,20 +96,25 @@ export class UsersInRoleModal {
     this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe((res) => {
       if (res?.Success && res.Data) {
         const data = res.Data;
-        const users = Array.isArray(data) ? data : data.Items || [];
-        this.totalRows = data.TotalCount ?? users.length;
-
-        this.workflowAuthoritiesData = users.map((u: any) => ({
-          ...u, // Preserves raw backend properties like 'empid' for the parent to use
-          employeeCode: u.empcode || u.EmployeeCode || u.employeeCode,
-          employeeName: u.firstname
-            ? `${u.firstname} ${u.lastname || ''}`.trim()
-            : u.EmployeeName || u.employeeName || u.UserName || u.userName,
-          department:
-            u.Department || u.department || u.DepartmentName || (u.dptid ? String(u.dptid) : ''),
-          designation:
-            u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
-        }));
+        const users = (Array.isArray(data) ? data : data.Items || []).filter((u: any) => u != null);
+        
+        if (users.length > 0) {
+          this.totalRows = data.TotalCount ?? users.length;
+          this.workflowAuthoritiesData = users.map((u: any) => ({
+            ...u, // Preserves raw backend properties like 'empid' for the parent to use
+            employeeCode: u.empcode || u.EmployeeCode || u.employeeCode,
+            employeeName: u.firstname
+              ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
+              : u.EmployeeName || u.employeeName || u.UserName || u.userName,
+            department:
+              u.Department || u.department || u.DepartmentName || (u.dptid ? String(u.dptid) : ''),
+            designation:
+              u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
+          }));
+        } else {
+          this.workflowAuthoritiesData = [];
+          this.totalRows = 0;
+        }
       } else {
         this.workflowAuthoritiesData = [];
         this.totalRows = 0;

@@ -232,8 +232,7 @@ export class MiscPolicies {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,

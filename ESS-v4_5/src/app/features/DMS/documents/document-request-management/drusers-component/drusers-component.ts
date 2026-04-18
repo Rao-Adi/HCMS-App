@@ -298,7 +298,7 @@ export class DRUsersComponent {
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     //console.log('Row updated:', event);
-    debugger;
+    // debugger;
     const payLoad = {
       divisionCode: event.rowData.level1Id || event.rowData.level1Id,
       departmentCode: event.rowData.level2Id || event.rowData.level2Id,
