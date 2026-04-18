@@ -12,12 +12,12 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { UserService } from '@app/shared/services/user-service';
-import { ColDef } from 'ag-grid-community';
-import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
+import { ColDef } from 'ag-grid-community'; 
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
 
 @Component({
   selector: 'app-drusers-component',
@@ -28,6 +28,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 export class DRUsersComponent {
   @Input() selectedUsers: any[] = [];
   @Output() usersChanged = new EventEmitter<any[]>();
+  @Input() documentTypeCode: string = '';
 
   gridConfig: GridConfig = {} as GridConfig;
   // --- PERMISSION FLAGS ---
@@ -226,9 +227,14 @@ export class DRUsersComponent {
 
     const modalRef = this.modal.create({
       nzTitle: 'Users in Role',
-      nzContent: RivisionHistoryPopup,
+      nzContent: UsersInRoleModal,
       nzData: {
         data: roleId, // pass the resolved roleId instead of the text
+        divisionCode: rowData.level1Id || rowData.divisionCode,
+        departmentCode: rowData.level2Id || rowData.departmentCode,
+        subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode,
+        businessDomainCode: rowData.level4Id || rowData.businessDomainCode,
+        documentTypeCode: this.documentTypeCode
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,

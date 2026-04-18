@@ -5,14 +5,14 @@ import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
-  selector: 'app-rivision-history-popup',
+  selector: 'app-users-in-role-modal',
   imports: [AgGridWrapper],
-  templateUrl: './rivision-history-popup.html',
-  styleUrl: './rivision-history-popup.css',
+  templateUrl: './users-in-role-modal.html',
+  styleUrl: './users-in-role-modal.css',
 })
-export class RivisionHistoryPopup {
-  @Input() data: any; 
-
+export class UsersInRoleModal {
+  @Input() data: any;
+  
   selectedPageSize = 10;
   pageSize = 10;
   totalRows = 0;
@@ -37,11 +37,11 @@ export class RivisionHistoryPopup {
       headerName: 'Employee Name',
       flex: 1,
     },
-    {
-      field: 'department',
-      headerName: 'Department',
-      flex: 1,
-    },
+    // {
+    //   field: 'department',
+    //   headerName: 'Department',
+    //   flex: 1,
+    // },
     {
       field: 'designation',
       headerName: 'Designation',
@@ -54,7 +54,7 @@ export class RivisionHistoryPopup {
   constructor(
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _peoplePartnerService: PeoplePartnersService,
-    private modalRef: NzModalRef
+    private modalRef: NzModalRef,
   ) {}
 
   ngOnInit() {
@@ -78,7 +78,7 @@ export class RivisionHistoryPopup {
   loadData(query: any = {}) {
     const roleId = this.modalData?.data;
     if (!roleId) return;
-
+    debugger;
     const sort = query.sortModel?.[0];
     const payload = {
       searchtext: query.searchTerm || query.searchText || '',
@@ -86,21 +86,30 @@ export class RivisionHistoryPopup {
       sortcolumn: sort?.colId || '',
       isactive: true,
       pagenumber: Number(query.pageNumber) || 1,
-      pagesize: Number(query.pageSize) || this.pageSize
+      pagesize: Number(query.pageSize) || this.pageSize,
+      divisionCode: this.modalData?.divisionCode || null,
+      departmentCode: this.modalData?.departmentCode || null,
+      subDepartmentCode: this.modalData?.subDepartmentCode || null,
+      businessDomainCode: this.modalData?.businessDomainCode || null,
+      documentTypeCode: this.modalData?.documentTypeCode || null,
     };
 
     this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe((res) => {
       if (res?.Success && res.Data) {
         const data = res.Data;
-        const users = Array.isArray(data) ? data : (data.Items || []);
+        const users = Array.isArray(data) ? data : data.Items || [];
         this.totalRows = data.TotalCount ?? users.length;
 
         this.workflowAuthoritiesData = users.map((u: any) => ({
           ...u, // Preserves raw backend properties like 'empid' for the parent to use
           employeeCode: u.empcode || u.EmployeeCode || u.employeeCode,
-          employeeName: u.firstname ? `${u.firstname} ${u.lastname || ''}`.trim() : (u.EmployeeName || u.employeeName || u.UserName || u.userName),
-          department: u.Department || u.department || u.DepartmentName || (u.dptid ? String(u.dptid) : ''),
-          designation: u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : '')
+          employeeName: u.firstname
+            ? `${u.firstname} ${u.lastname || ''}`.trim()
+            : u.EmployeeName || u.employeeName || u.UserName || u.userName,
+          department:
+            u.Department || u.department || u.DepartmentName || (u.dptid ? String(u.dptid) : ''),
+          designation:
+            u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
         }));
       } else {
         this.workflowAuthoritiesData = [];
