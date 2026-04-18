@@ -70,6 +70,7 @@ export interface GridColumn<T = any> {
   dropdownOptions?: T[];
   dropdownValueField?: keyof T;
   dropdownDisplayField?: keyof T;
+  showSearch?: boolean; // Allows enabling/disabling search per column
 
   // For cascade functionality
   dependsOn?: string; // Field name this dropdown depends on
@@ -361,6 +362,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 disabled: params.data?.disabled,
                 placeholder: column.placeholder || '--Select--',
                 emptyValue: 0,
+                
+                // Enable search by default, but allow override via GridColumn config
+                showSearch: column.showSearch !== false, 
+                customFilter: (input: string, option: any) => {
+                  if (!option || option.nzLabel == null) return false;
+                  return String(option.nzLabel).toLowerCase().includes(String(input).toLowerCase());
+                },
 
                 // Cascade specific params
                 dependsOn: column.dependsOn,

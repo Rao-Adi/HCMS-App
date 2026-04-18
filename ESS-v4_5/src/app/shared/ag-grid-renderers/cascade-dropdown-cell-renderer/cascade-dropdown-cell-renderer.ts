@@ -12,17 +12,22 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
     <nz-select
       class="ag-input"
       style="width: 200px;"
-      nzShowSearch
-      nzAllowClear
+      [nzShowSearch]="params?.showSearch"
+      [nzFilterOption]="params?.customFilter"
       nzPlaceHolder="-- Select --"
       [nzDisabled]="disabled"
       [(ngModel)]="value"
       (ngModelChange)="onChange($event)"
+      (keydown)="$event.stopPropagation()"
+      (keyup)="$event.stopPropagation()"
+      (keypress)="$event.stopPropagation()"
+      (mousedown)="$event.stopPropagation()"
+      (click)="$event.stopPropagation()"
     >
       <nz-option
         *ngFor="let option of options"
-        [nzValue]="option.id"
-        [nzLabel]="option.text"
+        [nzValue]="option[params?.valueField || 'id']"
+        [nzLabel]="option[params?.displayField || 'text']"
       ></nz-option>
     </nz-select>
   `,

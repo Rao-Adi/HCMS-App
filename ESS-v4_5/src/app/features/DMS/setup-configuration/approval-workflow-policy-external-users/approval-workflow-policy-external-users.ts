@@ -114,8 +114,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   constructor(
     private _permissionService: PermissionService,
     private _notification: NotificationService,
-    private _designationServices: DesignationService,
-    private _roleService: RoleService,
+    private _designationServices: DesignationService, 
     private _workflowStepService: WorkflowStepService,
     private _peoplePartnerService: PeoplePartnersService,
   ) {}
@@ -173,7 +172,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
     if (value != null) {
       this.selectedDocumentType = value;
       const payLoad = {
-        EntityType: 'Request',
+        EntityType: 'ExternalSharingDocument',
         documentTypeCode: this.selectedDocumentType,
         divisionCode: this.selectedDivisions,
         departmentCode: this.selectedDepartment,
@@ -204,10 +203,9 @@ export class ApprovalWorkflowPolicyExternalUsers {
       return;
     }
 
-    const payLoad = {
-      WorkflowPolicyId: 4, // Approval Workflow Policy – for sharing Documents to External Users
-      EntityType: 'REQUEST_FOR_DOCUMENT_SHARING_TO_EXTERNAL_USERS',
-      StepType: 'Review',
+    const payLoad = { 
+      EntityType: 'ExternalSharingDocument', //Dont modify it is used to identify the workflow steps for document sharing to external users
+      StepType: 'Review', //Dont modify it is used to identify the workflow steps for document sharing to external users
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -325,11 +323,11 @@ export class ApprovalWorkflowPolicyExternalUsers {
   }
 
   getAllDesignations = () => {
-    this._designationServices.getDesignationList().subscribe((res) => {
+    this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.designations = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+          CODE: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.designations = [];
@@ -342,8 +340,8 @@ export class ApprovalWorkflowPolicyExternalUsers {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res) {
         this.userRoles = (res.Data ?? []).map((d: any) => ({
-          id: d.Id,
-          text: d.Value,
+          ID: d.Id,
+          NAME: d.Value,
         }));
       } else {
         this.userRoles = [];
@@ -355,8 +353,8 @@ export class ApprovalWorkflowPolicyExternalUsers {
     this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+          CODE: d.Code || d.code,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.employees = [];

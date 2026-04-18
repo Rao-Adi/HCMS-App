@@ -71,7 +71,7 @@ export class DesignationList implements ControlValueAccessor {
   }
 
   writeValue(value: any): void {
-    this.value = value;
+    this.selectedUser = value || [];
   }
 
   registerOnChange(fn: any): void {
@@ -108,8 +108,8 @@ export class DesignationList implements ControlValueAccessor {
     this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Id,
-          NAME: d.Value,
+          CODE: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.data = [];

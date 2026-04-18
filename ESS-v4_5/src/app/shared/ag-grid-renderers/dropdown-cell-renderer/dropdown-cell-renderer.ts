@@ -12,14 +12,23 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
   template: `
     <nz-select
       class="ag-input"
-      style="width: auto;"
+      style="width: 100%; min-width: 150px;"
+      [nzShowSearch]="params?.showSearch"
+      [nzFilterOption]="params?.customFilter"
+      [nzDisabled]="params?.disabled"
+      nzPlaceHolder="-- Select --"
       [(ngModel)]="selectedValue"
       (ngModelChange)="onSelectionChange($event)"
+      (keydown)="$event.stopPropagation()"
+      (keyup)="$event.stopPropagation()"
+      (keypress)="$event.stopPropagation()"
+      (mousedown)="$event.stopPropagation()"
+      (click)="$event.stopPropagation()"
     >
       <nz-option
         *ngFor="let option of options"
-        [nzValue]="option.id"
-        [nzLabel]="option.text"
+        [nzValue]="option[params?.valueField || 'id']"
+        [nzLabel]="option[params?.displayField || 'text']"
       ></nz-option>
     </nz-select>
   `,
@@ -38,15 +47,20 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 })
 export class DropdownCellRenderer implements ICellRendererAngularComp {
   selectedValue: any = null;
-  options: { id: any; text: string }[] = [];
+  options: any[] = [];
 
-  private params!: ICellRendererParams & {
-    options: { id: number; text: string }[];
+  
+  params!: ICellRendererParams & {
+    options: any[];
     onValueChange?: (value: number, data: any) => void;
+    valueField?: string;
+    displayField?: string;
+    showSearch?: boolean;
+    customFilter?: any;
+    disabled?: boolean;
   };
 
   agInit(params: any): void {
-    
     this.params = params;
 
     const field = params.colDef.field as string;
@@ -56,8 +70,9 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
 
     // 🔥 FORCE type match (number ↔ number)
     if (rawValue !== null && rawValue !== undefined) {
-      const matched = this.options.find((o) => o.id == rawValue);
-      this.selectedValue = matched ? matched.id : null;
+      const valField = this.params.valueField || 'id';
+      const matched = this.options.find((o) => o[valField] == rawValue);
+      this.selectedValue = matched ? matched[valField] : null;
     } else {
       this.selectedValue = null;
     }
@@ -80,14 +95,16 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
   // }
 
   refresh(params: any): boolean {
+    this.params = params;
     const field = params.colDef.field as string;
     const rawValue = params.data?.[field];
 
     this.options = params.options || [];
 
     if (rawValue !== null && rawValue !== undefined) {
-      const matched = this.options.find((o) => o.id == rawValue);
-      this.selectedValue = matched ? matched.id : null;
+      const valField = this.params.valueField || 'id';
+      const matched = this.options.find((o) => o[valField] == rawValue);
+      this.selectedValue = matched ? matched[valField] : null;
     } else {
       this.selectedValue = null;
     }

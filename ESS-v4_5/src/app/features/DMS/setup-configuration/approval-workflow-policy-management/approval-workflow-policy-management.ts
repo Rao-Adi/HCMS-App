@@ -17,7 +17,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum ApprovalPolicy {
@@ -99,9 +99,9 @@ export class ApprovalWorkflowPolicyManagement {
   selectedRoleSingle: any = null; // For single select
   // single state
   activeMode: 'manual' | 'integration' | null = null;
-  
+
   designations: any[] = [];
-  roles: any[] = [];
+  userRoles: any[] = [];
   employees: any[] = [];
 
   authorityTypes: SelectList[] = [
@@ -190,8 +190,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.switchValue1 = this.switchValue1 == true ? false : true;
   }
 
-  addExclusion() {
-    debugger;
+  addExclusion() { 
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
     if (!this.approvalPolicy) {
       this._notification.createNotification(
@@ -209,7 +208,7 @@ export class ApprovalWorkflowPolicyManagement {
           : this.selectedPolicyId == PolicyId.DocumentCreation
             ? 'Document'
             : 'Revision',
-      StepType: 'Review', // this will be discussed and sent from frontend, for now we are hardcoding it
+      StepType: 'Review', //
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -220,7 +219,7 @@ export class ApprovalWorkflowPolicyManagement {
       employeeCodes: this.getEmployeeCodes(),
       CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
       RequireCrossFunctionalHead: false,
-      IsParallelApproval: false,
+      IsParallelApproval: this.switchValue1,
     };
 
     this._workflowStepService.create(payLoad).subscribe({
@@ -380,26 +379,12 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
 
-  // getAllDesignations = () => {
-  //   this._designationServices.getDesignationList().subscribe((res) => {
-  //     if (res?.Data) {
-  //       this.designations = (res.Data ?? []).map((d: any) => ({
-  //         CODE: d.Code,
-  //         NAME: d.Value,
-  //       }));
-  //     } else {
-  //       this.designations = [];
-  //     }
-  //     //this.cdr.detectChanges(); // force update
-  //   });
-  // };
-
   getAllDesignationList = () => {
     this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.designations = (res.Data ?? []).map((d: any) => ({
-          ID: d.Id,
-          NAME: d.Value,
+          CODE: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.designations = [];
@@ -411,12 +396,12 @@ export class ApprovalWorkflowPolicyManagement {
   getAllRoles = () => {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
-        this.roles = (res.Data ?? []).map((d: any) => ({
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
           ID: d.Id,
           NAME: d.Value,
         }));
       } else {
-        this.roles = [];
+        this.userRoles = [];
       }
       //this.cdr.detectChanges(); // force update
     });

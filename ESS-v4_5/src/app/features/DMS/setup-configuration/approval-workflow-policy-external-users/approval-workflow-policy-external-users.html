@@ -142,7 +142,7 @@
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Workflow Should Exclude These</span>
                       <nz-select
-                        style="width: 250px"
+                        style="width: 350px"
                         [(ngModel)]="selectedWorkflowExclude"
                         nzPlaceHolder="Select Exclusion"
                         (ngModelChange)="onWorkflowExcludeChange($event)"
@@ -168,7 +168,7 @@
                               labelKey="NAME"
                               placeholder="Select Designation"
                               [(ngModel)]="selectedDesignation"
-                              width="250px"
+                              width="350px"
                             >
                             </app-designation-list>
                           </div>
@@ -181,7 +181,7 @@
                               labelKey="NAME"
                               placeholder="Select Role"
                               [(ngModel)]="selectedRole"
-                              width="250px"
+                              width="350px"
                             >
                             </app-role-list>
                           </div>
@@ -194,7 +194,7 @@
                               labelKey="NAME"
                               placeholder="Select Employee"
                               [(ngModel)]="selectedEmployee"
-                              width="250px"
+                              width="350px"
                             >
                             </app-employee-list>
                           </div>
@@ -211,7 +211,7 @@
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Employee</span>
                       <nz-select
-                        style="width: 250px"
+                        style="width: 350px"
                         [(ngModel)]="selectedEmployeeSingle"
                         nzPlaceHolder="Select Employee"
                         (ngModelChange)="onEmployeeChange($event)"
@@ -232,11 +232,18 @@
                   <ng-container *ngSwitchCase="'3'">
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Role</span>
-                      <nz-select nzShowSearch nzPlaceHolder="Select Role" style="width: 250px">
+                      <nz-select
+                        style="width: 350px"
+                        [(ngModel)]="selectedRoleSingle"
+                        nzPlaceHolder="Select Role"
+                        (ngModelChange)="onRoleChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
                         <nz-option
-                          *ngFor="let emp of employees"
-                          [nzValue]="emp.CODE"
-                          [nzLabel]="emp.NAME"
+                          *ngFor="let dep of userRoles"
+                          [nzValue]="dep.ID"
+                          [nzLabel]="dep.NAME"
                         >
                         </nz-option>
                       </nz-select>
@@ -248,7 +255,7 @@
                     <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                       <span class="d-flex">Designation</span>
                       <nz-select
-                        style="width: 250px"
+                        style="width: 350px"
                         [(ngModel)]="selectedDesignation"
                         nzPlaceHolder="Select Designation"
                         (ngModelChange)="onDesignationChange($event)"

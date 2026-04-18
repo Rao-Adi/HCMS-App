@@ -68,7 +68,7 @@ export class RoleList implements ControlValueAccessor {
   }
 
   writeValue(value: any): void {
-    this.value = value;
+    this.selectedUser = value || [];
   }
 
   registerOnChange(fn: any): void {
@@ -104,8 +104,8 @@ export class RoleList implements ControlValueAccessor {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
-          ID: d.Id,
-          NAME: d.Value,
+          ID: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.data = [];

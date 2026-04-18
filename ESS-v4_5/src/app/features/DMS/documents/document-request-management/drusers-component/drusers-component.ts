@@ -124,6 +124,7 @@ export class DRUsersComponent {
         minWidth: 180,
         required: true,
         clickable: true,
+        showSearch: true,
         clickAction: 'userId', // triggers handleGridAction for 'userId'
       },
     ];

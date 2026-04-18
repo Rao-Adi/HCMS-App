@@ -109,8 +109,8 @@ export class EmployeeList {
     this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.options = (res.Data ?? []).map((d: any) => ({
-          value: d.Code,
-          label: d.Value,
+          value: d.Code || d.code,
+          label: d.Value || d.value,
         }));
       } else {
         this.options = [];
