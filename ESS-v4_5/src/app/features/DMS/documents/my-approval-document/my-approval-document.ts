@@ -94,7 +94,7 @@ export class MyApprovalDocument {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   pageSize = 1;

@@ -2,9 +2,7 @@ import { Component, Input, Output, EventEmitter, forwardRef, input } from '@angu
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { SelectList2 } from '@app/shared/interfaces/interfaces';
-import { RoleService } from '@app/shared/services/role.service';
-import { BehaviorSubject } from 'rxjs';
+import { SelectList2 } from '@app/shared/interfaces/interfaces';  
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
@@ -17,10 +15,9 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
     nzPlaceHolder="Select Roles"
     nzAllowClear
     nzShowSearch
-    nzServerSearch
+    [nzFilterOption]="customFilter"
     [style.width]="width"
     [(ngModel)]="selectedUser"
-    (nzOnSearch)="onSearch($event)"
     (ngModelChange)="onSelectionChange($event)"
   >
     <nz-option *ngFor="let item of data" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
@@ -59,11 +56,8 @@ export class RoleList implements ControlValueAccessor {
   value: any;
   disabled = false;
   selectedUser: string[] = [];
-  loading = false;
-  searchChange$ = new BehaviorSubject('');
 
-  constructor(private _roleService: RoleService,
-    private _peoplePartnerService: PeoplePartnersService
+  constructor(private _peoplePartnerService: PeoplePartnersService
   ) {}
 
   private onChange = (_: any) => {};
@@ -101,10 +95,10 @@ export class RoleList implements ControlValueAccessor {
   //   this.valueChange.emit(value);
   // }
 
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
+  customFilter = (input: string, option: any): boolean => {
+    if (!option || !option.nzLabel) return false;
+    return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
+  };
 
   getAllRoles = () => {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {

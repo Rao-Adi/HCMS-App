@@ -109,7 +109,7 @@ export class CreateUpdateDocument {
   documentId: string = '';
   documentName: string = '';
   requestId: number = 0;
-  LoginEmpId: string = '';
+  loginEmpId: string = '';
 
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
@@ -121,7 +121,7 @@ export class CreateUpdateDocument {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   pageSize = 10;
@@ -253,18 +253,18 @@ export class CreateUpdateDocument {
   ) {}
 
   ngOnInit() {
+    this.GetLoginEmpId();
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       // this.getAllDocumentRequestTypes();
       this.loadRequestTypes();
-      this.GetLoginEmpId();
     });
   }
 
   GetLoginEmpId() {
-    this.LoginEmpId = this._UtilitiesService.GetEmpid() || '';
+    this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   loadRequestTypes() {
@@ -633,7 +633,7 @@ export class CreateUpdateDocument {
 
     const payLoad = {
       documentid: this.documentId,
-      userid: this.LoginEmpId,
+      userid: this.loginEmpId,
       attributes: attributeValues,
     };
 
@@ -655,7 +655,7 @@ export class CreateUpdateDocument {
     });
   }
 
-  private buildAttributePayload(): any[] { 
+  private buildAttributePayload(): any[] {
     const result: any[] = [];
     const formValues = this.dynamicForm.value;
 
@@ -761,6 +761,17 @@ export class CreateUpdateDocument {
       documentTypeCode: this.selectedDocumentType,
       employeeCode: 'EMP-0001',
       RequestStatus: 'Approved',
+
+      // pageNumber: this.currentGridQuery.pageNumber,
+      // pageSize: this.currentGridQuery.pageSize,
+      // sortModel: this.currentGridQuery.sortModel || [],
+      // filterModel: this.currentGridQuery.filterModel || {},
+      // searchTerm: this.currentGridQuery.searchTerm || '',
+      // // Map to satisfy backend validation
+      // sortBy: sortBy,
+      // sortColumn: sortColumn,
+      // searchText: this.currentGridQuery.searchTerm || '',
+      empid: this.loginEmpId,
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({

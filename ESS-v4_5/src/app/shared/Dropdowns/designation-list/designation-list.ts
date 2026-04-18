@@ -3,9 +3,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { DesignationService } from '@app/shared/services/designation.service';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, debounceTime, map, switchMap } from 'rxjs/operators';
+import { DesignationService } from '@app/shared/services/designation.service'; 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
@@ -15,13 +13,12 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
   //templateUrl: './designation-list.html',
   template: `<nz-select
     nzMode="multiple"
-    nzPlaceHolder="Select users"
+    nzPlaceHolder="Select Designation"
     nzAllowClear
     nzShowSearch
-    nzServerSearch
+    [nzFilterOption]="customFilter"
     [style.width]="width"
     [(ngModel)]="selectedUser"
-    (nzOnSearch)="onSearch($event)"
     (ngModelChange)="onSelectionChange($event)"
   >
     <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
@@ -60,11 +57,7 @@ export class DesignationList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
- 
-  searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];
   selectedUser: string[] = [];
-  loading = false;
 
   constructor(private _designationServices: DesignationService,
     private _peoplePartnerService: PeoplePartnersService
@@ -74,16 +67,6 @@ export class DesignationList implements ControlValueAccessor {
   private onTouched = () => {};
 
   ngOnInit() {
-    // this.searchChange$
-    //   .pipe(
-    //     debounceTime(500),
-    //     switchMap((name) => this.getRandomNameList(name))
-    //   )
-    //   .subscribe((data) => {
-    //     this.optionList = data;
-    //     this.loading = false;
-    //   });
-
     this.getAllDesignations();
   }
 
@@ -108,6 +91,11 @@ export class DesignationList implements ControlValueAccessor {
     this.onChange(value); // VERY IMPORTANT
     this.onTouched();
   }
+
+  customFilter = (input: string, option: any): boolean => {
+    if (!option || !option.nzLabel) return false;
+    return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
+  };
 
   // onSelectionChange(value: any): void {
   //   this.value = value;
@@ -140,17 +128,4 @@ export class DesignationList implements ControlValueAccessor {
     //   //this.cdr.detectChanges(); // force update
     // });
   };
-
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
-
-  // getRandomNameList(name: string): Observable<string[]> {
-  //   return this.http.get<{ results: MockUser[] }>(`${this.randomUserUrl}`).pipe(
-  //     map((res) => res.results),
-  //     catchError(() => of<MockUser[]>([])),
-  //     map((list) => list.map((item) => `${item.name.first} ${name}`))
-  //   );
-  // }
 }

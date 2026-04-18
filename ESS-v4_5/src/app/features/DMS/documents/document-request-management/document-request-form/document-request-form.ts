@@ -18,8 +18,7 @@ import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfac
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
 import { CompanyService } from '@app/shared/services/company.service';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
-import { DRUsersComponent } from '../drusers-component/drusers-component';
-import { DocumentsComponent } from '../documents-component/documents-component';
+import { DRUsersComponent } from '../drusers-component/drusers-component'; 
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { TemplateService } from '@app/shared/services/template.service'; 
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service'; 
@@ -47,8 +46,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
     DocumentTypeList,
     DRDistributionList,
     DRUsersComponent,
-    DMSRichTextEdit,
-    DocumentsComponent,
+    DMSRichTextEdit, 
     CabinetStructureList,
   ],
   templateUrl: './document-request-form.html',
@@ -80,7 +78,7 @@ export class DocumentRequestForm {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   pageSize = 10;
@@ -233,6 +231,8 @@ export class DocumentRequestForm {
   ) {}
 
   ngOnInit() {
+    this.GetLoginEmpId();
+
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
@@ -244,7 +244,7 @@ export class DocumentRequestForm {
   }
  
   GetLoginEmpId() {
-    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
+    this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   onRequestTypeChange(value: string | null): void {
@@ -766,13 +766,23 @@ export class DocumentRequestForm {
   }
 
   GetAllApprovedDocuments(query: any) {
-    const payLoad = {
-      DivisionCode: this.selectedDivisions || '',
-      DepartmentCode: this.selectedDepartment || '',
-      SubDepartmentCode: this.selectedSubDepartment || '',
-      BusinessDomainCode: this.selectedBusinessDomain || '',
-      DocumentTypeCode: this.selectedDocumentType || '',
+    const payLoad = { 
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      documentTypeCode: this.selectedDocumentType, 
       RequestStatus: 'Approved',
+      // pageNumber: this.currentGridQuery.pageNumber,
+      // pageSize: this.currentGridQuery.pageSize,
+      // sortModel: this.currentGridQuery.sortModel || [],
+      // filterModel: this.currentGridQuery.filterModel || {},
+      // searchTerm: this.currentGridQuery.searchTerm || '',
+      // // Map to satisfy backend validation
+      // sortBy: sortBy,
+      // sortColumn: sortColumn,
+      // searchText: this.currentGridQuery.searchTerm || '',
+      empid: this.loginEmpId,
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({

@@ -17,6 +17,8 @@ import { WorkflowStepService } from '@app/shared/services/workflow-step-service'
 import { NotificationService } from '@app/shared/notification/notification.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -45,6 +47,8 @@ export enum PolicyId {
     NzButtonModule,
     DocumentTypeList,
     DesignationList,
+    RoleList,
+    EmployeeList,
     CabinetStructureList,
   ],
   templateUrl: './approval-workflow-policy-external-users.html',
@@ -67,10 +71,10 @@ export class ApprovalWorkflowPolicyExternalUsers {
 
   radioValue = '';
   showExclusionTable = false;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType?: string = '';
 
   selectedDesignation?: string[] = [];
@@ -95,7 +99,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   ];
   employees: any[] = [];
   designations: any[] = [];
-  roles: any[] = [];
+  userRoles: any[] = [];
   approvalSequenceData: any[] = [];
 
   workflowExclude: SelectList[] = [
@@ -168,7 +172,6 @@ export class ApprovalWorkflowPolicyExternalUsers {
   onDocumentTypeChange(value: string): void {
     if (value != null) {
       this.selectedDocumentType = value;
-      debugger;
       const payLoad = {
         EntityType: 'Request',
         documentTypeCode: this.selectedDocumentType,
@@ -230,6 +233,32 @@ export class ApprovalWorkflowPolicyExternalUsers {
         this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
       },
     });
+  }
+
+  resetAllFields() {
+    this.emptyInnerFields();
+  }
+
+  emptyInnerFields() {
+    this.approvalSequenceData = [];
+    this.showExclusionTable = false;
+    this.selectedAuthorityType = null;
+    this.selectedWorkflowExclude = null;
+    this.approvalPolicy = null;
+    this.selectedEmployeeSingle = null;
+    this.selectedDesignationSingle = null;
+    this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
+    this.radioValue = '';
+
+    //Cabinet Fields
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.selectedDocumentType = '';
   }
 
   private getEmployeeCodes(): string[] {
@@ -310,16 +339,15 @@ export class ApprovalWorkflowPolicyExternalUsers {
   };
 
   getAllRoles = () => {
-    this._roleService.getRoleList().subscribe((res) => {
-      if (res?.Data) {
-        this.roles = (res.Data ?? []).map((d: any) => ({
-          ID: d.Id,
-          NAME: d.Value,
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
+      if (res) {
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
         }));
       } else {
-        this.roles = [];
+        this.userRoles = [];
       }
-      //this.cdr.detectChanges(); // force update
     });
   };
 

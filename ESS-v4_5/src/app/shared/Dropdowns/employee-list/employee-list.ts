@@ -3,8 +3,7 @@ import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/cor
 import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms'; 
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzSelectModule } from 'ng-zorro-antd/select';
-import { BehaviorSubject } from 'rxjs';
+import { NzSelectModule } from 'ng-zorro-antd/select'; 
 
 @Component({
   selector: 'app-employee-list',
@@ -16,6 +15,7 @@ import { BehaviorSubject } from 'rxjs';
     [nzPlaceHolder]="placeholder"
     nzAllowClear
     nzShowSearch
+    [nzFilterOption]="customFilter"
     [nzDisabled]="disabled"
     [style.width]="width"
     [(ngModel)]="selectedUser"
@@ -92,6 +92,11 @@ export class EmployeeList {
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
   }
+
+  customFilter = (input: string, option: any): boolean => {
+    if (!option || !option.nzLabel) return false;
+    return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
+  };
 
   // onSelectionChange(value: any): void {
   //   this.value = value;

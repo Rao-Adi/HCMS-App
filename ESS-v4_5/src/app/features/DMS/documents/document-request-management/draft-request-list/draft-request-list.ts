@@ -54,7 +54,7 @@ export class DraftRequestList {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   selectedDraftRequest: any;

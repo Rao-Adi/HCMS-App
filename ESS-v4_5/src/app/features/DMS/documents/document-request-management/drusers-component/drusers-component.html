@@ -27,7 +27,9 @@
       <thead class="table-light">
         <tr>
           <th style="width: 25%;">Employee Code</th>
-          <th style="width: 60%;">Employee Name</th>
+          <th style="width: 25%;">Employee Name</th>
+          <th style="width: 25%;">Designation</th>
+          <th style="width: 25%;">Role</th>
           <th style="width: 15%; text-align: center;">Action</th>
         </tr>
       </thead>
@@ -35,6 +37,8 @@
         <tr *ngFor="let emp of selectedEmployeeList; let i = index">
           <td>{{ emp.employeeCode || emp.EmployeeCode || emp.empcode || emp.empid || 'N/A' }}</td>
           <td>{{ emp.employeeName || emp.EmployeeName || (emp.FirstName ? emp.FirstName + ' ' + (emp.LastName || '') : null) || (emp.firstname ? emp.firstname + ' ' + (emp.lastname || '') : null) || (emp.firstName ? emp.firstName + ' ' + (emp.lastName || '') : null) || 'N/A' }}</td>
+          <td>{{ emp.designation || emp.Designation || emp.DesignationName || 'N/A' }}</td>
+          <td>{{ emp.role || emp.Role || 'N/A' }}</td>
           <td style="text-align: center;">
             <button class="btn btn-sm btn-outline-danger" (click)="removeUser(i)" title="Remove User">
               <i class="bi bi-trash"></i>

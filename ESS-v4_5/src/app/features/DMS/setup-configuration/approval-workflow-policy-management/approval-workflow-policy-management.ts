@@ -77,10 +77,10 @@ export class ApprovalWorkflowPolicyManagement {
   optionList: string[] = [];
   approvalSequenceData: any[] = [];
   selectedUser?: string;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType?: string = '';
   selectedDesignation?: string[] = [];
   selectedRole?: string[] = [];
@@ -246,11 +246,6 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   resetAllFields() {
-    // this.selectedDivisions = '';
-    // this.selectedDepartment = '';
-    // this.selectedSubDepartment = '';
-    // this.selectedBusinessDomain = '';
-    // this.selectedDocumentType = '';
     this.emptyInnerFields();
   }
 

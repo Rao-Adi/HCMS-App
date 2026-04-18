@@ -31,7 +31,7 @@ export enum DocumentRequestStatus {
 export class PendingRequestForApproval {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
-  pageSize = 1;
+  pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
 
@@ -43,7 +43,7 @@ export class PendingRequestForApproval {
 
   currentGridQuery: any = {
     pageNumber: 1,
-    pageSize: 1,
+    pageSize: 10,
     sortModel: [],
     filterModel: {},
     searchTerm: '',
@@ -53,7 +53,7 @@ export class PendingRequestForApproval {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   employees: any[] = [];
@@ -136,12 +136,7 @@ export class PendingRequestForApproval {
   }
 
   GetAllPendingRequests(query?: any) {
-    // if (!this.selectedEmployee) {
-    //   this.documentRequestsData = [];
-    //   this.totalRows = 0;
-    //   return;
-    // }
-
+     
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
     } else {

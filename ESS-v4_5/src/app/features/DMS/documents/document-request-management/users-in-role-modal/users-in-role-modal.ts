@@ -77,8 +77,7 @@ export class UsersInRoleModal {
 
   loadData(query: any = {}) {
     const roleId = this.modalData?.data;
-    if (!roleId) return;
-    debugger;
+    if (!roleId) return; 
     const sort = query.sortModel?.[0];
     const payload = {
       searchtext: query.searchTerm || query.searchText || '',

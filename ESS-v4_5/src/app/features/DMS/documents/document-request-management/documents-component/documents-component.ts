@@ -146,18 +146,18 @@ export class DocumentsComponent {
   ) {}
 
   ngOnInit() {
+    this.GetLoginEmpId(); 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       
       this.GetAllApprovedDocuments('');
-      this.GetLoginEmpId(); 
     });
   }
  
   GetLoginEmpId() {
-    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
+    this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -170,8 +170,18 @@ export class DocumentsComponent {
       // departmentCode: this.selectedDepartment,
       // subDepartmentCode: this.selectedSubDepartment,
       // businessDomainCode: this.selectedBusinessDomain,
-      // documentTypeCode: this.selectedDocumentType, 
-      RequestStatus: 'Approved',
+      // documentTypeCode: this.selectedDocumentType,        
+      RequestStatus: 'Approved', 
+      // pageNumber: this.currentGridQuery.pageNumber,
+      // pageSize: this.currentGridQuery.pageSize,
+      // sortModel: this.currentGridQuery.sortModel || [],
+      // filterModel: this.currentGridQuery.filterModel || {},
+      // searchTerm: this.currentGridQuery.searchTerm || '',
+      // // Map to satisfy backend validation
+      // sortBy: sortBy,
+      // sortColumn: sortColumn,
+      // searchText: this.currentGridQuery.searchTerm || '',
+      empid: this.loginEmpId,
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
