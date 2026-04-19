@@ -257,6 +257,10 @@ export class MyApprovalRequest {
   emptyAllFileds() {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
+    this.clearSelection();
+  }
+
+  clearSelection() {
     this.templateHtml = '';
     this.draftFileUrl = '';
     this.requestId = 0;
@@ -265,6 +269,15 @@ export class MyApprovalRequest {
     this.stepId = 0;
     this.selectedRow = null;
     this.hasSelectedRows = false;
+
+    // Safely clear the selection from the ag-grid API to prevent row-index selection preservation
+    if (this.agGridWrapper) {
+      const wrapper = this.agGridWrapper as any;
+      const api = wrapper.gridApi || wrapper.api || wrapper.agGrid?.api;
+      if (api && typeof api.deselectAll === 'function') {
+        api.deselectAll();
+      }
+    }
   }
 
   async onDocumentTypeChange(value: string) {
@@ -531,10 +544,11 @@ export class MyApprovalRequest {
       next: (response) => {
         if (response?.Success) { 
           this._notificationToastService.createNotification('success', 'Request', response.Message);
-          this.emptyAllFileds();
-          this.GetAllPendingDocuments();
+          this.clearSelection();
           if (this.agGridWrapper) {
             this.agGridWrapper.refresh();
+          } else {
+            this.GetAllPendingDocuments(this.currentGridQuery);
           }
         }
       },

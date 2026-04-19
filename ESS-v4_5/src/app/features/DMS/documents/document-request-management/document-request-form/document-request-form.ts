@@ -26,8 +26,8 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
 import { DocumentService } from '@app/shared/services/document.service'; 
 import { PermissionService } from '@app/shared/services/permission.service';
-import { NotificationToastService } from '@app/shared/services/notification.service';
-
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+ 
 @Component({
   selector: 'app-document-request-form',
   imports: [

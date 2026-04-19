@@ -126,16 +126,35 @@
               
               <!-- Notification Toggle Tabs -->
               <div class="d-flex p-2 bg-light border-bottom justify-content-center gap-2">
-                <button class="btn btn-sm rounded-pill flex-fill fw-semibold transition-all" 
+                <div class="custom-tab-container">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': activeNotificationTab === 'unread' }"
+                (click)="switchNotificationTab('unread')"
+              >
+                Unread
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': activeNotificationTab === 'read' }"
+                (click)="switchNotificationTab('read')"
+              >
+                Read
+              </button> 
+            </div>
+
+                <!-- <button class="btn btn-sm rounded-pill flex-fill fw-semibold transition-all" 
                         [ngClass]="activeNotificationTab === 'unread' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted border-0'" 
-                        (click)="activeNotificationTab = 'unread'">
+                        (click)="switchNotificationTab('unread')">
                   Unread <span class="badge bg-white text-primary ms-1" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount }}</span>
                 </button>
                 <button class="btn btn-sm rounded-pill flex-fill fw-semibold transition-all" 
                         [ngClass]="activeNotificationTab === 'read' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted border-0'" 
-                        (click)="activeNotificationTab = 'read'">
+                        (click)="switchNotificationTab('read')">
                   Read
-                </button>
+                </button> -->
               </div>
 
               <!-- Content -->

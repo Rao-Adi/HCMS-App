@@ -20,12 +20,13 @@ import { DataService } from '@app/core/services/data.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { AppConfigService } from '@app/core/services/app-config';
 import { SpinnerService } from '@app/core/services/spinner.service';
-import { NotificationToastService as NotificationHttpService } from '@app/shared/services/notification.service';
+
 import {
   NotificationSignalrService,
   AppNotification,
 } from '@app/shared/services/notification-signalr.service';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
+import { NotificationService } from '@app/shared/services/notification.service';
 
 // 2. DEFINE THE API RESPONSE
 // This interface fixes all the 'unknown' type errors
@@ -84,6 +85,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   public isLoading: Signal<boolean> = this.spinnerService.isLoading.asReadonly();
   isNotificationOpen: boolean = false;
   LoginEmpId: string = '';
+  isRead: boolean = false;
   // --- END of properties ---
 
   activeNotificationTab: 'unread' | 'read' = 'unread';
@@ -111,7 +113,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // 3. INJECT ActivatedRoute
     private activatedRoute: ActivatedRoute,
     private notificationSignalrService: NotificationSignalrService,
-    private notificationHttpService: NotificationHttpService,
+    private notificationHttpService: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -417,6 +419,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.router.navigate(['/security']);
   }
 
+  switchNotificationTab(tab: 'unread' | 'read'): void {
+    this.activeNotificationTab = tab;
+    this.isRead = tab === 'read';
+    this.fetchExistingNotifications();
+  }
+
   // --- TEMPORARY METHOD FOR TESTING: Remove after SSO integration ---
   triggerTestNotification(): void {
     const payload = {
@@ -434,21 +442,29 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   fetchExistingNotifications(): void {
     const empId = this._utilityService.GetEmpid();
     if (empId) {
-      this.notificationHttpService.getMyNotifications(empId).subscribe({
+      this.notificationHttpService.getMyNotifications(empId, this.isRead).subscribe({
         next: (res: any) => {
           if (res?.Success && res.Data) {
-            this.notifications = res.Data.map((n: any) => ({
+            const dataArray = Array.isArray(res.Data) ? res.Data : [res.Data];
+            this.notifications = dataArray.map((n: any) => ({
               id: n.id || n.Id,
               title: n.title || n.Title,
               message: n.message || n.Message,
-              type: n.type || n.Type || 'info',
-              isRead: n.isRead || n.IsRead || false,
+              type: n.type || n.Type || (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
+              isRead: n.IsRead !== undefined ? n.IsRead : (n.isRead !== undefined ? n.isRead : false),
               createdAt: n.createdAt || n.CreatedAt,
             }));
             // Recalculate unread count
-            this.unreadNotificationCount = this.notifications.filter((n) => !n.isRead).length;
-            this.cdRef.detectChanges();
+            if (!this.isRead) {
+              this.unreadNotificationCount = this.notifications.filter((n) => !n.isRead).length;
+            }
+          } else {
+            this.notifications = [];
+            if (!this.isRead) {
+              this.unreadNotificationCount = 0;
+            }
           }
+          this.cdRef.detectChanges();
         },
         error: (err: any) => console.error('Failed to fetch notifications', err),
       });

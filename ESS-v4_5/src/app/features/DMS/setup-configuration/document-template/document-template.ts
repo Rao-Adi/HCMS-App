@@ -15,11 +15,11 @@ import { HttpClient } from '@angular/common/http';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { TemplateService } from '@app/shared/services/template.service';
-import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { TemplateService } from '@app/shared/services/template.service'; 
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { CabinetSelection } from '@app/shared/interfaces/interfaces';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 

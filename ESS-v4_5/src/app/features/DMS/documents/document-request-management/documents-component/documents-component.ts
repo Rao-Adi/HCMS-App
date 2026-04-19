@@ -7,8 +7,8 @@ import { ColDef } from 'ag-grid-community';
 import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
-import { NotificationToastService } from '@app/shared/services/notification.service';
-
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+ 
 @Component({
   selector: 'app-documents-component',
   imports: [AgGridWrapper],
@@ -138,7 +138,7 @@ export class DocumentsComponent {
 
   constructor(
     private modal: NzModalService,
-    private _notificationToasService: NotificationToastService,
+    private _notificationToastService: NotificationToastService,
     private _documentService: DocumentService, 
     private _permissionService: PermissionService
   ) {}
@@ -264,7 +264,7 @@ export class DocumentsComponent {
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }

@@ -9,7 +9,7 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationToastService {
+export class NotificationService {
   private _cabietStructureConfig = new ReplaySubject<Notification[]>(1);
 
   constructor(
@@ -105,8 +105,8 @@ export class NotificationToastService {
     this.notification.create(type, notificationTitle, description);
   }
 
-  getMyNotifications(empId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/DMSNotification/get-notification-by-code/${empId}`);
+  getMyNotifications(empId: string,isRead:boolean): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/DMSNotification/get-notification-by-code/${empId}/${isRead}`);
   }
 
   markAsRead(notificationId: number, empId: string): Observable<any> {

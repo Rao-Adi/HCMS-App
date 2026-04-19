@@ -8,11 +8,11 @@ import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { NotificationToastService } from '@app/shared/notification/notification.service';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
