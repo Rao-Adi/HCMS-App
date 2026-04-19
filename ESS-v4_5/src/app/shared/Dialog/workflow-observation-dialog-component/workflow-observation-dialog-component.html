@@ -26,8 +26,7 @@
               class="badge"
               [ngClass]="{
                 approve: o.Decision === 'Approved',
-                reject: o.Decision === 'Rejected',
-                review: o.Decision === 'Review',
+                reject: o.Decision === 'Rejected' || o.Decision === 'Reworked'
               }"
             >
               {{ o.Decision }}

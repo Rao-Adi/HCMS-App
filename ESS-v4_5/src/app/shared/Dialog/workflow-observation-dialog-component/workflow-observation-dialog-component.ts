@@ -12,7 +12,7 @@ export interface WorkflowObservationDialogData {
   executionId: number;
   stepId?: number;
   mode: 'view' | 'input';
-  action?: 'Approve' | 'Reject' | 'SendBack';
+  action?: 'Approve' | 'Reject' | 'Rework';
 }
 
 @Component({
@@ -78,7 +78,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
     const entityId = this.modalData.id || this.modalData.Id;
     const entityType = this.modalData.entityType;
     this._doumentRequestService
-      .GetWorkflowObservationDetails(entityId, entityType)
+      .getWorkflowDeatils(entityId, entityType)
       .subscribe({
         next: (response) => {
           if (response && response.Data) {
@@ -97,7 +97,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
               Designation: item.Designation,
               Decision: item.Decision,
               Observation: item.Observation,
-              ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.ActionAt || ''),
+              ActionAt: new CustomDateFormatPipe().transform(item.StatusUpdatedOn || item.statusUpdatedOn || ''),
               IsActive: item.isActive || item.IsActive,
             }));
           } else {

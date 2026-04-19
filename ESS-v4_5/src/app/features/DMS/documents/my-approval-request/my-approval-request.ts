@@ -244,13 +244,7 @@ export class MyApprovalRequest {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-
-      this.GetAllPendingDocuments({
-        pageNumber: 1,
-        pageSize: this.selectedPageSize,
-        sortModel: [],
-        filterModel: {},
-      });
+      // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
     });
   }
 
@@ -290,7 +284,7 @@ export class MyApprovalRequest {
     this.emptyAllFileds();
     this.pageNumber = 1;
     this.currentGridQuery.pageNumber = 1;
-    this.GetAllPendingDocuments();
+    // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically.
     
   }
 
@@ -326,7 +320,7 @@ export class MyApprovalRequest {
       subdepartmentcode: this.selectedSubDepartment || '',
       businessdomaincode: this.selectedBusinessDomain || '',
       documenttypecode: this.selectedDocumentType || '',
-      requeststatus: this.selectedTab === 'Disapproved' ? 'Rejected' : this.selectedTab || '',
+      requeststatus: this.selectedTab === 'Disapproved' ? 'Reworked' : this.selectedTab || '',
       empId: this.LoginEmpId || '',
     };
 

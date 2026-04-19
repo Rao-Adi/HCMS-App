@@ -65,7 +65,7 @@ export class ResponsibilityTransferWorkflow {
   totalRows = 0;
   divisions: any[] = [];
 
-  workflowExclude: any[] = [
+  approvalAuthority: any[] = [
     { id: '1', text: 'Director Of Board' },
     { id: '2', text: 'Quality Director' },
     { id: '3', text: 'Bizex Manager' },
@@ -114,7 +114,7 @@ export class ResponsibilityTransferWorkflow {
         field: 'approvalAuthority',
         headerName: 'Approval Authority',
         type: 'dropdown',
-        dropdownOptions: this.workflowExclude,
+        dropdownOptions: this.approvalAuthority,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
