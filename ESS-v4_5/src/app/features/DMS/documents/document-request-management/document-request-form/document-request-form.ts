@@ -18,16 +18,15 @@ import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfac
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
 import { CompanyService } from '@app/shared/services/company.service';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
-import { DRUsersComponent } from '../drusers-component/drusers-component'; 
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { DRUsersComponent } from '../drusers-component/drusers-component';  
 import { TemplateService } from '@app/shared/services/template.service'; 
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service'; 
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
-import { DocumentService } from '@app/shared/services/document.service';
-import { UtilitiesService } from '@app/core/services/utilities.service';
+import { DocumentService } from '@app/shared/services/document.service'; 
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/services/notification.service';
 
 @Component({
   selector: 'app-document-request-form',
@@ -221,12 +220,11 @@ export class DocumentRequestForm {
     private modal: NzModalService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
-    private _notification: NotificationService,
+    private _notificationToasService: NotificationToastService,
     private _doumentRequestService: DocumentRequestService,
     private _documentTemplateService: TemplateService, 
     private _workflowStepService: WorkflowStepService,
-    private _documentService: DocumentService,
-    private _UtilitiesService: UtilitiesService,
+    private _documentService: DocumentService, 
     private _permissionService: PermissionService
   ) {}
 
@@ -357,7 +355,7 @@ export class DocumentRequestForm {
 
   downloadTemplate(): void {
     if (!this.selectedDocumentType) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Template',
         'Please select a Document Type first.',
@@ -383,13 +381,13 @@ export class DocumentRequestForm {
               blob.text().then((text) => {
                 try {
                   const res = JSON.parse(text);
-                  this._notification.createNotification(
+                  this._notificationToasService.createNotification(
                     'warning',
                     'Template',
                     res.Message || 'Template not available.',
                   );
                 } catch {
-                  this._notification.createNotification(
+                  this._notificationToasService.createNotification(
                     'error',
                     'Template',
                     'Failed to read response.',
@@ -428,7 +426,7 @@ export class DocumentRequestForm {
             if (url) {
               window.open(url, '_blank');
             } else {
-              this._notification.createNotification(
+              this._notificationToasService.createNotification(
                 'warning',
                 'Template',
                 'No file template available for download.',
@@ -444,13 +442,13 @@ export class DocumentRequestForm {
             err.error.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification(
+                this._notificationToasService.createNotification(
                   'error',
                   'Template',
                   res.Message || 'Failed to download template.',
                 );
               } catch {
-                this._notification.createNotification(
+                this._notificationToasService.createNotification(
                   'error',
                   'Template',
                   'Failed to download template.',
@@ -459,7 +457,7 @@ export class DocumentRequestForm {
             });
           } else {
             console.error('Error downloading template', err);
-            this._notification.createNotification(
+            this._notificationToasService.createNotification(
               'error',
               'Template',
               'Failed to download template.',
@@ -480,7 +478,7 @@ export class DocumentRequestForm {
 
   DraftDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Validation',
         'Please select an Document Request Type.',
@@ -488,15 +486,15 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Company.');
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Company.');
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notification.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please enter Document Name.');
       return;
     }
     if (!this.selectedDocumentType) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Validation',
         'Please select a Document Type.',
@@ -504,15 +502,15 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedDivisions) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Division.');
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Division.');
       return;
     }
     if (!this.selectedDepartment) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Department.');
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Department.');
       return;
     }
     if (!this.selectedSubDepartment) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Validation',
         'Please select a Sub Department.',
@@ -520,7 +518,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedBusinessDomain) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Validation',
         'Please select a Business Domain.',
@@ -588,7 +586,7 @@ export class DocumentRequestForm {
           //clear all fields
           this.emptyFields();
 
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'success',
             'User',
             'Document drafted successfully!',
@@ -596,7 +594,7 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to draft document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to draft document.');
       },
     });
   }
@@ -604,7 +602,7 @@ export class DocumentRequestForm {
   SubmitDocumentRequests() {
     
     if (!this.selectedDocumentRequestType) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Validation',
         'Please select a Request Type.',
@@ -612,18 +610,18 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Company.');
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Company.');
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notification.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please enter Document Name.');
       return;
     }
 
     // UC-22: Revision Validation Checks
     if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       if (!this.selectedDocumentRow) {
-        this._notification.createNotification(
+        this._notificationToasService.createNotification(
           'warning',
           'Validation',
           'Please select an existing document to revise.',
@@ -633,7 +631,7 @@ export class DocumentRequestForm {
 
       // Mandatory Justification
       if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
-        this._notification.createNotification(
+        this._notificationToasService.createNotification(
           'warning',
           'Validation',
           'Justification is mandatory for a document revision.',
@@ -643,7 +641,7 @@ export class DocumentRequestForm {
 
       // Special Requirement: Document Content must be altered
       if (this.templateHtml === this.originalContentHtml) {
-        this._notification.createNotification(
+        this._notificationToasService.createNotification(
           'warning',
           'Validation',
           'Document Content must be altered from the original version before submission.',
@@ -665,7 +663,7 @@ export class DocumentRequestForm {
       (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
       !this.draftFile
     ) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Validation',
         'Please upload your drafted document before submitting.',
@@ -723,7 +721,7 @@ export class DocumentRequestForm {
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'success',
             'User',
             'Document submitted successfully!',
@@ -731,7 +729,7 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }
@@ -877,7 +875,7 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }

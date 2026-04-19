@@ -1,13 +1,11 @@
-import { Component, ViewChild } from '@angular/core';
-import { UtilitiesService } from '@app/core/services/utilities.service';
+import { Component, ViewChild } from '@angular/core'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
@@ -69,7 +67,7 @@ export class UploadDocuments {
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
     private _permissionService: PermissionService,
@@ -253,9 +251,9 @@ export class UploadDocuments {
 
   onRowAdded(event: { rowData: any; file?: File }): void {
     const { rowData, file } = event;
-    debugger;
+    // debugger;
     if (!file) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'error',
         'Document',
         'Please select a file before saving.',
@@ -285,7 +283,7 @@ export class UploadDocuments {
     formData.append('DocumentFile', file, file.name);
 
     this._documentService.create(formData).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'success',
         'Document',
         'Document created successfully!',
@@ -313,7 +311,7 @@ export class UploadDocuments {
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     //console.log('Row updated:', event);
-    debugger;
+    // debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.level1Id);
     event.rowData.departmentName = this.getDisplayName(this.departments, event.rowData.level2Id);

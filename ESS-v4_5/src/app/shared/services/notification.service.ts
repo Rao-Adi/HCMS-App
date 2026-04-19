@@ -1,33 +1,35 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, Notification } from '../interfaces/interfaces';
 import { AppConfigService } from '@app/core/services/app-config';
-
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+ 
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationService {
+export class NotificationToastService {
   private _cabietStructureConfig = new ReplaySubject<Notification[]>(1);
 
-  constructor(private http: HttpClient,
-    private _config: AppConfigService
+  constructor(
+    private notification: NzNotificationService,
+    private http: HttpClient,
+    private config: AppConfigService,
   ) {}
 
   get cabietStructureConfig$(): Observable<Notification[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
-   // We make apiUrl a getter. It's only called when needed.
+  // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
-    if (!this._config.baseUrl) {
+    if (!this.config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
       return ''; // Failsafe
     }
-    return this._config.baseUrl;
+    return this.config.baseUrl.replace(/\/$/, '');
   }
-
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -55,7 +57,7 @@ export class NotificationService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -76,27 +78,48 @@ export class NotificationService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSNotification/create-notification`,
-      payload
+      payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
       `${this.apiUrl}/DMSNotification/update-notification`,
-      payload
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSNotification/delete-notification/${code}`
+      `${this.apiUrl}/DMSNotification/delete-notification/${code}`,
     );
   }
 
   sendTestNotification(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/DMSNotification/SendTestNotification`, payload, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  createNotification(type: string, notificationTitle: string, description: string): void {
+    this.notification.create(type, notificationTitle, description);
+  }
+
+  getMyNotifications(empId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/DMSNotification/get-notification-by-code/${empId}`);
+  }
+
+  markAsRead(notificationId: number, empId: string): Observable<any> {
+    return this.http.put<any>(
+      `${this.apiUrl}/DMSNotification/mark-as-read/${notificationId}/${empId}`,
+      {},
+    );
+  }
+
+  markAllAsRead(empId: string): Observable<any> {
     return this.http.post<any>(
-      `${this.apiUrl}/DMSNotification/SendTestNotification`, 
-      payload, { headers: this.getHeaders() }
+      `${this.apiUrl}/DMSNotification/mark-all-as-read?empId=${empId}`,
+      {},
     );
   }
 }

@@ -8,7 +8,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -57,7 +57,7 @@ export class BusinessDomainComponent {
     private _businessDomainService: BusinessDomainService,
     private _masterCacheService: Mastercacheservice,
     private _subDepartmentServices: SubDepartmentService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -245,7 +245,7 @@ export class BusinessDomainComponent {
     this._businessDomainService.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Business Domain',
           'Business Domain updated successfully!',
@@ -265,7 +265,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -284,7 +284,7 @@ export class BusinessDomainComponent {
     this._businessDomainService.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Business Domain',
           'Business Domain updated successfully!',
@@ -304,7 +304,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -317,7 +317,7 @@ export class BusinessDomainComponent {
     this._businessDomainService.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Business Domain',
           'Business Domain deleted successfully!',
@@ -337,7 +337,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

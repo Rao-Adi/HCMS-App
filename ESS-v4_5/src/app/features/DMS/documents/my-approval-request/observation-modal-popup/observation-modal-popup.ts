@@ -1,8 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
@@ -65,7 +64,7 @@ export class ObservationModalPopup {
   constructor(
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
   ) {}
 
   ngOnInit() { 
@@ -152,7 +151,7 @@ export class ObservationModalPopup {
           }
         },
         error: (err) => {
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'error',
             'Error',
             err?.Message || 'Failed to fetch document details.',

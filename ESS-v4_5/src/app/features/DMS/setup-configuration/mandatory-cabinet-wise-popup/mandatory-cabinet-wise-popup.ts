@@ -5,17 +5,13 @@ import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AttributeMandatoryScopeService } from '@app/shared/services/attribute-mandatory-scope.service';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
-import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
-import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service'; 
 import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
@@ -71,7 +67,7 @@ export class MandatoryCabinetWisePopup {
     private modalRef: NzModalRef,
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _attributeMandatoryService: AttributeMandatoryScopeService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
     private _permissionService: PermissionService
@@ -187,7 +183,7 @@ export class MandatoryCabinetWisePopup {
     };
     this._attributeMandatoryService.create(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document Attribute',
           'Document Attribute created successfully!',
@@ -218,7 +214,7 @@ export class MandatoryCabinetWisePopup {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -239,7 +235,7 @@ export class MandatoryCabinetWisePopup {
     };
     this._attributeMandatoryService.update(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document Attribute',
           'Document Attribute created successfully!',
@@ -270,7 +266,7 @@ export class MandatoryCabinetWisePopup {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

@@ -8,7 +8,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DivisionService } from '@app/shared/services/division.services';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -54,7 +54,7 @@ export class DivisionComponent {
   constructor(
     private _divisionServices: DivisionService,
     private _masterCacheService: Mastercacheservice,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -218,7 +218,7 @@ export class DivisionComponent {
     this._divisionServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Division',
           'Division created successfully!',
@@ -238,7 +238,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -255,7 +255,7 @@ export class DivisionComponent {
     this._divisionServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Division',
           'Division updated successfully!',
@@ -275,7 +275,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -286,7 +286,7 @@ export class DivisionComponent {
     this._divisionServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Division',
           'Division deleted successfully!',
@@ -306,7 +306,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

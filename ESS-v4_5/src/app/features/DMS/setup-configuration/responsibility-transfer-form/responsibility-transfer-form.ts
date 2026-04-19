@@ -16,7 +16,7 @@ import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
@@ -139,7 +139,7 @@ export class ResponsibilityTransferForm {
   };
 
   constructor(
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _responsibilityTransfer: ResponsibilityTransferService,
     private _utilityService: UtilitiesService,
     private _peoplePartnerService: PeoplePartnersService,
@@ -328,14 +328,14 @@ export class ResponsibilityTransferForm {
 
   submitRequest(data: any) {
     if (this.selectedEmployeeFrom === undefined || this.selectedEmployeeFrom === '') {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Responsibity Transfer',
         'Employee From required',
       );
       return;
     } else if (this.selectedEmployeeTo === undefined || this.selectedEmployeeTo === '') {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Responsibity Transfer',
         'Employee To required',
@@ -345,7 +345,7 @@ export class ResponsibilityTransferForm {
       this.selectedReasonForTransfer === undefined ||
       this.selectedReasonForTransfer === ''
     ) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Responsibity Transfer',
         'Reason For Transfer required',
@@ -353,21 +353,21 @@ export class ResponsibilityTransferForm {
       return;
     }
     if (!this.selectedEffectiveDateFrom) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Responsibity Transfer',
         'Effective Date From required',
       );
       return;
     } else if (this.remarks === undefined || this.remarks === '') {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Responsibility Transfer',
         'Remarks field is mandatory.',
       );
       return;
     } else if (!this.attachment) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Responsibility Transfer',
         'Attachment is mandatory.',
@@ -398,7 +398,7 @@ export class ResponsibilityTransferForm {
 
     this._responsibilityTransfer.create(formData).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document',
           'Transfer request submitted successfully!',
@@ -406,7 +406,7 @@ export class ResponsibilityTransferForm {
         this.cancel();
       },
       error: (err: any) => {
-        this._notification.createNotification('error', 'Error', err?.Message || 'Failed to submit transfer request.');
+        this._notificationToastService.createNotification('error', 'Error', err?.Message || 'Failed to submit transfer request.');
       }
     });
   }
@@ -425,12 +425,12 @@ export class ResponsibilityTransferForm {
 
   submitWorkflowAction(actionType: string): void {
     if (!this.selectedRow) {
-      this._notification.createNotification('warning', 'Warning', 'Please select a row first.');
+      this._notificationToastService.createNotification('warning', 'Warning', 'Please select a row first.');
       return;
     }
 
     if (!this.observation || this.observation.trim() === '') {
-      this._notification.createNotification('error', 'Error', 'Observation is required');
+      this._notificationToastService.createNotification('error', 'Error', 'Observation is required');
       return;
     }
 
@@ -443,7 +443,7 @@ export class ResponsibilityTransferForm {
     this._responsibilityTransfer.takeAction(payload).subscribe({
       next: (res: any) => {
         if (res?.Success || res?.success) {
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'success',
             'Action Successful',
             res?.Message || `Request has been ${actionType.toLowerCase()}d.`,
@@ -452,11 +452,11 @@ export class ResponsibilityTransferForm {
           this.observation = '';
           this.selectedRow = null;
         } else {
-          this._notification.createNotification('error', 'Error', res?.Message || 'Action failed.');
+          this._notificationToastService.createNotification('error', 'Error', res?.Message || 'Action failed.');
         }
       },
       error: (err: any) => {
-        this._notification.createNotification('error', 'Error', err?.Message || 'Action failed.');
+        this._notificationToastService.createNotification('error', 'Error', err?.Message || 'Action failed.');
       },
     });
   }

@@ -32,15 +32,14 @@ import { WorkflowStepService } from '@app/shared/services/workflow-step-service'
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
 import { DocumentService } from '@app/shared/services/document.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
-import { UtilitiesService } from '@app/core/services/utilities.service';
-import { PermissionService } from '@app/shared/services/permission.service';
+import { PermissionService } from '@app/shared/services/permission.service'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 // Define interface for request types
 interface RequestType {
@@ -237,18 +236,18 @@ export class CreateUpdateDocument {
       }),
     },
   ];
+
   DocumentObseletionData: any[] = [];
 
   constructor(
     private modal: NzModalService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _documentService: DocumentService,
     private documentTemplateService: TemplateService,
-    private _documentRequestService: DocumentRequestService,
-    private _UtilitiesService: UtilitiesService,
+    private _documentRequestService: DocumentRequestService, 
     private _permissionService: PermissionService,
   ) {}
 
@@ -582,7 +581,7 @@ export class CreateUpdateDocument {
     debugger;
     this.showTrainingUserTable = this.showTrainingUserTable == true ? false : true;
     // if (!this.approvalPolicy) {
-    //   this._notification.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select an approval policy.',
@@ -616,11 +615,11 @@ export class CreateUpdateDocument {
     //     if (response?.Success) {
     //       this.trainingUsersData = [...response.Data];
 
-    //       this._notification.createNotification('success', 'Workflow', response.Message);
+    //       this._notificationToastService.createNotification('success', 'Workflow', response.Message);
     //     }
     //   },
     //   error: (err) => {
-    //     this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+    //     this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
     //   },
     // });
   }
@@ -640,7 +639,7 @@ export class CreateUpdateDocument {
     this._documentService.submitDocument(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification('success', 'Document', response.Message);
+          this._notificationToastService.createNotification('success', 'Document', response.Message);
           this.emptyFields();
           this.selectedRequestType = '';
           this.attributes = [];
@@ -650,7 +649,7 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to approve document.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to approve document.');
       },
     });
   }
@@ -857,7 +856,7 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }
@@ -901,7 +900,7 @@ export class CreateUpdateDocument {
     const idToDownload = this.selectedRequestId ? Number(this.selectedRequestId) : this.requestId;
 
     if (!idToDownload) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Draft',
         'No drafted file available for download.',
@@ -925,13 +924,13 @@ export class CreateUpdateDocument {
             blob.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification(
+                this._notificationToastService.createNotification(
                   'warning',
                   'Draft',
                   res.Message || 'Draft not available.',
                 );
               } catch {
-                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification('error', 'Draft', 'Failed to read response.');
               }
             });
             return;
@@ -957,7 +956,7 @@ export class CreateUpdateDocument {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
         } else {
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'warning',
             'Draft',
             'No drafted file available for download.',
@@ -972,18 +971,18 @@ export class CreateUpdateDocument {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification(
+              this._notificationToastService.createNotification(
                 'error',
                 'Draft',
                 res.Message || 'Failed to download draft.',
               );
             } catch {
-              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
         }
       },
     });

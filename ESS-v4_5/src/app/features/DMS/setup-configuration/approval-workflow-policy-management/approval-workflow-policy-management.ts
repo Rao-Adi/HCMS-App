@@ -15,7 +15,7 @@ import { DesignationList } from '@app/shared/Dropdowns/designation-list/designat
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -129,7 +129,7 @@ export class ApprovalWorkflowPolicyManagement {
   constructor(
     private _permissionService: PermissionService,
     private _workflowStepService: WorkflowStepService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
@@ -193,7 +193,7 @@ export class ApprovalWorkflowPolicyManagement {
   addExclusion() { 
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
     if (!this.approvalPolicy) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an approval policy.',
@@ -228,11 +228,11 @@ export class ApprovalWorkflowPolicyManagement {
           this.showExclusionTable = true;
           this.approvalSequenceData = [...response.Data];
 
-          this._notification.createNotification('success', 'Workflow', response.Message);
+          this._notificationToastService.createNotification('success', 'Workflow', response.Message);
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
       },
     });
   }

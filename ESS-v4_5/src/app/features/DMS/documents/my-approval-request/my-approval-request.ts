@@ -14,13 +14,13 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal'; 
 import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -229,7 +229,7 @@ export class MyApprovalRequest {
   constructor(
     private _doumentRequestService: DocumentRequestService,
     private modal: NzModalService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _userService: UserService,
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
@@ -408,7 +408,7 @@ export class MyApprovalRequest {
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
-        this._notification.createNotification('error', 'Error', 'Failed to fetch documents.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to fetch documents.');
       },
     });
   }
@@ -516,7 +516,7 @@ export class MyApprovalRequest {
 
   submitWorkflowAction(action: string, observation: string) {
     if (!observation || observation.trim() === '') {
-      this._notification.createNotification('error', 'Validation', 'Observation is required');
+      this._notificationToastService.createNotification('error', 'Validation', 'Observation is required');
       return;
     }
 
@@ -530,12 +530,16 @@ export class MyApprovalRequest {
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) { 
-          this._notification.createNotification('success', 'Request', response.Message);
+          this._notificationToastService.createNotification('success', 'Request', response.Message);
+          this.emptyAllFileds();
           this.GetAllPendingDocuments();
+          if (this.agGridWrapper) {
+            this.agGridWrapper.refresh();
+          }
         }
       },
       error: (err) => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Request',
           'Failed to create workflow step.',
@@ -606,7 +610,7 @@ export class MyApprovalRequest {
 
   downloadDraft(): void {
     if (!this.requestId) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Draft',
         'No drafted file available for download.',
@@ -630,13 +634,13 @@ export class MyApprovalRequest {
             blob.text().then((text) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification(
+                this._notificationToastService.createNotification(
                   'warning',
                   'Draft',
                   res.Message || 'Draft not available.',
                 );
               } catch {
-                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification('error', 'Draft', 'Failed to read response.');
               }
             });
             return;
@@ -662,7 +666,7 @@ export class MyApprovalRequest {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
         } else {
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'warning',
             'Draft',
             'No drafted file available for download.',
@@ -677,18 +681,18 @@ export class MyApprovalRequest {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification(
+              this._notificationToastService.createNotification(
                 'error',
                 'Draft',
                 res.Message || 'Failed to download draft.',
               );
             } catch {
-              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
         }
       },
     });

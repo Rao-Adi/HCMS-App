@@ -3,7 +3,7 @@ import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { UserService } from '@app/shared/services/user-service';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -112,7 +112,7 @@ export class PendingRequestForApproval {
 
   constructor(
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
   ) {}
@@ -208,7 +208,7 @@ export class PendingRequestForApproval {
         }
       },
       error: (err) => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.Message || 'Failed to fetch pending requests.',

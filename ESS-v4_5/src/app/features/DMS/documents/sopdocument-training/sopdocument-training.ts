@@ -15,7 +15,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DocumentTrainingService } from '@app/shared/services/document-training.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { NotificationService } from '@app/shared/notification/notification.service'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service'; 
 import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
@@ -70,7 +70,7 @@ export class SOPDocumentTraining {
   constructor(
     private _documentTrainingService: DocumentTrainingService,
     private modal: NzModalService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -307,7 +307,7 @@ export class SOPDocumentTraining {
           nzWidth: 500,
         });
       } else {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           res?.Message || 'Failed to load assessment details.',
@@ -334,14 +334,14 @@ export class SOPDocumentTraining {
   executeAcknowledge(docId: string) {
     this._documentTrainingService.AcknowledgeAndSendForAuthorization(docId).subscribe((res) => {
       if (res?.Success) {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Success',
           'Document training acknowledged and sent for authorization.',
         );
         this.GetAllOnline({});
       } else {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           res?.Message || 'Failed to send for authorization.',

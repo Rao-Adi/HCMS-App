@@ -3,12 +3,11 @@ import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal'; 
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { ColDef } from 'ag-grid-community';
-import { NotificationService } from '@app/shared/notification/notification.service'; 
+import { ColDef } from 'ag-grid-community'; 
 import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
-import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/services/notification.service';
 
 @Component({
   selector: 'app-documents-component',
@@ -139,9 +138,8 @@ export class DocumentsComponent {
 
   constructor(
     private modal: NzModalService,
-    private _notification: NotificationService,
-    private _documentService: DocumentService,
-    private _UtilitiesService: UtilitiesService,
+    private _notificationToasService: NotificationToastService,
+    private _documentService: DocumentService, 
     private _permissionService: PermissionService
   ) {}
 
@@ -266,7 +264,7 @@ export class DocumentsComponent {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }

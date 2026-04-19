@@ -11,10 +11,8 @@ import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces'
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { DesignationService } from '@app/shared/services/designation.service';
-import { RoleService } from '@app/shared/services/role.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
@@ -113,8 +111,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
 
   constructor(
     private _permissionService: PermissionService,
-    private _notification: NotificationService,
-    private _designationServices: DesignationService, 
+    private _notificationToastService: NotificationToastService, 
     private _workflowStepService: WorkflowStepService,
     private _peoplePartnerService: PeoplePartnersService,
   ) {}
@@ -194,7 +191,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   addExclusion() {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
     if (!this.approvalPolicy) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an approval policy.',
@@ -223,11 +220,11 @@ export class ApprovalWorkflowPolicyExternalUsers {
         if (response?.Success) {
           this.approvalSequenceData = [...response.Data];
 
-          this._notification.createNotification('success', 'Workflow', response.Message);
+          this._notificationToastService.createNotification('success', 'Workflow', response.Message);
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
       },
     });
   }

@@ -16,7 +16,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { TemplateService } from '@app/shared/services/template.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { CabinetSelection } from '@app/shared/interfaces/interfaces';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -100,7 +100,7 @@ export class DocumentTemplate {
     private http: HttpClient,
     private iconService: NzIconService,
     private documentTemplateService: TemplateService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {
     this.iconService.addIcon(DownloadOutline);
@@ -207,18 +207,18 @@ export class DocumentTemplate {
 
   saveTemplate(data: any) {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
-      this._notification.createNotification('warning', 'Document Type', 'Document Type required');
+      this._notificationToastService.createNotification('warning', 'Document Type', 'Document Type required');
       return;
     }
 
     if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
-      this._notification.createNotification('warning', 'Template Type', 'Template Type required');
+      this._notificationToastService.createNotification('warning', 'Template Type', 'Template Type required');
       return;
     }
 
     if (!this.isDefaultTemplate) {
       if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
-        this._notification.createNotification('warning', 'Department', 'Department required');
+        this._notificationToastService.createNotification('warning', 'Department', 'Department required');
         return;
       }
     }
@@ -227,7 +227,7 @@ export class DocumentTemplate {
       (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
       !this.selectedFile
     ) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'File Required',
         'Please choose a file to upload',
@@ -256,7 +256,7 @@ export class DocumentTemplate {
 
     this.documentTemplateService.create(formData).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document Template',
           'Document Template created successfully!',
@@ -277,7 +277,7 @@ export class DocumentTemplate {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Template', message);
+        this._notificationToastService.createNotification('error', 'Document Template', message);
       },
     });
   }

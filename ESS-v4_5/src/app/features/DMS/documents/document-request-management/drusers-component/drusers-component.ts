@@ -7,7 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
@@ -70,7 +70,7 @@ export class DRUsersComponent {
   constructor(
     private _userService: UserService,
     private modal: NzModalService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
     private _UtilitiesService: UtilitiesService,
@@ -211,7 +211,7 @@ export class DRUsersComponent {
 
   openCabinetModal(rowData: any): void {
     if (!rowData.userId) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Warning',
         'Please select a User Role first.',
@@ -282,7 +282,7 @@ export class DRUsersComponent {
     // };
 
     // this._userService.create(payLoad).subscribe(() => {
-    //   this._notification.createNotification('success', 'User', 'User created successfully!');
+    //   this._notificationToasService.createNotification('success', 'User', 'User created successfully!');
     // });
     const rowWithId = {
       ...rowData,
@@ -307,7 +307,7 @@ export class DRUsersComponent {
     };
 
     this._userService.update(payLoad).subscribe(() => {
-      this._notification.createNotification('success', 'User', 'User created successfully!');
+      this._notificationToastService.createNotification('success', 'User', 'User created successfully!');
 
       // Update display names
       event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);

@@ -3,14 +3,13 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
-import { BehaviorSubject } from 'rxjs';
-import { UserService } from '@app/shared/services/user-service';
+import { BehaviorSubject } from 'rxjs'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -78,7 +77,7 @@ export class ResponsibilityTransferWorkflow {
   };
 
   constructor(
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
     private _divisionServices: DivisionCacheService,
     private _transferWorkflowPolicyService: TransferWorkflowPolicyService,
@@ -163,7 +162,7 @@ export class ResponsibilityTransferWorkflow {
     };
 
     this._transferWorkflowPolicyService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'success',
         'Access Level',
         'Access Level created successfully!',

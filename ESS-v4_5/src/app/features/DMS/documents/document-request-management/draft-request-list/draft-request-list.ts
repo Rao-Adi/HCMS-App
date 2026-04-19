@@ -2,8 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces'; 
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { ColDef } from 'ag-grid-community';
@@ -17,7 +16,8 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
-
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+ 
 export enum DocumentRequestStatus {
   Draft = 0,
   Submitted = 1,
@@ -85,13 +85,13 @@ export class DraftRequestList {
 
   requestId: number = 0;
   submittedby: number = 0;
-  pageSize = 1;
+  pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
 
   currentGridQuery: any = {
     pageNumber: 1,
-    pageSize: 1,
+    pageSize: 10,
     sortModel: [],
     filterModel: {},
     searchTerm: '',
@@ -167,13 +167,13 @@ export class DraftRequestList {
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'createdOn', label: 'Created On', visible: true },
-    { field: 'Status', label: 'Status', visible: true },
+    { field: 'status', label: 'Status', visible: true },
   ];
 
   constructor(
     private modal: NzModalService,
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
+    private _notificationToasService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
   ) {}
@@ -287,7 +287,7 @@ export class DraftRequestList {
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
-        this._notification.createNotification(
+        this._notificationToasService.createNotification(
           'error',
           'Error',
           err?.Message || 'Failed to fetch draft documents.',
@@ -382,7 +382,7 @@ export class DraftRequestList {
 
   downloadDraft(): void {
     if (!this.requestId) {
-      this._notification.createNotification(
+      this._notificationToasService.createNotification(
         'warning',
         'Draft',
         'No drafted file available for download.',
@@ -406,13 +406,13 @@ export class DraftRequestList {
             blob.text().then((text) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification(
+                this._notificationToasService.createNotification(
                   'warning',
                   'Template',
                   res.Message || 'Template not available.',
                 );
               } catch {
-                this._notification.createNotification(
+                this._notificationToasService.createNotification(
                   'error',
                   'Template',
                   'Failed to read response.',
@@ -451,7 +451,7 @@ export class DraftRequestList {
           if (url) {
             window.open(url, '_blank');
           } else {
-            this._notification.createNotification(
+            this._notificationToasService.createNotification(
               'warning',
               'Template',
               'No file template available for download.',
@@ -467,13 +467,13 @@ export class DraftRequestList {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification(
+              this._notificationToasService.createNotification(
                 'error',
                 'Template',
                 res.Message || 'Failed to download template.',
               );
             } catch {
-              this._notification.createNotification(
+              this._notificationToasService.createNotification(
                 'error',
                 'Template',
                 'Failed to download template.',
@@ -482,7 +482,7 @@ export class DraftRequestList {
           });
         } else {
           console.error('Error downloading template', err);
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'error',
             'Template',
             'Failed to download template.',
@@ -529,8 +529,7 @@ export class DraftRequestList {
     // Reverted back to JSON to resolve 415 Unsupported Media Type
     const payload = {
       CompanyId: this.selectedCompany,
-      RequestId: this.requestId,
-      SubmittedBy: 1, // this will be bind with UserId
+      RequestId: this.requestId, 
       DistributionList: cleanDistributionList,
       UserIds: userids,
     };
@@ -538,16 +537,17 @@ export class DraftRequestList {
     this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'success',
             'User',
             'Document submitted successfully!',
           );
           this.GetAllDraftDocuments();
+          this.selectedDraftRequest=null;
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }
@@ -614,7 +614,7 @@ export class DraftRequestList {
     this._doumentRequestService.UpdateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'success',
             'User',
             'Document updated successfully!',
@@ -623,7 +623,7 @@ export class DraftRequestList {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }

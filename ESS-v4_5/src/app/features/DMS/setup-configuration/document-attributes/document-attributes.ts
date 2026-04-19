@@ -15,7 +15,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { MandatoryCabinetWisePopup } from '../mandatory-cabinet-wise-popup/mandatory-cabinet-wise-popup';
-import { NotificationService } from '@app/shared/notification/notification.service'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service'; 
 import { ControlTypeService } from '@app/shared/services/control-type.service'; 
 import { PermissionService } from '@app/shared/services/permission.service';
 @Component({
@@ -76,7 +76,7 @@ export class DocumentAttributes {
   constructor(
     private _documentAttribute: DocumentAttributeService,
     private modal: NzModalService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _controlTypeService: ControlTypeService,
     private _permissionService: PermissionService,
   ) {}
@@ -205,7 +205,7 @@ export class DocumentAttributes {
 
   onRowAdded(event: { rowData: any }): void {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Document Attribute',
         'Document Attribute is required',
@@ -225,9 +225,9 @@ export class DocumentAttributes {
     this._documentAttribute.create(payLoad).subscribe({
       next: (res: ApiResponse<any>) => {
         if (res.Success) {
-          this._notification.createNotification('success', 'Document template', res.Message);
+          this._notificationToastService.createNotification('success', 'Document template', res.Message);
         } else {
-          this._notification.createNotification('warning', 'Document template', res.Message);
+          this._notificationToastService.createNotification('warning', 'Document template', res.Message);
         }
 
         const rowWithId = {
@@ -242,7 +242,7 @@ export class DocumentAttributes {
         this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
       },
       error: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Document Attribute',
           'Server error. Please try again.',
@@ -253,7 +253,7 @@ export class DocumentAttributes {
 
   onRowUpdated(event: { rowData: any }): void {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Document Attribute',
         'Document Attribute is required',
@@ -271,7 +271,7 @@ export class DocumentAttributes {
       IsDeleted: false,
     };
     this._documentAttribute.update(payLoad).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'sucess',
         'Document template',
         'Document template updated successfully!',
@@ -296,7 +296,7 @@ export class DocumentAttributes {
     //console.log('🗑️ Row Deleted:', row);
 
     this._documentAttribute.delete(row.Code).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'sucess',
         'Document Attribute',
         'Document Attribute deleted successfully!',

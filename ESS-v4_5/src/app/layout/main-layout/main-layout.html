@@ -45,7 +45,7 @@
     </div>
 
     <header class="page-header bg-white border-bottom position-sticky top-0 w-100" role="region" aria-label="Page Header">
-      <div class="header-content container-fluid py-0 d-flex align-items-center justify-content-between gap-3">
+      <div class="header-content container-fluid py-0 d-flex align-items-center justify-content-between gap-3 w-100">
 
         <div class="header-left d-flex align-items-center gap-2 min-w-0">
           <!-- Toggle button removed from here -->
@@ -88,7 +88,7 @@
 
         </div>
 
-        <div class="header-right d-flex align-items-center gap-3">
+        <div class="header-right d-flex align-items-center gap-3 ms-auto">
           <!-- TEMPORARY TEST BUTTON: Remove after SSO integration -->
           <button type="button" class="btn btn-sm btn-outline-danger" (click)="triggerTestNotification()">Test Notif</button>
 
@@ -103,27 +103,82 @@
               </span>
             </button>
 
-            <div class="dropdown-content shadow border rounded-3 p-0" [style.display]="isNotificationOpen ? 'block' : 'none'" (click)="$event.stopPropagation()" style="width: 320px; right: -10px; left: auto; max-height: 400px; overflow-y: auto;">
-              <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white position-sticky top-0" style="z-index: 10;">
-                <span class="fw-semibold mb-0">Notifications</span>
-                <a href="javascript:void(0)" class="text-decoration-none small text-primary" *ngIf="unreadNotificationCount > 0" (click)="markAllAsRead(); $event.stopPropagation()">Mark all as read</a>
+            <!-- Embedded CSS for modern scrollbar and animations -->
+            <style>
+              .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+              .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+              .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.15); border-radius: 10px; }
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,0.25); }
+              @keyframes slideDownNotif { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+              .notif-dropdown-anim { animation: slideDownNotif 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+              .notif-item-hover:hover { background-color: #f8f9fa !important; }
+            </style>
+
+            <div class="dropdown-content shadow-lg border-0 rounded-4 p-0 notif-dropdown-anim" [style.display]="isNotificationOpen ? 'block' : 'none'" (click)="$event.stopPropagation()" style="width: 360px; right: -10px; left: auto; max-height: 500px; display: flex; flex-direction: column; overflow: hidden;">
+              
+              <!-- Header -->
+              <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white position-sticky top-0" style="z-index: 10; border-radius: 1rem 1rem 0 0;">
+                <h6 class="fw-bold mb-0 text-dark">Notifications</h6>
+                <a href="javascript:void(0)" class="text-decoration-none small text-primary fw-semibold" *ngIf="unreadNotificationCount > 0" (click)="markAllAsRead(); $event.stopPropagation()">
+                  <i class="bi bi-check2-all me-1"></i>Mark all read
+                </a>
               </div>
-              <div *ngIf="notifications.length === 0" class="p-4 text-center text-muted small">
-                You have no new notifications.
+              
+              <!-- Notification Toggle Tabs -->
+              <div class="d-flex p-2 bg-light border-bottom justify-content-center gap-2">
+                <button class="btn btn-sm rounded-pill flex-fill fw-semibold transition-all" 
+                        [ngClass]="activeNotificationTab === 'unread' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted border-0'" 
+                        (click)="activeNotificationTab = 'unread'">
+                  Unread <span class="badge bg-white text-primary ms-1" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount }}</span>
+                </button>
+                <button class="btn btn-sm rounded-pill flex-fill fw-semibold transition-all" 
+                        [ngClass]="activeNotificationTab === 'read' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted border-0'" 
+                        (click)="activeNotificationTab = 'read'">
+                  Read
+                </button>
               </div>
-              <div class="list-group list-group-flush">
-                <div *ngFor="let notif of notifications"
-                     class="list-group-item list-group-item-action p-3 border-bottom"
-                     [class.bg-light]="!notif.isRead"
-                     (click)="markAsRead(notif)"
-                     style="cursor: pointer;">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <strong class="small mb-0 text-truncate me-2" [class.text-dark]="!notif.isRead" [class.text-muted]="notif.isRead">{{ notif.title }}</strong>
-                    <span class="badge" style="font-size: 0.65rem;" [ngClass]="getNotificationBadgeClass(notif.type)">{{ notif.type || 'info' }}</span>
+
+              <!-- Content -->
+              <div class="flex-grow-1 overflow-auto custom-scrollbar" style="max-height: 380px; background-color: #fcfcfc;">
+                
+                <!-- Empty State -->
+                <div *ngIf="filteredNotifications.length === 0" class="d-flex flex-column align-items-center justify-content-center p-5 text-center">
+                  <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-bell-slash text-muted fs-3"></i>
                   </div>
-                  <p class="small mb-0 text-break" style="line-height: 1.4;" [class.text-muted]="notif.isRead" [class.text-dark]="!notif.isRead">{{ notif.message }}</p>
+                  <h6 class="fw-semibold text-dark mb-1">All caught up!</h6>
+                  <p class="text-muted small mb-0">You have no {{ activeNotificationTab }} notifications.</p>
+                </div>
+
+                <!-- Notification List -->
+                <div class="list-group list-group-flush">
+                  <div *ngFor="let notif of filteredNotifications"
+                     class="list-group-item list-group-item-action p-3 border-bottom d-flex gap-3 align-items-start border-0 position-relative notif-item-hover"
+                     [ngStyle]="{'background-color': notif.isRead ? '#ffffff' : '#f4f9ff'}"
+                     (click)="markAsRead(notif)"
+                     style="cursor: pointer; transition: background-color 0.2s ease;">
+                    
+                    <!-- Unread dot indicator -->
+                    <div *ngIf="!notif.isRead" class="position-absolute top-50 start-0 translate-middle-y rounded-circle bg-primary" style="width: 6px; height: 6px; margin-left: 8px;"></div>
+                    
+                    <!-- Icon Container -->
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                         style="width: 40px; height: 40px; background-color: #e9ecef; margin-left: 8px;">
+                      <i class="bi fs-5" [ngClass]="[getNotificationIcon(notif.type), getNotificationColor(notif.type)]"></i>
+                    </div>
+
+                    <!-- Text Content -->
+                    <div class="flex-grow-1 min-vw-0">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="small mb-0 text-truncate" [class.text-dark]="!notif.isRead" [class.text-secondary]="notif.isRead" style="max-width: 80%;">{{ notif.title }}</strong>
+                        <small class="text-muted ms-2" style="font-size: 0.7rem; white-space: nowrap;" *ngIf="notif.createdAt">{{ notif.createdAt | date:'MMM d, h:mm a' }}</small>
+                      </div>
+                      <p class="small mb-0" style="line-height: 1.4; color: #555;" [class.text-muted]="notif.isRead">{{ notif.message }}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
@@ -160,8 +215,6 @@
 
           </div>
         </div>
-
-      </div>
     </header>
 
     <div class="page-content container-fluid" role="main">

@@ -8,7 +8,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { DivisionService } from '@app/shared/services/division.services';
@@ -64,7 +64,7 @@ export class DepartmentComponent {
     private _departmentServices: DepartmentService,
     private _masterCacheService: Mastercacheservice,
     private _divisionServices: DivisionService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -260,7 +260,7 @@ export class DepartmentComponent {
     this._departmentServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Department',
           'Department updated successfully!',
@@ -280,7 +280,7 @@ export class DepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -297,7 +297,7 @@ export class DepartmentComponent {
     this._departmentServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Department',
           'Department updated successfully!',
@@ -317,7 +317,7 @@ export class DepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -328,7 +328,7 @@ export class DepartmentComponent {
     this._departmentServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Department',
           'Department deleted successfully!',
@@ -348,7 +348,7 @@ export class DepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

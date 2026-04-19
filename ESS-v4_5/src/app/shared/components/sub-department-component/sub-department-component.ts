@@ -7,8 +7,8 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
-import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -89,7 +89,7 @@ export class SubDepartmentComponent {
     private _subDepartmentServices: SubDepartmentService,
     private _masterCacheService: Mastercacheservice,
     private _departmentService: DepartmentService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -276,7 +276,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
           'Sub-Department created successfully!',
@@ -296,7 +296,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -315,7 +315,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
           'Sub-Department updated successfully!',
@@ -335,7 +335,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -346,7 +346,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
           'Sub-Department updated successfully!',
@@ -366,7 +366,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

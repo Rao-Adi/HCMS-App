@@ -19,10 +19,10 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
-import { DocumentService } from '@app/shared/services/document.service'; 
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { DocumentService } from '@app/shared/services/document.service';  
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -199,7 +199,7 @@ export class DocumentAuthorizationPostTraining {
   constructor(
     private modal: NzModalService,
     private _documentService: DocumentService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService
   ) {}
@@ -291,7 +291,7 @@ export class DocumentAuthorizationPostTraining {
       error: (err) => {
         this.pendingAuthorizationData = [];
         this.totalRows = 0;
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.Message || 'Failed to fetch pending authorizations.',
@@ -363,7 +363,7 @@ export class DocumentAuthorizationPostTraining {
 
     const selectedRows = this.gridApi.getSelectedRows();
     if (selectedRows.length === 0) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Selection Required',
         'Please select at least one document to approve.',
@@ -385,14 +385,14 @@ export class DocumentAuthorizationPostTraining {
         this._documentService.AuthorizeDocumentPostTraining(payload).subscribe({
           next: (res) => {
             if (res?.Success) {
-              this._notification.createNotification(
+              this._notificationToastService.createNotification(
                 'success',
                 'Success',
                 'Document authorized successfully.',
               );
               this.GetAllDocuments({ pageNumber: 1, pageSize: this.pageSize });
             } else {
-              this._notification.createNotification(
+              this._notificationToastService.createNotification(
                 'error',
                 'Error',
                 res?.Message || 'Failed to authorize document.',
@@ -400,7 +400,7 @@ export class DocumentAuthorizationPostTraining {
             }
           },
           error: () =>
-            this._notification.createNotification(
+            this._notificationToastService.createNotification(
               'error',
               'Error',
               'Failed to authorize document.',

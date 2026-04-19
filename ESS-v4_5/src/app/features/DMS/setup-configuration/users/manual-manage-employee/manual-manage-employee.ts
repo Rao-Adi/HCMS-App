@@ -13,7 +13,7 @@ import {
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
@@ -83,7 +83,7 @@ export class ManualManageEmployee {
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
     private _businessDomainCacheService: BusinessDomainCacheService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _designationServices: DesignationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
@@ -304,7 +304,7 @@ export class ManualManageEmployee {
     };
     this._userService.create(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification('success', 'User', 'User created successfully!');
+        this._notificationToastService.createNotification('success', 'User', 'User created successfully!');
 
         const rowWithId = {
           ...rowData,
@@ -335,7 +335,7 @@ export class ManualManageEmployee {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -359,7 +359,7 @@ export class ManualManageEmployee {
 
     this._userService.update(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification('success', 'User', 'User Updated successfully!');
+        this._notificationToastService.createNotification('success', 'User', 'User Updated successfully!');
         
         const rowWithId = {
           ...rowData,
@@ -391,7 +391,7 @@ export class ManualManageEmployee {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

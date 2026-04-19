@@ -21,14 +21,14 @@ import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces'
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
 import { CompanyService } from '@app/shared/services/company.service';
 import { PendingRequestForApproval } from './pending-request-for-approval/pending-request-for-approval';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NotificationService } from '@app/shared/notification/notification.service'; 
+import { DocumentRequestService } from '@app/shared/services/document-request.service'; 
 import { TemplateService } from '@app/shared/services/template.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service'; 
 import { DocumentRequestForm } from './document-request-form/document-request-form';
 import { DraftRequestList } from './draft-request-list/draft-request-list';
 import { UtilitiesService } from '@app/core/services/utilities.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-document-request-management',
@@ -153,7 +153,7 @@ export class DocumentRequestManagement {
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _documentTemplateService: TemplateService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
@@ -297,7 +297,7 @@ export class DocumentRequestManagement {
 
   DraftDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an Document Request Type.',
@@ -305,15 +305,15 @@ export class DocumentRequestManagement {
       return;
     }
     if (!this.selectedCompany) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Company.');
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please select a Company.');
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notification.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please enter Document Name.');
       return;
     }
     if (!this.selectedDocumentType) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Document Type.',
@@ -321,15 +321,15 @@ export class DocumentRequestManagement {
       return;
     }
     if (!this.selectedDivisions) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Division.');
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please select a Division.');
       return;
     }
     if (!this.selectedDepartment) {
-      this._notification.createNotification('warning', 'Validation', 'Please select a Department.');
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please select a Department.');
       return;
     }
     if (!this.selectedSubDepartment) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Sub Department.',
@@ -337,7 +337,7 @@ export class DocumentRequestManagement {
       return;
     }
     if (!this.selectedBusinessDomain) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Business Domain.',
@@ -367,7 +367,7 @@ export class DocumentRequestManagement {
           //clear all fields
           this.emptyFields();
 
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'success',
             'User',
             'Document drafted successfully!',
@@ -375,7 +375,7 @@ export class DocumentRequestManagement {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to draft document.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to draft document.');
       },
     });
   }
@@ -391,7 +391,7 @@ export class DocumentRequestManagement {
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'success',
             'User',
             'Document submitted successfully!',
@@ -399,7 +399,7 @@ export class DocumentRequestManagement {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }

@@ -9,7 +9,7 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
@@ -88,7 +88,7 @@ export class DRDistributionList {
     private _distributionList: DistributionListService,
     private _distributionTypeService: DistributionTypeService,
     private _roleServices: RoleService,
-    private _notification: NotificationService,
+    private _notificationToasService: NotificationToastService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
     private _permissionService: PermissionService
@@ -303,7 +303,7 @@ export class DRDistributionList {
     this.notifyParent();
 
     // this._distributionList.create(payLoad).subscribe(() => {
-    //   this._notification.createNotification(
+    //   this._notificationToasService.createNotification(
     //     'sucess',
     //     'Distribution List',
     //     'Distribution list added successfully!',

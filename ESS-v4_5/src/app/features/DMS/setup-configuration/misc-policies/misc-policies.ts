@@ -6,7 +6,7 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -94,7 +94,7 @@ export class MiscPolicies {
   constructor(
     private _trainingPolicyService: TrainingPolicyService,
     private _documentTypes: DocumentTypeService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -241,7 +241,7 @@ export class MiscPolicies {
     };
 
     this._trainingPolicyService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'sucess',
         'Distribution List',
         'Distribution list added successfully!',

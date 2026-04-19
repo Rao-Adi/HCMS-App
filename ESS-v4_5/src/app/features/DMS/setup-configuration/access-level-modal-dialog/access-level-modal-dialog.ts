@@ -7,7 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
@@ -86,7 +86,7 @@ export class AccessLevelModalDialog {
   constructor(
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _documentTypeService: DocumentTypeCacheService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private cabinetGridService: CabinetGridService,
     private readonly hierarchyService: CabinetHierarchyService,
     private _userAccessLevelService: UserAccesssLevelService,
@@ -195,7 +195,7 @@ export class AccessLevelModalDialog {
     };
 
     this._userAccessLevelService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'success',
         'Access Level',
         'Access Level created successfully!',

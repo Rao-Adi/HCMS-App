@@ -2,8 +2,8 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
-import { NotificationService } from '@app/shared/notification/notification.service';
-
+import { NotificationToastService } from './notification.service';
+ 
 export interface AppNotification {
   title: string;
   message: string;
@@ -21,7 +21,7 @@ export class NotificationSignalrService {
   public notification$ = this.notificationSubject.asObservable();
 
   constructor(
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -80,13 +80,19 @@ export class NotificationSignalrService {
 
   private addReceiveNotificationListener(): void {
     // 'ReceiveNotification' MUST exactly match the method name invoked by your .NET backend
-    this.hubConnection?.on('ReceiveNotification', (notification: AppNotification) => {
+    this.hubConnection?.on('ReceiveNotification', (notification: any) => {
       console.log('[SignalR] Notification received from backend: ', notification);
-      this.notificationSubject.next(notification);
+      
+      const mappedNotif: AppNotification = {
+        title: notification.title || notification.Title,
+        message: notification.message || notification.Message,
+        type: (notification.type || notification.Type || 'info').toLowerCase()
+      };
+
+      this.notificationSubject.next(mappedNotif);
       
       // Instantly show a toast message when the backend pushes a notification
-      const type = notification.type || 'info';
-      this._notification.createNotification(type, notification.title, notification.message);
+      this._notificationToastService.createNotification(mappedNotif.type!, mappedNotif.title, mappedNotif.message);
     });
   }
 
@@ -102,9 +108,13 @@ export class NotificationSignalrService {
         .catch((err: any) => console.error('[SignalR] Error sending test notification: ', err));
     } else {
       console.log('[SignalR] Not connected. Simulating locally instead: ', notification);
-      this.notificationSubject.next(notification);
-      const type = notification.type || 'info';
-      this._notification.createNotification(type, notification.title, notification.message);
+      const mappedNotif: AppNotification = {
+        title: notification.title || notification.title,
+        message: notification.message || notification.message,
+        type: (notification.type || notification.type || 'info').toLowerCase() as any
+      };
+      this.notificationSubject.next(mappedNotif);
+      this._notificationToastService.createNotification(mappedNotif.type!, mappedNotif.title, mappedNotif.message);
     }
   }
 }

@@ -65,7 +65,7 @@ export class WorkflowApprovalHistoryComponent {
         }
       },
       error: (err) => {
-        // this._notification.createNotification(
+        // this._notificationToastService.createNotification(
         //   'error',
         //   'Error',
         //   err?.Message || 'Failed to fetch document details.',
