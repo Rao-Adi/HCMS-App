@@ -78,10 +78,10 @@
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
-                (click)="onTabChange('Disapproved')"
+                [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
+                (click)="onTabChange('Rejected')"
               >
-                Disapproved
+                Rejected
               </button>
             </div>
 
@@ -183,7 +183,7 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Disapproved'">
+            <div class="row row-space" *ngIf="selectedTab === 'Rejected'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>

@@ -333,7 +333,7 @@ export class MyApprovalRequest {
       subdepartmentcode: this.selectedSubDepartment || '',
       businessdomaincode: this.selectedBusinessDomain || '',
       documenttypecode: this.selectedDocumentType || '',
-      requeststatus: this.selectedTab === 'Disapproved' ? 'Reworked' : this.selectedTab || '',
+      requeststatus: this.selectedTab,
       empId: this.LoginEmpId || '',
     };
 
