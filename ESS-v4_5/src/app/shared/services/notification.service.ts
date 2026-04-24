@@ -105,20 +105,20 @@ export class NotificationService {
     this.notification.create(type, notificationTitle, description);
   }
 
-  getMyNotifications(empId: string,isRead:boolean): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/DMSNotification/get-notification-by-code/${empId}/${isRead}`);
+  getMyNotifications(isRead:boolean): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/DMSNotification/get-notification-by-code/${isRead}`);
   }
 
-  markAsRead(notificationId: number, empId: string): Observable<any> {
+  markAsRead(notificationId: number): Observable<any> {
     return this.http.put<any>(
-      `${this.apiUrl}/DMSNotification/mark-as-read/${notificationId}/${empId}`,
+      `${this.apiUrl}/DMSNotification/mark-as-read/${notificationId}`,
       {},
     );
   }
 
-  markAllAsRead(empId: string): Observable<any> {
+  markAllAsRead(): Observable<any> {
     return this.http.post<any>(
-      `${this.apiUrl}/DMSNotification/mark-all-as-read?empId=${empId}`,
+      `${this.apiUrl}/DMSNotification/mark-all-as-read`,
       {},
     );
   }

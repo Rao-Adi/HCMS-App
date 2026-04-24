@@ -106,7 +106,7 @@ export class MyApprovalDocument {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'documentId', label: 'Document Id', visible: true },
     { field: 'documentName', label: 'documentName', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -147,7 +147,7 @@ export class MyApprovalDocument {
     },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
-    { field: 'requestId', headerName: 'Request Id' },
+    { field: 'documentId', headerName: 'Document Id' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'company', headerName: 'Company' },
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
@@ -287,7 +287,7 @@ export class MyApprovalDocument {
               // ──────────────────────────────────────────────
               ExecutionId: get(['ExecutionId', 'executionId']),
               Id: get(['Id', 'id']),
-              requestId: get(['Id', 'id']), // often same as Id
+              documentId: get(['Id', 'id']), // often same as Id
               stepId: get(['StepId', 'stepId']),
               stepOrder: get(['StepOrder', 'stepOrder']),
               ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),

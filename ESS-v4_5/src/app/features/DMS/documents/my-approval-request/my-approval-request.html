@@ -114,7 +114,7 @@
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
                               title="Approve"
-                              (click)="promptAction('APPROVE')"
+                              (click)="promptAction('APPROVED')"
                               [disabled]="hasSelectedRows === false"
                             >
                               <i class="bi bi-check2-square"></i>
@@ -124,7 +124,7 @@
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
                               title="Disapprove"
-                              (click)="promptAction('REJECT')"
+                              (click)="promptAction('REJECTED')"
                               [disabled]="hasSelectedRows === false"
                             >
                               <i class="bi bi-x-square"></i>
@@ -134,7 +134,7 @@
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
                               title="REWORK"
-                              (click)="promptAction('REWORK')"
+                              (click)="promptAction('REWORKED')"
                               [disabled]="hasSelectedRows === false"
                             >
                               <i class="bi bi-reply"></i>

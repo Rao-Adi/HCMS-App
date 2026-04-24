@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // <-- 1. Import FormsModule
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { DashboardService } from '@app/shared/services/dashboard.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,6 +29,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private _utilityService: UtilitiesService,
     private _dashboardService: DashboardService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -39,12 +41,12 @@ export class DashboardComponent implements OnInit {
 
   GetLoginEmpId() {
     this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
-    this.GetDashbaordData(this.loginEmpId);
+    this.GetDashbaordData();
   }
 
-  GetDashbaordData(empId: string) {
+  GetDashbaordData() {
     this.isLoading = true;
-    this._dashboardService.GetDashboardData(empId).subscribe({
+    this._dashboardService.GetDashboardData().subscribe({
       next: (res: any) => {
         if (res?.Success && res?.Data) {
           this.summary = res.Data.Summary || {};
@@ -53,6 +55,7 @@ export class DashboardComponent implements OnInit {
             ...task,
             TaskName: task.Title,
             DueDate: task.AssignedDate,
+            EntityType : task.EntityType
           }));
           this.recentActivities = res.Data.RecentActivities || [];
         }
@@ -96,10 +99,12 @@ export class DashboardComponent implements OnInit {
 
   // --- Click Handlers (for demo) ---
 
-  onActionClick(item: any) {
-    console.log('Clicked on action:', item.text);
-    // You can show a simple alert for the presentation
-    alert('This would navigate to the task: "' + item.text + '"');
+  onActionClick(item: any) { 
+    if (item === 'Request') {
+      this.router.navigate(['documents/my-approvals-request']); // Adjust to your actual route path
+    } else {
+      this.router.navigate(['documents/my-approvals-documents']); // Adjust to your actual route path
+    }
   }
 
   onLinkClick(linkName: string) {

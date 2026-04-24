@@ -42,6 +42,7 @@ interface DisplayNotification extends AppNotification {
   id?: number;
   isRead: boolean;
   createdAt?: string;
+  relatedEntityType?: string;
 }
 
 @Component({
@@ -84,6 +85,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private spinnerService = inject(SpinnerService);
   public isLoading: Signal<boolean> = this.spinnerService.isLoading.asReadonly();
   isNotificationOpen: boolean = false;
+  isProfileOpen: boolean = false;
   LoginEmpId: string = '';
   isRead: boolean = false;
   // --- END of properties ---
@@ -148,7 +150,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.notificationSignalrService.notification$.subscribe((notification: AppNotification) => {
-        this.notifications.unshift({ ...notification, isRead: false });
+        this.notifications.unshift({ 
+          ...notification, 
+          isRead: false,
+          relatedEntityType: (notification as any).RelatedEntityType || (notification as any).relatedEntityType 
+        });
         this.unreadNotificationCount++;
         this.cdRef.detectChanges();
       }),
@@ -393,12 +399,24 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   toggleNotifications(event: Event): void {
     event.stopPropagation();
     this.isNotificationOpen = !this.isNotificationOpen;
+    if (this.isNotificationOpen) {
+      this.isProfileOpen = false;
+    }
+  }
+
+  toggleProfile(event: Event): void {
+    event.stopPropagation();
+    this.isProfileOpen = !this.isProfileOpen;
+    if (this.isProfileOpen) {
+      this.isNotificationOpen = false;
+    }
   }
 
   @HostListener('document:click')
   closeNotifications(): void {
-    if (this.isNotificationOpen) {
+    if (this.isNotificationOpen || this.isProfileOpen) {
       this.isNotificationOpen = false;
+      this.isProfileOpen = false;
       this.cdRef.detectChanges();
     }
   }
@@ -440,35 +458,36 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   fetchExistingNotifications(): void {
-    const empId = this._utilityService.GetEmpid();
-    if (empId) {
-      this.notificationHttpService.getMyNotifications(empId, this.isRead).subscribe({
-        next: (res: any) => {
-          if (res?.Success && res.Data) {
-            const dataArray = Array.isArray(res.Data) ? res.Data : [res.Data];
-            this.notifications = dataArray.map((n: any) => ({
-              id: n.id || n.Id,
-              title: n.title || n.Title,
-              message: n.message || n.Message,
-              type: n.type || n.Type || (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
-              isRead: n.IsRead !== undefined ? n.IsRead : (n.isRead !== undefined ? n.isRead : false),
-              createdAt: n.createdAt || n.CreatedAt,
-            }));
-            // Recalculate unread count
-            if (!this.isRead) {
-              this.unreadNotificationCount = this.notifications.filter((n) => !n.isRead).length;
-            }
-          } else {
-            this.notifications = [];
-            if (!this.isRead) {
-              this.unreadNotificationCount = 0;
-            }
+    this.notificationHttpService.getMyNotifications(this.isRead).subscribe({
+      next: (res: any) => {
+        if (res?.Success && res.Data) {
+          const dataArray = Array.isArray(res.Data) ? res.Data : [res.Data];
+          this.notifications = dataArray.map((n: any) => ({
+            id: n.id || n.Id,
+            title: n.title || n.Title,
+            message: n.message || n.Message,
+            type:
+              n.type ||
+              n.Type ||
+              (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
+            isRead: n.IsRead !== undefined ? n.IsRead : n.isRead !== undefined ? n.isRead : false,
+            createdAt: n.createdAt || n.CreatedAt,
+        relatedEntityType: n.RelatedEntityType || n.relatedEntityType,
+          }));
+          // Recalculate unread count
+          if (!this.isRead) {
+            this.unreadNotificationCount = this.notifications.filter((n) => !n.isRead).length;
           }
-          this.cdRef.detectChanges();
-        },
-        error: (err: any) => console.error('Failed to fetch notifications', err),
-      });
-    }
+        } else {
+          this.notifications = [];
+          if (!this.isRead) {
+            this.unreadNotificationCount = 0;
+          }
+        }
+        this.cdRef.detectChanges();
+      },
+      error: (err: any) => console.error('Failed to fetch notifications', err),
+    });
   }
 
   markAsRead(notification: DisplayNotification): void {
@@ -479,9 +498,18 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
       // Execute API call
       if (notification.id) {
-        this.notificationHttpService.markAsRead(notification.id, this.LoginEmpId).subscribe();
+        this.notificationHttpService.markAsRead(notification.id).subscribe();
       }
     }
+    
+    // Navigate based on RelatedEntityType
+    if (notification.relatedEntityType === 'Request') {
+      this.router.navigate(['/documents/my-approvals-request']);
+    } else {
+      this.router.navigate(['/documents/my-approvals-documents']);
+    }
+    
+    this.isNotificationOpen = false; // Close the dropdown menu
   }
 
   markAllAsRead(): void {
@@ -489,11 +517,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.unreadNotificationCount = 0;
     this.cdRef.detectChanges();
 
-    // Execute API call
-    const empId = this._utilityService.GetEmpid();
-    if (empId) {
-      this.notificationHttpService.markAllAsRead(empId).subscribe();
-    }
+    this.notificationHttpService.markAllAsRead().subscribe();
   }
 
   getNotificationIcon(type?: string): string {

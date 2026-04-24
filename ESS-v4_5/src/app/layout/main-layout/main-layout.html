@@ -197,8 +197,12 @@
             </div>
           </div>
 
-          <div class="dropdown">
-            <div class="profile-section d-flex align-items-center gap-2 px-1 py-1 rounded-2" [title]="EmpName + ' - ' + CompanyName">
+          <div class="position-relative">
+            <div class="profile-section d-flex align-items-center gap-2 px-2 py-1 rounded-2 notif-item-hover" 
+                 [title]="EmpName + ' - ' + CompanyName"
+                 (click)="toggleProfile($event)" 
+                 style="cursor: pointer;"
+                 [ngClass]="{'bg-light': isProfileOpen}">
               <img class="profile-pic" [src]="EmployeePic" alt="Profile Picture" />
               <div class="profile-info d-flex flex-column lh-sm">
                 <span class="profile-name fw-semibold small">{{ EmpName }}</span>
@@ -206,28 +210,38 @@
               </div>
             </div>
 
-            <div class="dropdown-content profile-dropdown dropdown-knowledge shadow border rounded-3">
-              <div class="profile-dropdown-header">
-                <span class="profile-dropdown-name">{{ EmpName }}</span>
-                <span class="profile-dropdown-company">{{ CompanyName }}</span>
+            <div class="shadow border rounded-3 notif-dropdown-anim"
+                 [style.display]="isProfileOpen ? 'flex' : 'none'"
+                 (click)="$event.stopPropagation()"
+                 style="width: 220px; right: 0; left: auto; top: calc(100% + 8px); flex-direction: column; overflow: hidden; background: #fff; position: absolute; z-index: 1050;">
+              
+              <div class="px-3 py-3 border-bottom bg-light">
+                <span class="d-block fw-bold text-dark fs-6">{{ EmpName }}</span>
+                <span class="d-block text-muted small">{{ CompanyName }}</span>
               </div>
 
-              <a class="more-action" (click)="openReportDialog()">
-                <span class="action-label text-truncate">Report a Problem</span>
-                <i class="bi bi-exclamation-triangle-fill action-icon text-warning" aria-hidden="true"></i>
-              </a>
+              <div class="p-2 d-flex flex-column gap-1">
+                <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-dark notif-item-hover" 
+                   (click)="openReportDialog(); isProfileOpen = false;" style="cursor: pointer;">
+                  <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Report a Problem</span>
+                  <i class="bi bi-exclamation-triangle-fill text-warning fs-6" aria-hidden="true"></i>
+                </a>
 
-              <a class="more-action" *ngIf="haveDashboardRights" (click)="openDashboard()">
-                <span class="action-label text-truncate">Dashboard</span>
-                <i class="bi bi-speedometer2 action-icon" aria-hidden="true"></i>
-              </a>
+                <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-dark notif-item-hover" 
+                   *ngIf="haveDashboardRights" (click)="openDashboard(); isProfileOpen = false;" style="cursor: pointer;">
+                  <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Dashboard</span>
+                  <i class="bi bi-speedometer2 text-primary fs-6" aria-hidden="true"></i>
+                </a>
 
-            <a class="more-action" (click)="logout()" style="cursor: pointer;">
-              <span class="action-label text-truncate text-danger">Logout</span>
-              <i class="bi bi-box-arrow-right action-icon text-danger" aria-hidden="true"></i>
-            </a>
+                <hr class="my-1 text-light border-secondary opacity-25">
+
+                <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-danger notif-item-hover" 
+                   (click)="logout()" style="cursor: pointer;">
+                  <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Logout</span>
+                  <i class="bi bi-box-arrow-right fs-6" aria-hidden="true"></i>
+                </a>
+              </div>
             </div>
-
           </div>
         </div>
     </header>

@@ -33,8 +33,8 @@ export class DashboardService {
     return headers;
   }
 
-  GetDashboardData(empId: string): Observable<ApiResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDashboard/get-dashboard-data/${empId}`;
+  GetDashboardData(): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDashboard/get-dashboard-data`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

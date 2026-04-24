@@ -95,8 +95,7 @@ export class login implements OnInit {
   }
 
   SaveLoginCredentials() {
-    // 1. Save all credentials to localStorage
-    debugger;
+    // 1. Save all credentials to localStorage 
     this.LoginDetails.forEach((x: any) => {
       localStorage.setItem('HRISCompanyId', x.CompanyId);
       localStorage.setItem('HRISLoginCulture', x.Culture);

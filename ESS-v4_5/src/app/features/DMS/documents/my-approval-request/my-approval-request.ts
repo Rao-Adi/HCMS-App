@@ -556,7 +556,8 @@ export class MyApprovalRequest {
         this._notificationToastService.createNotification(
           'error',
           'Request',
-          'Failed to create workflow step.',
+          err.error?.Message || 'Failed to take action on the request.',
+          // 'Failed to create workflow step.',
         );
       },
     });

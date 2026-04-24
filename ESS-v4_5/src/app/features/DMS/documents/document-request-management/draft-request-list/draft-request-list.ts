@@ -136,7 +136,7 @@ export class DraftRequestList {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Created On' },
+    { field: 'createdOn', headerName: 'Last Saved On' },
     {
       field: 'status',
       headerName: 'Status',
@@ -166,7 +166,7 @@ export class DraftRequestList {
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
-    { field: 'createdOn', label: 'Created On', visible: true },
+    { field: 'createdOn', label: 'Last Saved On', visible: true },
     { field: 'status', label: 'Status', visible: true },
   ];
 
