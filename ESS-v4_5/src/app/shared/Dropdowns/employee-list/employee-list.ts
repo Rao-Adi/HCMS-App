@@ -1,17 +1,34 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
+import { Component, EventEmitter, forwardRef, Input, Output, Pipe, PipeTransform } from '@angular/core';
 import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms'; 
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select'; 
 
+@Pipe({
+  name: 'highlightSearch',
+  standalone: true
+})
+export class HighlightSearchPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+  
+  transform(text: string, search: string): SafeHtml | string {
+    if (!search || !text) return text;
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+    const highlighted = text.replace(regex, '<mark class="highlight">$1</mark>');
+    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
+  }
+}
+
 @Component({
   selector: 'app-employee-list',
-  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule],
+  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule, HighlightSearchPipe],
   // templateUrl: './employee-list.html',
   // styleUrl: './employee-list.css'
   template: `<nz-select
-    nzMode="multiple"
+    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
     [nzPlaceHolder]="placeholder"
     nzAllowClear
     nzShowSearch
@@ -20,10 +37,18 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
     [style.width]="width"
     [(ngModel)]="selectedUser"
     (ngModelChange)="onSelectionChange($event)"
+    (nzOnSearch)="onSearch($event)"
     nzVirtualHeight="300px"
     nzVirtualItemSize="32"
-    [nzOptions]="options"
   >
+    <nz-option 
+      *ngFor="let opt of options" 
+      [nzValue]="opt.value" 
+      [nzLabel]="opt.label" 
+      nzCustomContent
+    >
+      <span [innerHTML]="opt.label | highlightSearch:searchTerm"></span>
+    </nz-option>
   </nz-select>`,
   styles: [
     `
@@ -33,6 +58,11 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 
       .loading-icon {
         margin-right: 8px;
+      }
+
+      mark.highlight {
+        background-color: #ffc107;
+        padding: 0;
       }
     `,
   ],
@@ -52,6 +82,7 @@ export class EmployeeList {
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
+  @Input() isMultiSelect = true;
 
   options: Array<{ label: string; value: string }> = [];
   
@@ -60,9 +91,12 @@ export class EmployeeList {
   value: any;
   disabled = false;
 
-  selectedUser: string[] = [];
+  selectedUser: any = null;
+  searchTerm = '';
 
-  constructor(private _peoplePartnerService: PeoplePartnersService) {}
+  constructor(
+    private _peoplePartnerService: PeoplePartnersService
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -71,14 +105,14 @@ export class EmployeeList {
     this.getAllUsersList();
   }
 
-  onSelectionChange(value: string[]): void {
+  onSelectionChange(value: any): void {
     this.selectedUser = value;
     this.onChange(value); // VERY IMPORTANT
     this.onTouched();
   }
 
-  writeValue(value: string[]): void {
-    this.selectedUser = value || [];
+  writeValue(value: any): void {
+    this.selectedUser = value;
   }
 
   registerOnChange(fn: any): void {
@@ -97,6 +131,10 @@ export class EmployeeList {
     if (!option || !option.nzLabel) return false;
     return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
   };
+
+  onSearch(value: string): void {
+    this.searchTerm = value;
+  }
 
   // onSelectionChange(value: any): void {
   //   this.value = value;

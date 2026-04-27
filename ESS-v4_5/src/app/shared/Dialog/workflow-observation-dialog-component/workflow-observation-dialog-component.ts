@@ -97,7 +97,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
               Designation: item.Designation,
               Decision: item.Decision,
               Observation: item.Observation,
-              ActionAt: new CustomDateFormatPipe().transform(item.StatusUpdatedOn || item.statusUpdatedOn || ''),
+              ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
               IsActive: item.isActive || item.IsActive,
             }));
           } else {
