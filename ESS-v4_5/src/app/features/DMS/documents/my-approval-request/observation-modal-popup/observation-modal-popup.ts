@@ -55,7 +55,9 @@ export class ObservationModalPopup {
     },
     {
       field: 'lastActionPerformedOn',
-      headerName: 'Last Action Performed On'
+      headerName: 'Last Action Performed On',
+      cellStyle: { color: '#6c757d' },
+      headerClass: 'text-muted'
     },
   ];
 

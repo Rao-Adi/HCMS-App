@@ -277,7 +277,7 @@ export class DocumentRequestForm {
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
     };
-    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+    this._workflowStepService.getWorkflowPolicyByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
     });

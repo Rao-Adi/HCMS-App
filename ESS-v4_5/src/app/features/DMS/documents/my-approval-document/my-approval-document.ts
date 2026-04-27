@@ -27,6 +27,7 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -106,8 +107,8 @@ export class MyApprovalDocument {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'documentId', label: 'Document Id', visible: true },
-    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'documentId', label: 'Document ID', visible: true },
+    { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
@@ -147,7 +148,7 @@ export class MyApprovalDocument {
     },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
-    { field: 'documentId', headerName: 'Document Id' },
+    { field: 'documentId', headerName: 'Document ID' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'company', headerName: 'Company' },
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
@@ -326,13 +327,13 @@ export class MyApprovalDocument {
               // Audit / History fields
               // ──────────────────────────────────────────────
               requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
-              requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
-              startedAt: this.formatDate(startedAtRaw),
+              dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
+              requestCreatedOn: new CustomDateFormatPipe().transform(get(['RequestCreatedAt', 'requestCreatedAt'])),
+              startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
               previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              previousVersionCreatedOn: this.formatDate(
+              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
                 get(['RequestCreatedAt', 'requestCreatedAt']),
               ),
 

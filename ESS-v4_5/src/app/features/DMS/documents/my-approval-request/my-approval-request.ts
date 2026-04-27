@@ -21,6 +21,7 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -106,7 +107,7 @@ export class MyApprovalRequest {
     },
     {
       field: 'documentRequestId',
-      headerName: 'Request Id',
+      headerName: 'Request ID',
     },
     {
       field: 'documentName',
@@ -208,7 +209,7 @@ export class MyApprovalRequest {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'documentRequestId', label: 'Request Id', visible: true },
+    { field: 'documentRequestId', label: 'Request ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -378,10 +379,10 @@ export class MyApprovalRequest {
                   'RequestCreatedBy',
                   'requestCreatedBy',
                 ]),
-                requestCreatedOn: this.formatDate(
+                requestCreatedOn: new CustomDateFormatPipe().transform(
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
-                ),
-                previousVersionCreatedOn: this.formatDate(
+                ), 
+                previousVersionCreatedOn: new CustomDateFormatPipe().transform(
                   get([
                     'DraftContentLastModifiedAt',
                     'draftContentLastModifiedAt',

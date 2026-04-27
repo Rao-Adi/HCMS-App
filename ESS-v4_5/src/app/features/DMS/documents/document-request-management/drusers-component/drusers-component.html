@@ -1,7 +1,8 @@
 <app-editable-ag-grid-wrapper
-  [gridStyle]="{ width: '100%', height: '300px' }"
+  [showSearchBar]="false"
+  [gridStyle]="{ width: '100%', height: '250px' }"
   class="ag-theme-alpine"
-  [gridId]="'employee-planning-grid'" 
+  [gridId]="'employee-planning-grid'"
   [config]="gridConfig"
   [rowData]="manualUserData"
   [divisionList]="divisions"
@@ -15,32 +16,47 @@
   (cellValueChanged)="onCellValueChanged($event)"
   (selectionChanged)="onSelectionChanged($event)"
   (actionClicked)="handleGridAction($event)"
-  (gridReady)="onGridReady($event)" 
+  (gridReady)="onGridReady($event)"
 >
 </app-editable-ag-grid-wrapper>
 
 <!-- SELECTED USERS TABLE -->
 <div class="mt-4" *ngIf="selectedEmployeeList && selectedEmployeeList.length > 0">
-  <h5 class="mb-3 PnlHeader" style="font-size: 15px; font-weight: 600;">Selected Employees (Drafted)</h5>
-  <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+  <h5 class="mb-3 PnlHeader" style="font-size: 15px; font-weight: 600">
+    Selected Employees (Drafted)
+  </h5>
+  <div class="table-responsive" style="max-height: 250px; overflow-y: auto">
     <table class="table table-bordered table-striped table-hover align-middle">
       <thead class="table-light">
         <tr>
-          <th style="width: 25%;">Employee Code</th>
-          <th style="width: 25%;">Employee Name</th>
-          <th style="width: 25%;">Designation</th>
-          <th style="width: 25%;">Role</th>
-          <th style="width: 15%; text-align: center;">Action</th>
+          <th style="width: 25%">Employee Code</th>
+          <th style="width: 25%">Employee Name</th>
+          <th style="width: 25%">Designation</th>
+          <th style="width: 25%">Role</th>
+          <th style="width: 15%; text-align: center">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let emp of selectedEmployeeList; let i = index">
           <td>{{ emp.employeeCode || emp.EmployeeCode || emp.empcode || emp.empid || 'N/A' }}</td>
-          <td>{{ emp.employeeName || emp.EmployeeName || (emp.FirstName ? emp.FirstName + ' ' + (emp.LastName || '') : null) || (emp.firstname ? emp.firstname + ' ' + (emp.lastname || '') : null) || (emp.firstName ? emp.firstName + ' ' + (emp.lastName || '') : null) || 'N/A' }}</td>
+          <td>
+            {{
+              emp.employeeName ||
+                emp.EmployeeName ||
+                (emp.FirstName ? emp.FirstName + ' ' + (emp.LastName || '') : null) ||
+                (emp.firstname ? emp.firstname + ' ' + (emp.lastname || '') : null) ||
+                (emp.firstName ? emp.firstName + ' ' + (emp.lastName || '') : null) ||
+                'N/A'
+            }}
+          </td>
           <td>{{ emp.designation || emp.Designation || emp.DesignationName || 'N/A' }}</td>
           <td>{{ emp.role || emp.Role || 'N/A' }}</td>
-          <td style="text-align: center;">
-            <button class="btn btn-sm btn-outline-danger" (click)="removeUser(i)" title="Remove User">
+          <td style="text-align: center">
+            <button
+              class="btn btn-sm btn-outline-danger"
+              (click)="removeUser(i)"
+              title="Remove User"
+            >
               <i class="bi bi-trash"></i>
             </button>
           </td>

@@ -147,8 +147,8 @@ export class SOPDocumentTraining {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentTypeId', label: 'document Type', visible: true },
-    { field: 'requestId', label: 'Request Id', visible: true },
-    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'requestId', label: 'Request ID', visible: true },
+    { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'viewDocument', label: 'Document Content', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },

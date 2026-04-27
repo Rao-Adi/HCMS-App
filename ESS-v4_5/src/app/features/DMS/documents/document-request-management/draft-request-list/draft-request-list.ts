@@ -159,7 +159,7 @@ export class DraftRequestList {
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestNumber', label: 'Request Id', visible: true },
+    { field: 'requestNumber', label: 'Request ID', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },

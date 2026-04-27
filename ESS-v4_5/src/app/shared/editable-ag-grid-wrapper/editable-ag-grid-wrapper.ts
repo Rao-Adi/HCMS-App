@@ -141,6 +141,7 @@ export interface GridConfig {
 export class EditableAgGridWrapper implements OnInit, OnChanges {
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
   @Input() isSelectionRequired: boolean = true;
+  @Input() showSearchBar: Boolean = true;
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -236,7 +237,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.columnDefs = [];
 
     // Add action column if inline add, edit or delete is enabled
-    if (this.config.enableInlineAdd || this.config.enableInlineEdit || this.config.enableInlineDelete) {
+    if (
+      this.config.enableInlineAdd ||
+      this.config.enableInlineEdit ||
+      this.config.enableInlineDelete
+    ) {
       if (this.isSelectionRequired) {
         this.columnDefs.push(this.createActionColumn());
       }
@@ -338,7 +343,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         const isCascade = !!column.dependsOn;
 
         colDef.cellRendererSelector = (params: any) => {
-    
           if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
             const rendererComponent = isCascade
               ? CascadeDropdownCellRenderer
@@ -362,9 +366,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 disabled: params.data?.disabled,
                 placeholder: column.placeholder || '--Select--',
                 emptyValue: 0,
-                
+
                 // Enable search by default, but allow override via GridColumn config
-                showSearch: column.showSearch !== false, 
+                showSearch: column.showSearch !== false,
                 customFilter: (input: string, option: any) => {
                   if (!option || option.nzLabel == null) return false;
                   return String(option.nzLabel).toLowerCase().includes(String(input).toLowerCase());
@@ -621,7 +625,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         break;
       case 'button':
         colDef.cellRendererSelector = (params: any) => {
- 
           return {
             component: LinkRenderer,
             params: {

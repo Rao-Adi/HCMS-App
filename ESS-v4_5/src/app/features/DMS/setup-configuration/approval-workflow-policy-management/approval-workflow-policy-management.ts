@@ -191,7 +191,6 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   addExclusion() { 
-    this.showExclusionTable = this.showExclusionTable == true ? false : true;
     if (!this.approvalPolicy) {
       this._notificationToastService.createNotification(
         'warning',
@@ -200,6 +199,8 @@ export class ApprovalWorkflowPolicyManagement {
       );
       return;
     }
+    
+    this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
     const payLoad = {
       EntityType:

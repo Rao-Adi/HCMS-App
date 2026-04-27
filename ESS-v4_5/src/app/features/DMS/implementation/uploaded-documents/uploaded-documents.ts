@@ -48,7 +48,7 @@ export class UploadedDocuments {
   };
 
   workflowAuthoritiesColumnDefs = [
-    { field: 'documentId', headerName: 'Document Id', flex: 1 },
+    { field: 'documentId', headerName: 'Document ID', flex: 1 },
     { field: 'documentName', headerName: 'Document Name', flex: 1 },
     { field: 'version', headerName: 'Version Number', flex: 1 },
     { field: 'documentTypeId', headerName: 'Document Type', flex: 1 },
@@ -83,7 +83,7 @@ export class UploadedDocuments {
     return [
       {
         field: 'documentId',
-        headerName: 'Document Id',
+        headerName: 'Document ID',
         type: 'readonly',
         minWidth: 150,
         pinned: 'left',

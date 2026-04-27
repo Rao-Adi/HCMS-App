@@ -45,11 +45,11 @@ export class CustomDateFormatPipe implements PipeTransform {
         const minutes = timeComponents[1];
         const seconds = timeComponents[2] || '00';
 
-        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        return `${month} ${day},${year} ${hours}:${minutes}:${seconds}`;
       }
     }
 
     // If no time component or not a string with time format, return date only
-    return `${day}/${month}/${year}`;
+    return `${month} ${day},${year}`;
   }
 }

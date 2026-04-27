@@ -51,6 +51,13 @@ export class WorkflowStepService {
     );
   }
 
+  getWorkflowPolicyByDocumentTypeCode(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSWorkflowStep/get-workflow-policy-by-document-code`,
+      payload,
+    );
+  }
+
   getPendingApprovals(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSWorkflowStep/get-pending-approvals}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });

@@ -96,7 +96,7 @@ export class PendingRequestForApproval {
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'requestId', label: 'Request ID', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },

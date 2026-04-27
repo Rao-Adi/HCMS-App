@@ -73,7 +73,7 @@ export class CabinetStructure {
           createdBy: l.createdBy,
           createdAt: l.createdAt,
           lastModifiedBy: l.lastModifiedBy,
-          lastModifiedAt: l.lastModifiedAt,
+          lastModifiedAt: new CustomDateFormatPipe().transform(l.lastModifiedAt),
         }));
 
         if (this.tabs?.length) {
@@ -193,7 +193,7 @@ export class CabinetStructure {
                 ...tab,
                 title: updated.Data.Name,
                 lastModifiedBy: updated.Data.LastModifiedBy,
-                lastModifiedAt: updated.Data.LastModifiedAt,
+                lastModifiedAt: new CustomDateFormatPipe().transform(updated.Data.LastModifiedAt),
               }
             : tab,
         );
@@ -209,7 +209,7 @@ export class CabinetStructure {
           ...this.cabinetConfigStructure,
           title: updated.Data.Name,
           lastModifiedBy: updated.Data.LastModifiedBy,
-          lastModifiedAt: updated.Data.LastModifiedAt,
+          lastModifiedAt: new CustomDateFormatPipe().transform(updated.Data.LastModifiedAt),
         };
 
         this.cdr.detectChanges();

@@ -220,7 +220,7 @@ export class DocumentRequestManagement {
         businessDomainCode: this.selectedBusinessDomain,
       };
       this._workflowStepService
-        .getWorkflowStepByDocumentTypeCode(
+        .getWorkflowPolicyByDocumentTypeCode(
           payLoad,
           // value,
           // this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001'
