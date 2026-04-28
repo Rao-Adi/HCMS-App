@@ -601,10 +601,10 @@ export class MenuComponent implements OnDestroy {
       'OrgPoliciesAndDoc': 'file-earmark-text',
       'Favourites': 'star',
       'HRPlanningRoot': 'diagram-2',
-      "documentmanagement": 'diagram-2',
-      "implementation": 'diagram-2',
-      "reports": 'diagram-2',
-      "setupsandconfiguration": 'diagram-2',
+      "documentmanagement": 'folder2-open',
+      "implementation": 'box-seam',
+      "reports": 'file-earmark-bar-graph',
+      "setupsandconfiguration": 'gear',
     };
 
     const key = value.split(' ')[0];
