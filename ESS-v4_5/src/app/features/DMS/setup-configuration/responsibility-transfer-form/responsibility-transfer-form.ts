@@ -22,6 +22,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -40,6 +41,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
     NzCheckboxModule,
     NzInputModule,
     NzModalModule,
+    EmployeeList
   ],
   templateUrl: './responsibility-transfer-form.html',
   styleUrl: './responsibility-transfer-form.css',
@@ -85,7 +87,7 @@ export class ResponsibilityTransferForm {
 
   pageSize = 10;
   rowData: any[] = [];
-  employees: any[] = [];
+  tempEmployees: any[] = [];
   employeeOptions: Array<{ label: string; value: string; department: string }> = [];
   filteredEmployeeToOptions: Array<{ label: string; value: string; department: string }> = [];
   totalRows = 0;
@@ -260,26 +262,26 @@ export class ResponsibilityTransferForm {
   getAllUsersList = () => {
     this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
-        this.employees = (res.Data ?? []).map((d: any) => ({
+        this.tempEmployees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
           NAME: d.Value,
           DEPARTMENT: d.DepartmentCode || d.DepartmentId || 'Unknown', // Storing department for filtering
         }));
         
-        this.employeeOptions = this.employees.map(e => ({
-          label: e.NAME,
-          value: e.CODE,
+        this.employeeOptions = this.tempEmployees.map(e => ({
+          label: e.NAME + ' (' + e.CODE + ')',
+          value: e.CODE ,
           department: e.DEPARTMENT
         }));
         this.filteredEmployeeToOptions = [...this.employeeOptions];
 
         const currentUserCode = this._utilityService.GetUserEmpId();
-        if (currentUserCode && this.employees.some((e) => e.CODE === currentUserCode)) {
+        if (currentUserCode && this.tempEmployees.some((e) => e.CODE === currentUserCode)) {
           this.selectedEmployeeFrom = currentUserCode;
           this.onEmployeeFromChange(currentUserCode);
         }
       } else {
-        this.employees = [];
+        this.tempEmployees = [];
         this.employeeOptions = [];
         this.filteredEmployeeToOptions = [];
       }

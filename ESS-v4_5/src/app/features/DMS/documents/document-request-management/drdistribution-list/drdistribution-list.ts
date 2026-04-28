@@ -15,6 +15,7 @@ import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-g
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DistributionListService } from '@app/shared/services/distribution-list.service';
 import { DistributionTypeService } from '@app/shared/services/distribution-type.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { RoleService } from '@app/shared/services/role.service';
 import { ColDef } from 'ag-grid-community';
@@ -55,6 +56,7 @@ export class DRDistributionList {
   gridConfig: GridConfig = {} as GridConfig;
 
   distributionListData: DistributionGridRow[] = [];
+  userRoles: string[] = [];
   divisions: any[] = [];
   departments: any[] = [];
   roles: { id: any; text: string }[] = [];
@@ -88,12 +90,13 @@ export class DRDistributionList {
     private _distributionList: DistributionListService,
     private _distributionTypeService: DistributionTypeService,
     private _roleServices: RoleService,
-    private _notificationToasService: NotificationToastService,
+    private _notificationToastService: NotificationToastService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
+    private _peoplePartnerService: PeoplePartnersService
   ) {
-    //this.loadSampleData();
+    
   }
 
   ngOnInit() {
@@ -103,7 +106,9 @@ export class DRDistributionList {
       this.canDelete = permissions.canDelete;
 
       this.loadDropdownsAndGrid();
+      this.GetAllUserRoles();
     });
+
     // this.GetAllDistributionList({
     //   pageNumber: 1,
     //   pageSize: this.selectedPageSize,
@@ -154,7 +159,7 @@ export class DRDistributionList {
         field: 'roleId',
         headerName: 'Role',
         type: 'dropdown',
-        dropdownOptions: this.roles,
+        dropdownOptions: this.userRoles,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -390,13 +395,13 @@ export class DRDistributionList {
 
   private loadDropdownsAndGrid(): void {
     forkJoin({
-      roles: this._roleServices.getRoleList(),
+      userRoles: this._roleServices.getRoleList(),
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
-    }).subscribe(({ roles, distributionTypes, hierarchy }) => {
+    }).subscribe(({ userRoles, distributionTypes, hierarchy }) => {
       // ✅ Normalize Roles
-      this.roles =
-        roles?.Data?.map((d: any) => ({
+      this.userRoles =
+        userRoles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
         })) ?? [];
@@ -429,7 +434,22 @@ export class DRDistributionList {
     // }));
 
     // this.distributionChanged.emit(cleanList);
-  }
+  };
+
+  
+  
+  GetAllUserRoles = () => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
+      if (res) {
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
+        }));
+      } else {
+        this.userRoles = [];
+      }
+    });
+  };
 }
 
 class DistributionColumns {

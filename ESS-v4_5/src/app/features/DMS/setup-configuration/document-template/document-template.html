@@ -2,14 +2,6 @@
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="card-custom mb-4">
-        <div class="clearfix">
-          <div class="pull-left">
-            <h3 class="mt-0">Document Template</h3>
-            <small class="text-muted">Document Template</small>
-          </div>
-        </div>
-        <br />
-        <hr />
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="row mb-4">
@@ -108,18 +100,39 @@
                   <div class="PnlHeading">
                     <label>Choose File (DOCX/PDF)</label>
                   </div>
-                  <input type="file" class="form-control input-sm" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" style="width: 350px" />
+                  <input
+                    type="file"
+                    class="form-control input-sm"
+                    (change)="onFileSelected($event)"
+                    accept=".pdf,.doc,.docx"
+                    style="width: 350px"
+                  />
 
-                  <div *ngIf="existingFileName" class="mt-2 text-info" style="font-size: 13px;">
-                    <i class="bi bi-file-earmark-check"></i> Current Template: <strong>{{ existingFileName }}</strong>
+                  <div *ngIf="existingFileName" class="mt-2 text-info" style="font-size: 13px">
+                    <i class="bi bi-file-earmark-check"></i> Current Template:
+                    <strong>{{ existingFileName }}</strong>
                   </div>
                 </div>
               </ng-container>
             </div>
-            
-            <br />
-            <div class="justify-content-center">
-              <button nz-button nzType="primary" [disabled]="!(this.canAdd)" (click)="saveTemplate($event)">Save</button>
+
+             
+            <div class="row mt-4 btn-stick">
+              <div
+                class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+              >
+                <div class="col-sm-1">
+                  <button
+                    type="button"
+                    tabindex="0"
+                    class="btn btn-sm btn-outline-secondary shadow-sm"
+                    (click)="saveTemplate($event)"
+                  >
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Save
+                  </button>
+                </div> 
+              </div>
             </div>
           </div>
         </div>

@@ -1,11 +1,10 @@
-
 <div class="layout-wrapper" [class.sidebar-open]="isSidebarOpen">
   <aside class="sidebar bg-white border-end d-flex flex-column" role="navigation" aria-label="Main Menu"
-       (mouseenter)="isSidebarHovering = true"
-       (mouseleave)="isSidebarHovering = false"
-       (focusin)="isSidebarHovering = true"
-       (focusout)="isSidebarHovering = false">
-    <!-- UPDATED: Sidebar header with toggle button on the left -->
+         (mouseenter)="isSidebarHovering = true"
+         (mouseleave)="isSidebarHovering = false"
+         (focusin)="isSidebarHovering = true"
+         (focusout)="isSidebarHovering = false">
+    
     <div class="sidebar-header">
       <button *ngIf="!isSidebarOpen && isSidebarHovering" class="sidebar-toggle-button sidebar-toggle-left d-inline-flex align-items-center justify-content-center"
               (click)="toggleSidebar()"
@@ -28,11 +27,13 @@
               title="Collapse Menu">
         <i class="bi bi-arrow-left-circle"></i>
       </button>
-
     </div>
 
     <div class="menu-container flex-grow-1">
-      <app-menu (formSelected)="getForms($event)" [isExpanded]="isSidebarOpen"></app-menu>
+      <app-menu (formSelected)="getForms($event)" 
+                (menuLoaded)="onMenuLoaded($event)"
+                [isExpanded]="isSidebarOpen">
+      </app-menu>
     </div>
   </aside>
 
@@ -48,14 +49,22 @@
       <div class="header-content container-fluid py-0 d-flex align-items-center justify-content-between gap-3 w-100">
 
         <div class="header-left d-flex align-items-center gap-2 min-w-0">
-          <!-- Toggle button removed from here -->
-
           <div class="page-title-section d-flex align-items-center justify-content-between gap-2">
             <div class="title-wrap">
-              <h2 class="page-title fs-6 fw-semibold mb-0 text-truncate" [title]="showdesc ? formdescription : ''">
-                {{ formName }}
-              </h2>
-              <small *ngIf="showdesc" class="title-sub text-truncate">{{ formdescription }}</small>
+              <ng-container *ngIf="formName">
+                <h2 class="page-title fs-6 fw-semibold mb-0 text-truncate" [title]="showdesc ? formdescription : ''">
+                  {{ formName }}
+                </h2>
+                <div class="page-path-dim" *ngIf="strBreadCrumb && strBreadCrumb !== 'Home / Dashboard'">
+                  {{ strBreadCrumb }}
+                </div>
+                <small *ngIf="showdesc" class="title-sub text-truncate">{{ formdescription }}</small>
+              </ng-container>
+
+              <div class="d-flex flex-column gap-1 pt-1" *ngIf="!formName">
+                <app-skeleton width="180px" height="18px"></app-skeleton>
+                <app-skeleton width="260px" height="11px" className="opacity-75"></app-skeleton>
+              </div>
             </div>
 
             <div class="header-actions d-inline-flex align-items-center gap-1 ms-2">
@@ -76,23 +85,13 @@
                     <span class="action-label text-truncate">{{ FavMenuText }}</span>
                     <img [src]="favPath2" class="action-icon" alt="" />
                   </a>
-                  <a class="more-action" href="#">
-                    <span class="action-label text-truncate">Training Video</span>
-                    <i class="bi bi-arrow-right-short action-icon" aria-hidden="true"></i>
-                  </a>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
 
         <div class="header-right d-flex align-items-center gap-3 ms-auto">
-          <!-- TEMPORARY TEST BUTTON: Remove after SSO integration -->
-          <!-- <button type="button" class="btn btn-sm btn-outline-danger" (click)="triggerTestNotification()">Test Notif</button> -->
-
-          <!-- Notification Bell -->
           <div class="dropdown position-relative">
             <button class="icon-button position-relative" aria-label="Notifications" title="Notifications" (click)="toggleNotifications($event)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -103,23 +102,7 @@
               </span>
             </button>
 
-            <!-- Embedded CSS for modern scrollbar and animations -->
-            <style>
-              .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-              .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-              .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.15); border-radius: 10px; }
-              .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,0.25); }
-              @keyframes slideDownNotif { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-              .notif-dropdown-anim { animation: slideDownNotif 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-              .notif-item-hover { transition: background-color 0.2s ease, transform 0.2s ease; }
-              .notif-item-hover:hover { background-color: #f8f9fa !important; transform: translateY(-1px); }
-              .notif-item-unread { background-color: #f0f7ff; border-left: 3px solid #0d6efd !important; }
-              .notif-item-read { background-color: #ffffff; border-left: 3px solid transparent !important; }
-            </style>
-
             <div class="dropdown-content shadow border-0 p-0 notif-dropdown-anim" [style.display]="isNotificationOpen ? 'flex' : 'none'" (click)="$event.stopPropagation()" style="width: 380px; right: -10px; left: auto; max-height: 85vh; border-radius: 12px; flex-direction: column; overflow: hidden; background: #fff;">
-              
-              <!-- Header -->
               <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white z-2">
                 <h6 class="fw-bold mb-0 text-dark fs-6">Notifications</h6>
                 <button class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold shadow-none" *ngIf="unreadNotificationCount > 0" (click)="markAllAsRead(); $event.stopPropagation()">
@@ -127,7 +110,6 @@
                 </button>
               </div>
               
-              <!-- Notification Toggle Tabs -->
               <div class="bg-white px-3 py-2 border-bottom">
                 <div class="d-flex bg-light rounded-3 p-1">
                   <button class="btn btn-sm w-50 rounded-2 fw-medium border-0 transition-all"
@@ -143,57 +125,47 @@
                 </div>
               </div>
 
-              <!-- Content -->
               <div class="flex-grow-1 overflow-auto custom-scrollbar" style="max-height: 400px; background-color: #fff;">
-                
-                <!-- Empty State -->
                 <div *ngIf="filteredNotifications.length === 0" class="d-flex flex-column align-items-center justify-content-center py-5 text-center h-100">
                   <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 72px; height: 72px;">
                     <i class="bi bi-bell-slash text-secondary fs-1"></i>
                   </div>
                   <h6 class="fw-bold text-dark mb-1">All caught up!</h6>
-                  <p class="text-muted small mb-0 px-4">You have no {{ activeNotificationTab }} notifications at the moment.</p>
+                  <p class="text-muted small mb-0 px-4">You have no {{ activeNotificationTab }} notifications.</p>
                 </div>
 
-                <!-- Notification List -->
                 <div class="list-group list-group-flush">
                   <div *ngFor="let notif of filteredNotifications"
-                     class="list-group-item list-group-item-action p-3 d-flex gap-3 align-items-start border-bottom border-light position-relative notif-item-hover rounded-0"
-                     [ngClass]="!notif.isRead ? 'notif-item-unread' : 'notif-item-read'"
-                     (click)="markAsRead(notif)"
-                     style="cursor: pointer;">
+                       class="list-group-item list-group-item-action p-3 d-flex gap-3 align-items-start border-bottom border-light position-relative notif-item-hover rounded-0"
+                       [ngClass]="!notif.isRead ? 'notif-item-unread' : 'notif-item-read'"
+                       (click)="markAsRead(notif)"
+                       style="cursor: pointer;">
 
-                    <!-- Icon Container -->
                     <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
                          style="width: 42px; height: 42px;"
                          [ngClass]="'bg-' + getNotificationColor(notif.type).replace('text-', '') + ' bg-opacity-10'">
                       <i class="bi fs-5" [ngClass]="[getNotificationIcon(notif.type), getNotificationColor(notif.type)]"></i>
                     </div>
 
-                    <!-- Text Content -->
                     <div class="flex-grow-1 min-vw-0 pe-3">
                       <div class="d-flex justify-content-between align-items-baseline mb-1">
                         <strong class="mb-0 text-truncate text-dark" style="font-size: 0.875rem; max-width: 75%;">{{ notif.title }}</strong>
-                        <small class="text-muted ms-2 fw-medium" style="font-size: 0.7rem; white-space: nowrap;" *ngIf="notif.createdAt">{{ notif.createdAt | date:'MMM d, h:mm a' }}</small>
+                        <small class="text-muted ms-2 fw-medium" style="font-size: 0.7rem;" *ngIf="notif.createdAt">{{ notif.createdAt | date:'MMM d, h:mm a' }}</small>
                       </div>
                       <p class="mb-0 text-secondary" style="font-size: 0.8125rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" [class.fw-medium]="!notif.isRead">
                         {{ notif.message }}
                       </p>
                     </div>
-
-                    <!-- Unread dot indicator -->
                     <div *ngIf="!notif.isRead" class="position-absolute top-50 translate-middle-y bg-primary rounded-circle shadow-sm" style="width: 8px; height: 8px; right: 12px;"></div>
                   </div>
                 </div>
               </div>
               
-              <!-- Footer -->
               <div class="p-2 border-top bg-light text-center z-2">
                 <button class="btn btn-link btn-sm text-decoration-none fw-semibold shadow-none w-100" (click)="$event.stopPropagation();">
                   View all notifications
                 </button>
               </div>
-            </div>
             </div>
           </div>
 
@@ -204,9 +176,13 @@
                  style="cursor: pointer;"
                  [ngClass]="{'bg-light': isProfileOpen}">
               <img class="profile-pic" [src]="EmployeePic" alt="Profile Picture" />
-              <div class="profile-info d-flex flex-column lh-sm">
+              <div class="profile-info d-flex flex-column lh-sm" *ngIf="EmpName">
                 <span class="profile-name fw-semibold small">{{ EmpName }}</span>
                 <span class="profile-company text-muted small">{{ CompanyName }}</span>
+              </div>
+              <div class="profile-info d-flex flex-column gap-1" *ngIf="!EmpName">
+                <app-skeleton width="100px" height="12px"></app-skeleton>
+                <app-skeleton width="120px" height="10px" className="opacity-50"></app-skeleton>
               </div>
             </div>
 
@@ -224,13 +200,19 @@
                 <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-dark notif-item-hover" 
                    (click)="openReportDialog(); isProfileOpen = false;" style="cursor: pointer;">
                   <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Report a Problem</span>
-                  <i class="bi bi-exclamation-triangle-fill text-warning fs-6" aria-hidden="true"></i>
+                  <i class="bi bi-exclamation-triangle-fill text-warning fs-6"></i>
                 </a>
 
                 <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-dark notif-item-hover" 
                    *ngIf="haveDashboardRights" (click)="openDashboard(); isProfileOpen = false;" style="cursor: pointer;">
                   <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Dashboard</span>
-                  <i class="bi bi-speedometer2 text-primary fs-6" aria-hidden="true"></i>
+                  <i class="bi bi-speedometer2 text-primary fs-6"></i>
+                </a>
+
+                <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-dark notif-item-hover" 
+                   (click)="openAbout(); isProfileOpen = false;" style="cursor: pointer;">
+                  <span class="text-truncate fw-medium" style="font-size: 0.875rem;">About</span>
+                  <i class="bi bi-info-circle text-info fs-6"></i>
                 </a>
 
                 <hr class="my-1 text-light border-secondary opacity-25">
@@ -238,16 +220,16 @@
                 <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-danger notif-item-hover" 
                    (click)="logout()" style="cursor: pointer;">
                   <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Logout</span>
-                  <i class="bi bi-box-arrow-right fs-6" aria-hidden="true"></i>
+                  <i class="bi bi-box-arrow-right fs-6"></i>
                 </a>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </header>
 
     <div class="page-content container-fluid" role="main">
-      <!-- <app-spinner *ngIf="isLoading()"></app-spinner> -->
       <router-outlet (activate)='onActivate()'></router-outlet>
     </div>
 

@@ -189,11 +189,7 @@ export class DraftRequestList {
   }
 
   GetAllDraftDocuments(query?: any) {
-    // if (!this.selectedEmployee) {
-    //   this.documentRequestsData = [];
-    //   this.totalRows = 0;
-    //   return;
-    // }
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -214,11 +210,10 @@ export class DraftRequestList {
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {},
-      searchTerm: this.currentGridQuery.searchTerm || '',
+      filterModel: this.currentGridQuery.filterModel || {}, 
       sortBy: sortBy,
       sortColumn: sortColumn,
-      searchText: this.currentGridQuery.searchTerm || '',
+      searchText: searchText || '',
     };
 
     this._doumentRequestService.getMyDraftDocumentRequest(payload).subscribe({

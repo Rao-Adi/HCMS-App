@@ -145,13 +145,13 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedAuthorityType = value;
     //reset preselected values
     if (value == 2) {
-      this.getAllUsersList();
+      //this.getAllUsersList();
     }
     if (value == 3) {
-      this.getAllRoles();
+      //this.getAllRoles();
     }
     if (value == 4) {
-      this.getAllDesignationList();
+      //this.getAllDesignationList();
     }
     this.selectedUser = '';
     this.selectedDesignationSingle = null;
@@ -199,7 +199,7 @@ export class ApprovalWorkflowPolicyManagement {
       );
       return;
     }
-    
+
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
     const payLoad = {

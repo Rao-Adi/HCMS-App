@@ -1,6 +1,118 @@
-<!-- <nav class="modern-menu" [class.expanded]="isExpanded">
+<nav class="modern-menu" [class.expanded]="isExpanded">
+
+  <!-- Search Section (Only in Expanded Mode) -->
+  <div class="menu-search-container" *ngIf="isExpanded" (click)="$event.stopPropagation()">
+    <!-- Expanded mode: Full search input -->
+    <div class="search-input-wrapper">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text"
+             class="search-input"
+             placeholder="Search menu..."
+             [(ngModel)]="searchQuery"
+             (input)="onSearchInput()"
+             (focus)="showSearchResults = searchQuery.length > 0"
+             (click)="$event.stopPropagation()"
+             autocomplete="off" />
+      <button *ngIf="searchQuery"
+              class="search-clear"
+              (click)="clearSearch(); $event.stopPropagation()"
+              aria-label="Clear search">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Search Results Dropdown (Only in Expanded Mode) -->
+    <div class="search-results" *ngIf="isExpanded && showSearchResults && searchResults.length > 0" (click)="$event.stopPropagation()">
+      <div class="search-results-header">
+        <span>{{ searchResults.length }} result{{ searchResults.length !== 1 ? 's' : '' }}</span>
+        <button class="btn-close-search" (click)="clearSearch(); $event.stopPropagation()" aria-label="Close">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      <ul class="search-results-list">
+        <li *ngFor="let result of searchResults"
+            class="search-result-item">
+          <a [routerLink]="result.item.NavigateUrl ? [result.item.NavigateUrl.toLowerCase()] : null"
+             (click)="selectSearchResult(result); $event.stopPropagation()"
+             class="search-result-link">
+            <div class="result-text">{{ result.item.Text }}</div>
+            <div class="result-breadcrumb">{{ result.breadcrumb }}</div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- No Results (Only in Expanded Mode) -->
+    <div class="search-no-results" *ngIf="isExpanded && showSearchResults && searchResults.length === 0" (click)="$event.stopPropagation()">
+      <i class="bi bi-search"></i>
+      <p>No results found for "{{ searchQuery }}"</p>
+    </div>
+  </div>
+
+  <!-- Search Flyout (for collapsed mode) -->
+  <div class="search-flyout" *ngIf="!isExpanded && showSearchFlyout" (click)="$event.stopPropagation()">
+    <div class="search-flyout-header">
+      <span>Search Menu</span>
+      <button class="btn-close-search" (click)="closeSearchFlyout()" aria-label="Close">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <div class="search-flyout-input-wrapper">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text"
+             class="search-input"
+             placeholder="Search menu..."
+             [(ngModel)]="searchQuery"
+             (input)="onSearchInput()"
+             (click)="$event.stopPropagation()"
+             autocomplete="off" />
+      <button *ngIf="searchQuery"
+              class="search-clear"
+              (click)="clearSearch(); $event.stopPropagation()"
+              aria-label="Clear search">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Search Results in Flyout -->
+    <div class="search-flyout-results" *ngIf="searchResults.length > 0">
+      <ul class="search-results-list">
+        <li *ngFor="let result of searchResults" class="search-result-item">
+          <a [routerLink]="result.item.NavigateUrl ? [result.item.NavigateUrl.toLowerCase()] : null"
+             (click)="selectSearchResult(result); $event.stopPropagation()"
+             class="search-result-link">
+            <div class="result-text">{{ result.item.Text }}</div>
+            <div class="result-breadcrumb">{{ result.breadcrumb }}</div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- No Results in Flyout -->
+    <div class="search-flyout-no-results" *ngIf="searchQuery && searchResults.length === 0">
+      <i class="bi bi-search"></i>
+      <p>No results found</p>
+    </div>
+  </div>
+
+  <!-- Menu Items Container -->
   <div class="menu-scroll-container">
     <ul class="list-unstyled mb-0">
+      <!-- Search as First Menu Item (Only in Collapsed Mode) -->
+      <li *ngIf="!isExpanded" class="menu-item root-item search-menu-item">
+        <a class="menu-link d-flex align-items-center rounded-2"
+           href="#"
+           (click)="toggleSearchFlyout($event)"
+           (mouseenter)="showRootHint($event, 'Search Menu')"
+           (mouseleave)="hideRootHint()"
+           title="Search Menu">
+          <i class="menu-icon bi bi-search" aria-hidden="true"></i>
+          <span class="menu-text flex-grow-1 text-truncate fw-medium">Search Menu</span>
+          <span class="submenu-indicator" aria-hidden="true">›</span>
+        </a>
+      </li>
+
       <li *ngFor="let root of RootItems"
           class="menu-item root-item Menu_{{root.Value.split(' ')[0]}}"
           [class.has-children]="root.child?.length"
@@ -14,7 +126,7 @@
            (mouseleave)="hideRootHint()"
            [attr.title]="isExpanded ? root.Text : null"
            [attr.aria-expanded]="root.child?.length ? openSubmenus[key(root.Value)] : null">
-          <span class="menu-icon" aria-hidden="true"></span>
+          <i class="menu-icon bi" [ngClass]="'bi-' + getIconClass(root.Value)" aria-hidden="true"></i>
           <span class="menu-text flex-grow-1 text-truncate fw-medium">{{root.Text}}</span>
           <span *ngIf="root.count" class="menu-count">{{root.count}}</span>
           <span *ngIf="root.child?.length" class="submenu-indicator" aria-hidden="true">›</span>
@@ -94,133 +206,6 @@
             <a *ngIf="!s.ClsSep && !s.CLSSEP"
                class="menu-link d-flex align-items-center rounded-2"
                [routerLink]="s.NavigateUrl ? [s.NavigateUrl.toLowerCase()] : null"
-               (click)="selectIfLeaf(s)"
-               [attr.title]="s.Text">
-              <span class="menu-text flex-grow-1 text-truncate">{{s.Text}}</span>
-              <span *ngIf="s.count" class="menu-count sub-count">{{s.count}}</span>
-            </a>
-          </li>
-        </ul>
-      </ng-container>
-    </div>
-  </ng-template>
-</nav> -->
-
-
-
-
-<nav class="modern-menu" [class.expanded]="isExpanded">
-  <div class="menu-scroll-container">
-    <ul class="list-unstyled mb-0">
-      <li *ngFor="let root of RootItems"
-          class="menu-item root-item Menu_{{root.Value.split(' ')[0]}}"
-          [class.has-children]="root.child?.length"
-          [class.open]="openSubmenus[key(root.Value)]"
-          [routerLinkActive]="['active-parent']"
-          [routerLinkActiveOptions]="{ exact: false }">
-
-        <a class="menu-link d-flex align-items-center rounded-2"
-           [routerLink]="(!root.child?.length && root.NavigateUrl) ? [root.NavigateUrl.toLowerCase()] : null"
-           routerLinkActive="active"
-           [routerLinkActiveOptions]="{ exact: true }"
-           [href]="(root.child?.length) ? '#' : null"
-           (click)="handleRootClick($event, root)"
-           (mouseenter)="showRootHint($event, root.Text)"
-           (mouseleave)="hideRootHint()"
-           [attr.title]="isExpanded ? root.Text : null"
-           [attr.aria-expanded]="root.child?.length ? openSubmenus[key(root.Value)] : null">
-          <span class="menu-icon" aria-hidden="true"></span>
-          <span class="menu-text flex-grow-1 text-truncate fw-medium">{{root.Text}}</span>
-          <span *ngIf="root.count" class="menu-count">{{root.count}}</span>
-          <span *ngIf="root.child?.length" class="submenu-indicator" aria-hidden="true">›</span>
-        </a>
-
-        <ul class="submenu level-1 list-unstyled ms-1"
-            *ngIf="isExpanded && root.child?.length && openSubmenus[key(root.Value)]">
-          <li *ngFor="let child of root.child"
-              class="menu-item {{child.Class || ''}}"
-              [class.has-children]="child.subChild?.length"
-              [class.open]="openSubmenus[getSubmenuKey(root.Value, child.Value)]"
-              [routerLinkActive]="['active-parent']"
-              [routerLinkActiveOptions]="{ exact: false }">
-
-            <div *ngIf="child.ClsSep" class="separator"></div>
-
-            <a *ngIf="!child.ClsSep"
-               class="menu-link d-flex align-items-center rounded-2"
-               [routerLink]="(!child.subChild?.length && child.NavigateUrl) ? [child.NavigateUrl.toLowerCase()] : null"
-               routerLinkActive="active"
-               [routerLinkActiveOptions]="{ exact: true }"
-               [href]="(child.subChild?.length) ? '#' : null"
-               (click)="handleL1Click($event, root, child)"
-               [attr.title]="child.Text"
-               [attr.aria-expanded]="child.subChild?.length ? openSubmenus[getSubmenuKey(root.Value, child.Value)] : null">
-              <span class="menu-text flex-grow-1 text-truncate">{{child.Text}}</span>
-              <span *ngIf="child.count" class="menu-count sub-count">{{child.count}}</span>
-              <span *ngIf="child.subChild?.length" class="submenu-indicator" aria-hidden="true">›</span>
-            </a>
-
-            <ul class="submenu level-2 list-unstyled" *ngIf="isExpanded && child.subChild?.length && openSubmenus[getSubmenuKey(root.Value, child.Value)]">
-              <li *ngFor="let sub of child.subChild" class="menu-item {{sub.Class || ''}}">
-                <div *ngIf="sub.ClsSep || sub.CLSSEP" class="separator"></div>
-
-                <a *ngIf="!sub.ClsSep && !sub.CLSSEP"
-                   class="menu-link d-flex align-items-center rounded-2"
-                   [routerLink]="sub.NavigateUrl ? [sub.NavigateUrl.toLowerCase()] : null"
-                   routerLinkActive="active"
-                   [routerLinkActiveOptions]="{ exact: true }"
-                   (click)="selectIfLeaf(sub)"
-                   [attr.title]="sub.Text">
-                  <span class="menu-text flex-grow-1 text-truncate">{{sub.Text}}</span>
-                  <span *ngIf="sub.count" class="menu-count sub-count">{{sub.count}}</span>
-                </a>
-              </li>
-            </ul>
-
-          </li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-
-  <ng-template #flyoutTpl let-level="level" let-root="root" let-child="child">
-    <div class="flyout shadow border rounded-3">
-      <ng-container *ngIf="level === 1">
-        <div class="flyout-header">{{ root.Text }}</div>
-        <ul class="submenu level-1 in-flyout list-unstyled">
-          <li *ngFor="let c of root.child" class="menu-item" [class.has-children]="c.subChild?.length"
-              [routerLinkActive]="['active-parent']" [routerLinkActiveOptions]="{ exact: false }">
-            <div *ngIf="c.ClsSep" class="separator"></div>
-
-            <a *ngIf="!c.ClsSep"
-               class="menu-link d-flex align-items-center rounded-2"
-               [routerLink]="(!c.subChild?.length && c.NavigateUrl) ? [c.NavigateUrl.toLowerCase()] : null"
-               routerLinkActive="active"
-               [routerLinkActiveOptions]="{ exact: true }"
-               [href]="(c.subChild?.length) ? '#' : null"
-               (click)="handleFlyoutL1Click($event, root, c)"
-               (mouseenter)="handleFlyoutL1Enter($event, root, c)"
-               [attr.title]="c.Text">
-              <span class="menu-text flex-grow-1 text-truncate">{{c.Text}}</span>
-              <span *ngIf="c.count" class="menu-count sub-count">{{c.count}}</span>
-              <span *ngIf="c.subChild?.length" class="submenu-indicator" aria-hidden="true">›</span>
-            </a>
-          </li>
-        </ul>
-      </ng-container>
-
-      <ng-container *ngIf="level === 2">
-        <div class="flyout-header">{{ child.Text }}</div>
-        <ul class="submenu level-2 in-flyout list-unstyled">
-          <li *ngFor="let s of child.subChild" class="menu-item"
-              [routerLinkActive]="['active-parent']" [routerLinkActiveOptions]="{ exact: false }">
-            <div *ngIf="s.ClsSep || s.CLSSEP" class="separator"></div>
-
-            <a *ngIf="!s.ClsSep && !s.CLSSEP"
-               class="menu-link d-flex align-items-center rounded-2"
-               [routerLink]="s.NavigateUrl ? [s.NavigateUrl.toLowerCase()] : null"
-               routerLinkActive="active"
-               [routerLinkActiveOptions]="{ exact: true }"
                (click)="selectIfLeaf(s)"
                [attr.title]="s.Text">
               <span class="menu-text flex-grow-1 text-truncate">{{s.Text}}</span>

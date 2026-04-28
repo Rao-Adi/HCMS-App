@@ -26,7 +26,7 @@
               class="badge"
               [ngClass]="{
                 approve: o.Decision === 'Approved',
-                reject: o.Decision === 'Rejected' || o.Decision === 'Reworked'
+                reject: o.Decision === 'Rejected' || o.Decision === 'Reworked',
               }"
             >
               {{ o.Decision }}
@@ -67,11 +67,20 @@
       >
         Observation is required
       </div>
-
-      <div class="mt-3 text-end d-flex">
-        <!-- <button class="btn btn-secondary me-2" type="button" (click)="close()">Cancel</button> -->
-
-        <button class="btn btn-primary" type="button" (click)="submit()">Submit</button>
+      <div class="row mt-4 btn-stick">
+        <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
+          <div class="col-sm-1">
+            <button
+              type="button"
+              tabindex="0"
+              class="btn btn-sm btn-outline-secondary shadow-sm"
+              (click)="submit()"
+            >
+              <i class="bi bi-file-earmark-text me-2"></i>
+              Submit
+            </button>
+          </div>
+        </div>
       </div>
     </form>
   </div>

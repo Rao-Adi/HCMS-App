@@ -2,14 +2,6 @@
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="card-custom">
-        <div class="clearfix">
-          <div class="pull-left">
-            <h3 class="mt-0">My Approvals – Documents</h3>
-            <small class="text-muted">My Approvals – Documents</small>
-          </div>
-        </div>
-        <br />
-        <hr /> 
         <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
           <h3 class="PnlHeader">
             {{ 'labels.Filters' | safeTranslate }}
@@ -266,7 +258,7 @@
           <div class="col-lg-12 col-md-12 col-sm-12">
             <h3 class="PnlHeader">Document Content</h3>
             <br />
-            
+
             <!-- HTML Template Editor -->
             <ng-container *ngIf="!draftFileUrl">
               <app-dmsrich-text-edit
@@ -278,17 +270,30 @@
 
             <!-- Word/PDF File Download -->
             <ng-container *ngIf="draftFileUrl">
-              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px;">
+              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
                 <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                 <div>
-                  <strong>Instructions:</strong> Please download and review the drafted document attached to this request.
+                  <strong>Instructions:</strong> Please download and review the drafted document
+                  attached to this request.
                 </div>
               </div>
-              
-              <div class="d-flex align-items-center gap-3 mb-4"> 
-                <button type="button" class="btn btn-outline-success" (click)="downloadDraft()">
-                  <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Drafted Document
-                </button>
+
+              <div class="row mt-4 btn-stick">
+                <div
+                  class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                >
+                  <div class="col-sm-2">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-sm btn-outline-secondary shadow-sm"
+                      (click)="downloadDraft()"
+                    >
+                      <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                      Download Drafted Document
+                    </button>
+                  </div>
+                </div>
               </div>
             </ng-container>
           </div>

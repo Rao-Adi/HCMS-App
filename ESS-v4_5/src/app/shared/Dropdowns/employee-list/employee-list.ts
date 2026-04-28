@@ -1,18 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, forwardRef, Input, Output, Pipe, PipeTransform } from '@angular/core';
-import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms'; 
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  Input,
+  Output,
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
+import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzSelectModule } from 'ng-zorro-antd/select'; 
+import { NzSelectModule } from 'ng-zorro-antd/select';
 
 @Pipe({
   name: 'highlightSearch',
-  standalone: true
+  standalone: true,
 })
 export class HighlightSearchPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}
-  
+
   transform(text: string, search: string): SafeHtml | string {
     if (!search || !text) return text;
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -41,13 +49,13 @@ export class HighlightSearchPipe implements PipeTransform {
     nzVirtualHeight="300px"
     nzVirtualItemSize="32"
   >
-    <nz-option 
-      *ngFor="let opt of options" 
-      [nzValue]="opt.value" 
-      [nzLabel]="opt.label" 
+    <nz-option
+      *ngFor="let opt of options"
+      [nzValue]="opt.value"
+      [nzLabel]="opt.label"
       nzCustomContent
     >
-      <span [innerHTML]="opt.label | highlightSearch:searchTerm"></span>
+      <span [innerHTML]="opt.label | highlightSearch: searchTerm"></span>
     </nz-option>
   </nz-select>`,
   styles: [
@@ -85,7 +93,7 @@ export class EmployeeList {
   @Input() isMultiSelect = true;
 
   options: Array<{ label: string; value: string }> = [];
-  
+
   @Output() valueChange = new EventEmitter<any>();
 
   value: any;
@@ -94,9 +102,7 @@ export class EmployeeList {
   selectedUser: any = null;
   searchTerm = '';
 
-  constructor(
-    private _peoplePartnerService: PeoplePartnersService
-  ) {}
+  constructor(private _peoplePartnerService: PeoplePartnersService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -143,12 +149,12 @@ export class EmployeeList {
   //   this.valueChange.emit(value);
   // }
 
-  getAllUsersList = () => { 
+  getAllUsersList = () => {
     this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.options = (res.Data ?? []).map((d: any) => ({
           value: d.Code || d.code,
-          label: d.Value || d.value,
+          label: d.Value + ' (' + d.Code + ')' || d.value,
         }));
       } else {
         this.options = [];

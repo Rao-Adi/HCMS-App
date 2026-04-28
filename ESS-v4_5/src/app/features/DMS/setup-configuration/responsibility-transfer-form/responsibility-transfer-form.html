@@ -2,14 +2,6 @@
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="card-custom">
-        <div class="clearfix">
-          <div class="pull-left">
-            <h3 class="mt-0">Responsibility Transfer Form</h3>
-            <small class="text-muted">Responsibility Transfer Form</small>
-          </div>
-        </div>
-        <br />
-        <hr />
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
@@ -37,7 +29,10 @@
                     <div class="row">
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>{{ 'labels.Employee (From)' | safeTranslate }} <span class="text-danger ml-1">*</span></label>
+                          <label
+                            >{{ 'labels.Employee (From)' | safeTranslate }}
+                            <span class="text-danger ml-1">*</span></label
+                          >
                         </div>
                         <div>
                           <nz-select
@@ -57,7 +52,10 @@
 
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>{{ 'labels.Employee (To)' | safeTranslate }} <span class="text-danger ml-1">*</span></label>
+                          <label
+                            >{{ 'labels.Employee (To)' | safeTranslate }}
+                            <span class="text-danger ml-1">*</span></label
+                          >
                         </div>
                         <div class="Divtxtemployeeschright" style="width: 250px">
                           <div>
@@ -78,7 +76,10 @@
 
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>{{ 'labels.Reason For Transfer' | safeTranslate }}<span class="text-danger ml-1">*</span></label>
+                          <label
+                            >{{ 'labels.Reason For Transfer' | safeTranslate
+                            }}<span class="text-danger ml-1">*</span></label
+                          >
                         </div>
                         <div>
                           <nz-select
@@ -100,7 +101,9 @@
                     </div>
                     <div class="row pt-4">
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <span class="d-flex">Effective Date (From)<span class="text-danger ml-1">*</span></span>
+                        <span class="d-flex"
+                          >Effective Date (From)<span class="text-danger ml-1">*</span></span
+                        >
                         <nz-date-picker
                           [nzPlaceHolder]="'Select Date'"
                           [(ngModel)]="selectedEffectiveDateFrom"
@@ -111,7 +114,9 @@
                       </div>
 
                       <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <span class="d-flex">Effective Date (To)<span class="text-danger ml-1">*</span></span>
+                        <span class="d-flex"
+                          >Effective Date (To)<span class="text-danger ml-1">*</span></span
+                        >
                         <nz-date-picker
                           [nzPlaceHolder]="'Select Date'"
                           [(ngModel)]="selectedEffectiveDateTo"
@@ -133,9 +138,13 @@
                       </div>
                     </div>
                     <div class="row pt-4">
-                      <div class="col-lg-12 col-md-12 col-sm-6 mb-10"> 
+                      <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                         <div class="PnlHeading">
-                          <label>Upload Document (DOCX/PDF/PNG/JPG)<span class="text-danger ml-1">*</span></label>
+                          <label
+                            >Upload Document (DOCX/PDF/PNG/JPG)<span class="text-danger ml-1"
+                              >*</span
+                            ></label
+                          >
                         </div>
                         <input
                           type="file"
@@ -162,9 +171,33 @@
                 </div>
               </div>
               <br />
-              <div class="justify-content-center pt-4 d-flex gap-2">
-                <button nz-button nzType="primary" (click)="submitRequest($event)">Submit</button>
-                <button nz-button nzType="default" (click)="cancel()">Cancel</button>
+              <div class="row mt-4 btn-stick">
+                <div
+                  class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                >
+                  <div class="col-sm-1">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-sm btn-outline-secondary shadow-sm"
+                      (click)="submitRequest($event)"
+                    >
+                      <i class="bi bi-file-earmark-text me-2"></i>
+                      Submit
+                    </button>
+                  </div>
+                  <div class="col-sm-1">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-sm btn-primary shadow-sm"
+                      (click)="cancel()"
+                    >
+                      <i class="bi bi-cancel me-2"></i>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -215,7 +248,7 @@
                       <button
                         class="grid-icon-btn"
                         title="Approve"
-                        [disabled]="(!hasSelectedRows || !this.canAdd)"
+                        [disabled]="!hasSelectedRows || !this.canAdd"
                         [class.disabled]="!hasSelectedRows"
                         (click)="approveDocument('Approved')"
                       >
@@ -224,7 +257,7 @@
                       <button
                         class="grid-icon-btn"
                         title="Reject"
-                        [disabled]="(!hasSelectedRows || !this.canAdd)"
+                        [disabled]="!hasSelectedRows || !this.canAdd"
                         [class.disabled]="!hasSelectedRows"
                         (click)="approveDocument('Rejected')"
                       >

@@ -133,7 +133,10 @@ export class PendingRequestForApproval {
   }
 
   GetAllPendingRequests(query?: any) {
-     
+      
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
     } else {
@@ -156,11 +159,10 @@ export class PendingRequestForApproval {
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {},
-      searchTerm: this.currentGridQuery.searchTerm || '',
+      filterModel: this.currentGridQuery.filterModel || {}, 
       sortBy: sortBy,
       sortColumn: sortColumn,
-      searchText: this.currentGridQuery.searchTerm || '',
+      searchText: searchText || '',
     };
 
     this._doumentRequestService.GetMyRequestsPendingApproval(payload).subscribe({
