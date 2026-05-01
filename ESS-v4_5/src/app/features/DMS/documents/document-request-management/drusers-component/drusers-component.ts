@@ -12,12 +12,13 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { UserService } from '@app/shared/services/user-service';
-import { ColDef } from 'ag-grid-community'; 
+import { ColDef } from 'ag-grid-community';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-drusers-component',
@@ -88,18 +89,29 @@ export class DRUsersComponent {
         this.selectedEmployeeList = [...this.selectedUsers];
       }
 
-      this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-        this.cabinetHierarchy = levels;
-
-        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-      });
-
-      this.GetAllUserRoles();
-      // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
-      // this.getAllDivisionList();
-      // this.getAllDepartmentList();
-      // this.getAllSubDepartmentList();
+      this.loadDropdownsAndGrid();
     });
+    // this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+    //   this.canAdd = permissions.canAdd;
+    //   this.canEdit = permissions.canEdit;
+    //   this.canDelete = permissions.canDelete;
+
+    //   if (this.selectedUsers && this.selectedUsers.length > 0) {
+    //     this.selectedEmployeeList = [...this.selectedUsers];
+    //   }
+
+    //   this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+    //     this.cabinetHierarchy = levels;
+
+    //     this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    //   });
+
+    //   this.GetAllUserRoles();
+    //   // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    //   // this.getAllDivisionList();
+    //   // this.getAllDepartmentList();
+    //   // this.getAllSubDepartmentList();
+    // });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -235,7 +247,7 @@ export class DRUsersComponent {
         departmentCode: rowData.level2Id || rowData.departmentCode,
         subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode,
         businessDomainCode: rowData.level4Id || rowData.businessDomainCode,
-        documentTypeCode: this.documentTypeCode
+        documentTypeCode: this.documentTypeCode,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
@@ -307,7 +319,11 @@ export class DRUsersComponent {
     };
 
     this._userService.update(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification('success', 'User', 'User created successfully!');
+      this._notificationToastService.createNotification(
+        'success',
+        'User',
+        'User created successfully!',
+      );
 
       // Update display names
       event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
@@ -370,6 +386,26 @@ export class DRUsersComponent {
       // Open in modal or new tab
       window.open(fileInfo.url, '_blank');
     }
+  }
+
+  private loadDropdownsAndGrid(): void {
+    forkJoin({
+      userRoles: this._peoplePartnerService.GetAllRoles(),
+      hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
+    }).subscribe(({ userRoles, hierarchy }) => {
+      // ✅ Normalize Roles
+      this.userRoles =
+        userRoles?.Data?.map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
+        })) ?? [];
+
+      // ✅ Cabinet hierarchy
+      this.cabinetHierarchy = hierarchy;
+
+      // ✅ Load hierarchy dropdown data
+      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => this.buildGrid());
+    });
   }
 
   GetAllUserRoles = () => {

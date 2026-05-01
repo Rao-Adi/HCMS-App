@@ -18,16 +18,17 @@ import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfac
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
 import { CompanyService } from '@app/shared/services/company.service';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
-import { DRUsersComponent } from '../drusers-component/drusers-component';  
-import { TemplateService } from '@app/shared/services/template.service'; 
-import { WorkflowStepService } from '@app/shared/services/workflow-step-service'; 
+import { DRUsersComponent } from '../drusers-component/drusers-component';
+import { TemplateService } from '@app/shared/services/template.service';
+import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
-import { DocumentService } from '@app/shared/services/document.service'; 
+import { DocumentService } from '@app/shared/services/document.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
- 
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+
 @Component({
   selector: 'app-document-request-form',
   imports: [
@@ -45,7 +46,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
     DocumentTypeList,
     DRDistributionList,
     DRUsersComponent,
-    DMSRichTextEdit, 
+    DMSRichTextEdit,
     CabinetStructureList,
   ],
   templateUrl: './document-request-form.html',
@@ -55,7 +56,7 @@ export class DocumentRequestForm {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() draftData: any;
 
-   // --- PERMISSION FLAGS ---
+  // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
   canDelete = false;
@@ -80,20 +81,21 @@ export class DocumentRequestForm {
     editable: false,
   };
 
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 10,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: '',
+  };
+
   pageSize = 10;
   totalRows = 0;
-  totalUsers = 0;
-  totalDistributioinList = 0;
-  totalWorkflowAuthorities = 0;
-  totalDocuments = 0;
-  totalPendingApprovals = 0;
-  rowData: any[] = [];
   trainingContent: boolean = false;
   showExclusionTable = false;
 
   public noRowsOverlay: string = '';
-  selectedCompany: string | null = null;
-  selectedRequestType: string = '';
+  selectedCompany: string | null = null; 
   selectedDocumentRequestType: string | null = null;
   showDocumentDiv: boolean = false;
   showDocumentCreationDiv: boolean = false;
@@ -119,6 +121,7 @@ export class DocumentRequestForm {
   requestId: number = 0;
   submittedby: number = 0;
   loginEmpId: string = '';
+  pageNumber = 1;
 
   documentColumnDefs: ColDef[] = [
     {
@@ -222,10 +225,9 @@ export class DocumentRequestForm {
     private _companyService: CompanyService,
     private _notificationToasService: NotificationToastService,
     private _doumentRequestService: DocumentRequestService,
-    private _documentTemplateService: TemplateService, 
-    private _workflowStepService: WorkflowStepService,
-    private _documentService: DocumentService, 
-    private _permissionService: PermissionService
+    private _documentTemplateService: TemplateService,
+    private _workflowStepService: WorkflowStepService, 
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
@@ -235,29 +237,26 @@ export class DocumentRequestForm {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
-      this.getAllDocumentRequestTypes(); 
+
+      this.getAllDocumentRequestTypes();
       this.getAllCompanies();
     });
   }
- 
+
   GetLoginEmpId() {
     this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   onRequestTypeChange(value: string | null): void {
-    this.selectedDocumentRequestType = value;
+    this.selectedDocumentRequestType = value; 
     this.selectedDocumentRow = null;
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
       this.showDocumentCreationDiv = true;
       this.showDocumentDiv = false;
-    } else if (
-      this.selectedDocumentRequestType == '2' ||
-      this.selectedDocumentRequestType == 'DRT-0002'
-    ) {
+    } else if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       this.showDocumentDiv = true;
+      this.GetEffectiveDocumentsForRevision('');
       this.showDocumentCreationDiv = true;
-      this.GetAllApprovedDocuments('');
     } else {
       this.showDocumentDiv = true; // show document grid on obseletion as well.
       this.showDocumentCreationDiv = true;
@@ -486,11 +485,19 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Company.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Company.',
+      );
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Document Name.',
+      );
       return;
     }
     if (!this.selectedDocumentType) {
@@ -502,11 +509,19 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedDivisions) {
-      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Division.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Division.',
+      );
       return;
     }
     if (!this.selectedDepartment) {
-      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Department.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Department.',
+      );
       return;
     }
     if (!this.selectedSubDepartment) {
@@ -525,7 +540,7 @@ export class DocumentRequestForm {
       );
       return;
     }
-    debugger;
+
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,
@@ -548,7 +563,7 @@ export class DocumentRequestForm {
     if (this.selectedSubDepartment)
       formData.append('subDepartmentCode', this.selectedSubDepartment);
     if (this.selectedBusinessDomain)
-      formData.append('businessDomainCode', this.selectedBusinessDomain); 
+      formData.append('businessDomainCode', this.selectedBusinessDomain);
 
     cleanDistributionList.forEach((item: any, index: number) => {
       if (item.divisionCode)
@@ -594,13 +609,16 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to draft document.');
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to draft document.',
+        );
       },
     });
   }
 
   SubmitDocumentRequests() {
-    
     if (!this.selectedDocumentRequestType) {
       this._notificationToasService.createNotification(
         'warning',
@@ -610,11 +628,19 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification('warning', 'Validation', 'Please select a Company.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Company.',
+      );
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification('warning', 'Validation', 'Please enter Document Name.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Document Name.',
+      );
       return;
     }
 
@@ -684,7 +710,7 @@ export class DocumentRequestForm {
     if (this.selectedSubDepartment)
       formData.append('subDepartmentCode', this.selectedSubDepartment);
     if (this.selectedBusinessDomain)
-      formData.append('businessDomainCode', this.selectedBusinessDomain); 
+      formData.append('businessDomainCode', this.selectedBusinessDomain);
 
     cleanDistributionList.forEach((item: any, index: number) => {
       if (item.divisionCode)
@@ -729,13 +755,16 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
 
-  emptyFields() {
-    this.selectedRequestType = '';
+  emptyFields() { 
     this.selectedDocumentRequestType = null;
     this.selectedCompany = '';
     this.documentName = '';
@@ -761,125 +790,114 @@ export class DocumentRequestForm {
     const { gridId, pageSize } = event;
   }
 
-  GetAllApprovedDocuments(query: any) {
-    const payLoad = { 
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType, 
-      RequestStatus: 'Approved',
-      // pageNumber: this.currentGridQuery.pageNumber,
-      // pageSize: this.currentGridQuery.pageSize,
-      // sortModel: this.currentGridQuery.sortModel || [],
-      // filterModel: this.currentGridQuery.filterModel || {},
-      // searchTerm: this.currentGridQuery.searchTerm || '',
-      // // Map to satisfy backend validation
-      // sortBy: sortBy,
-      // sortColumn: sortColumn,
-      // searchText: this.currentGridQuery.searchTerm || '',
-      empid: this.loginEmpId,
+  GetEffectiveDocumentsForRevision(query?: any) {
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      status: 0, // 0 = Draft
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: searchText || '',
     };
 
-    this._documentService.GetDocumentByStatus(payLoad).subscribe({
+    this._doumentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
       next: (response) => {
-        if (response?.Success) {
-          this.totalRows = response.Data.TotalCount;
-          this.documentRevisionData = response.Data.Items.map((item: any) => {
-            // Helper to get value with case-insensitive fallback
-            const get = (keys: string[], defaultValue: any = ''): any => {
-              for (const key of keys) {
-                if (item[key] !== undefined && item[key] !== null) return item[key];
-                const lower = key.toLowerCase();
-                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
-              }
-              return defaultValue;
-            };
+        if (response?.Success || response?.Data) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
 
-            const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
-            const startedAtRaw = get(['StartedAt', 'startedAt']);
-
-            return {
-              // ──────────────────────────────────────────────
-              // Identification & Request
-              // ──────────────────────────────────────────────
-              ExecutionId: get(['ExecutionId', 'executionId']),
-              Id: get(['Id', 'id']),
-              requestId: get(['Id', 'id']), // often same as Id
-              stepId: get(['StepId', 'stepId']),
-              stepOrder: get(['StepOrder', 'stepOrder']),
-              ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
-
-              // ──────────────────────────────────────────────
-              // Document metadata
-              // ──────────────────────────────────────────────
-              documentType: get(['DocumentType', 'documentType']),
-              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
-              documentName: get(['Title', 'title']),
-              company: get(['Company', 'company'], ''),
-              companyId: get(['CompanyId', 'companyId']),
-              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
-              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
-
-              // ──────────────────────────────────────────────
-              // Organizational context
-              // ──────────────────────────────────────────────
-              division: get(['Division']),
-              department: get(['Department']),
-              departmentId: get(['DepartmentCode', 'departmentCode']),
-              subdepartment: get(['subdepartment', 'SubDepartment']),
-              businessdomain: get(['BusinessDomain', 'businessDomain']),
-              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
-              version: get(['ProposedVersionNumber', 'proposedVersionNumber']),
-              // ──────────────────────────────────────────────
-              // Content / Justification
-              // ──────────────────────────────────────────────
-
-              proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
-
-              // ──────────────────────────────────────────────
-              // Audit / History fields
-              // ──────────────────────────────────────────────
-              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
-              requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
-              startedAt: this.formatDate(startedAtRaw),
-
-              // Previous version info (only if present in real payloads)
-              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              previousVersionCreatedOn: this.formatDate(
-                get(['RequestCreatedAt', 'requestCreatedAt']),
-              ),
-
-              // ──────────────────────────────────────────────
-              // Placeholder / missing fields from your original
-              // (add real data source when available)
-              // ──────────────────────────────────────────────
-              observation: '', // ← not in sample → populate when available
-              requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
-              dateOfApproval: '', // ← not present
-              approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
-              distributionListPayload: (item.DistributionList || []).map((x: any) => ({
-                ...x,
-                level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
-                level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
-                level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
-                level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
-                roleId: x.roleId || x.RoleId,
-                distributiontypeId:
-                  x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
-              })),
-              distributionUserList: item.UserList,
-            };
-          });
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRevisionData = items.map((item: any) => ({
+            Id: item.id || item.Id,
+            companyId: item.companyId || item.CompanyId,
+            requestNumber: item.RequestNumber || item.requestNumber,
+            documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
+            documentType: item.DocumentType || item.documenttype,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
+            stepId: item.StepId || item.stepId,
+            stepOrder: item.StepOrder || item.stepOrder,
+            startedAt: item.StartedAt || item.startedAt,
+            division: item.Division || item.division,
+            documentId: item.DocumentNumber || item.documentid,
+            documentName: item.DocumentName || item.documentname || item.title,
+            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+            department: item.Department || item.department,
+            departmentId: item.DepartmentCode || item.departmentcode,
+            subdepartment: item.SubDepartment || item.subdepartment,
+            justification: item.Justification || item.justification,
+            businessdomainId: item.BusinessDomainCode || item.businessdomaincode,
+            pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
+            sumbittedby: item.CreatedBy || item.createdby,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.CreatedAt || item.createdat || '',
+            ),
+            previousVersionCreatedBy: item.LastModifiedBy || item.lastmodifiedby,
+            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || item.lastmodifiedat || '',
+            ),
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            nextReviewDate: new CustomDateFormatPipe().transform(item.NextReviewDate || item.nextreviewdate || ''),
+            url: item.DocumentUrl || item.documenturl,
+            proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            draftFileUrl:
+              item.DraftFileUrl ||
+              item.draftFileUrl ||
+              (String(item.TemplateType || item.templateType) === '1' ||
+              String(item.TemplateType || item.templateType) === '2'
+                ? item.ProposedContent || item.proposedcontent
+                : ''),
+            // Map backend fields back to the frontend keys expected by the component
+            distributionListPayload: (item.DistributionList || item.distributionList || []).map((x: any) => ({
+              ...x,
+              level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+              level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+              level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+              level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+              roleId: x.roleId || x.RoleId,
+              distributiontypeId:
+                x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+            })),
+            distributionUserList: item.UserList || item.userList || [],
+          }));
+        } else {
+          this.documentRevisionData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this.documentRevisionData = [];
+        this.totalRows = 0;
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          err?.Message || 'Failed to fetch draft documents.',
+        );
       },
     });
   }
-
+ 
   // Option 1: Simple custom method (no pipe dependency)
   private formatDate(value: string | null | undefined): string {
     if (!value) return '';
@@ -947,7 +965,7 @@ export class DocumentRequestForm {
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,
-        entityType: 'Document',
+        entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1000,

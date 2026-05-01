@@ -81,6 +81,18 @@ export class DocumentRequestService {
     );
   }
 
+  GetEffectiveDocumentDetailsForRevisionByIdAsync(Id: string): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-details-by-id/${Id}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });  
+  }
+  
+   GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-for-revision`,
+      payload,
+    );
+  }
+
   UpdateDraftDocumentRequest(payload: any) {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/update-draft-document-request`,

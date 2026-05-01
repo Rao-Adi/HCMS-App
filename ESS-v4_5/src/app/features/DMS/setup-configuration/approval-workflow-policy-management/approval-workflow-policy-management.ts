@@ -274,6 +274,7 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   private getEmployeeCodes(): string[] {
+    debugger;
     // If multi-select has value
     if (this.selectedEmployee && this.selectedEmployee.length > 0) {
       // If app-employee-list returns objects

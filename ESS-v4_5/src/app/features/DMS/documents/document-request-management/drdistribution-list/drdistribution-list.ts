@@ -88,8 +88,7 @@ export class DRDistributionList {
 
   constructor(
     private _distributionList: DistributionListService,
-    private _distributionTypeService: DistributionTypeService,
-    private _roleServices: RoleService,
+    private _distributionTypeService: DistributionTypeService, 
     private _notificationToastService: NotificationToastService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
@@ -105,8 +104,7 @@ export class DRDistributionList {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
-      this.loadDropdownsAndGrid();
-      this.GetAllUserRoles();
+      this.loadDropdownsAndGrid(); 
     });
 
     // this.GetAllDistributionList({
@@ -395,7 +393,7 @@ export class DRDistributionList {
 
   private loadDropdownsAndGrid(): void {
     forkJoin({
-      userRoles: this._roleServices.getRoleList(),
+      userRoles: this._peoplePartnerService.GetAllRoles(),
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
     }).subscribe(({ userRoles, distributionTypes, hierarchy }) => {

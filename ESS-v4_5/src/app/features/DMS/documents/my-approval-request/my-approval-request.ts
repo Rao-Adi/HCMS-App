@@ -14,7 +14,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal'; 
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { UtilitiesService } from '@app/core/services/utilities.service';
@@ -253,8 +253,6 @@ export class MyApprovalRequest {
     this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
-
-
   emptyAllFileds() {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
@@ -299,9 +297,7 @@ export class MyApprovalRequest {
     this.pageNumber = 1;
     this.currentGridQuery.pageNumber = 1;
     // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically.
-    
   }
-
 
   GetAllPendingDocuments(query?: any) {
     let searchText = '';
@@ -381,7 +377,7 @@ export class MyApprovalRequest {
                 ]),
                 requestCreatedOn: new CustomDateFormatPipe().transform(
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
-                ), 
+                ),
                 previousVersionCreatedOn: new CustomDateFormatPipe().transform(
                   get([
                     'DraftContentLastModifiedAt',
@@ -422,7 +418,11 @@ export class MyApprovalRequest {
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
-        this._notificationToastService.createNotification('error', 'Error', 'Failed to fetch documents.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to fetch documents.',
+        );
       },
     });
   }
@@ -436,12 +436,12 @@ export class MyApprovalRequest {
 
   onHierarchyChange(values: CabinetSelection[]) {
     this.emptyAllFileds();
-    
+
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
-    
+
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     }
@@ -530,7 +530,11 @@ export class MyApprovalRequest {
 
   submitWorkflowAction(action: string, observation: string) {
     if (!observation || observation.trim() === '') {
-      this._notificationToastService.createNotification('error', 'Validation', 'Observation is required');
+      this._notificationToastService.createNotification(
+        'error',
+        'Validation',
+        'Observation is required',
+      );
       return;
     }
 
@@ -543,7 +547,7 @@ export class MyApprovalRequest {
 
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
-        if (response?.Success) { 
+        if (response?.Success) {
           this._notificationToastService.createNotification('success', 'Request', response.Message);
           this.clearSelection();
           if (this.agGridWrapper) {
@@ -656,7 +660,11 @@ export class MyApprovalRequest {
                   res.Message || 'Draft not available.',
                 );
               } catch {
-                this._notificationToastService.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
               }
             });
             return;
@@ -703,12 +711,20 @@ export class MyApprovalRequest {
                 res.Message || 'Failed to download draft.',
               );
             } catch {
-              this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
         }
       },
     });

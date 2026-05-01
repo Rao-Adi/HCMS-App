@@ -38,8 +38,9 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
-import { PermissionService } from '@app/shared/services/permission.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 // Define interface for request types
 interface RequestType {
@@ -121,6 +122,14 @@ export class CreateUpdateDocument {
     filter: true,
     cellDataType: false,
     editable: false,
+  };
+
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 10,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: '',
   };
 
   pageSize = 10;
@@ -247,7 +256,7 @@ export class CreateUpdateDocument {
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _documentService: DocumentService,
     private documentTemplateService: TemplateService,
-    private _documentRequestService: DocumentRequestService, 
+    private _documentRequestService: DocumentRequestService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -320,7 +329,7 @@ export class CreateUpdateDocument {
       case 'DRT-0002': // Revision of existing document
         this.trainingContent = false;
         this.showExclusionTable = false;
-        this.GetAllApprovedDocuments('');
+        this.GetEffectiveDocumentsForRevision('');
         break;
       case 'DRT-0003': // Obsoletion of existing document
         this.trainingContent = false;
@@ -578,7 +587,6 @@ export class CreateUpdateDocument {
   }
 
   AddTrainingUsers() {
-    debugger;
     this.showTrainingUserTable = this.showTrainingUserTable == true ? false : true;
     // if (!this.approvalPolicy) {
     //   this._notificationToastService.createNotification(
@@ -625,8 +633,6 @@ export class CreateUpdateDocument {
   }
 
   SubmiteDocumentRequests() {
-    debugger;
-
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
@@ -639,7 +645,11 @@ export class CreateUpdateDocument {
     this._documentService.submitDocument(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notificationToastService.createNotification('success', 'Document', response.Message);
+          this._notificationToastService.createNotification(
+            'success',
+            'Document',
+            response.Message,
+          );
           this.emptyFields();
           this.selectedRequestType = '';
           this.attributes = [];
@@ -649,7 +659,11 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notificationToastService.createNotification('error', 'Error', 'Failed to approve document.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to approve document.',
+        );
       },
     });
   }
@@ -748,6 +762,109 @@ export class CreateUpdateDocument {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  GetEffectiveDocumentsForRevision(query?: any) {
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      status: 0, // 0 = Draft
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: searchText || '',
+    };
+
+    this._documentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
+      next: (response) => {
+        if (response?.Success || response?.Data) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRevisionData = items.map((item: any) => ({
+            Id: item.id || item.Id,
+            companyId: item.companyId || item.CompanyId,
+            requestNumber: item.RequestNumber || item.requestNumber,
+            documentType: item.DocumentType || item.documentType,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber,
+            stepId: item.StepId || item.stepId,
+            stepOrder: item.StepOrder || item.stepOrder,
+            startedAt: item.StartedAt || item.startedAt,
+            division: item.Division,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            proposedContent: item.ProposedContent,
+            department: item.Department,
+            departmentId: item.DepartmentCode,
+            subdepartment: item.SubDepartment,
+            justification: item.Justification,
+            businessdomainId: item.BusinessDomainCode,
+            documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
+            pendingWith: item.CurrentAssignedUser,
+            sumbittedby: item.CreatedBy,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.createdAt || item.CreatedAt || '',
+            ),
+            previousVersionCreatedOn:
+              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+            proposedVersionNumber: item.RowVersion || item.rowVersion,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            draftFileUrl:
+              item.DraftFileUrl ||
+              item.draftFileUrl ||
+              (String(item.TemplateType || item.templateType) === '1' ||
+              String(item.TemplateType || item.templateType) === '2'
+                ? item.ProposedContent
+                : ''),
+            // Map backend fields back to the frontend keys expected by the component
+            distributionListPayload: (item.DistributionList || []).map((x: any) => ({
+              ...x,
+              level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+              level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+              level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+              level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+              roleId: x.roleId || x.RoleId,
+              distributiontypeId:
+                x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+            })),
+            distributionUserList: item.UserList,
+          }));
+        } else {
+          this.documentRevisionData = [];
+          this.totalRows = 0;
+        }
+      },
+      error: (err) => {
+        this.documentRevisionData = [];
+        this.totalRows = 0;
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.Message || 'Failed to fetch draft documents.',
+        );
+      },
     });
   }
 
@@ -856,7 +973,11 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notificationToastService.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
@@ -930,7 +1051,11 @@ export class CreateUpdateDocument {
                   res.Message || 'Draft not available.',
                 );
               } catch {
-                this._notificationToastService.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
               }
             });
             return;
@@ -977,12 +1102,20 @@ export class CreateUpdateDocument {
                 res.Message || 'Failed to download draft.',
               );
             } catch {
-              this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
         }
       },
     });

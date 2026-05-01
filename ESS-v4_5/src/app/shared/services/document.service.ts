@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, Document } from '../interfaces/interfaces';
@@ -11,15 +11,16 @@ import { AppConfigService } from '@app/core/services/app-config';
 export class DocumentService {
   private _cabietStructureConfig = new ReplaySubject<Document[]>(1);
 
-  constructor(private http: HttpClient,
-    private _config: AppConfigService
+  constructor(
+    private http: HttpClient,
+    private _config: AppConfigService,
   ) {}
 
   get cabietStructureConfig$(): Observable<Document[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
-   // We make apiUrl a getter. It's only called when needed.
+  // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
     if (!this._config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
@@ -27,7 +28,6 @@ export class DocumentService {
     }
     return this._config.baseUrl;
   }
-
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -53,13 +53,11 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-approved-request-for-document-creation`,
       payload,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
-  GerFinalizedDocumentByRequestId( 
-    requestId: string,
-  ): Observable<GenericResponse<any>> {
+  GerFinalizedDocumentByRequestId(requestId: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-draft-by-request/${requestId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
@@ -68,31 +66,27 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/approve-document`,
       payload,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
   submitDocument(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocument/submit-document`,
-      payload,
-      { headers: this.getHeaders() }
-    );
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/submit-document`, payload, {
+      headers: this.getHeaders(),
+    });
   }
 
   rejectDocument(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocument/reject-document`,
-      payload,
-      { headers: this.getHeaders() }
-    );
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/reject-document`, payload, {
+      headers: this.getHeaders(),
+    });
   }
 
   revertDocument(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/send-back-for-rework`,
       payload,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
@@ -100,7 +94,15 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-pending-authorizations`,
       payload,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetDocumentsPendingTrainingAcknowledgmentAsync(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-training`,
+      payload,
+      { headers: this.getHeaders() },
     );
   }
 
@@ -108,7 +110,7 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/authorize-document-post-training`,
       payload,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
@@ -117,10 +119,9 @@ export class DocumentService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-document-by-status`,
       payload,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
-
 
   GetAllDocument(
     searchText: string,
@@ -147,31 +148,22 @@ export class DocumentService {
   }
 
   create(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocument/create-document`,
-      payload,
-    );
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/create-document`, payload);
   }
 
   update(payload: any) {
-    return this.http.put<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocument/update-document`,
-      payload,
-    );
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/update-document`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocument/delete-document/${code}`,
-    );
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/delete-document/${code}`);
   }
 
-    DownloadDocumentTemplate(id: any) {
+  DownloadDocumentTemplate(id: any) {
     const uri = `${this.apiUrl}/DMSDocument/download-submitted-document-template/${id}`;
-    return this.http.get(uri, { 
+    return this.http.get(uri, {
       observe: 'response',
-      responseType: 'blob' 
+      responseType: 'blob',
     });
   }
-  
 }

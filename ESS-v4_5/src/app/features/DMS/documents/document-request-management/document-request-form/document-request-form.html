@@ -83,7 +83,7 @@
                     [pageSize]="selectedPageSize"
                     gridId="documentGrid"
                     (pageSizeChange)="onPageSizeChanged($event)"
-                    (serverQuery)="GetAllApprovedDocuments($event)"
+                    (serverQuery)="GetEffectiveDocumentsForRevision($event)"
                     (cellClicked)="onCellClicked($event)"
                   >
                   </app-ag-grid-wrapper>
