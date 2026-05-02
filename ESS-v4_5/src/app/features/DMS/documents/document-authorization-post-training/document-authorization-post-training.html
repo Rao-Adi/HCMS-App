@@ -9,7 +9,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Pending Authorization' }"
-                (click)="selectedTab = 'Pending Authorization'"
+              (click)="selectedTab = 'Pending Authorization'; GetAllDocuments({})"
               >
                 Pending Authorization
               </button>
@@ -17,7 +17,7 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Authorized' }"
-                (click)="selectedTab = 'Authorized'"
+              (click)="selectedTab = 'Authorized'; GetAllDocuments({})"
               >
                 Authorized
               </button>

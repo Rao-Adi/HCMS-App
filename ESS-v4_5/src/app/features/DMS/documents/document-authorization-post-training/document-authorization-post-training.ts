@@ -262,7 +262,8 @@ export class DocumentAuthorizationPostTraining {
       isActive: true,
       pageNumber: query?.pageNumber || 1,
       pageSize: query?.pageSize || this.pageSize,
-    };
+      IsAuthorized : this.selectedTab =='Pending Authorization' ? false : true,
+    }; 
 
     this._documentService.GetPendingAuthorizations(payload).subscribe({
       next: (res: any) => {
@@ -417,13 +418,15 @@ export class DocumentAuthorizationPostTraining {
     }
 
     const documentToApprove = selectedRows[0]; // Processes one document at a time
+    const docId = documentToApprove.Id || documentToApprove.id || documentToApprove.documentId;
 
     this.modal.confirm({
       nzTitle: 'Approve Document',
       nzContent: `Are you sure you want to authorize the document: ${documentToApprove.documentName}?`,
       nzOnOk: () => {
         const payload = {
-          documentId: documentToApprove.documentId,
+          documentId: docId,
+          empId: this.loginEmpId,
           observation: 'Authorized via post-training screen', // TODO: Collect via a form/modal wrapper if required by BL-011
         };
 
@@ -455,8 +458,7 @@ export class DocumentAuthorizationPostTraining {
     });
   }
 
-  openAverageScoreModal(row: any): void {
-    debugger;
+  openAverageScoreModal(row: any): void { 
     this.modal.create({
       nzTitle: 'Average Document Score',
       nzContent: AverageDocumentScoreModal,
