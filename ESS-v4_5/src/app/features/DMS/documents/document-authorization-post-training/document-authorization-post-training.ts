@@ -19,10 +19,12 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
-import { DocumentService } from '@app/shared/services/document.service';  
+import { DocumentService } from '@app/shared/services/document.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -84,14 +86,20 @@ export class DocumentAuthorizationPostTraining {
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'trainingProof', label: 'Training Proof', visible: true },
+    { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'documentName', label: 'Document Name', visible: true },
+    { field: 'version', label: 'Version', visible: true },
     { field: 'trainingMode', label: 'Training Mode', visible: true },
+    { field: 'userAssigned', label: 'User Assigned', visible: true },
     { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
-    { field: 'userAssinged', label: 'User Assigned', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subDepartment', label: 'Sub-Department', visible: true },
     { field: 'url', label: 'URL', visible: true },
+    { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+    { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
     { field: 'approvalHistory', label: 'Approval History', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
@@ -107,33 +115,29 @@ export class DocumentAuthorizationPostTraining {
     { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
     { field: 'documentName', headerName: 'Document Name', pinned: 'left' },
     { field: 'version', headerName: 'Version', pinned: 'left' },
+    { field: 'trainingMode', headerName: 'Training Mode' },
     {
-      field: 'trainingProof',
-      headerName: 'Training Proof',
-      cellRendererSelector: () => ({
+      field: 'userAssigned',
+      headerName: 'User Assigned',
+      cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
-          label: 'View Proof',
-          onClick: (rowData: any) => {
-            this.openTrainingProofModal(rowData);
+          label: params.value ?? 'View',
+          onClick: () => {
+            this.openTrainingProofModal(params.data);
           },
         },
       }),
     },
     {
-      field: 'trainingMode',
-      headerName: 'Training Mode',
-    },
-    { field: 'userAssinged', headerName: 'User Assinged' },
-    {
       field: 'averageDocumentScore',
       headerName: 'Average Document Score',
-      cellRendererSelector: (params) => ({
+      cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
           label: params.value ?? 'View',
-          onClick: (rowData: any) => {
-            this.openAverageScoreModal(rowData);
+          onClick: () => {
+            this.openAverageScoreModal(params.data);
           },
         },
       }),
@@ -159,12 +163,12 @@ export class DocumentAuthorizationPostTraining {
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
-      cellRendererSelector: () => ({
+      cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
           label: 'View',
-          onClick: (rowData: any) => {
-            this.openApprovalHistoryModal(rowData);
+          onClick: () => {
+            this.openApprovalHistoryModal(params.data);
           },
         },
       }),
@@ -172,12 +176,12 @@ export class DocumentAuthorizationPostTraining {
     {
       field: 'revisionHistory',
       headerName: 'Revision History',
-      cellRendererSelector: () => ({
+      cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
           label: 'View',
-          onClick: (rowData: any) => {
-            this.openRevisionHistoryModal(rowData);
+          onClick: () => {
+            this.openRevisionHistoryModal(params.data);
           },
         },
       }),
@@ -194,14 +198,13 @@ export class DocumentAuthorizationPostTraining {
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
- 
 
   constructor(
     private modal: NzModalService,
     private _documentService: DocumentService,
     private _notificationToastService: NotificationToastService,
     private _UtilitiesService: UtilitiesService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
@@ -209,11 +212,11 @@ export class DocumentAuthorizationPostTraining {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       this.GetLoginEmpId();
     });
   }
- 
+
   GetLoginEmpId() {
     this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
@@ -269,19 +272,53 @@ export class DocumentAuthorizationPostTraining {
           this.totalRows = data.TotalCount ?? items.length;
           this.pendingAuthorizationData = items.map((item: any) => ({
             ...item,
-            documentId: item.documentid || item.DocumentId || item.documentId || item.Id || item.id,
-            documentNumber: item.documentnumber,
-            documentName: item.title || item.DocumentName || item.documentName,
-            version: item.version || item.Version || item.RowVersion || item.rowVersion,
-            documentType: item.documenttype || item.DocumentType || item.documentType,
-            documentTypeCode: item.documenttypecode,
-            trainingProof: item.trainingproofurl,
-            division: item.divisionname || item.Division || item.division,
-            department: item.departmentname || item.Department || item.department,
-            subDepartment: item.subdepartmentname || item.SubDepartment || item.subDepartment,
-            businessDomain: item.businessdomain,
-            requestCreatedBy: item.initiator,
-            requestCreatedOn: this.formatDate(item.createdat),
+            Id: item.id || item.Id,
+            trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+            averageDocumentScore: item.averagescore || item.averagescore || 0,
+            userAssigned: item.totalassigned || item.totalassigned,
+            companyId: item.companyId || item.CompanyId,
+            company: item.Company || item.company,
+            requestNumber: item.RequestNumber || item.requestNumber,
+            documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
+            documentType: item.DocumentType || item.documenttype,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
+            division: item.Division || item.division,
+            divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
+            documentId: item.DocumentNumber || item.documentid,
+            documentName: item.DocumentName || item.documentname || item.title,
+            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+            department: item.Department || item.department,
+            departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
+            subDepartment: item.subdepartment || item.subdepartment,
+            subDepartmentCode:
+              item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
+            justification: item.Justification || item.justification,
+            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
+            businessDomainCode:
+              item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
+            pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
+            sumbittedby: item.CreatedBy || item.createdby,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.CreatedAt || item.createdat || '',
+            ),
+            requestCreatedBy: item.createdbyname || item.createdByName,
+            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+              item.draftContentLastModifiedAt ||
+                item.DraftContentLastModifiedAt ||
+                item.lastmodifiedat ||
+                '',
+            ),
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            nextReviewDate: new CustomDateFormatPipe().transform(
+              item.NextReviewDate || item.nextreviewdate || '',
+            ),
+            url: item.DocumentURL || item.documenturl,
+            proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
           }));
         } else {
           this.pendingAuthorizationData = [];
@@ -355,7 +392,15 @@ export class DocumentAuthorizationPostTraining {
 
   openTrainingProofModal(row: any): void {
     // TODO: Implement logic to open training proof file/report
-    console.log('Opening training proof for:', row);
+    this.modal.create({
+      nzTitle: 'Average Document Score',
+      nzContent: AverageDocumentScoreModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
   }
 
   approve(): void {
@@ -378,7 +423,7 @@ export class DocumentAuthorizationPostTraining {
       nzContent: `Are you sure you want to authorize the document: ${documentToApprove.documentName}?`,
       nzOnOk: () => {
         const payload = {
-          documentId: documentToApprove.documentId, 
+          documentId: documentToApprove.documentId,
           observation: 'Authorized via post-training screen', // TODO: Collect via a form/modal wrapper if required by BL-011
         };
 
@@ -411,6 +456,7 @@ export class DocumentAuthorizationPostTraining {
   }
 
   openAverageScoreModal(row: any): void {
+    debugger;
     this.modal.create({
       nzTitle: 'Average Document Score',
       nzContent: AverageDocumentScoreModal,
@@ -423,20 +469,19 @@ export class DocumentAuthorizationPostTraining {
   }
 
   openApprovalHistoryModal(row: any): void {
-    this.modal.create({
-      // nzTitle: 'Approval History',
-      // nzContent: ApprovalHistoryModalComponent,
-      // nzComponentParams: {
-      //   data: row,
-      // },
-      // nzWidth: 800,
-      nzTitle: 'Approval History',
-      nzContent: ApprovalHistoryModal,
+    const modalRef = this.modal.create({
+      nzTitle: 'Workflow History',
+      nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        data: row, // 👈 this is what we’ll read inside modal
+        id: row.id,
+        entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
     });
   }
 

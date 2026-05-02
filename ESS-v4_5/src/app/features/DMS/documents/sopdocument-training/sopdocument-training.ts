@@ -11,13 +11,15 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list'; 
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DocumentTrainingService } from '@app/shared/services/document-training.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { DocumentService } from '@app/shared/services/document.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -33,7 +35,7 @@ import { DocumentService } from '@app/shared/services/document.service';
     NzButtonModule,
     SafeTranslatePipe,
     CabinetStructureList,
-    DocumentTypeList, 
+    DocumentTypeList,
     NzModalModule,
   ],
   templateUrl: './sopdocument-training.html',
@@ -55,6 +57,7 @@ export class SOPDocumentTraining {
   selectedSubDepartment?: string = '';
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
+  selectedDocumentId: string | null = null;
 
   pageNumber = 1;
 
@@ -97,13 +100,7 @@ export class SOPDocumentTraining {
   classRoomColumnDefs = [
     { field: 'documentId', headerName: 'Document ID', hide: true },
     { field: 'documentName', headerName: 'Document Name' },
-    {
-      field: 'documentType',
-      headerName: 'Document Type',
-      cellEditorParams: {
-        values: ['Porsche', 'Toyota', 'Ford', 'AAA', 'BBB', 'CCC'],
-      },
-    },
+    { field: 'documentType', headerName: 'Document Type' },
     { field: 'version', headerName: 'Version' },
     { field: 'trainingMode', headerName: 'Training Mode' },
     { field: 'userAssigned', headerName: 'User Assigned' },
@@ -156,25 +153,21 @@ export class SOPDocumentTraining {
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'documentTypeId', label: 'document Type', visible: true },
-    { field: 'requestId', label: 'Request ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
-    { field: 'viewDocument', label: 'Document Content', visible: true },
-    { field: 'observation', label: 'Observation', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
-    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
-    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'version', label: 'Version', visible: true },
+    { field: 'trainingMode', label: 'Training Mode', visible: true },
+    { field: 'userAssigned', label: 'User Assigned', visible: true },
+    { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
-    { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'subDepartment', label: 'Sub-Department', visible: true },
+    { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
-    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
-    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'preVersionOn', label: 'Prev. Version On', visible: true },
     { field: 'approvalHistory', label: 'Approval History', visible: true },
+    { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
 
   onlineColumnDefs = [
@@ -276,14 +269,53 @@ export class SOPDocumentTraining {
           this.totalClassRoom = res.Data.TotalCount;
           this.classRoomData = res.Data.Items.map((item: any) => ({
             ...item,
-            documentId: item.DocumentId || item.documentId,
-            companyId: item.CompanyId || item.companyId,
-            documentName: item.DocumentName || item.documentName,
-            version: item.Version || item.version || item.RowVersion || item.rowVersion,
-            documentType: item.DocumentType || item.documentType,
+            Id: item.id || item.Id,
+            trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+            averageDocumentScore: item.averagescore || item.averagescore || 0,
+            userAssigned: item.totalassigned || item.totalassigned,
+            companyId: item.companyId || item.CompanyId,
+            company: item.Company || item.company,
+            requestNumber: item.RequestNumber || item.requestNumber,
+            documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
+            documentType: item.DocumentType || item.documenttype,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
             division: item.Division || item.division,
+            divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
+            documentId: item.DocumentNumber || item.documentid,
+            documentName: item.DocumentName || item.documentname || item.title,
+            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
             department: item.Department || item.department,
-            subDepartment: item.SubDepartment || item.subDepartment,
+            departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
+            subDepartment: item.subdepartment || item.subdepartment,
+            subDepartmentCode:
+              item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
+            justification: item.Justification || item.justification,
+            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
+            businessDomainCode:
+              item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
+            pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
+            sumbittedby: item.CreatedBy || item.createdby,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.CreatedAt || item.createdat || '',
+            ),
+            requestCreatedBy: item.createdbyname || item.createdByName,
+            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+              item.draftContentLastModifiedAt ||
+                item.DraftContentLastModifiedAt ||
+                item.lastmodifiedat ||
+                '',
+            ),
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            nextReviewDate: new CustomDateFormatPipe().transform(
+              item.NextReviewDate || item.nextreviewdate || '',
+            ),
+            url: item.DocumentURL || item.documenturl,
+            proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
           }));
         } else {
           this.classRoomData = [];
@@ -445,11 +477,11 @@ export class SOPDocumentTraining {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
-      nzTitle: 'Revision History',
-      nzContent: RevisionHistoryModal,
+      nzTitle: 'Workflow History',
+      nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        id: rowData.Id,
-        entityType: 'Document',
+        id: rowData.id,
+        entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
@@ -458,5 +490,49 @@ export class SOPDocumentTraining {
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });
+  }
+
+  onSelectionChange(selectedRows: any[]): void {
+    if (selectedRows && selectedRows.length > 0) {
+      this.selectedDocumentId =
+        selectedRows[0].documentId || selectedRows[0].DocumentId || selectedRows[0].Id;
+    } else {
+      this.selectedDocumentId = null;
+    }
+  }
+
+  approve() {
+    if (!this.selectedDocumentId) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a document to approve.',
+      );
+      return;
+    }
+
+    this._documentTrainingService
+      .AcknowledgeAndSendForAuthorization(this.selectedDocumentId)
+      .subscribe({
+        next: (response) => {
+          if (response?.Success) {
+            this._notificationToastService.createNotification(
+              'success',
+              'Request',
+              response.Message,
+            );
+            this.GetAllClassRooms({}); // Refresh the grid
+            this.selectedDocumentId = null; // Clear the selection
+          }
+        },
+        error: (err) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Request',
+            err.error?.Message || 'Failed to take action on the request.',
+            // 'Failed to create workflow step.',
+          );
+        },
+      });
   }
 }

@@ -49,16 +49,12 @@ export class DocumentTrainingService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetTrainingAssessmentDetails(
-    documentId: string
-  ): Observable<ApiResponse<any>> {
+  GetTrainingAssessmentDetails(documentId: string): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  AcknowledgeAndSendForAuthorization(
-    documentId: string,
-  ): Observable<ApiResponse<any>> {
+  AcknowledgeAndSendForAuthorization(documentId: string): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentTraining/acknowledge-and-send-for-authorization/${documentId}`;
     return this.http.post<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }

@@ -322,20 +322,7 @@ export class DraftRequestList {
     // Maintain frontend format to avoid breaking the UI bindings
     this.distributionListPayload = list;
   }
-
-  onUsersChanged(users: any[]) {
-    this.distributionUserList = users;
-  }
-
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    if (this.agGridWrapper) {
-      this.agGridWrapper.refresh();
-    } else {
-      this.GetAllDraftDocuments();
-    }
-  }
-
+  
   onSelectionChange(selectedRows: any): void {
     this.requestId = selectedRows[0].id;
     this.submittedby = selectedRows[0].sumbittedby;
