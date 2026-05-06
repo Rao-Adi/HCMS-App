@@ -99,7 +99,7 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
       return;
     }
 
-    const cacheKey = `${MASTER_CACHE_KEYS.SUB_DEPARTMENTS}_${divisionCode}`;
+    const cacheKey = MASTER_CACHE_KEYS.SUB_DEPARTMENTS;
 
     this._masterCacheService
       .getMasterData({

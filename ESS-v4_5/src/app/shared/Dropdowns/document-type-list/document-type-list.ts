@@ -84,8 +84,9 @@ export class DocumentTypeList implements ControlValueAccessor {
             : of(1000),
         getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (d: any) => ({
-          CODE: d.Code,
-          NAME: d.Name,
+          Id: d.Id || d.id,
+          Code: d.Code || d.code,
+          Name: d.Name || d.name,
           CreatedBy: d.CreatedBy || d.createdBy || '',
           CreatedByName:
             d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
@@ -98,7 +99,10 @@ export class DocumentTypeList implements ControlValueAccessor {
         }),
       })
       .subscribe((data) => {
-        this.DocTypeData = data ?? [];
+        this.DocTypeData = (data ?? []).map((d: any) => ({
+          CODE: d.Code || d.code || d.CODE,
+          NAME: d.Name || d.name || d.NAME,
+        }));
         this.cdr.markForCheck();
       });
   };

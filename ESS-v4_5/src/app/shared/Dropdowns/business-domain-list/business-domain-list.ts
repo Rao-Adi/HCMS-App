@@ -100,7 +100,7 @@ export class BusinessDomainList implements ControlValueAccessor {
       return;
     }
 
-    const cacheKey = `${MASTER_CACHE_KEYS.BUSINESS_DOMAIN}_${subdepartmentCode}`;
+    const cacheKey = MASTER_CACHE_KEYS.BUSINESS_DOMAIN;
 
     this._masterCacheService
       .getMasterData({

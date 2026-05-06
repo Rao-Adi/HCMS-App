@@ -97,7 +97,7 @@ export class DepartmentList implements ControlValueAccessor {
       return;
     }
 
-    const cacheKey = `${MASTER_CACHE_KEYS.DEPARTMENTS}_${divisionCode}`;
+    const cacheKey = MASTER_CACHE_KEYS.DEPARTMENTS;
 
     this._masterCacheService
       .getMasterData({
