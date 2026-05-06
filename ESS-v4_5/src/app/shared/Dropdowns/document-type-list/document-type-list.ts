@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, forwardRef, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, ChangeDetectorRef } from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -22,16 +22,16 @@ import { of } from 'rxjs';
   templateUrl: './document-type-list.html',
   styleUrl: './document-type-list.css',
 })
-export class DocumentTypeList implements ControlValueAccessor{
+export class DocumentTypeList implements ControlValueAccessor {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
-
-  data: SelectList[] = [];
   @Output() valueChange = new EventEmitter<any>();
+
+  DocTypeData: SelectList[] = [];
 
   value: any;
   disabled = false;
@@ -39,6 +39,7 @@ export class DocumentTypeList implements ControlValueAccessor{
   constructor(
     private _documentTypeService: DocumentTypeService,
     private _masterCacheService: Mastercacheservice,
+    private cdr: ChangeDetectorRef
   ) {}
 
   private onChange = (_: any) => {};
@@ -77,27 +78,28 @@ export class DocumentTypeList implements ControlValueAccessor{
     this._masterCacheService
       .getMasterData({
         cacheKey: cacheKey,
-        getCount$: () => (this._documentTypeService as any).getDocumentTypeCount ? (this._documentTypeService as any).getDocumentTypeCount() : of(1000),
-        getData$: () => this._documentTypeService.getDocumentTypeList(),
+        getCount$: () =>
+          (this._documentTypeService as any).getDocumentTypeCount
+            ? (this._documentTypeService as any).getDocumentTypeCount()
+            : of(1000),
+        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
         mapFn: (d: any) => ({
           CODE: d.Code,
-          NAME: d.Value,
+          NAME: d.Name,
           CreatedBy: d.CreatedBy || d.createdBy || '',
-          CreatedByName: d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
+          CreatedByName:
+            d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(d.CreatedAt || d.createdAt || ''),
           LastModifiedBy: d.LastModifiedBy || d.lastModifiedBy || '',
           LastModifiedByName: d.LastModifiedByName || d.lastModifiedByName || '',
-          LastModifiedAt: new CustomDateFormatPipe().transform(d.LastModifiedAt || d.lastModifiedAt || '')
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            d.LastModifiedAt || d.lastModifiedAt || '',
+          ),
         }),
       })
-      .subscribe({
-        next: (mappedData) => {
-          this.data = mappedData ?? [];
-        },
-        error: (err) => {
-          console.error('Failed to load document types', err);
-          this.data = [];
-        },
+      .subscribe((data) => {
+        this.DocTypeData = data ?? [];
+        this.cdr.markForCheck();
       });
   };
 }

@@ -154,8 +154,12 @@ export class ApprovalWorkflowPolicyManagement {
       //this.getAllDesignationList();
     }
     this.selectedUser = '';
+    this.selectedEmployeeSingle = null;
     this.selectedDesignationSingle = null;
     this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
     this.selectedWorkflowExclude = 0;
   }
 
@@ -191,14 +195,14 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   addExclusion() { 
-    if (!this.approvalPolicy) {
-      this._notificationToastService.createNotification(
-        'warning',
-        'Validation',
-        'Please select an approval policy.',
-      );
-      return;
-    }
+    // if (!this.approvalPolicy) {
+    //   this._notificationToastService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please select an approval policy.',
+    //   );
+    //   return;
+    // }
 
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
@@ -273,10 +277,13 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedDocumentType = '';
   }
 
-  private getEmployeeCodes(): string[] {
-    debugger;
+  private getEmployeeCodes(): string[] { 
     // If multi-select has value
     if (this.selectedEmployee && this.selectedEmployee.length > 0) {
+      if (!Array.isArray(this.selectedEmployee)) {
+        return [this.selectedEmployee as any];
+      }
+
       // If app-employee-list returns objects
       if (typeof this.selectedEmployee[0] === 'object') {
         return this.selectedEmployee.map((emp: any) => emp.ID);
@@ -298,6 +305,10 @@ export class ApprovalWorkflowPolicyManagement {
   private getDesignationCodes(): string[] {
     // If multi-select has value
     if (this.selectedDesignation && this.selectedDesignation.length > 0) {
+      if (!Array.isArray(this.selectedDesignation)) {
+        return [this.selectedDesignation as any];
+      }
+
       // If app-designation-list returns objects
       if (typeof this.selectedDesignation[0] === 'object') {
         return this.selectedDesignation.map((emp: any) => emp.CODE);
@@ -319,6 +330,10 @@ export class ApprovalWorkflowPolicyManagement {
   private getRoleCodes(): string[] {
     // If multi-select has value
     if (this.selectedRole && this.selectedRole.length > 0) {
+      if (!Array.isArray(this.selectedRole)) {
+        return [this.selectedRole as any];
+      }
+
       // If app-role-list returns objects
       if (typeof this.selectedRole[0] === 'object') {
         return this.selectedRole.map((emp: any) => emp.ID);

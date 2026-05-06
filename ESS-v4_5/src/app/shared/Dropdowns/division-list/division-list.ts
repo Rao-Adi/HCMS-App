@@ -34,9 +34,7 @@ export class DivisionList implements ControlValueAccessor {
 
   value: any;
   disabled = false;
-  totalDivisions = 0;
   divisionData: SelectList[] = [];
-  divisions: any[] = []; // for dropdowns
 
   constructor(
     private _divisionServices: DivisionService,
@@ -92,7 +90,12 @@ export class DivisionList implements ControlValueAccessor {
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedByName:
+            item.CreateByName ||
+            item.createByName ||
+            item.CreatedByName ||
+            item.createdByName ||
+            '',
           CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
           LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
           LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
@@ -102,12 +105,10 @@ export class DivisionList implements ControlValueAccessor {
         }),
       })
       .subscribe((data) => {
- 
         this.divisionData = (data ?? []).map((d: any) => ({
           CODE: d.Code,
           NAME: d.Name,
         }));
-        this.totalDivisions = data.length;
       });
   };
 }
