@@ -12,7 +12,7 @@ export class SubDepartmentCacheService {
 
   constructor(
     private masterCache: Mastercacheservice,
-    private subDepartmentService: SubDepartmentService
+    private subDepartmentService: SubDepartmentService,
   ) {}
 
   getSubDepartments(): Observable<SubDepartment[]> {
@@ -27,10 +27,20 @@ export class SubDepartmentCacheService {
         Name: item.Name || item.name,
         DepartmentCode: item.DepartmentCode || item.departmentCode,
         Department: item.Department || item.department,
-        CreatedBy: item.CreatedBy || item.createdBy || '',
-        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
-        LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-        LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || item.lastModifiedAt || ''),
+        CreatedBy: item.CreatedBy ?? item.createdBy ?? '',
+        CreatedByName: item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
+        CreatedAt:
+          new CustomDateFormatPipe().transform(item.CreatedAt ?? item.createdAt ?? '') ?? '',
+        LastModifiedBy: item.LastModifiedBy ?? item.lastModifiedBy ?? '',
+        LastModifiedByName:
+          item.LastModifiedByName ??
+          item.lastModifiedByName ??
+          item.LastModifiedBy ??
+          item.lastModifiedBy ??
+          '',
+        LastModifiedAt:
+          new CustomDateFormatPipe().transform(item.LastModifiedAt || item.lastModifiedAt || '') ??
+          '',
       }),
     });
   }

@@ -99,7 +99,7 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
       return;
     }
 
-    const cacheKey = `${MASTER_CACHE_KEYS.SUB_DEPARTMENTS}`;
+    const cacheKey = `${MASTER_CACHE_KEYS.SUB_DEPARTMENTS}_${divisionCode}`;
 
     this._masterCacheService
       .getMasterData({
@@ -129,10 +129,12 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
           Department: item.Department || item.department || '',
           DepartmentCode: item.DepartmentCode || item.departmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
+          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
-            item.lastModifiedAt || item.LastModifiedAt || '',
+            item.LastModifiedAt || item.lastModifiedAt || '',
           ),
         }),
       })

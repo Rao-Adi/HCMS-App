@@ -4,6 +4,10 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectList } from '@app/shared/interfaces/interfaces';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-document-type-list',
@@ -32,7 +36,10 @@ export class DocumentTypeList implements ControlValueAccessor{
   value: any;
   disabled = false;
 
-  constructor(private _documentTypeService: DocumentTypeService) {}
+  constructor(
+    private _documentTypeService: DocumentTypeService,
+    private _masterCacheService: Mastercacheservice,
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -65,16 +72,32 @@ export class DocumentTypeList implements ControlValueAccessor{
   }
 
   getDocumentTypeList = () => {
-    this._documentTypeService.getDocumentTypeList().subscribe((res) => {
-      if (res?.Data) {
-        this.data = (res.Data ?? []).map((d: any) => ({
+    const cacheKey = (MASTER_CACHE_KEYS as any).DOCUMENT_TYPES || 'DOCUMENT_TYPES';
+
+    this._masterCacheService
+      .getMasterData({
+        cacheKey: cacheKey,
+        getCount$: () => (this._documentTypeService as any).getDocumentTypeCount ? (this._documentTypeService as any).getDocumentTypeCount() : of(1000),
+        getData$: () => this._documentTypeService.getDocumentTypeList(),
+        mapFn: (d: any) => ({
           CODE: d.Code,
           NAME: d.Value,
-        }));
-      } else {
-        this.data = [];
-      }
-      //this.cdr.detectChanges(); // force update
-    });
+          CreatedBy: d.CreatedBy || d.createdBy || '',
+          CreatedByName: d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
+          CreatedAt: new CustomDateFormatPipe().transform(d.CreatedAt || d.createdAt || ''),
+          LastModifiedBy: d.LastModifiedBy || d.lastModifiedBy || '',
+          LastModifiedByName: d.LastModifiedByName || d.lastModifiedByName || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(d.LastModifiedAt || d.lastModifiedAt || '')
+        }),
+      })
+      .subscribe({
+        next: (mappedData) => {
+          this.data = mappedData ?? [];
+        },
+        error: (err) => {
+          console.error('Failed to load document types', err);
+          this.data = [];
+        },
+      });
   };
 }

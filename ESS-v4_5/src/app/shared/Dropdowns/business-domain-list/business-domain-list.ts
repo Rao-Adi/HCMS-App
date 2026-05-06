@@ -100,7 +100,7 @@ export class BusinessDomainList implements ControlValueAccessor {
       return;
     }
 
-    const cacheKey = `${MASTER_CACHE_KEYS.BUSINESS_DOMAIN}`;
+    const cacheKey = `${MASTER_CACHE_KEYS.BUSINESS_DOMAIN}_${subdepartmentCode}`;
 
     this._masterCacheService
       .getMasterData({
@@ -130,10 +130,12 @@ export class BusinessDomainList implements ControlValueAccessor {
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
+          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
-            item.lastModifiedAt || item.LastModifiedAt || '',
+            item.LastModifiedAt || item.lastModifiedAt || '',
           ),
         }),
       })

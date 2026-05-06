@@ -27,11 +27,13 @@ export class DepartmentCacheService {
         Division: item.Division ?? item.division ?? '',
         DivisionCode: item.DivisionCode ?? item.divisionCode ?? '',
         CreatedBy: item.CreatedBy ?? item.createdBy ?? '',
-        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
+        CreatedByName: item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
+        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt ?? item.createdAt ?? '') ?? '',
         LastModifiedBy: item.LastModifiedBy ?? item.lastModifiedBy ?? '',
+        LastModifiedByName: item.LastModifiedByName ?? item.lastModifiedByName ?? item.LastModifiedBy ?? item.lastModifiedBy ?? '',
         LastModifiedAt: new CustomDateFormatPipe().transform(
           item.LastModifiedAt || item.lastModifiedAt || '',
-        ),
+        ) ?? '',
       }),
     });
   }

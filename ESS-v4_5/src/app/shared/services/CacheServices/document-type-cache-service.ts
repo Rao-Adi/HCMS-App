@@ -22,10 +22,14 @@ export class DocumentTypeCacheService {
         Id: item.Id || item.id,
         Code: item.Code || item.code,
         Name: item.Name || item.name,
-        CreatedBy: item.CreatedBy || item.createdBy || '',
-        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
-        LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-        LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || item.lastModifiedAt || ''),
+        CreatedBy: item.CreatedBy ?? item.createdBy ?? '',
+        CreatedByName: item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
+        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt ?? item.createdAt ?? '') ?? '',
+        LastModifiedBy: item.LastModifiedBy ?? item.lastModifiedBy ?? '',
+        LastModifiedByName: item.LastModifiedByName ?? item.lastModifiedByName ?? item.LastModifiedBy ?? item.lastModifiedBy ?? '',
+        LastModifiedAt: new CustomDateFormatPipe().transform(
+          item.LastModifiedAt || item.lastModifiedAt || '',
+        ) ?? '',
       }),
     });
   }

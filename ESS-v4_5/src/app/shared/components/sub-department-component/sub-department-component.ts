@@ -154,7 +154,7 @@ export class SubDepartmentComponent {
         required: true,
       },
       {
-        field: 'LastModifiedBy',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -172,7 +172,7 @@ export class SubDepartmentComponent {
     ];
   }
 
-  loadSubDepartments(): void {
+  loadSubDepartments(): void { 
     this._masterCacheService
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
@@ -185,9 +185,11 @@ export class SubDepartmentComponent {
           Name: item.name || item.Name,
           Department: item.Department || item.Department || '',
           DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -247,8 +249,10 @@ export class SubDepartmentComponent {
           Department: item.Department || item.department || '',
           DepartmentCode: item.DepartmentCode || item.departmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),

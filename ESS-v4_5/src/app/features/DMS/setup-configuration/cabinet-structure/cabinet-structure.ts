@@ -216,48 +216,7 @@ export class CabinetStructure {
       },
     });
   }
-
-  // saveTabTitle(): void {
-  //   const payload: CabinetStructureTabsConfig = {
-  //     Id: this.selectedTabId,
-  //     Name: this.selectedTabTitle,
-  //     CreatedAt: null,
-  //     CreatedBy: null,
-  //     LastModifiedAt: null,
-  //     LastModifiedBy: null,
-  //   };
-
-  //   this._cabietTabConfigService.update(payload).subscribe({
-  //     next: (updated: any) => {
-  //       // Update tabs array
-  //       this.tabs = this.tabs.map((tab) =>
-  //         tab.level === updated.Data.Id
-  //           ? {
-  //               ...tab,
-  //               Name: updated.Data.Name,
-  //               LastModifiedBy: updated.Data.LastModifiedBy,
-  //               LastModifiedAt: updated.Data.LastModifiedAt,
-  //             }
-  //           : tab,
-  //       );
-
-  //       // Update selected tab reference too (for UI refresh)
-  //       if (this.cabinetConfigStructure.level === updated.Data.Id) {
-  //         this.cabinetConfigStructure = {
-  //           ...this.cabinetConfigStructure,
-  //           title: updated.Data.Name,
-  //           lastModifiedBy: updated.Data.LastModifiedBy,
-  //           lastModifiedAt: updated.Data.LastModifiedAt,
-  //         };
-  //       }
-  //       this.cdr.detectChanges();
-  //     },
-  //     error: (err) => {
-  //       console.error(err);
-  //     },
-  //   });
-  // }
-
+ 
   trackByTabId(index: number, tab: any) {
     return tab.Id;
   }

@@ -20,14 +20,8 @@ export interface ApiResponse<T> {
   Message: string;
   Data: T;
 }
-export type ControlTypes =
-  | 'textbox'
-  | 'numeric'
-  | 'textarea'
-  | 'list'
-  | 'date'
-  | 'checkbox';
- 
+export type ControlTypes = 'textbox' | 'numeric' | 'textarea' | 'list' | 'date' | 'checkbox';
+
 export interface DocumentAttribute {
   Id: number;
   ControlLabel: string;
@@ -50,17 +44,21 @@ export interface CabinetLevel {
   level: number;
   title: string;
   createdBy: string | null;
+  createdByName: string | null;
   createdAt: string | null;
   lastModifiedBy: string | null;
+  lastModifiedByName: string | null;
   lastModifiedAt: string | null;
 }
 
 export interface ControlType {
-  Id: number; 
+  Id: number;
   Name: string;
   CreatedBy: string;
+  CreatedByName: string;
   CreatedAt: string;
   LastModifiedBy: string;
+  LastModifiedByName: string;
   LastModifiedAt: string;
 }
 
@@ -69,8 +67,10 @@ export interface Division {
   Code: string;
   Name: string;
   CreatedBy: string;
+  CreatedByName: string;
   CreatedAt: string;
   LastModifiedBy: string;
+  LastModifiedByName: string;
   LastModifiedAt: string;
 }
 
@@ -79,7 +79,6 @@ export interface CabinetSelection {
   title: string;
   value: any;
 }
-
 
 export interface OrganizationItem {
   id: string;
@@ -107,14 +106,16 @@ export interface SelectList2 {
   NAME: string;
 }
 
-export class DocumentType {
-  Id: number = 0;
-  Code: string = '';
-  Name: string = '';
-  CreatedBy: string = '';
-  CreatedAt: any = '';
-  LastModifiedBy: string = '';
-  LastModifiedAt: any = '';
+export interface DocumentType {
+  Id: number;
+  Code: string;
+  Name: string;
+  CreatedBy: string;
+  CreatedByName: string;
+  CreatedAt: string;
+  LastModifiedBy: string;
+  LastModifiedByName: string;
+  LastModifiedAt: string;
 }
 
 export interface SubDepartment {
@@ -124,9 +125,11 @@ export interface SubDepartment {
   Department: string;
   DepartmentCode: string;
   CreatedBy: string;
-  CreatedAt: any;
+  CreatedByName: string;
+  CreatedAt: string;
   LastModifiedBy: string;
-  LastModifiedAt: any;
+  LastModifiedByName: string;
+  LastModifiedAt: string;
 }
 
 export interface Department {
@@ -136,9 +139,11 @@ export interface Department {
   Division: string;
   DivisionCode: string;
   CreatedBy: string;
-  CreatedAt: any;
+  CreatedByName: string;
+  CreatedAt: string;
   LastModifiedBy: string;
-  LastModifiedAt: any;
+  LastModifiedByName: string;
+  LastModifiedAt: string;
 }
 
 export interface BusinessDomain {
@@ -148,9 +153,11 @@ export interface BusinessDomain {
   SubDepartment: string;
   SubDepartmentCode: string;
   CreatedBy: string;
-  CreatedAt: any;
+  CreatedByName: string;
+  CreatedAt: string;
   LastModifiedBy: string;
-  LastModifiedAt: any;
+  LastModifiedByName: string;
+  LastModifiedAt: string;
 }
 
 export interface AuditableEntity {
@@ -434,7 +441,7 @@ export interface User extends AuditableEntity {
 
 export interface UserAccessLevel extends AuditableEntity {
   id: string;
-  employeeCode: string; 
+  employeeCode: string;
   divisionCode: string | null;
   departmentCode: string | null;
   subDepartmentCode: string | null;

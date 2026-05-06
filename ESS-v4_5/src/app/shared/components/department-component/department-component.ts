@@ -132,7 +132,7 @@ export class DepartmentComponent {
         required: true,
       },
       {
-        field: 'LastModifiedBy',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -163,9 +163,11 @@ export class DepartmentComponent {
           Name: item.name || item.Name,
           Division: item.Division || item.division || '',
           DivisionCode: item.DivisionCode || item.divisionCode || '',
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -193,8 +195,10 @@ export class DepartmentComponent {
           Division: item.Division || item.division || '',
           DivisionCode: item.DivisionCode || item.divisionCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),

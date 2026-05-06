@@ -122,7 +122,7 @@ export class BusinessDomainComponent {
         required: true,
       },
       {
-        field: 'LastModifiedBy',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -158,8 +158,10 @@ export class BusinessDomainComponent {
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -185,9 +187,11 @@ export class BusinessDomainComponent {
           Name: item.name || item.Name,
           SubDepartment: item.SubDepartment || item.SubDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.SubDepartmentCode || '',
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
