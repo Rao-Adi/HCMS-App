@@ -65,6 +65,7 @@ export class DocumentTrainingService {
     isActive: boolean,
     pageNumber: number,
     pageSize: number,
+    filters?: any
   ): Observable<any> {
     const body = {
       searchText,
@@ -73,6 +74,7 @@ export class DocumentTrainingService {
       isActive,
       pageNumber,
       pageSize,
+      ...filters
     };
 
     const uri = `${this.apiUrl}/DMSDocumentTraining/get-all-document-training`;

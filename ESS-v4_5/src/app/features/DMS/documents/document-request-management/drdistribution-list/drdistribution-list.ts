@@ -59,6 +59,8 @@ export class DRDistributionList {
   userRoles: string[] = [];
   divisions: any[] = [];
   departments: any[] = [];
+  subDepartments: any[]=[];
+  businessDomains: any[] = [];
   roles: { id: any; text: string }[] = [];
   distributionTypeList: { id: any; text: string }[] = [];
   selectedPageSize = 1; // default value

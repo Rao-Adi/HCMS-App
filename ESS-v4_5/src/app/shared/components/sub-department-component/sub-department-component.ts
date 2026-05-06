@@ -188,7 +188,7 @@ export class SubDepartmentComponent {
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Department: item.Department || item.Department || '',
-          DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
+          DepartmentCode: item.DepartmentCode || item.DepartmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),

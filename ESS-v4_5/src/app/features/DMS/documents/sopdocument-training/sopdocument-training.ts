@@ -142,7 +142,7 @@ export class SOPDocumentTraining {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          Approval History
+          Revision History
         </span>
       `;
       },
@@ -225,6 +225,8 @@ export class SOPDocumentTraining {
     this.selectedDocumentType = value;
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
+    } else {
+      this.fetchDataForCurrentTab();
     }
   }
 
@@ -240,20 +242,23 @@ export class SOPDocumentTraining {
       searchText = query.searchText || '';
       if (query.sortModel && query.sortModel.length > 0) {
         sortColumn = query.sortModel[0].colId;
-        sortBy = query.sortModel[0].sort;
+        sortBy = query.sortModel[0].sort?.toUpperCase() || 'DESC';
       }
     } else {
       // Otherwise, reset to page 1 for fresh filters
       this.pageNumber = 1;
     }
 
+    const pageNumber = this.pageNumber || 1;
+    const pageSize = this.selectedPageSize || this.divisionPageSize || 10;
+
     const payload = {
       searchtext: searchText,
       sortby: sortBy,
       sortcolumn: sortColumn,
       isactive: true,
-      pagenumber: this.pageNumber,
-      pagesize: this.selectedPageSize || 10,
+      pagenumber: pageNumber,
+      pagesize: pageSize,
       divisioncode: this.selectedDivisions || '',
       departmentcode: this.selectedDepartment || '',
       subdepartmentcode: this.selectedSubDepartment || '',
@@ -326,9 +331,25 @@ export class SOPDocumentTraining {
 
   GetAllOnline(query: any = {}) {
     const sort = query.sortModel?.[0];
-    const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || this.employeePageSize;
+    
+    if (query && typeof query === 'object' && Object.keys(query).length > 0) {
+      if (query.pageNumber) this.pageNumber = query.pageNumber;
+      if (query.pageSize) this.selectedPageSize = query.pageSize;
+    } else {
+      this.pageNumber = 1;
+    }
+
+    const pageNumber = this.pageNumber || 1;
+    const pageSize = this.selectedPageSize || this.employeePageSize || 10;
     const searchText = query?.searchText || '';
+
+    const filters = {
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
+      documentTypeCode: this.selectedDocumentType || ''
+    };
 
     this._documentTrainingService
       .GetAllDocumentTrainings(
@@ -338,6 +359,7 @@ export class SOPDocumentTraining {
         true,
         pageNumber,
         pageSize,
+        filters
       )
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
@@ -438,13 +460,14 @@ export class SOPDocumentTraining {
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
+    this.selectedPageSize = pageSize;
 
     switch (gridId) {
-      case 'classroomGrid':
+      case 'documentGrid':
         this.divisionPageSize = pageSize;
         this.GetAllClassRooms({
           pageNumber: 1,
-          pageSize: this.selectedPageSize,
+          pageSize: pageSize,
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
@@ -453,7 +476,7 @@ export class SOPDocumentTraining {
         this.employeePageSize = pageSize;
         this.GetAllOnline({
           pageNumber: 1,
-          pageSize: this.selectedPageSize,
+          pageSize: pageSize,
           sortModel: [], // or your current sort/filter model
           filterModel: {},
         });
@@ -470,6 +493,16 @@ export class SOPDocumentTraining {
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
+    } else {
+      this.fetchDataForCurrentTab();
+    }
+  }
+
+  fetchDataForCurrentTab() {
+    if (this.selectedTab === 'Class Room') {
+      this.GetAllClassRooms({});
+    } else if (this.selectedTab === 'Online') {
+      this.GetAllOnline({});
     }
   }
 

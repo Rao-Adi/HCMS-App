@@ -117,7 +117,7 @@ export class NotificationService {
   }
 
   markAllAsRead(): Observable<any> {
-    return this.http.post<any>(
+    return this.http.put<any>(
       `${this.apiUrl}/DMSNotification/mark-all-as-read`,
       {},
     );

@@ -394,12 +394,13 @@
     </div>
   </div>
 
-  <div class="row mt-4 btn-stick">
+  <div class="row mt-4 btn-stick" *ngIf="selectedDocumentRequestType">
     <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
-      <div class="col-sm-1" *ngIf="selectedTemplateType === '1'">
+      <div class="col-sm-1" *ngIf="(this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001')">
         <button
           type="button"
           tabindex="0"
+              [disabled]="!selectedDocumentType"
           class="btn btn-sm btn-outline-secondary shadow-sm"
           (click)="DraftDocumentRequests()"
         >
@@ -411,6 +412,7 @@
         <button
           type="button"
           tabindex="0"
+              [disabled]="!selectedDocumentType"
           class="btn btn-sm btn-primary shadow-sm"
           (click)="SubmitDocumentRequests()"
         >

@@ -1,4 +1,4 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
@@ -23,6 +23,7 @@ export class NotificationSignalrService {
   constructor(
     private _notificationService: NotificationService,
     @Inject(PLATFORM_ID) private platformId: Object,
+    private ngZone: NgZone
   ) {}
 
   public startConnection(hubUrl: string, token: string = ''): void {
@@ -72,11 +73,13 @@ export class NotificationSignalrService {
       console.error(`[SignalR] Connection closed.`, error);
     });
 
+    // 3. Register event handlers BEFORE calling start()
+    this.addReceiveNotificationListener();
+
     this.hubConnection
       .start()
       .then(() => {
         console.log('[SignalR] Connection started successfully!');
-        this.addReceiveNotificationListener();
       })
       .catch((err: any) => console.error('[SignalR] Error while starting connection: ', err));
   }
@@ -84,22 +87,25 @@ export class NotificationSignalrService {
   private addReceiveNotificationListener(): void {
     // 'ReceiveNotification' MUST exactly match the method name invoked by your .NET backend
     this.hubConnection?.on('ReceiveNotification', (notification: any) => {
-      console.log('[SignalR] Notification received from backend: ', notification);
+      // 4. Run inside Angular's Zone so the UI updates in real-time without needing a manual user interaction
+      this.ngZone.run(() => {
+        console.log('[SignalR] Notification received from backend: ', notification);
 
-      const mappedNotif: AppNotification = {
-        title: notification.title || notification.Title,
-        message: notification.message || notification.Message,
-        type: (notification.type || notification.Type || 'info').toLowerCase(),
-      };
+        const mappedNotif: AppNotification = {
+          title: notification.title || notification.Title,
+          message: notification.message || notification.Message,
+          type: (notification.type || notification.Type || 'info').toLowerCase(),
+        };
 
-      this.notificationSubject.next(mappedNotif);
+        this.notificationSubject.next(mappedNotif);
 
-      // Instantly show a toast message when the backend pushes a notification
-      this._notificationService.createNotification(
-        mappedNotif.type!,
-        mappedNotif.title,
-        mappedNotif.message,
-      );
+        // Instantly show a toast message when the backend pushes a notification
+        this._notificationService.createNotification(
+          mappedNotif.type!,
+          mappedNotif.title,
+          mappedNotif.message,
+        );
+      });
     });
   }
 
@@ -122,9 +128,9 @@ export class NotificationSignalrService {
     } else {
       console.log('[SignalR] Not connected. Simulating locally instead: ', notification);
       const mappedNotif: AppNotification = {
-        title: notification.title || notification.title,
-        message: notification.message || notification.message,
-        type: (notification.type || notification.type || 'info').toLowerCase() as any,
+        title: notification.title || (notification as any).Title,
+        message: notification.message || (notification as any).Message,
+        type: (notification.type || (notification as any).Type || 'info').toLowerCase() as any,
       };
       this.notificationSubject.next(mappedNotif);
       this._notificationService.createNotification(
