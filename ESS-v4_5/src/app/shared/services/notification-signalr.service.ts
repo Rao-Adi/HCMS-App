@@ -44,7 +44,9 @@ export class NotificationSignalrService {
 
     console.log(`[SignalR] Attempting to connect to Hub: ${hubUrl}`);
 
-    const options: signalR.IHttpConnectionOptions = {};
+    const options: signalR.IHttpConnectionOptions = {
+      withCredentials: true // Extremely important if backend auth uses cookies
+    };
     if (token) {
       options.accessTokenFactory = () => token;
     }
@@ -53,6 +55,8 @@ export class NotificationSignalrService {
       this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl, options)
         .withAutomaticReconnect()
+        .withServerTimeout(60000) // Increase timeout to 60 seconds
+        .withKeepAliveInterval(30000) // Increase keep-alive to 30 seconds
         .configureLogging(signalR.LogLevel.Debug) // Set to Debug to see full negotiation details
         .build();
     } catch (error) {

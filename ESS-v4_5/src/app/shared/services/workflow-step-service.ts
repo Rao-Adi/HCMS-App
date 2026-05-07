@@ -87,7 +87,16 @@ export class WorkflowStepService {
     });
   }
 
-  create(payload: any): Observable<ApiResponse<any>> {
+  updateApprovalSequence(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSWorkflowStep/update-approval-sequence`,
+      payload,
+    );
+  }
+
+  
+
+   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSWorkflowStep/create-workflow-step`,
       payload,

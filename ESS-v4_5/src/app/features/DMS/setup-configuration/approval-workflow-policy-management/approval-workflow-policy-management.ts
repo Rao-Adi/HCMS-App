@@ -19,6 +19,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { CdkDragDrop, moveItemInArray, CdkDrag, CdkDropList, CdkDragHandle } from '@angular/cdk/drag-drop';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -49,6 +50,9 @@ export enum PolicyId {
     RoleList,
     EmployeeList,
     CabinetStructureList,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
   ],
   templateUrl: './approval-workflow-policy-management.html',
   styleUrl: './approval-workflow-policy-management.css',
@@ -57,6 +61,19 @@ export enum PolicyId {
       [nz-button] {
         margin-right: 8px;
         margin-bottom: 12px;
+      }
+      .cdk-drag-preview {
+        box-sizing: border-box;
+        border-radius: 4px;
+        background-color: white;
+        display: table;
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+      }
+      .cdk-drag-placeholder {
+        opacity: 0;
+      }
+      .cdk-drag-animating {
+        transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
       }
     `,
   ],
@@ -378,6 +395,55 @@ export class ApprovalWorkflowPolicyManagement {
     } else {
       this.selectedDocumentType = '';
     }
+  }
+
+  drop(event: CdkDragDrop<any[]>) {
+    if (event.previousIndex !== event.currentIndex) {
+      moveItemInArray(this.approvalSequenceData, event.previousIndex, event.currentIndex);
+      this.saveUpdatedSequence();
+    }
+  }
+
+  removeSequenceItem(index: number) {
+    const policyIdToFallback = this.approvalSequenceData[index]?.WorkflowPolicyId;
+    this.approvalSequenceData.splice(index, 1);
+    this.saveUpdatedSequence(policyIdToFallback);
+  }
+
+  saveUpdatedSequence(fallbackPolicyId?: number) {
+    // Re-assign step order based on new array indices
+    this.approvalSequenceData.forEach((item, index) => {
+      item.StepOrder = index + 1;
+    });
+
+    const workflowPolicyId = this.approvalSequenceData.length > 0 ? this.approvalSequenceData[0].WorkflowPolicyId : (fallbackPolicyId || 0);
+
+    const payLoad = {
+      workflowpolicyid: workflowPolicyId,
+      steps: this.approvalSequenceData.map(item => ({
+        steporder: item.StepOrder,
+        stepgroup: item.StepGroup || 0,
+        steptype: item.StepType || '',
+        roleid: item.RoleId || 0,
+        designationid: item.DesignationId || 0,
+        userid: item.EmployeeCode || item.UserId?.toString() || '',
+        requiresallapprovals: item.RequiresAllApprovals || false
+      }))
+    };
+
+    // Note: Assuming your WorkflowStepService has an `updateSequence` method. 
+    // Adjust the method name below as needed to match your service's actual implementation.
+    this._workflowStepService.updateApprovalSequence(payLoad).subscribe({
+      next: (response: any) => {
+        if (response?.Success) {
+          this.approvalSequenceData = response.Data || [];
+          this._notificationToastService.createNotification('success', 'Workflow', 'Approval sequence updated successfully.');
+        }
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to update approval sequence.');
+      }
+    });
   }
 
   // Function to handle the change

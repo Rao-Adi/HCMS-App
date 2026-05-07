@@ -363,18 +363,29 @@
                 >
                   <thead>
                     <th>Approval Sequence</th>
-                    <th></th>
+                    <th>Details</th>
+                    <th>Action</th>
                   </thead>
-                  <tbody>
-                    <!-- Use keyvalue pipe to convert the object -->
-                    @for (item of approvalSequenceData | keyvalue; track item.key; let i = $index) {
-                      <tr>
-                        <td width="250px">{{ i + 1 }}</td>
+                  <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                    @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
+                      <tr cdkDrag>
+                        <td width="250px">
+                          <i cdkDragHandle class="bi bi-grip-vertical" style="cursor: grab; margin-right: 8px; color: #a1a1a1;" title="Drag to reorder"></i>
+                          {{ i + 1 }}
+                        </td>
                         <td>
-                          <!-- Access data using item.value -->
-                          {{ item.value.EmployeeName }}<br />
-                          <strong>Role:</strong> {{ item.value.UserRole }}<br />
-                          <strong>Designation:</strong> {{ item.value.Designation }}
+                          {{ item.EmployeeName }}<br />
+                          <strong>Role:</strong> {{ item.UserRole }}<br />
+                          <strong>Designation:</strong> {{ item.Designation }}
+                        </td>
+                        <td>
+                          <button
+                            class="btn btn-sm btn-outline-danger"
+                            (click)="removeSequenceItem(i)"
+                            title="Remove from sequence"
+                          >
+                            <i class="bi bi-trash"></i>
+                          </button>
                         </td>
                       </tr>
                     }

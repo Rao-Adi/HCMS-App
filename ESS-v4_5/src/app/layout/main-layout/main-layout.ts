@@ -122,7 +122,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       console.error('CRITICAL: AppConfigService has no apiUrl.');
       return '';
     }
-    return this._config.baseUrl;
+    // Safely remove any trailing slashes to prevent malformed URLs downstream
+    return this._config.baseUrl.replace(/\/$/, '');
   }
 
   

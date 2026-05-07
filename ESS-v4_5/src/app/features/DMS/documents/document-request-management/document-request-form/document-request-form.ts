@@ -100,7 +100,7 @@ export class DocumentRequestForm {
   showExclusionTable = false;
 
   public noRowsOverlay: string = '';
-  selectedCompany: string | null = null; 
+  selectedCompany: string | null = null;
   selectedDocumentRequestType: string | null = null;
   showDocumentDiv: boolean = false;
   showDocumentCreationDiv: boolean = false;
@@ -231,7 +231,7 @@ export class DocumentRequestForm {
     private _notificationToasService: NotificationToastService,
     private _doumentRequestService: DocumentRequestService,
     private _documentTemplateService: TemplateService,
-    private _workflowStepService: WorkflowStepService, 
+    private _workflowStepService: WorkflowStepService,
     private _permissionService: PermissionService,
   ) {}
 
@@ -256,13 +256,16 @@ export class DocumentRequestForm {
     const currentCompany = this.selectedCompany; // Preserve company selection if already chosen
     this.emptyFields(); // Clears out all the form fields, grids, and selections
 
-    this.selectedDocumentRequestType = value; 
-    this.selectedCompany = currentCompany; 
+    this.selectedDocumentRequestType = value;
+    this.selectedCompany = currentCompany;
 
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
       this.showDocumentCreationDiv = true;
       this.showDocumentDiv = false;
-    } else if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
+    } else if (
+      this.selectedDocumentRequestType == '2' ||
+      this.selectedDocumentRequestType == 'DRT-0002'
+    ) {
       this.showDocumentDiv = true;
       this.GetEffectiveDocumentsForRevision('');
       this.showDocumentCreationDiv = true;
@@ -351,9 +354,10 @@ export class DocumentRequestForm {
           response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
         this.templateFileUrl =
           response.Data?.TemplateFileURL || response.Data?.templateFileUrl || '';
-        
+
         if (!isRevision) {
-          this.templateHtml = response.Data?.TemplateContent || response.Data?.templateContent || '';
+          this.templateHtml =
+            response.Data?.TemplateContent || response.Data?.templateContent || '';
         }
       },
       error: (err) => console.error(err),
@@ -520,38 +524,38 @@ export class DocumentRequestForm {
       );
       return;
     }
-    if (!this.selectedDivisions) {
-      this._notificationToasService.createNotification(
-        'warning',
-        'Validation',
-        'Please select a Division.',
-      );
-      return;
-    }
-    if (!this.selectedDepartment) {
-      this._notificationToasService.createNotification(
-        'warning',
-        'Validation',
-        'Please select a Department.',
-      );
-      return;
-    }
-    if (!this.selectedSubDepartment) {
-      this._notificationToasService.createNotification(
-        'warning',
-        'Validation',
-        'Please select a Sub Department.',
-      );
-      return;
-    }
-    if (!this.selectedBusinessDomain) {
-      this._notificationToasService.createNotification(
-        'warning',
-        'Validation',
-        'Please select a Business Domain.',
-      );
-      return;
-    }
+    // if (!this.selectedDivisions) {
+    //   this._notificationToasService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please select a Division.',
+    //   );
+    //   return;
+    // }
+    // if (!this.selectedDepartment) {
+    //   this._notificationToasService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please select a Department.',
+    //   );
+    //   return;
+    // }
+    // if (!this.selectedSubDepartment) {
+    //   this._notificationToasService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please select a Sub Department.',
+    //   );
+    //   return;
+    // }
+    // if (!this.selectedBusinessDomain) {
+    //   this._notificationToasService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please select a Business Domain.',
+    //   );
+    //   return;
+    // }
 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
@@ -678,14 +682,14 @@ export class DocumentRequestForm {
       }
 
       // Special Requirement: Document Content must be altered
-      if (this.templateHtml === this.originalContentHtml) {
-        this._notificationToasService.createNotification(
-          'warning',
-          'Validation',
-          'Document Content must be altered from the original version before submission.',
-        );
-        return;
-      }
+      // if (this.templateHtml === this.originalContentHtml) {
+      //   this._notificationToasService.createNotification(
+      //     'warning',
+      //     'Validation',
+      //     'Document Content must be altered from the original version before submission.',
+      //   );
+      //   return;
+      // }
     }
 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
@@ -767,16 +771,12 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification(
-          'error',
-          'Error',
-          'Failed to submit document.',
-        );
+        this._notificationToasService.createNotification('error', 'Error', err.Message);
       },
     });
   }
 
-  emptyFields() { 
+  emptyFields() {
     this.selectedDocumentRequestType = null;
     this.selectedCompany = '';
     this.documentName = '';
@@ -815,7 +815,7 @@ export class DocumentRequestForm {
       this._notificationToasService.createNotification(
         'warning',
         'Download',
-        'No existing document available for download.'
+        'No existing document available for download.',
       );
     }
   }
@@ -874,10 +874,12 @@ export class DocumentRequestForm {
             department: item.Department || item.department,
             departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
             subdepartment: item.SubDepartment || item.subdepartment,
-            subDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
+            subDepartmentCode:
+              item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
             justification: item.Justification || item.justification,
             businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
-            businessDomainCode: item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
+            businessDomainCode:
+              item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
             pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
             sumbittedby: item.CreatedBy || item.createdby,
             status: item.IsReworked ? 'Reworked' : 'Draft',
@@ -885,13 +887,18 @@ export class DocumentRequestForm {
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.CreatedAt || item.createdat || '',
             ),
-            requestCreatedBy: item.CreatedByName || item.createdByName, 
+            requestCreatedBy: item.CreatedByName || item.createdByName,
             previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
             previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || item.lastmodifiedat || '',
+              item.draftContentLastModifiedAt ||
+                item.DraftContentLastModifiedAt ||
+                item.lastmodifiedat ||
+                '',
             ),
             version: item.Version || item.version || item.RowVersion || item.rowVersion,
-            nextReviewDate: new CustomDateFormatPipe().transform(item.NextReviewDate || item.nextreviewdate || ''),
+            nextReviewDate: new CustomDateFormatPipe().transform(
+              item.NextReviewDate || item.nextreviewdate || '',
+            ),
             url: item.DocumentURL || item.documenturl,
             proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
             templateType: item.TemplateType || item.templateType,
@@ -904,16 +911,18 @@ export class DocumentRequestForm {
                 ? item.ProposedContent || item.proposedcontent
                 : ''),
             // Map backend fields back to the frontend keys expected by the component
-            distributionListPayload: (item.DistributionList || item.distributionList || []).map((x: any) => ({
-              ...x,
-              level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
-              level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
-              level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
-              level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
-              roleId: x.roleId || x.RoleId,
-              distributiontypeId:
-                x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
-            })),
+            distributionListPayload: (item.DistributionList || item.distributionList || []).map(
+              (x: any) => ({
+                ...x,
+                level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+                level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+                level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+                level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+                roleId: x.roleId || x.RoleId,
+                distributiontypeId:
+                  x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+              }),
+            ),
             distributionUserList: item.UserList || item.userList || [],
           }));
         } else {
@@ -932,7 +941,7 @@ export class DocumentRequestForm {
       },
     });
   }
- 
+
   // Option 1: Simple custom method (no pipe dependency)
   private formatDate(value: string | null | undefined): string {
     if (!value) return '';
@@ -963,7 +972,7 @@ export class DocumentRequestForm {
     this.inputJustificationValue = row.justification;
     this.templateHtml = row.proposedContent || row.content || '';
     this.originalContentHtml = row.proposedContent || row.content || '';
-    
+
     this.selectedTemplateType = row.templateType?.toString() || '';
     this.templateFileUrl = row.templateFileUrl || '';
     this.draftFileUrl = row.draftFileUrl || row.url || '';
