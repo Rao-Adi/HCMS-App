@@ -90,15 +90,33 @@ export class NotificationSignalrService {
 
   private addReceiveNotificationListener(): void {
     // 'ReceiveNotification' MUST exactly match the method name invoked by your .NET backend
-    this.hubConnection?.on('ReceiveNotification', (notification: any) => {
+    this.hubConnection?.on('ReceiveNotification', (arg1: any, arg2?: string, arg3?: string) => {
       // 4. Run inside Angular's Zone so the UI updates in real-time without needing a manual user interaction
       this.ngZone.run(() => {
-        console.log('[SignalR] Notification received from backend: ', notification);
+        console.log('[SignalR] Notification received from backend: ', arg1, arg2, arg3);
+
+        let title = 'Notification';
+        let message = '';
+        let type = 'info';
+
+        // Handle both object payload and separate string arguments
+        if (arg1 && typeof arg1 === 'object') {
+          title = arg1.title || arg1.Title || 'Notification';
+          message = arg1.message || arg1.Message || '';
+          type = (arg1.type || arg1.Type || 'info').toLowerCase();
+        } else if (arg2 === undefined && arg3 === undefined) {
+          // Fallback if backend just sends a single string message
+          message = arg1 || '';
+        } else {
+          title = arg1 || 'Notification';
+          message = arg2 || '';
+          type = (arg3 || 'info').toLowerCase();
+        }
 
         const mappedNotif: AppNotification = {
-          title: notification.title || notification.Title,
-          message: notification.message || notification.Message,
-          type: (notification.type || notification.Type || 'info').toLowerCase(),
+          title,
+          message,
+          type: (type === 'success' || type === 'warning' || type === 'error') ? type : 'info',
         };
 
         this.notificationSubject.next(mappedNotif);

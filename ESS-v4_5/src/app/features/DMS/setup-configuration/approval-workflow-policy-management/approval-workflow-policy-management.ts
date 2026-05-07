@@ -254,7 +254,7 @@ export class ApprovalWorkflowPolicyManagement {
         }
       },
       error: (err) => {
-        this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
+        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to create workflow step.');
       },
     });
   }
@@ -370,31 +370,41 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onDocumentTypeChange(value: string): void {
-    this.emptyInnerFields();
     if (value != null) {
       this.selectedDocumentType = value;
-
-      const payLoad = {
-        EntityType:
-          this.selectedPolicyId == PolicyId.RequestForDocumentCreation
-            ? 'Request'
-            : this.selectedPolicyId == PolicyId.DocumentCreation
-              ? 'Document'
-              : 'Revision',
-        documentTypeCode: this.selectedDocumentType,
-        divisionCode: this.selectedDivisions,
-        departmentCode: this.selectedDepartment,
-        subDepartmentCode: this.selectedSubDepartment,
-        businessDomainCode: this.selectedBusinessDomain,
-      };
-      this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
-        // console.log('User Details:', res);
-        this.showExclusionTable = true;
-        this.approvalSequenceData = res?.Data ? res.Data : [];
-      });
+      this.fetchApprovalSequence();
     } else {
       this.selectedDocumentType = '';
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
     }
+  }
+
+  fetchApprovalSequence() {
+    if (!this.selectedDocumentType) {
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+      return;
+    }
+
+    const payLoad = {
+      EntityType:
+        this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+          ? 'Request'
+          : this.selectedPolicyId == PolicyId.DocumentCreation
+            ? 'Document'
+            : 'Revision',
+      documentTypeCode: this.selectedDocumentType,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
+    };
+
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+      this.showExclusionTable = true;
+      this.approvalSequenceData = res?.Data ? res.Data : [];
+    });
   }
 
   drop(event: CdkDragDrop<any[]>) {
@@ -441,7 +451,7 @@ export class ApprovalWorkflowPolicyManagement {
         }
       },
       error: (err: any) => {
-        this._notificationToastService.createNotification('error', 'Error', 'Failed to update approval sequence.');
+        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to update approval sequence.');
       }
     });
   }
@@ -456,10 +466,11 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
-    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? '';
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? '';
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? '';
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? '';
+    this.fetchApprovalSequence();
   }
 
   getAllDesignationList = () => {

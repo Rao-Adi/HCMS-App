@@ -161,8 +161,18 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
     let token = '';
     if (typeof window !== 'undefined' && localStorage) {
-      token = localStorage.getItem('token') || '';
+      // Check multiple common keys in case the token is stored under a different name
+      token = localStorage.getItem('token') || localStorage.getItem('Token') || localStorage.getItem('access_token') || '';
+      
+      // Prevent "Bearer Bearer eyJ..." errors:
+      // SignalR's accessTokenFactory automatically prepends "Bearer " in the header.
+      // If the stored token already contains "Bearer ", we must strip it.
+      if (token.startsWith('Bearer ')) {
+        token = token.substring(7);
+      }
     }
+
+    console.log(`[SignalR Init] Connecting to: ${hubUrl} | Token Present: ${!!token}`);
     this.notificationSignalrService.startConnection(hubUrl, token);
 
     this.subscriptions.push(

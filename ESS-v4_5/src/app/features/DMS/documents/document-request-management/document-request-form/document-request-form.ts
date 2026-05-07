@@ -61,10 +61,10 @@ export class DocumentRequestForm {
   canDelete = false;
   formId = 'requestdocumentcreation';
 
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType: string = '';
   inputJustificationValue?: string;
   documentName?: string = '';
@@ -280,13 +280,19 @@ export class DocumentRequestForm {
   }
 
   loadWorkflowAuthorities(documentType: string) {
+    if (!documentType) {
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+      return;
+    }
+
     const payLoad = {
       EntityType: 'Request',
       documentTypeCode: documentType,
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
     };
     this._workflowStepService.getWorkflowPolicyByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
@@ -315,10 +321,14 @@ export class DocumentRequestForm {
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
-    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? '';
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? '';
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? '';
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? '';
+
+    if (this.selectedDocumentType) {
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+    }
   }
 
   getAllCompanies = () => {
@@ -475,7 +485,7 @@ export class DocumentRequestForm {
             this._notificationToasService.createNotification(
               'error',
               'Template',
-              'Failed to download template.',
+              err?.error?.Message || err?.Message || 'Failed to download template.',
             );
           }
         },
@@ -628,7 +638,7 @@ export class DocumentRequestForm {
         this._notificationToasService.createNotification(
           'error',
           'Error',
-          'Failed to draft document.',
+          err?.error?.Message || err?.Message || 'Failed to draft document.',
         );
       },
     });
@@ -771,7 +781,7 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', err.Message);
+        this._notificationToasService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to submit document.');
       },
     });
   }
@@ -936,7 +946,7 @@ export class DocumentRequestForm {
         this._notificationToasService.createNotification(
           'error',
           'Error',
-          err?.Message || 'Failed to fetch draft documents.',
+          err?.error?.Message || err?.Message || 'Failed to fetch draft documents.',
         );
       },
     });
