@@ -6,20 +6,19 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
-import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
-import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
-import { RivisionHistoryPopup } from '../rivision-history-popup/rivision-history-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-drusers-component',
@@ -30,25 +29,25 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 export class DRUsersComponent {
   @Input() selectedUsers: any[] = [];
   @Output() usersChanged = new EventEmitter<any[]>();
+  @Input() documentTypeCode: string = '';
 
   gridConfig: GridConfig = {} as GridConfig;
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'requestdocumentcreation';
 
   manualUserData: any[] = [];
   divisions: any[] = [];
   departments: any[] = [];
   subDepartments: any[] = [];
-  documentTypes: any[] = [];
-  users: any[] = [
-    {
-      id: '1',
-      text: 'Territory Sales Manager(TSM)',
-    },
-    { id: '2', text: 'District Sales Manager(DSM)' },
-    { id: '3', text: 'Regional Sales Manager(RSM)' },
-  ];
+  userRoles: any[] = [];
+  selectedEmployeeList: any[] = [];
 
   totalManullayManageEmployees = 0;
   loading = false;
+  loginEmpId: string = '';
 
   defaultColDef: ColDef = {
     filter: true,
@@ -69,81 +68,76 @@ export class DRUsersComponent {
     },
   ];
 
-  private loadSampleData(): void {
-    this.manualUserData = [
-      {
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        userId: '1',
-        UserName: 'Territory Sales Manager(TSM)',
-        isActive: true,
-      },
-      {
-        divisionId: 'D1',
-        divisionName: 'Corporate',
-        departmentId: 'DEP1',
-        departmentName: 'Software Department',
-        subDepartmentId: 'SD1',
-        subDepartmentName: 'Recruitment',
-        userId: '2',
-        documentTypeName: 'District Sales Manager(DSM)',
-        isActive: true,
-      },
-    ];
-  }
-
   constructor(
     private _userService: UserService,
-    private _documentTypeService: DocumentTypeCacheService,
     private modal: NzModalService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
-  ) {
-    //this.loadSampleData();
-  }
+    private _UtilitiesService: UtilitiesService,
+    private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService,
+  ) {}
 
   ngOnInit() {
-    if (this.selectedUsers) {
-      this.users = [...this.selectedUsers];
-    }
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
 
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
+      if (this.selectedUsers && this.selectedUsers.length > 0) {
+        this.selectedEmployeeList = [...this.selectedUsers];
+      }
 
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      this.loadDropdownsAndGrid();
     });
+    // this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+    //   this.canAdd = permissions.canAdd;
+    //   this.canEdit = permissions.canEdit;
+    //   this.canDelete = permissions.canDelete;
 
-    // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
-    this.getAllDocumentTypes();
-    // this.getAllDivisionList();
-    // this.getAllDepartmentList();
-    // this.getAllSubDepartmentList();
+    //   if (this.selectedUsers && this.selectedUsers.length > 0) {
+    //     this.selectedEmployeeList = [...this.selectedUsers];
+    //   }
+
+    //   this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+    //     this.cabinetHierarchy = levels;
+
+    //     this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+    //   });
+
+    //   this.GetAllUserRoles();
+    //   // this._cabinetHirarchyService.loadDropdownHierarchy(); // 🔥 REQUIRED
+    //   // this.getAllDivisionList();
+    //   // this.getAllDepartmentList();
+    //   // this.getAllSubDepartmentList();
+    // });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['selectedUsers']) {
-      this.users = [...this.selectedUsers];
+      this.selectedEmployeeList = [...this.selectedUsers];
     }
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
   }
 
   private getRemainingColumns(): GridColumn[] {
     return [
       {
         field: 'userId',
-        headerName: 'User',
+        headerName: 'User Role',
         type: 'dropdown',
-        dropdownOptions: this.users,
+        dropdownOptions: this.userRoles,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
         required: true,
         clickable: true,
-        clickAction: '', // optional but VERY powerful
+        showSearch: true,
+        clickAction: 'userId', // triggers handleGridAction for 'userId'
       },
     ];
   }
@@ -157,9 +151,9 @@ export class DRUsersComponent {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: false,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -174,80 +168,6 @@ export class DRUsersComponent {
       ...this.getRemainingColumns(),
     ];
   }
-
-  // private buildGrid(): void {
-  //   this.gridConfig = {
-  //     columns: this.getColumns(),
-  //     enablePagination: true,
-  //     pageSize: 10,
-  //     pageSizeOptions: [10, 20, 50, 100],
-  //     enableSorting: true,
-  //     enableFiltering: true,
-  //     enableSelection: true,
-  //     enableInlineAdd: true,
-  //     enableInlineEdit: true,
-  //     enableInlineDelete: true,
-  //     rowHeight: 47,
-  //     headerHeight: 40,
-  //     domLayout: 'autoHeight',
-  //     theme: 'ag-theme-alpine',
-  //     suppressCellFocus: true,
-  //   };
-  // }
-
-  // private getColumns(): GridColumn[] {
-  //   return [
-  //     // ✅ DIVISION
-  //     {
-  //       field: 'divisionName',
-  //       headerName: 'Division',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.divisions,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DEPARTMENT
-  //     {
-  //       field: 'departmentName',
-  //       headerName: 'Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'divisionName',
-  //       dataSourceKey: 'departments',
-  //       filterKey: 'divisionId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // ✅ SUB DEPARTMENT
-  //     {
-  //       field: 'subDepartmentName',
-  //       headerName: 'Sub Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'departmentName',
-  //       dataSourceKey: 'subDepartments',
-  //       filterKey: 'departmentId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // DOCUMENT TYPES
-  //     {
-  //       field: 'userId',
-  //       headerName: 'User',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.users,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //   ];
-  // }
 
   GetAllManuallyManageEmployee(query: any) {
     const sort = query.sortModel?.[0];
@@ -302,17 +222,53 @@ export class DRUsersComponent {
   }
 
   openCabinetModal(rowData: any): void {
+    if (!rowData.userId) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Warning',
+        'Please select a User Role first.',
+      );
+      return;
+    }
+
+    // Since rowData.userId might contain the display text (due to getDisplayName in onRowAdded),
+    // we look up the actual Role ID from the userRoles list.
+    const selectedRole = this.userRoles.find(
+      (r) => r.id == rowData.userId || r.text == rowData.userId,
+    );
+    const roleId = selectedRole ? selectedRole.id : rowData.userId;
+
     const modalRef = this.modal.create({
-      nzTitle: 'Rivision History',
-      nzContent: RivisionHistoryPopup,
+      nzTitle: 'Users in Role',
+      nzContent: UsersInRoleModal,
       nzData: {
-        data: rowData.Id, // 👈 this is what we’ll read inside modal
+        data: roleId, // pass the resolved roleId instead of the text
+        divisionCode: rowData.level1Id || rowData.divisionCode,
+        departmentCode: rowData.level2Id || rowData.departmentCode,
+        subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode,
+        businessDomainCode: rowData.level4Id || rowData.businessDomainCode,
+        documentTypeCode: this.documentTypeCode,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
     });
-    modalRef.afterClose.subscribe((result) => {
-      //console.log('Modal closed with:', result);
+
+    modalRef.afterClose.subscribe((selectedUsers: any[]) => {
+      if (selectedUsers && selectedUsers.length > 0) {
+        // Accumulate selected users and avoid duplicates
+        selectedUsers.forEach((user) => {
+          const code = user.employeeCode || user.EmployeeCode || user.empcode || user.empid;
+          const exists = this.selectedEmployeeList.some(
+            (u) => (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code,
+          );
+          if (!exists) {
+            this.selectedEmployeeList.push(user);
+          }
+        });
+
+        // Emit the updated list to the parent component (document-request-management.ts)
+        this.usersChanged.emit(this.selectedEmployeeList);
+      }
     });
   }
 
@@ -328,46 +284,46 @@ export class DRUsersComponent {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-    debugger;
+    //debugger;
     // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      divisionCode: rowData.level1Id || rowData.level1Id,
-      departmentCode: rowData.level2Id || rowData.level2Id,
-      subDepartmentCode: rowData.level3Id || rowData.level3Id,
-      businessDomainCode: rowData.level4Id || rowData.level4Id,
-      userId: rowData.userId || rowData.userId,
-    };
+    // const payLoad = {
+    //   divisionCode: rowData.level1Id || rowData.level1Id,
+    //   departmentCode: rowData.level2Id || rowData.level2Id,
+    //   subDepartmentCode: rowData.level3Id || rowData.level3Id,
+    //   businessDomainCode: rowData.level4Id || rowData.level4Id,
+    // };
 
-    this._userService.create(payLoad).subscribe(() => {
-      this._notification.createNotification('success', 'User', 'User created successfully!');
-    });
+    // this._userService.create(payLoad).subscribe(() => {
+    //   this._notificationToasService.createNotification('success', 'User', 'User created successfully!');
+    // });
     const rowWithId = {
       ...rowData,
       id: this.generateId(),
       divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
       departmentName: this.getDisplayName(this.departments, rowData.departmentName),
       subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
-      userId: this.getDisplayName(this.users, rowData.userId),
+      userId: this.getDisplayName(this.userRoles, rowData.userId),
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
-    debugger;
+    //console.log('Row updated:', event);
+    // debugger;
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       divisionCode: event.rowData.level1Id || event.rowData.level1Id,
       departmentCode: event.rowData.level2Id || event.rowData.level2Id,
       subDepartmentCode: event.rowData.level3Id || event.rowData.level3Id,
       businessDomainCode: event.rowData.level4Id || event.rowData.level4Id,
-      userId: event.rowData.userId || event.rowData.userId,
     };
 
     this._userService.update(payLoad).subscribe(() => {
-      this._notification.createNotification('success', 'User', 'User created successfully!');
+      this._notificationToastService.createNotification(
+        'success',
+        'User',
+        'User created successfully!',
+      );
 
       // Update display names
       event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
@@ -383,7 +339,7 @@ export class DRUsersComponent {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    //console.log('Row deleted at index:', rowIndex);
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
   }
@@ -410,6 +366,11 @@ export class DRUsersComponent {
     }
   }
 
+  removeUser(index: number) {
+    this.selectedEmployeeList.splice(index, 1);
+    this.usersChanged.emit(this.selectedEmployeeList);
+  }
+
   private generateId(): number {
     return Date.now();
   }
@@ -427,18 +388,36 @@ export class DRUsersComponent {
     }
   }
 
-  getAllDocumentTypes = () => {
-    this._documentTypeService.getDocumentTypes().subscribe((res) => {
+  private loadDropdownsAndGrid(): void {
+    forkJoin({
+      userRoles: this._peoplePartnerService.GetAllRoles(),
+      hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
+    }).subscribe(({ userRoles, hierarchy }) => {
+      // ✅ Normalize Roles
+      this.userRoles =
+        userRoles?.Data?.map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
+        })) ?? [];
+
+      // ✅ Cabinet hierarchy
+      this.cabinetHierarchy = hierarchy;
+
+      // ✅ Load hierarchy dropdown data
+      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => this.buildGrid());
+    });
+  }
+
+  GetAllUserRoles = () => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res) {
-        this.documentTypes = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
         }));
       } else {
-        this.documentTypes = [];
+        this.userRoles = [];
       }
-      // ✅ build grid ONLY after divisions are ready
-      this.buildGrid();
     });
   };
 }

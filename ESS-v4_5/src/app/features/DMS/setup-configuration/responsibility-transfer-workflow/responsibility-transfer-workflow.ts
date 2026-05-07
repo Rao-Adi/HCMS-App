@@ -3,17 +3,16 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
-import { BehaviorSubject } from 'rxjs';
-import { SelectList } from '@app/shared/interfaces/interfaces';
-import { UserService } from '@app/shared/services/user-service';
+import { BehaviorSubject } from 'rxjs'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { NotificationService } from '@app/shared/notification/notification.service';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
+import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
@@ -22,6 +21,12 @@ import { DivisionCacheService } from '@app/shared/services/CacheServices/divisio
   styleUrl: './responsibility-transfer-workflow.css',
 })
 export class ResponsibilityTransferWorkflow {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'responsibilitiestransferpolicy';
+
   public noRowsOverlay: string = '';
   gridConfig: GridConfig = {} as GridConfig;
   manualUserData: any[] = [];
@@ -58,8 +63,8 @@ export class ResponsibilityTransferWorkflow {
   rowData: any[] = [];
   totalRows = 0;
   divisions: any[] = [];
- 
-  workflowExclude: any[] = [
+
+  approvalAuthority: any[] = [
     { id: '1', text: 'Director Of Board' },
     { id: '2', text: 'Quality Director' },
     { id: '3', text: 'Bizex Manager' },
@@ -72,13 +77,21 @@ export class ResponsibilityTransferWorkflow {
   };
 
   constructor(
-    private _userService: UserService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
     private _divisionServices: DivisionCacheService,
+    private _transferWorkflowPolicyService: TransferWorkflowPolicyService,
   ) {}
 
   ngOnInit() {
-   this.getAllDivisionList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.getAllDivisionList();
+      this.GetAllResponsibilityTransferWorkflows();
+    });
   }
 
   private getColumns(): GridColumn[] {
@@ -99,8 +112,8 @@ export class ResponsibilityTransferWorkflow {
       {
         field: 'approvalAuthority',
         headerName: 'Approval Authority',
-        type: 'dropdown', 
-        dropdownOptions: this.workflowExclude,
+        type: 'dropdown',
+        dropdownOptions: this.approvalAuthority,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -108,6 +121,7 @@ export class ResponsibilityTransferWorkflow {
       },
     ];
   }
+
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
@@ -115,11 +129,11 @@ export class ResponsibilityTransferWorkflow {
       pageSize: 10,
       pageSizeOptions: [10, 20, 50, 100],
       enableSorting: true,
-      enableFiltering: true,
+      enableFiltering: false, // Set to false as per your request
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -139,20 +153,16 @@ export class ResponsibilityTransferWorkflow {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      divisionCode: rowData.level1Id || rowData.level1Id,
-      departmentCode: rowData.level2Id || rowData.level2Id,
-      subDepartmentCode: rowData.level3Id || rowData.level3Id,
-      businessDomainCode: rowData.level4Id || rowData.level4Id,
-      documentTypeId: rowData.documentTypeId || rowData.documentTypeId,
+      divisionCode: rowData.divisionName || rowData.divisionName,
+      approvalroleid: 1,
+      approvaluserid: 1,
     };
 
-    this._userService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
+    this._transferWorkflowPolicyService.create(payLoad).subscribe(() => {
+      this._notificationToastService.createNotification(
         'success',
         'Access Level',
         'Access Level created successfully!',
@@ -172,8 +182,7 @@ export class ResponsibilityTransferWorkflow {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
-    debugger;
+    console.log('Row updated:', event); 
     // Update display names
     // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     // event.rowData.departmentName = this.getDisplayName(
@@ -221,6 +230,35 @@ export class ResponsibilityTransferWorkflow {
   private getDisplayName(options: any[], id: any): string {
     const option = options.find((opt) => opt.id == id);
     return option ? option.text : '';
+  }
+
+  GetAllResponsibilityTransferWorkflows(query: any = {}) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || this.pageSize;
+
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+    this._transferWorkflowPolicyService
+      .GetAllTransferWorkflowPolicies(
+        searchText,
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'fname',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res: any) => {
+        if (res?.Success && res.Data?.Items) {
+          this.manualUserData = res.Data.Items.map((item: any) => ({
+            id: item.Id,
+            divisionName: item.DivisionCode,
+            approvalAuthority: item.ApprovalRoleId ? item.ApprovalRoleId.toString() : null,
+          }));
+        } else {
+          this.manualUserData = [];
+        }
+      });
   }
 
   getAllDivisionList = () => {

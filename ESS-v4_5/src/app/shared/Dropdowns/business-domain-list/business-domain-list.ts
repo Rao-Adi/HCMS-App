@@ -19,10 +19,17 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 @Component({
   selector: 'app-business-domain-list',
   imports: [CommonModule, FormsModule, NzSelectModule],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => BusinessDomainList),
+      multi: true,
+    },
+  ],
   templateUrl: './business-domain-list.html',
   styleUrl: './business-domain-list.css',
 })
-export class BusinessDomainList {
+export class BusinessDomainList implements ControlValueAccessor {
   @Input() subDepartment: string | undefined;
   @Input() valueKey!: string;
   @Input() labelKey!: string;
@@ -93,7 +100,7 @@ export class BusinessDomainList {
       return;
     }
 
-    const cacheKey = `${MASTER_CACHE_KEYS.BUSINESS_DOMAIN}`;
+    const cacheKey = MASTER_CACHE_KEYS.BUSINESS_DOMAIN;
 
     this._masterCacheService
       .getMasterData({
@@ -123,10 +130,12 @@ export class BusinessDomainList {
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
+          LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
-            item.lastModifiedAt || item.LastModifiedAt || '',
+            item.LastModifiedAt || item.lastModifiedAt || '',
           ),
         }),
       })

@@ -75,7 +75,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'authorization-post-training',
+            path: 'trainingauthorization',
             loadComponent: () =>
               import(
                 '@app/features/DMS/documents/document-authorization-post-training/document-authorization-post-training'

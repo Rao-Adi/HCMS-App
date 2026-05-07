@@ -6,7 +6,7 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationService {
+export class NotificationToastService {
     
   constructor(private notification: NzNotificationService) {}
 

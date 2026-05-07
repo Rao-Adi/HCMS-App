@@ -6,8 +6,7 @@ import {
   FormsModule,
   ReactiveFormsModule,
   Validators,
-} from '@angular/forms';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@angular/forms'; 
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
@@ -37,10 +36,9 @@ export class WorkflowApprovalHistoryComponent {
 
   loadHistory() {
     this.loading = true;
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
     const entityId = this.modalData.id;
     const entityType = this.modalData.entityType;
-    this._doumentRequestService.getWorkflowDeatils(companyId, entityId, entityType).subscribe({
+    this._doumentRequestService.getWorkflowDeatils(entityId, entityType).subscribe({
       next: (response) => {
         if (response && response.Data) { 
           this.workflowHistory = response.Data.map((item: any) => ({
@@ -67,7 +65,7 @@ export class WorkflowApprovalHistoryComponent {
         }
       },
       error: (err) => {
-        // this._notification.createNotification(
+        // this._notificationToastService.createNotification(
         //   'error',
         //   'Error',
         //   err?.Message || 'Failed to fetch document details.',

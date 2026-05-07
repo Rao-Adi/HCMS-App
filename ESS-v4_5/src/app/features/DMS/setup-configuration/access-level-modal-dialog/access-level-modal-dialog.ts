@@ -6,13 +6,13 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { UserAccesssLevelService } from '@app/shared/services/user-access-level.service';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
@@ -26,6 +26,12 @@ import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 export class AccessLevelModalDialog {
   gridConfig: GridConfig = {} as GridConfig;
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'users';
+
   manualUserData: any[] = [];
   divisions: any[] = [];
   departments: any[] = [];
@@ -33,7 +39,7 @@ export class AccessLevelModalDialog {
   documentTypes: any[] = [];
   totalManullayManageEmployees = 0;
   loading = false;
-  
+
   selectedPageSize = 10; // default value
 
   dropdownDataSources: Record<number, any[]> = {};
@@ -77,85 +83,36 @@ export class AccessLevelModalDialog {
     ];
   }
 
-  // private getColumns(): GridColumn[] {
-  //   return [
-  //     // ✅ DIVISION
-  //     {
-  //       field: 'divisionName',
-  //       headerName: 'Division',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.divisions,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DEPARTMENT
-  //     {
-  //       field: 'departmentName',
-  //       headerName: 'Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'divisionName',
-  //       dataSourceKey: 'departments',
-  //       filterKey: 'divisionId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // ✅ SUB DEPARTMENT
-  //     {
-  //       field: 'subDepartmentName',
-  //       headerName: 'Sub Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'departmentName',
-  //       dataSourceKey: 'subDepartments',
-  //       filterKey: 'departmentId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // DOCUMENT TYPES
-  //     {
-  //       field: 'documentTypeName',
-  //       headerName: 'Document Type',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.documentTypes,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //   ];
-  // }
-
-  constructor( 
+  constructor(
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _documentTypeService: DocumentTypeCacheService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private cabinetGridService: CabinetGridService,
     private readonly hierarchyService: CabinetHierarchyService,
     private _userAccessLevelService: UserAccesssLevelService,
+    private _permissionService: PermissionService,
   ) {
     //this.loadSampleData();
   }
 
-  ngOnInit() { 
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      this.getAllDocumentTypes();
+      this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
 
-    this.getAllDocumentTypes();
-    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      });
 
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
-    
-    this.GetAllUserAccessLevel({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+      this.GetAllUserAccessLevel({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
     });
   }
 
@@ -168,9 +125,9 @@ export class AccessLevelModalDialog {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -179,50 +136,41 @@ export class AccessLevelModalDialog {
     };
   }
 
-
   GetAllUserAccessLevel(query: any) {
-      const sort = query.sortModel?.[0];
-      const pageNumber = Number(query?.pageNumber) || 1;
-      const pageSize = Number(query?.pageSize) || 10;
-  
-      this._userAccessLevelService
-        .GetAllUser(
-          query?.filterModel?.Name?.filter || '',
-          sort?.sort?.toUpperCase() || 'ASC',
-          sort?.colId || 'Name',
-          true,
-          pageNumber,
-          pageSize,
-        )
-        .subscribe((res) => {
-          if (res?.Success && res.Data?.Items) {
-            this.totalManullayManageEmployees = res.Data.TotalCount;
-            this.manualUserData = res.Data.Items.map((item: any) => ({
-              Id: item.id || item.Id, 
-              divisionCode: item.divisionCode || item.DivisionCode,
-              level1Id: item.division || item.Division,
-              departmentCode: item.departmentCode || item.DepartmentCode,
-              level2Id: item.department || item.Department,
-              subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-              level3Id: item.subDepartment || item.SubDepartment,
-              businessDomainCode: item.businessDomainCode || item.BusinessDomainCode,
-              level4Id: item.businessDomain || item.BusinessDomain,
-              documentTypeId: item.documentTypeCode || item.DocumentTypeCode,
-              documentTypeName: item.documentType || item.DocumentType,
-              IsActive: item.isActive || item.IsActive,
-              IsDeleted: item.isDeleted || item.IsDeleted,
-              CreatedBy: item.createdBy || item.CreatedBy || '',
-              CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-            }));
-            //console.log('Mapped documentTypeData:', this.documentTypeData);
-          } else {
-            this.manualUserData = [];
-          }
-          //this.cdr.detectChanges(); // force update
-        });
-    }
-  
-  
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._userAccessLevelService
+      .GetAccessLevelByEmployeeCode(this.modalData.employeeCode)
+      .subscribe((res) => {
+        if (res?.Success && res.Data) {
+          this.totalManullayManageEmployees = res.Data.length;
+          this.manualUserData = res.Data.map((item: any) => ({
+            Id: item.id || item.Id,
+            divisionCode: item.divisionCode || item.DivisionCode,
+            level1Id: item.division || item.Division,
+            departmentCode: item.departmentCode || item.DepartmentCode,
+            level2Id: item.department || item.Department,
+            subDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
+            level3Id: item.subDepartment || item.SubDepartment,
+            businessDomainCode: item.businessDomainCode || item.BusinessDomainCode,
+            level4Id: item.businessDomain || item.BusinessDomain,
+            documentTypeId: item.documentTypeCode || item.DocumentTypeCode,
+            documentTypeName: item.documentType || item.DocumentType,
+            IsActive: item.isActive || item.IsActive,
+            IsDeleted: item.isDeleted || item.IsDeleted,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+          }));
+          //console.log('Mapped documentTypeData:', this.documentTypeData);
+        } else {
+          this.manualUserData = [];
+        }
+        //this.cdr.detectChanges(); // force update
+      });
+  }
+
   onSelectionChanged(selectedRows: any[]): void {
     //console.log('Selected rows:', selectedRows);
     // Handle selection logic
@@ -235,20 +183,19 @@ export class AccessLevelModalDialog {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-  
+
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      employeeCode: this.modalData.employeeCode,
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,
       subDepartmentCode: rowData.level3Id || rowData.level3Id,
       businessDomainCode: rowData.level4Id || rowData.level4Id,
       documentTypeCode: rowData.documentTypeId || rowData.documentTypeId,
+      employeeCode: this.modalData.employeeCode,
     };
 
     this._userAccessLevelService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'success',
         'Access Level',
         'Access Level created successfully!',
@@ -268,8 +215,7 @@ export class AccessLevelModalDialog {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
-    debugger;
+    //console.log('Row updated:', event); 
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     event.rowData.departmentName = this.getDisplayName(
@@ -283,7 +229,7 @@ export class AccessLevelModalDialog {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    //console.log('Row deleted at index:', rowIndex);
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
   }

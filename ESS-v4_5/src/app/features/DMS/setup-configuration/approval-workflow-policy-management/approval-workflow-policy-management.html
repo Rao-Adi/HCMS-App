@@ -1,17 +1,7 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom">
-        <div class="clearfix">
-          <div class="pull-left">
-            <h3 class="mt-0">Approval Workflow Policy - Document Creation/Revision/Obsoletion</h3>
-            <small class="text-muted"
-              >Approval Workflow Policy - Document Creation/Revision/Obsoletion</small
-            >
-          </div>
-        </div>
-        <br />
-        <hr />
+      <div class="card-custom"> 
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
@@ -28,7 +18,7 @@
               <button
                 class="tab-button"
                 [ngClass]="{ 'active-tab': selectedPolicyId === PolicyId.DocumentCreation }"
-               (click)="selectTab(PolicyId.DocumentCreation)"
+                (click)="selectTab(PolicyId.DocumentCreation)"
               >
                 Document Creation
               </button>
@@ -95,7 +85,13 @@
                       </div>
                     </div>
                     <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                      <app-cabinet-structure-list
+                        [divisionCode]="selectedDivisions"
+                        [departmentCode]="selectedDepartment"
+                        [subDepartmentCode]="selectedSubDepartment"
+                        [businessDomainCode]="selectedBusinessDomain"
+                        (hierarchyChange)="onHierarchyChange($event)"
+                      >
                       </app-cabinet-structure-list>
                     </div>
                   </div>
@@ -128,15 +124,23 @@
                         >
                         </nz-option>
                       </nz-select>
-
                       <button
+                        class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                        [class.disabled]="!this.canAdd"
+                        title="Approve"
+                        (click)="addExclusion()"
+                        [disabled]="!this.canAdd"
+                      >
+                        <i class="bi bi-plus-square"></i>
+                      </button>
+                      <!-- <button
                         aria-label="Collapse Menu"
                         title="Collapse Menu"
                         (click)="addExclusion()"
                         class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       >
                         <i class="bi bi-plus-circle"></i>
-                      </button>
+                      </button> -->
                     </div>
                   </div>
                   <div class="row row-space">
@@ -151,7 +155,7 @@
                             appDecimalInput
                             name="TotalClaim"
                             type="text"
-                            style="width: 250px !important"
+                            style="width: 350px !important"
                             [ngClass]="{
                               'form-control': true,
                               'input-sm': true,
@@ -162,7 +166,7 @@
                         <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                           <span class="d-flex">Workflow Should Exclude These</span>
                           <nz-select
-                            style="width: 250px"
+                            style="width: 350px"
                             [(ngModel)]="selectedWorkflowExclude"
                             nzPlaceHolder="Select Exclusion"
                             (ngModelChange)="onWorkflowExcludeChange($event)"
@@ -186,9 +190,10 @@
                                 <app-designation-list
                                   valueKey="CODE"
                                   labelKey="NAME"
+                                  [isMultiSelect]="true"
                                   placeholder="Select Designation"
                                   [(ngModel)]="selectedDesignation"
-                                  width="250px"
+                                  width="350px"
                                 >
                                 </app-designation-list>
                               </div>
@@ -200,8 +205,9 @@
                                   valueKey="ID"
                                   labelKey="NAME"
                                   placeholder="Select Role"
+                                  [isMultiSelect]="true"
                                   [(ngModel)]="selectedRole"
-                                  width="250px"
+                                  width="350px"
                                 >
                                 </app-role-list>
                               </div>
@@ -213,8 +219,9 @@
                                   valueKey="ID"
                                   labelKey="NAME"
                                   placeholder="Select Employee"
+                                  [isMultiSelect]="true"
                                   [(ngModel)]="selectedEmployee"
-                                  width="250px"
+                                  width="350px"
                                 >
                                 </app-employee-list>
                               </div>
@@ -230,8 +237,17 @@
                       <ng-container *ngSwitchCase="'2'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Employee</span>
-                          <nz-select
-                            style="width: 250px"
+                          <app-employee-list
+                            valueKey="ID"
+                            labelKey="NAME"
+                            placeholder="Select Employee"
+                            [isMultiSelect]="false"
+                            [(ngModel)]="selectedEmployeeSingle"
+                            width="350px"
+                          >
+                          </app-employee-list>
+                          <!-- <nz-select
+                            style="width: 350px"
                             [(ngModel)]="selectedEmployeeSingle"
                             nzPlaceHolder="Select Employee"
                             (ngModelChange)="onEmployeeChange($event)"
@@ -244,7 +260,7 @@
                               [nzLabel]="dep.NAME"
                             >
                             </nz-option>
-                          </nz-select>
+                          </nz-select> -->
                         </div>
                       </ng-container>
 
@@ -252,8 +268,17 @@
                       <ng-container *ngSwitchCase="'3'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Role</span>
-                          <nz-select
-                            style="width: 250px"
+                          <app-role-list
+                            valueKey="ID"
+                            labelKey="NAME"
+                            placeholder="Select Role"
+                            [isMultiSelect]="false"
+                            [(ngModel)]="selectedRoleSingle"
+                            width="350px"
+                          >
+                          </app-role-list>
+                          <!-- <nz-select
+                            style="width: 350px"
                             [(ngModel)]="selectedRoleSingle"
                             nzPlaceHolder="Select Role"
                             (ngModelChange)="onRoleChange($event)"
@@ -261,12 +286,12 @@
                             nzShowSearch
                           >
                             <nz-option
-                              *ngFor="let dep of roles"
+                              *ngFor="let dep of userRoles"
                               [nzValue]="dep.ID"
                               [nzLabel]="dep.NAME"
                             >
                             </nz-option>
-                          </nz-select>
+                          </nz-select> -->
                         </div>
                       </ng-container>
 
@@ -274,8 +299,17 @@
                       <ng-container *ngSwitchCase="'4'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Designation</span>
-                          <nz-select
-                            style="width: 250px"
+                          <app-designation-list
+                            valueKey="CODE"
+                            labelKey="NAME"
+                            placeholder="Select Designation"
+                            [isMultiSelect]="false"
+                            [(ngModel)]="selectedDesignationSingle"
+                            width="350px"
+                          >
+                          </app-designation-list>
+                          <!-- <nz-select
+                            style="width: 350px"
                             [(ngModel)]="selectedDesignationSingle"
                             nzPlaceHolder="Select Designation"
                             (ngModelChange)="onDesignationChange($event)"
@@ -288,7 +322,7 @@
                               [nzLabel]="dep.NAME"
                             >
                             </nz-option>
-                          </nz-select>
+                          </nz-select> -->
                         </div>
                       </ng-container>
 
@@ -323,21 +357,35 @@
                 *ngIf="showExclusionTable"
                 class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
               >
-                <table class="table" *ngIf="approvalSequenceData && approvalSequenceData.length > 0">
+                <table
+                  class="table"
+                  *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                >
                   <thead>
                     <th>Approval Sequence</th>
-                    <th></th>
+                    <th>Details</th>
+                    <th>Action</th>
                   </thead>
-                  <tbody>
-                    <!-- Use keyvalue pipe to convert the object -->
-                    @for (item of approvalSequenceData | keyvalue; track item.key; let i = $index) {
-                      <tr>
-                        <td width="250px">{{ i + 1 }}</td>
+                  <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                    @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
+                      <tr cdkDrag>
+                        <td width="250px">
+                          <i cdkDragHandle class="bi bi-grip-vertical" style="cursor: grab; margin-right: 8px; color: #a1a1a1;" title="Drag to reorder"></i>
+                          {{ i + 1 }}
+                        </td>
                         <td>
-                          <!-- Access data using item.value -->
-                          {{ item.value.EmployeeName }}<br />
-                          Role: {{ item.value.UserRole }}<br />
-                          Designation: {{ item.value.Designation }}
+                          {{ item.EmployeeName }}<br />
+                          <strong>Role:</strong> {{ item.UserRole }}<br />
+                          <strong>Designation:</strong> {{ item.Designation }}
+                        </td>
+                        <td>
+                          <button
+                            class="btn btn-sm btn-outline-danger"
+                            (click)="removeSequenceItem(i)"
+                            title="Remove from sequence"
+                          >
+                            <i class="bi bi-trash"></i>
+                          </button>
                         </td>
                       </tr>
                     }

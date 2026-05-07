@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DistributionType } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +11,18 @@ import { ApiResponse, DistributionType } from '../interfaces/interfaces';
 export class DistributionTypeService {
   private _cabietStructureConfig = new ReplaySubject<DistributionType[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
 
   get cabietStructureConfig$(): Observable<DistributionType[]> {
     return this._cabietStructureConfig.asObservable();
@@ -28,12 +39,12 @@ export class DistributionTypeService {
   }
 
   getDistributionTypeList(): Observable<any> {
-    const uri = `${environment.baseUrl}/DMSDistributionType/get-all-distribution-type-list`;
+    const uri = `${this.apiUrl}/DMSDistributionType/get-all-distribution-type-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDistributionTypeById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDistributionType/get-distribution-type-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSDistributionType/get-distribution-type-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +65,7 @@ export class DistributionTypeService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSDistributionType/get-all-distribution-type`;
+    const uri = `${this.apiUrl}/DMSDistributionType/get-all-distribution-type`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -62,14 +73,14 @@ export class DistributionTypeService {
   }
 
   create(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${environment.baseUrl}/DMSDistributionType/create-distribution-type`, payload);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDistributionType/create-distribution-type`, payload);
   }
 
   update(payload: any) {
-    return this.http.put<ApiResponse<any>>(`${environment.baseUrl}/DMSDistributionType/update-distribution-type`, payload);
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/DMSDistributionType/update-distribution-type`, payload);
   }
 
   delete(code: string) {
-    return this.http.delete<ApiResponse<any>>(`${environment.baseUrl}/DMSDistributionType/delete-distribution-type/${code}`);
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSDistributionType/delete-distribution-type/${code}`);
   }
 }

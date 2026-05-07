@@ -1,8 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
@@ -56,7 +55,9 @@ export class ObservationModalPopup {
     },
     {
       field: 'lastActionPerformedOn',
-      headerName: 'Last Action Performed On'
+      headerName: 'Last Action Performed On',
+      cellStyle: { color: '#6c757d' },
+      headerClass: 'text-muted'
     },
   ];
 
@@ -65,7 +66,7 @@ export class ObservationModalPopup {
   constructor(
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
   ) {}
 
   ngOnInit() { 
@@ -82,11 +83,10 @@ export class ObservationModalPopup {
 
   GetAllPendingDocuments(query: any) { 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       requestId: this.modalData.data,
     };
     this._doumentRequestService
-      .GetWorkflowObservationDetails(payload.companyId, payload.requestId,'')
+      .GetWorkflowObservationDetails(payload.requestId,'')
       .subscribe({
         next: (response) => { 
           if (response  && response.Data) {
@@ -153,7 +153,7 @@ export class ObservationModalPopup {
           }
         },
         error: (err) => {
-          this._notification.createNotification(
+          this._notificationToastService.createNotification(
             'error',
             'Error',
             err?.Message || 'Failed to fetch document details.',

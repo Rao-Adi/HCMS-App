@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-personalized-email-alerts',
@@ -34,6 +36,12 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 export class PersonalizedEmailAlerts {
   selectedTab: string = 'Filtering Criteria';
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'emailalertpolicy';
+
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
@@ -45,9 +53,15 @@ export class PersonalizedEmailAlerts {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
 
-  constructor() {}
+  constructor(private _permissionService: PermissionService) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+  }
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {

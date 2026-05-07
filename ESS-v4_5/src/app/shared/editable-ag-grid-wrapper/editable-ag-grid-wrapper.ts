@@ -70,6 +70,7 @@ export interface GridColumn<T = any> {
   dropdownOptions?: T[];
   dropdownValueField?: keyof T;
   dropdownDisplayField?: keyof T;
+  showSearch?: boolean; // Allows enabling/disabling search per column
 
   // For cascade functionality
   dependsOn?: string; // Field name this dropdown depends on
@@ -140,6 +141,7 @@ export interface GridConfig {
 export class EditableAgGridWrapper implements OnInit, OnChanges {
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
   @Input() isSelectionRequired: boolean = true;
+  @Input() showSearchBar: Boolean = true;
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -173,6 +175,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() divisionList: any[] = [];
   @Input() departmentList: any[] = [];
   @Input() subDepartmentList: any[] = [];
+  @Input() businessDomainList: any[] = [];
   @Input() roleList: any[] = [];
   @Input() gridStyle: any = {};
 
@@ -226,17 +229,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     this.gridContext = this.getContextData();
-    this.buildColumnDefs();
-    // if (changes['config'] || changes['rowData']) {
-    //   this.buildColumnDefs();
-    // }
+    if (changes['config'] || changes['isSelectionRequired']) {
+      this.buildColumnDefs();
+    }
   }
 
   private buildColumnDefs(): void {
     this.columnDefs = [];
 
-    // Add action column if inline edit/delete is enabled
-    if (this.config.enableInlineEdit || this.config.enableInlineDelete) {
+    // Add action column if inline add, edit or delete is enabled
+    if (
+      this.config.enableInlineAdd ||
+      this.config.enableInlineEdit ||
+      this.config.enableInlineDelete
+    ) {
       if (this.isSelectionRequired) {
         this.columnDefs.push(this.createActionColumn());
       }
@@ -338,7 +344,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         const isCascade = !!column.dependsOn;
 
         colDef.cellRendererSelector = (params: any) => {
-    
           if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
             const rendererComponent = isCascade
               ? CascadeDropdownCellRenderer
@@ -362,6 +367,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 disabled: params.data?.disabled,
                 placeholder: column.placeholder || '--Select--',
                 emptyValue: 0,
+
+                // Enable search by default, but allow override via GridColumn config
+                showSearch: column.showSearch !== false,
+                customFilter: (input: string, option: any) => {
+                  if (!option || option.nzLabel == null) return false;
+                  return String(option.nzLabel).toLowerCase().includes(String(input).toLowerCase());
+                },
 
                 // Cascade specific params
                 dependsOn: column.dependsOn,
@@ -614,7 +626,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         break;
       case 'button':
         colDef.cellRendererSelector = (params: any) => {
- 
           return {
             component: LinkRenderer,
             params: {
@@ -641,7 +652,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
               params: {
                 value: params.data?.[column.field],
                 onValueChange: (value: any, data: any) => {
-                  debugger;
+                  // debugger;
                   data[column.field] = value;
                   this.emitCellValueChanged(column.field, value, data, params.rowIndex);
                 },
@@ -671,6 +682,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       divisions: this.divisionList,
       departments: this.departmentList,
       subDepartments: this.subDepartmentList,
+      businessDomains: this.businessDomainList,
       roles: this.roleList,
       // Add any other data sources needed
     };

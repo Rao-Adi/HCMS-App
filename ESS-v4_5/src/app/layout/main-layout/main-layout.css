@@ -15,9 +15,8 @@
   font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
   display: flex;
   min-height: 100vh;
-  background-color: #fff; /*#f8fafc; screen bgcolor*/
+  background-color: #fff;
   position: relative;
-/*  overflow-x: hidden ;*/
 }
 
 /* Sidebar rail */
@@ -28,49 +27,54 @@
   z-index: 1100;
   transform: translateX(0);
   transition: transform var(--sidebar-transition-speed) ease, width var(--sidebar-transition-speed) ease;
+  background: #fff;
 }
 
 .layout-wrapper:not(.sidebar-open) .sidebar {
   width: var(--sidebar-width-collapsed);
 }
 
-/* NEW: Sidebar header with toggle button */
+/* Sidebar header - Fixed height to prevent shifts */
 .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
   height: var(--header-height);
-  /*border-bottom: 1px solid var(--border-color); Hiding this line*/ 
   gap: 0.5rem;
+  position: relative;
 }
 
 /* Toggle button in sidebar */
 .sidebar-toggle-button {
-  position: relative;
-  overflow: hidden;
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   width: 36px;
   height: 36px;
   border-radius: 0.5rem;
   border: none !important;
   background: transparent;
   box-shadow: none !important;
-  line-height: 0;
   cursor: pointer;
-  flex-shrink: 0;
+  z-index: 10;
   transition: background-color 0.2s ease;
 }
 
   .sidebar-toggle-button:hover {
-    background-color: #f4f7fc;
-  }
+  background-color: #f4f7fc;
+}
 
-  .sidebar-toggle-button i.bi {
-    font-size: 24px;
-    line-height: 1;
-    color: var(--primary-color-dark);
-    transition: transform 0.2s ease;
-  }
+.sidebar-toggle-button i.bi {
+  font-size: 24px;
+  color: var(--primary-color-dark);
+}
+
+.sidebar-toggle-right {
+  right: 1rem;
+  left: auto;
+}
 
   .sidebar-toggle-button:focus,
   .sidebar-toggle-button:active {
@@ -108,26 +112,18 @@
 /* Logos swap when collapsed */
 .brand-logo-icon {
   display: none;
- /* height: 32px;
-  width: 32px;*/
   object-fit: contain;
 }
 
 .brand-logo-full {
   display: block;
- /* height: 30px;
-  width: auto;*/
-  object-fit: contain;
   max-width: 100%;
+  object-fit: contain;
 }
+.layout-wrapper:not(.sidebar-open) .brand-logo-full { display: none; }
+.layout-wrapper:not(.sidebar-open) .brand-logo-icon { display: block; }
 
-.layout-wrapper:not(.sidebar-open) .brand-logo-full {
-  display: none;
-}
-
-.layout-wrapper:not(.sidebar-open) .brand-logo-icon {
-  display: block;
-}
+ 
 
 /* When collapsed, center the logo and hide toggle on the right */
 .layout-wrapper:not(.sidebar-open) .sidebar-header {
@@ -139,11 +135,10 @@
   display: none;
 }
 
-/* Menu container must fill available space */
+/* Menu container must fill available space */ 
 .menu-container {
   flex: 1 1 auto;
-  /* overflow: hidden;   <-- remove this */
-  overflow: visible; /* add this */
+  overflow: visible;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -162,9 +157,14 @@
   padding-left: var(--sidebar-width-collapsed);
 }
 
-/* Header / breadcrumb */
+
+/* Header / breadcrumb */ 
 .page-header {
   min-height: var(--header-height);
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  background: #fff;
 }
 
 .page-title {
@@ -175,10 +175,13 @@
   color: var(--text-color-muted);
 }
 
-/* Profile */
-.profile-section:hover {
-  background-color: #f4f7fc;
+/* Profile Section */
+.profile-section {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
 }
+
+.profile-section:hover { background-color: #f4f7fc; }
 
 .profile-pic {
   width: 40px;
@@ -188,29 +191,33 @@
   border: 1px solid var(--border-color);
 }
 
-.profile-name, .profile-company {
+.profile-name { font-weight: 600; color: var(--text-color-dark); }
+.profile-company { color: var(--text-color-muted); }
+
+/* .profile-name, .profile-company {
   max-width: 150px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
+} */
 
 /* Icon button */
 .icon-button {
-  background: transparent;
-  border: none;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  border: 1px solid var(--border-color);
+  background: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-  .icon-button:hover {
-    background-color: #f4f7fc;
-  }
+.icon-button:hover {
+  background: #f8f9fd;
+  border-color: #3F5AA8;
+}
 
   .icon-button img {
     width: 20px;
@@ -232,25 +239,22 @@
   position: relative;
   display: inline-block;
 }
-
+/* Notification & Profile Dropdowns (Merged logic) */
 .dropdown-content {
   display: none;
   position: absolute;
   background: #fff;
-  min-width: 220px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  z-index: 1500;
   border: 1px solid var(--border-color);
-  border-radius: .75rem;
-  left: auto;
-  right: 0;
-  top: 100%;
-  margin-top: .5rem;
-  z-index: 1000;
-  overflow: hidden;
 }
 
-.dropdown:hover .dropdown-content {
-  display: block;
+.dropdown:hover .dropdown-content,
+.notif-dropdown-anim {
+  display: flex; /* Handled by [style.display] in HTML */
 }
+
 
 .dropdown-content a {
   padding: .625rem .875rem;
@@ -438,9 +442,10 @@
 
 /* Title stack */
 .page-title-section {
-  min-height: var(--header-height);
   padding-block: .25rem;
-  overflow: visible;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .title-wrap {
@@ -449,18 +454,27 @@
 
 .title-sub {
   display: block;
-  margin-top: .125rem;
   font-size: .78rem;
   color: var(--text-color-muted);
 }
 
 /* Title + accent bar (title size comes from .fs-6 in HTML) */
 .page-title {
-  position: relative;
   font-weight: 600;
-  letter-spacing: .2px;
   color: var(--text-color-dark);
-  padding-left: .5rem;
+  letter-spacing: .2px;
+  margin-bottom: 0;
+}
+
+/* Path Dim Styling */
+.page-path-dim {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
 }
 
   .page-title::before {
@@ -616,9 +630,58 @@
   color: var(--text-color-muted);
   line-height: 1.2;
 }
-
  
 
+/* Custom Scrollbar for Notifications */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+  background: rgba(0,0,0,0.1); 
+  border-radius: 10px; 
+}
 
+/* Notification Item States */
+.notif-item-hover:hover { background-color: #f8f9fa !important; }
+.notif-item-unread { 
+  background-color: #f0f7ff; 
+  border-left: 3px solid var(--primary-color) !important; 
+}
 
+/* Connection status bar */
+.connection-status {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+}
 
+.connection-status.online { background-color: var(--online-bg); }
+.connection-status.offline { background-color: var(--offline-bg); }
+
+/* Main page padding */
+.page-content {
+  padding: var(--content-padding);
+  position: relative;
+}
+
+/* Mobile adjustments */
+@media (max-width: 992px) {
+  .sidebar { width: var(--sidebar-width-collapsed); }
+  .layout-wrapper.sidebar-open .sidebar { width: var(--sidebar-width); }
+  .main-content { padding-left: var(--sidebar-width-collapsed) !important; }
+  .profile-info { display: none; }
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 900;
+  display: none;
+}

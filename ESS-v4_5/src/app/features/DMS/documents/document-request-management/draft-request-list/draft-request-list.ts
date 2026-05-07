@@ -2,22 +2,22 @@ import { CommonModule } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces'; 
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { DocumentRequestForm } from '../document-request-form/document-request-form';
-import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { TemplateService } from '@app/shared/services/template.service';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+ 
 export enum DocumentRequestStatus {
   Draft = 0,
   Submitted = 1,
@@ -34,10 +34,10 @@ export enum DocumentRequestStatus {
     AgGridWrapper,
     SafeTranslatePipe,
     NzSelectModule,
+    NzSwitchModule,
     DRDistributionList,
     DRUsersComponent,
     DMSRichTextEdit,
-    CabinetStructureList,
   ],
   templateUrl: './draft-request-list.html',
   styleUrl: './draft-request-list.css',
@@ -45,11 +45,17 @@ export enum DocumentRequestStatus {
 export class DraftRequestList {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   selectedDraftRequest: any;
@@ -62,7 +68,7 @@ export class DraftRequestList {
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
 
-  selectedCompany: string ='';
+  selectedCompany: string = '';
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
@@ -79,16 +85,16 @@ export class DraftRequestList {
 
   requestId: number = 0;
   submittedby: number = 0;
-  pageSize = 1;
+  pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
 
   currentGridQuery: any = {
     pageNumber: 1,
-    pageSize: 1,
+    pageSize: 10,
     sortModel: [],
     filterModel: {},
-    searchTerm: ''
+    searchTerm: '',
   };
 
   DocumentRequestStatusOptions = [
@@ -105,7 +111,7 @@ export class DraftRequestList {
       headerName: 'Id',
       hide: true,
     },
-     {
+    {
       field: 'companyId',
       headerName: 'companyId',
       hide: true,
@@ -130,38 +136,60 @@ export class DraftRequestList {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Created On'},
+    { field: 'createdOn', headerName: 'Last Saved On' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: false,
+      cellRenderer: (params: any) => {
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+            ${params.value}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openObservationModal(event.data);
+      },
+    },
     { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestNumber', label: 'Request Id', visible: true },
+    { field: 'requestNumber', label: 'Request ID', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
-    { field: 'createdOn', label: ' Created On', visible: true },
+    { field: 'createdOn', label: 'Last Saved On', visible: true },
+    { field: 'status', label: 'Status', visible: true },
   ];
 
   constructor(
+    private modal: NzModalService,
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
-    private _userService: UserService,
-    private _documentTemplateService: TemplateService
+    private _notificationToasService: NotificationToastService,
+    private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getAllUsersList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      // this.getAllUsersList();
+      this.GetAllDraftDocuments();
+    });
   }
 
   GetAllDraftDocuments(query?: any) {
-    if (!this.selectedEmployee) {
-      this.documentRequestsData = [];
-      this.totalRows = 0;
-      return;
-    }
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -178,17 +206,14 @@ export class DraftRequestList {
     }
 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      employeeCode: this.selectedEmployee,
-      status: this.selectedStatus,
+      status: 0, // 0 = Draft
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {},
-      searchTerm: this.currentGridQuery.searchTerm || '',
+      filterModel: this.currentGridQuery.filterModel || {}, 
       sortBy: sortBy,
       sortColumn: sortColumn,
-      searchText: this.currentGridQuery.searchTerm || '',
+      searchText: searchText || '',
     };
 
     this._doumentRequestService.getMyDraftDocumentRequest(payload).subscribe({
@@ -196,11 +221,11 @@ export class DraftRequestList {
         if (response?.Success || response?.Data) {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
-          
+
           this.totalRows = data?.TotalCount ?? items.length;
           this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
-            companyId : item.companyId || item.CompanyId,
+            companyId: item.companyId || item.CompanyId,
             requestNumber: item.RequestNumber || item.requestNumber,
             documentType: item.DocumentType || item.documentType,
             proposedDocumentNumber: item.RequestNumber || item.requestNumber,
@@ -219,6 +244,7 @@ export class DraftRequestList {
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
             sumbittedby: item.CreatedBy,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
             createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.createdAt || item.CreatedAt || '',
@@ -228,7 +254,13 @@ export class DraftRequestList {
             proposedVersionNumber: item.RowVersion || item.rowVersion,
             templateType: item.TemplateType || item.templateType,
             templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
-            draftFileUrl: item.DraftFileUrl || item.draftFileUrl || ((String(item.TemplateType || item.templateType) === '1' || String(item.TemplateType || item.templateType) === '2') ? item.ProposedContent : ''),
+            draftFileUrl:
+              item.DraftFileUrl ||
+              item.draftFileUrl ||
+              (String(item.TemplateType || item.templateType) === '1' ||
+              String(item.TemplateType || item.templateType) === '2'
+                ? item.ProposedContent
+                : ''),
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,
@@ -237,7 +269,8 @@ export class DraftRequestList {
               level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
               level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
               roleId: x.roleId || x.RoleId,
-              distributiontypeId: x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+              distributiontypeId:
+                x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
             })),
             distributionUserList: item.UserList,
           }));
@@ -249,7 +282,7 @@ export class DraftRequestList {
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
-        this._notification.createNotification(
+        this._notificationToasService.createNotification(
           'error',
           'Error',
           err?.Message || 'Failed to fetch draft documents.',
@@ -259,7 +292,7 @@ export class DraftRequestList {
   }
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
@@ -289,25 +322,7 @@ export class DraftRequestList {
     // Maintain frontend format to avoid breaking the UI bindings
     this.distributionListPayload = list;
   }
-
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    if (this.agGridWrapper) {
-      this.agGridWrapper.refresh();
-    } else {
-      this.GetAllDraftDocuments();
-    }
-  }
   
-  onStatusChange(value: number): void {
-    this.selectedStatus = value;
-    if (this.agGridWrapper) {
-      this.agGridWrapper.refresh();
-    } else {
-      this.GetAllDraftDocuments();
-    }
-  }
-
   onSelectionChange(selectedRows: any): void {
     this.requestId = selectedRows[0].id;
     this.submittedby = selectedRows[0].sumbittedby;
@@ -317,7 +332,7 @@ export class DraftRequestList {
   }
 
   onCellClicked(event: any): void {
-    const row = event.data; 
+    const row = event.data;
     this.selectedDraftRequest = row;
 
     this.requestId = row.Id;
@@ -343,120 +358,122 @@ export class DraftRequestList {
     // ✅ Populate Users
     this.distributionUserList = row.distributionUserList || [];
 
-    console.log('Distribution:', this.distributionListPayload);
-    console.log('Users:', this.distributionUserList);
+    // console.log('Distribution:', this.distributionListPayload);
+    // console.log('Users:', this.distributionUserList);
   }
 
-   downloadDraft(): void {
+  downloadDraft(): void {
     if (!this.requestId) {
-      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      this._notificationToasService.createNotification(
+        'warning',
+        'Draft',
+        'No drafted file available for download.',
+      );
       return;
     }
 
-    this._doumentRequestService
-      .DownloadDraftDocument(this.requestId)
-      .subscribe({
-        next: (response: any) => {
-          const body = response?.body || response;
-          let blob: Blob | null = null;
+    this._doumentRequestService.DownloadDraftDocument(this.requestId).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
 
-          if (body instanceof Blob) {
-            blob = body;
-          } else if (body instanceof ArrayBuffer) {
-            blob = new Blob([body]);
-          }
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
 
-          if (blob) {
-            if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
-              blob.text().then((text) => {
-                try {
-                  const res = JSON.parse(text);
-                  this._notification.createNotification(
-                    'warning',
-                    'Template',
-                    res.Message || 'Template not available.',
-                  );
-                } catch {
-                  this._notification.createNotification(
-                    'error',
-                    'Template',
-                    'Failed to read response.',
-                  );
-                }
-              });
-              return;
-            }
-
-            let filename = `Template_${this.selectedDocumentType}`;
-            const contentDisposition =
-              response?.headers?.get('content-disposition') ||
-              response?.headers?.get('Content-Disposition');
-            if (contentDisposition) {
-              const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
-              if (matches != null && matches[1]) {
-                filename = matches[1].replace(/['"]/g, '');
-              }
-            }
-
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-          } else {
-            const url =
-              typeof response?.Data === 'string'
-                ? response.Data
-                : response?.Data?.TemplateFileURL ||
-                  response?.Data?.templateFileUrl ||
-                  this.templateFileUrl;
-            if (url) {
-              window.open(url, '_blank');
-            } else {
-              this._notification.createNotification(
-                'warning',
-                'Template',
-                'No file template available for download.',
-              );
-            }
-          }
-        },
-        error: (err: any) => {
-          if (
-            err.error instanceof Blob &&
-            (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
-          ) {
-            err.error.text().then((text: string) => {
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification(
-                  'error',
+                this._notificationToasService.createNotification(
+                  'warning',
                   'Template',
-                  res.Message || 'Failed to download template.',
+                  res.Message || 'Template not available.',
                 );
               } catch {
-                this._notification.createNotification(
+                this._notificationToasService.createNotification(
                   'error',
                   'Template',
-                  'Failed to download template.',
+                  'Failed to read response.',
                 );
               }
             });
+            return;
+          }
+
+          let filename = `Template_${this.selectedDocumentType}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          const url =
+            typeof response?.Data === 'string'
+              ? response.Data
+              : response?.Data?.TemplateFileURL ||
+                response?.Data?.templateFileUrl ||
+                this.templateFileUrl;
+          if (url) {
+            window.open(url, '_blank');
           } else {
-            console.error('Error downloading template', err);
-            this._notification.createNotification(
-              'error',
+            this._notificationToasService.createNotification(
+              'warning',
               'Template',
-              'Failed to download template.',
+              'No file template available for download.',
             );
           }
-        },
-      });
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToasService.createNotification(
+                'error',
+                'Template',
+                res.Message || 'Failed to download template.',
+              );
+            } catch {
+              this._notificationToasService.createNotification(
+                'error',
+                'Template',
+                'Failed to download template.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading template', err);
+          this._notificationToasService.createNotification(
+            'error',
+            'Template',
+            'Failed to download template.',
+          );
+        }
+      },
+    });
   }
- 
+
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
     if (fileList && fileList.length > 0) {
@@ -466,7 +483,7 @@ export class DraftRequestList {
     }
   }
 
-  SubmiteDocumentRequests() { 
+  SubmiteDocumentRequests() {
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,
@@ -476,33 +493,49 @@ export class DraftRequestList {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    const payLoad = {
+    const userids = this.distributionUserList
+      .map(
+        (u: any) =>
+          u.employeeCode ||
+          u.EmployeeCode ||
+          u.empcode ||
+          u.empid ||
+          u.userId ||
+          u.UserId ||
+          u.id ||
+          u.Id,
+      )
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    // Reverted back to JSON to resolve 415 Unsupported Media Type
+    const payload = {
       CompanyId: this.selectedCompany,
-      requestid:  this.requestId ,
-      submittedby: 1, // this will be bind with UserId
-      distributionlist: cleanDistributionList,
-      userlist: [],
+      RequestId: this.requestId, 
+      DistributionList: cleanDistributionList,
+      UserIds: userids,
     };
 
-    this._doumentRequestService.SubmitDraftDocumentRequest(payLoad).subscribe({
+    this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'success',
             'User',
             'Document submitted successfully!',
           );
           this.GetAllDraftDocuments();
+          this.selectedDraftRequest=null;
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }
 
   UpdateDocumentRequests() {
-    debugger;
+    // debugger;
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,
@@ -513,20 +546,47 @@ export class DraftRequestList {
     }));
 
     const formData = new FormData();
-    formData.append('companyId', this.selectedCompany?.toString() || '');
-    formData.append('requestid', this.requestId?.toString() || '');
-    formData.append('documentname', this.documentName || '');
-    formData.append('justification', this.inputJustificationValue || '');
-    formData.append('proposedcontent', this.templateHtml || '');
-    formData.append('modifiedbyuserid', '1'); // this will be bind with UserId
+    formData.append('CompanyId', this.selectedCompany?.toString() || '');
+    formData.append('RequestId', this.requestId?.toString() || '');
+    formData.append('DocumentName', this.documentName || '');
+    formData.append('Justification', this.inputJustificationValue || '');
+    formData.append('ProposedContent', this.templateHtml || '');
+    formData.append('ModifiedByUserId', '1'); // this will be bind with UserId
 
     cleanDistributionList.forEach((item: any, index: number) => {
-      if (item.divisionCode) formData.append(`distributionlist[${index}].divisionCode`, item.divisionCode);
-      if (item.departmentCode) formData.append(`distributionlist[${index}].departmentCode`, item.departmentCode);
-      if (item.subDepartmentCode) formData.append(`distributionlist[${index}].subDepartmentCode`, item.subDepartmentCode);
-      if (item.businessDomainCode) formData.append(`distributionlist[${index}].businessDomainCode`, item.businessDomainCode);
-      if (item.roleId) formData.append(`distributionlist[${index}].roleId`, item.roleId.toString());
-      if (item.distributionTypeId) formData.append(`distributionlist[${index}].distributionTypeId`, item.distributionTypeId.toString());
+      if (item.divisionCode)
+        formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode)
+        formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode)
+        formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode)
+        formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId)
+        formData.append(
+          `DistributionList[${index}].distributionTypeId`,
+          item.distributionTypeId.toString(),
+        );
+    });
+
+    const userids = this.distributionUserList
+      .map(
+        (u: any) =>
+          u.employeeCode ||
+          u.EmployeeCode ||
+          u.empcode ||
+          u.empid ||
+          u.userId ||
+          u.UserId ||
+          u.id ||
+          u.Id,
+      )
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`UserIds[${index}]`, id);
     });
 
     if (this.draftFile) {
@@ -536,7 +596,7 @@ export class DraftRequestList {
     this._doumentRequestService.UpdateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification(
+          this._notificationToasService.createNotification(
             'success',
             'User',
             'Document updated successfully!',
@@ -545,8 +605,28 @@ export class DraftRequestList {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
+    });
+  }
+
+  openObservationModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: rowData.Id,
+        entityType: 'Request',
+        mode: 'view',
+        action: 'Approver',
+      },
+      nzFooter: null,
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      if (!result) return;
     });
   }
 }

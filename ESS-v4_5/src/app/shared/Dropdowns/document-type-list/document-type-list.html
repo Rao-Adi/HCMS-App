@@ -1,6 +1,6 @@
 <nz-select
   [style.width]="width"
-  [(ngModel)]="value"
+  [ngModel]="value"
   [nzPlaceHolder]="placeholder"
   [nzAllowClear]="allowClear"
   [nzShowSearch]="showSearch"
@@ -8,9 +8,9 @@
   (ngModelChange)="onSelectionChange($event)"
 >
 <nz-option
-  *ngFor="let item of data"
-  [nzValue]="item.CODE"
-  [nzLabel]="item.NAME"
+  *ngFor="let item of DocTypeData"
+  [nzValue]="$any(item)[valueKey]"
+  [nzLabel]="$any(item)[labelKey]"
 ></nz-option>
 
 </nz-select>

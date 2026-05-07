@@ -84,8 +84,7 @@ export class SecurityComponent implements OnInit, OnDestroy {
   }
 
   // Handle the login process
-  GetERPLogin(): void {
-    debugger;
+  GetERPLogin(): void { 
     // Only allow login if all required fields are filled
     if (!this.selectedCompany || !this._UserId || !this._Password) {
       this.errorMsg = 'Please select a company, enter User ID, and Password.';

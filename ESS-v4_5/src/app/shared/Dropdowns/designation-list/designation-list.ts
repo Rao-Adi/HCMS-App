@@ -1,37 +1,48 @@
-import { Component, Input, Output, EventEmitter, forwardRef, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, input, Pipe, PipeTransform } from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { DesignationService } from '@app/shared/services/designation.service';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, debounceTime, map, switchMap } from 'rxjs/operators';
+import { DesignationService } from '@app/shared/services/designation.service'; 
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Pipe({
+  name: 'highlightSearch',
+  standalone: true
+})
+export class HighlightSearchPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+  
+  transform(text: string, search: string): SafeHtml | string {
+    if (!search || !text) return text;
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+    const highlighted = text.replace(regex, '<mark class="highlight">$1</mark>');
+    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
+  }
+}
 
 @Component({
   selector: 'app-designation-list',
-  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule],
+  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule, HighlightSearchPipe],
   //templateUrl: './designation-list.html',
   template: `<nz-select
-    nzMode="multiple"
-    nzPlaceHolder="Select users"
+    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
+    nzPlaceHolder="Select Designation"
     nzAllowClear
     nzShowSearch
-    nzServerSearch
+    [nzFilterOption]="customFilter"
     [style.width]="width"
     [(ngModel)]="selectedUser"
-    (nzOnSearch)="onSearch($event)"
     (ngModelChange)="onSelectionChange($event)"
+    (nzOnSearch)="onSearch($event)"
   >
-    <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
-    <!-- @if (!loading) { @for (o of optionList; track o) {
-    <nz-option [nzValue]="o" [nzLabel]="o"></nz-option>
-    } } @else {
-    <nz-option nzDisabled nzCustomContent>
-      <nz-icon nzType="loading" class="loading-icon" />
-      Loading Data...
+    <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME" nzCustomContent>
+      <span [innerHTML]="item.NAME | highlightSearch:searchTerm"></span>
     </nz-option>
-    } -->
+     
   </nz-select>`,
   styles: [
     `
@@ -41,6 +52,11 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 
       .loading-icon {
         margin-right: 8px;
+      }
+
+      mark.highlight {
+        background-color: #ffc107;
+        padding: 0;
       }
     `,
   ],
@@ -60,40 +76,29 @@ export class DesignationList implements ControlValueAccessor {
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
+  @Input() isMultiSelect = true;
 
   data: SelectList[] = [];
   @Output() valueChange = new EventEmitter<any>();
 
   value: any;
   disabled = false;
+  selectedUser: any = null;
+  searchTerm = '';
 
-  // randomUserUrl = 'https://api.randomuser.me/?results=5';
-  searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];
-  selectedUser: string[] = [];
-  loading = false;
-
-  constructor(private _designationServices: DesignationService) {}
+  constructor(private _designationServices: DesignationService,
+    private _peoplePartnerService: PeoplePartnersService
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
-    // this.searchChange$
-    //   .pipe(
-    //     debounceTime(500),
-    //     switchMap((name) => this.getRandomNameList(name))
-    //   )
-    //   .subscribe((data) => {
-    //     this.optionList = data;
-    //     this.loading = false;
-    //   });
-
     this.getAllDesignations();
   }
 
   writeValue(value: any): void {
-    this.value = value;
+    this.selectedUser = value;
   }
 
   registerOnChange(fn: any): void {
@@ -108,10 +113,19 @@ export class DesignationList implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  onSelectionChange(value: string[]): void {
+  onSelectionChange(value: any): void {
     this.selectedUser = value;
     this.onChange(value); // VERY IMPORTANT
     this.onTouched();
+  }
+
+  customFilter = (input: string, option: any): boolean => {
+    if (!option || !option.nzLabel) return false;
+    return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
+  };
+
+  onSearch(value: string): void {
+    this.searchTerm = value;
   }
 
   // onSelectionChange(value: any): void {
@@ -122,29 +136,27 @@ export class DesignationList implements ControlValueAccessor {
   // }
 
   getAllDesignations = () => {
-    this._designationServices.getDesignationList().subscribe((res) => {
+    this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+          CODE: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.data = [];
       }
       //this.cdr.detectChanges(); // force update
     });
+    // this._designationServices.getDesignationList().subscribe((res) => {
+    //   if (res?.Data) {
+    //     this.data = (res.Data ?? []).map((d: any) => ({
+    //       CODE: d.Code,
+    //       NAME: d.Value,
+    //     }));
+    //   } else {
+    //     this.data = [];
+    //   }
+    //   //this.cdr.detectChanges(); // force update
+    // });
   };
-
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
-
-  // getRandomNameList(name: string): Observable<string[]> {
-  //   return this.http.get<{ results: MockUser[] }>(`${this.randomUserUrl}`).pipe(
-  //     map((res) => res.results),
-  //     catchError(() => of<MockUser[]>([])),
-  //     map((list) => list.map((item) => `${item.name.first} ${name}`))
-  //   );
-  // }
 }

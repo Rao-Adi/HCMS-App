@@ -2,28 +2,6 @@
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="card-custom">
-        <div class="clearfix">
-          <div class="pull-left">
-            <h3 class="mt-0">My Approvals – Request for Document Creation/Update</h3>
-            <small class="text-muted">My Approvals – Request for Document Creation/Update</small>
-          </div>
-        </div>
-        <br />
-        <hr />
-        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-          <span class="d-flex">Employee</span>
-          <nz-select
-            style="width: 250px"
-            [(ngModel)]="selectedEmployee"
-            nzPlaceHolder="Select Employee"
-            (ngModelChange)="onEmployeeChange($event)"
-            nzAllowClear
-            nzShowSearch
-          >
-            <nz-option *ngFor="let dep of employees" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
-            </nz-option>
-          </nz-select>
-        </div>
         <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
           <h3 class="PnlHeader">
             {{ 'labels.Filters' | safeTranslate }}
@@ -78,10 +56,10 @@
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
-                (click)="onTabChange('Disapproved')"
+                [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
+                (click)="onTabChange('Rejected')"
               >
-                Disapproved
+                Rejected
               </button>
             </div>
 
@@ -100,10 +78,10 @@
                         [isSelectionRequired]="true"
                         [showDisplayOption]="true"
                         [rowData]="documentRequestsData"
-                        [pageSize]="pageSize"
-                        [totalRows]="totalRows"
                         [pageSize]="selectedPageSize"
-                        gridId="documentGrid"
+                        [pageSizeOptions]="[10, 20, 50, 100]"
+                        [totalRows]="totalRows"
+                        gridId="documentGridPending"
                         (pageSizeChange)="onPageSizeChanged($event)"
                         (selectionChange)="onSelectionChange($event)"
                         (serverQuery)="GetAllPendingDocuments($event)"
@@ -114,7 +92,7 @@
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
                             title="Approve"
-                            (click)="promptAction('APPROVE')"
+                            (click)="promptAction('APPROVED')"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-check2-square"></i>
@@ -124,7 +102,7 @@
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
                             title="Disapprove"
-                            (click)="promptAction('REJECT')"
+                            (click)="promptAction('REJECTED')"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-x-square"></i>
@@ -133,8 +111,8 @@
                           <button
                             class="grid-icon-btn"
                             [class.disabled]="!hasSelectedRows"
-                            title="Revert"
-                            (click)="promptAction('REVERT')"
+                            title="REWORK"
+                            (click)="promptAction('REWORKED')"
                             [disabled]="hasSelectedRows === false"
                           >
                             <i class="bi bi-reply"></i>
@@ -162,7 +140,6 @@
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
                   <br />
-                  <!-- <app-my-pending-request-for-approval> </app-my-pending-request-for-approval> -->
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -171,10 +148,9 @@
                     [isSelectionRequired]="false"
                     [showDisplayOption]="true"
                     [rowData]="documentRequestsData"
-                    [pageSize]="pageSize"
                     [totalRows]="totalRows"
                     [pageSize]="selectedPageSize"
-                    gridId="documentGrid"
+                    gridId="documentGridApproved"
                     (pageSizeChange)="onPageSizeChanged($event)"
                     (selectionChange)="onSelectionChange($event)"
                     (serverQuery)="GetAllPendingDocuments($event)"
@@ -185,12 +161,11 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Disapproved'">
+            <div class="row row-space" *ngIf="selectedTab === 'Rejected'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
                   <br />
-                  <!-- <app-my-pending-request-for-approval> </app-my-pending-request-for-approval> -->
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -199,10 +174,9 @@
                     [isSelectionRequired]="false"
                     [showDisplayOption]="true"
                     [rowData]="documentRequestsData"
-                    [pageSize]="pageSize"
                     [totalRows]="totalRows"
                     [pageSize]="selectedPageSize"
-                    gridId="documentGrid"
+                    gridId="documentGridDisapproved"
                     (pageSizeChange)="onPageSizeChanged($event)"
                     (selectionChange)="onSelectionChange($event)"
                     (serverQuery)="GetAllPendingDocuments($event)"
@@ -214,12 +188,12 @@
             </div>
           </div>
         </div>
-
+        <br />
         <div class="row mt-10" *ngIf="requestId">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <h3 class="PnlHeader">Document Content</h3>
             <br />
-            
+
             <!-- HTML Template Editor -->
             <ng-container *ngIf="!draftFileUrl">
               <app-dmsrich-text-edit
@@ -231,17 +205,30 @@
 
             <!-- Word/PDF File Download -->
             <ng-container *ngIf="draftFileUrl">
-              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px;">
+              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
                 <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                 <div>
-                  <strong>Instructions:</strong> Please download and review the drafted document attached to this request.
+                  <strong>Instructions:</strong> Please download and review the drafted document
+                  attached to this request.
                 </div>
               </div>
-              
-              <div class="d-flex align-items-center gap-3 mb-4"> 
-                <button type="button" class="btn btn-outline-success" (click)="downloadDraft()">
-                  <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Drafted Document
-                </button>
+
+              <div class="row mt-4 btn-stick">
+                <div
+                  class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                >
+                  <div class="col-sm-2">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-outline-secondary btn-lg shadow-sm"
+                      (click)="downloadDraft()"
+                    >
+                      <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                      Download Drafted Document
+                    </button>
+                  </div>
+                </div>
               </div>
             </ng-container>
           </div>

@@ -15,11 +15,11 @@ import { HttpClient } from '@angular/common/http';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { TemplateService } from '@app/shared/services/template.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { TemplateService } from '@app/shared/services/template.service'; 
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { CabinetSelection } from '@app/shared/interfaces/interfaces';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 const icons = [DownloadOutline, { ...DownloadOutline, name: 'download-o' }];
 
@@ -57,6 +57,12 @@ export class DocumentTemplate {
   @ViewChild(CabinetStructureList)
   cabinetStructure!: CabinetStructureList;
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'templates';
+
   randomUserUrl = '';
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
@@ -66,13 +72,14 @@ export class DocumentTemplate {
   isDefaultTemplate = false;
   templateHtml: string = '';
 
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedbusinessDomain?: string = '';
-  selectedDocumentType?: string = '';
-  selectedTemplateType?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedbusinessDomain: string = '';
+  selectedDocumentType: string = '';
+  selectedTemplateType: string = '';
   selectedFile: File | null = null;
+  existingFileName: string = '';
 
   templateTypes: any[] = [
     {
@@ -91,26 +98,31 @@ export class DocumentTemplate {
 
   constructor(
     private http: HttpClient,
-    private datePipe: DatePipe,
-    private decimalPipe: DecimalPipe,
     private iconService: NzIconService,
     private documentTemplateService: TemplateService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
   ) {
     this.iconService.addIcon(DownloadOutline);
     this.iconService.addIcon({ ...DownloadOutline, name: 'download-o' });
   }
 
   ngOnInit(): void {
-    this.searchChange$
-      .pipe(
-        debounceTime(500),
-        switchMap((name) => this.getRandomNameList(name)),
-      )
-      .subscribe((data) => {
-        this.optionList = data;
-        this.loading = false;
-      });
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.searchChange$
+        .pipe(
+          debounceTime(500),
+          switchMap((name) => this.getRandomNameList(name)),
+        )
+        .subscribe((data) => {
+          this.optionList = data;
+          this.loading = false;
+        });
+    });
   }
 
   onfiscalYearchange() {}
@@ -142,12 +154,46 @@ export class DocumentTemplate {
     // this.loading = true;
     this.selectedDocumentType = value;
 
+    if (!value) {
+      this.resetTemplateDetails();
+      return;
+    }
+
     this.documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response) => {
-        this.templateHtml = response.Data.TemplateContent;
+        if (response?.Data) {
+          const data = response.Data;
+          this.templateHtml = data.TemplateContent || '';
+          this.selectedTemplateType = data.TemplateType ? String(data.TemplateType) : '';
+          this.isDefaultTemplate =
+            data.IsDefault === true || String(data.IsDefault).toLowerCase() === 'true';
+          this.existingFileName = data.TemplateFileUrl || data.templateFileUrl || '';
+          this.selectedDivisions = data.DivisionCode || '';
+          this.selectedDepartment = data.DepartmentCode || '';
+          this.selectedSubDepartment = data.SubDepartmentCode || '';
+          this.selectedbusinessDomain = data.BusinessDomainCode || '';
+        } else {
+          this.resetTemplateDetails(false);
+        }
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        console.error(err);
+        this.resetTemplateDetails(false);
+      },
     });
+  }
+
+  private resetTemplateDetails(clearDocType: boolean = true) {
+    if (clearDocType) this.selectedDocumentType = '';
+    this.templateHtml = '';
+    this.selectedTemplateType = '';
+    this.isDefaultTemplate = false;
+    this.existingFileName = '';
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedbusinessDomain = '';
+    this.selectedFile = null;
   }
 
   onFileSelected(event: any): void {
@@ -159,42 +205,49 @@ export class DocumentTemplate {
     }
   }
 
-  saveTemplate(data: any) { 
-
+  saveTemplate(data: any) {
     if (this.selectedDocumentType === undefined || this.selectedDocumentType === '') {
-      this._notification.createNotification('warning', 'Document Type', 'Document Type required');
+      this._notificationToastService.createNotification('warning', 'Document Type', 'Document Type required');
       return;
     }
 
     if (this.selectedTemplateType === undefined || this.selectedTemplateType === '') {
-      this._notification.createNotification('warning', 'Template Type', 'Template Type required');
+      this._notificationToastService.createNotification('warning', 'Template Type', 'Template Type required');
       return;
     }
 
     if (!this.isDefaultTemplate) {
       if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
-        this._notification.createNotification('warning', 'Department', 'Department required');
+        this._notificationToastService.createNotification('warning', 'Department', 'Department required');
         return;
       }
     }
 
-    if ((this.selectedTemplateType === '1' || this.selectedTemplateType === '2') && !this.selectedFile) {
-      this._notification.createNotification('warning', 'File Required', 'Please choose a file to upload');
+    if (
+      (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
+      !this.selectedFile
+    ) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'File Required',
+        'Please choose a file to upload',
+      );
       return;
     }
 
     const formData = new FormData();
-    formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID.toString());
     formData.append('DocumentTypeCode', this.selectedDocumentType);
-    formData.append('TemplateName', this.templateName || 'Template'); 
+    formData.append('TemplateName', this.templateName || 'Template');
     formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : '');
     formData.append('TemplateType', this.selectedTemplateType);
     formData.append('IsDefault', String(this.isDefaultTemplate));
 
     if (this.selectedDivisions) formData.append('DivisionCode', this.selectedDivisions);
     if (this.selectedDepartment) formData.append('DepartmentCode', this.selectedDepartment);
-    if (this.selectedSubDepartment) formData.append('SubDepartmentCode', this.selectedSubDepartment);
-    if (this.selectedbusinessDomain) formData.append('BusinessDomainCode', this.selectedbusinessDomain);
+    if (this.selectedSubDepartment)
+      formData.append('SubDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedbusinessDomain)
+      formData.append('BusinessDomainCode', this.selectedbusinessDomain);
     if (this.templateHtml) formData.append('TemplateContent', this.templateHtml);
 
     if (this.selectedFile) {
@@ -203,7 +256,7 @@ export class DocumentTemplate {
 
     this.documentTemplateService.create(formData).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document Template',
           'Document Template created successfully!',
@@ -224,7 +277,7 @@ export class DocumentTemplate {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Template', message);
+        this._notificationToastService.createNotification('error', 'Document Template', message);
       },
     });
   }

@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentVersion } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, DocumentVersion } from '../interfaces/interfaces';
 export class DocumentVersionService {
   private _cabietStructureConfig = new ReplaySubject<DocumentVersion[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<DocumentVersion[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -28,12 +40,12 @@ export class DocumentVersionService {
   }
 
   getAllDocumentVersionsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentVersion/get-all-document-version-list`;
+    const uri = `${this.apiUrl}/DMSDocumentVersion/get-all-document-version-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDocumentVersionById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentVersion/get-document-version-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSDocumentVersion/get-document-version-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +66,7 @@ export class DocumentVersionService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSDocumentVersion/get-all-document-version`;
+    const uri = `${this.apiUrl}/DMSDocumentVersion/get-all-document-version`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,21 +75,21 @@ export class DocumentVersionService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentVersion/create-document-version`,
+      `${this.apiUrl}/DMSDocumentVersion/create-document-version`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentVersion/update-document-version`,
+      `${this.apiUrl}/DMSDocumentVersion/update-document-version`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentVersion/delete-document-version/${code}`
+      `${this.apiUrl}/DMSDocumentVersion/delete-document-version/${code}`
     );
   }
 }

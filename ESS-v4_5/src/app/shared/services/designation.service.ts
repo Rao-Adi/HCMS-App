@@ -1,22 +1,34 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { ApiResponse, Designation, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
+import { AppConfigService } from '@app/core/services/app-config';
 // import { Customer } from './customer';
 
 @Injectable({ providedIn: 'root' })
 export class DesignationService {
   private _designations: ReplaySubject<Designation[]> = new ReplaySubject<Designation[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get designations$(): Observable<Designation[]> {
     return this._designations.asObservable();
   }
 
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
+
+  
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
     const headers = new HttpHeaders({
@@ -28,7 +40,7 @@ export class DesignationService {
   }
 
   getDesignationList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDesignation/get-all-designation-list`;
+    const uri = `${this.apiUrl}/DMSDesignation/get-all-designation-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -49,7 +61,7 @@ export class DesignationService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSDesignation/get-all-designations`;
+    const uri = `${this.apiUrl}/DMSDesignation/get-all-designations`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -58,21 +70,21 @@ export class DesignationService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDesignation/create-designation`,
+      `${this.apiUrl}/DMSDesignation/create-designation`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDesignation/update-designation`,
+      `${this.apiUrl}/DMSDesignation/update-designation`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDesignation/delete-designation/${code}`
+      `${this.apiUrl}/DMSDesignation/delete-designation/${code}`
     );
   }
  

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
@@ -10,6 +11,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DocumentService } from '@app/shared/services/document.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
@@ -20,6 +22,12 @@ import { ColDef } from 'ag-grid-community';
 })
 export class UploadedDocuments {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
 
   uploadedDocumentsData: any[] = [];
   totalUplodedDocument = 0;
@@ -40,7 +48,7 @@ export class UploadedDocuments {
   };
 
   workflowAuthoritiesColumnDefs = [
-    { field: 'documentId', headerName: 'Document Id', flex: 1 },
+    { field: 'documentId', headerName: 'Document ID', flex: 1 },
     { field: 'documentName', headerName: 'Document Name', flex: 1 },
     { field: 'version', headerName: 'Version Number', flex: 1 },
     { field: 'documentTypeId', headerName: 'Document Type', flex: 1 },
@@ -53,16 +61,21 @@ export class UploadedDocuments {
 
   constructor(
     private _documentService: DocumentService,
-    private readonly hierarchyService: CabinetHierarchyService,
-    private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.GetAllUploadedDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.GetAllUploadedDocuments({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
     });
   }
 
@@ -70,7 +83,7 @@ export class UploadedDocuments {
     return [
       {
         field: 'documentId',
-        headerName: 'Document Id',
+        headerName: 'Document ID',
         type: 'readonly',
         minWidth: 150,
         pinned: 'left',

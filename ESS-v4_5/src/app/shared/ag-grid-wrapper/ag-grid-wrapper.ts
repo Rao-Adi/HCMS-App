@@ -47,7 +47,7 @@ interface ColumnToggle {
     NzAlertModule,
     NzSpinModule,
     NzSwitchModule,
-    NzIconModule,
+    NzIconModule    
   ],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
@@ -95,7 +95,7 @@ export class AgGridWrapper implements OnInit {
     pageSize: number;
     sortModel: any;
     filterModel: any;
-    searchTerm?: string;
+    searchText?: string;
   }>();
 
   @Output() gridReady = new EventEmitter<GridReadyEvent>();
@@ -114,7 +114,10 @@ export class AgGridWrapper implements OnInit {
   //pageSize!: number;
   totalPages = 0;
 
-  constructor(private cdr: ChangeDetectorRef, private ngZone: NgZone) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
+  ) {}
 
   ngOnInit(): void {
     this.isServerSide = this.serverQuery.observed;
@@ -182,17 +185,17 @@ export class AgGridWrapper implements OnInit {
         getRows: (params: any) => {
           this.getRowsParams = params;
           this.pageNumber = Math.floor(params.startRow / this.pageSize) + 1;
-          
+
           this.ngZone.run(() => {
             this.serverQuery.emit({
               pageNumber: this.pageNumber,
               pageSize: this.pageSize,
               sortModel: params.sortModel.map((c: any) => ({ colId: c.colId, sort: c.sort })),
               filterModel: params.filterModel,
-              searchTerm: this.searchValue()
+              searchText: this.searchValue(),
             });
           });
-        }
+        },
       };
       this.gridApi.setGridOption('datasource', dataSource);
     }
@@ -202,7 +205,7 @@ export class AgGridWrapper implements OnInit {
       const selectedRows = this.gridApi.getSelectedRows();
       this.selectionChange.emit(selectedRows);
     });
-    
+
     setTimeout(() => {
       this.isGridInitialized = true;
     });
@@ -266,7 +269,7 @@ export class AgGridWrapper implements OnInit {
         .filter((c) => c.sort)
         .map((c) => ({ colId: c.colId, sort: c.sort })),
       filterModel: this.gridApi.getFilterModel(),
-      searchTerm: this.searchValue()
+      searchText: this.searchValue(),
     });
   }
 
@@ -348,7 +351,7 @@ export class AgGridWrapper implements OnInit {
     if (newPageSize !== this.pageSize) {
       this.pageSize = newPageSize;
       this.pageSizeChange.emit({ gridId: this.gridId, pageSize: this.pageSize });
-      
+
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
       this.gridApi.refreshInfiniteCache();
     }

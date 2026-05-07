@@ -10,13 +10,13 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
-import { UserService } from '@app/shared/services/user-service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { DesignationService } from '@app/shared/services/designation.service';
-import { RoleService } from '@app/shared/services/role.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -45,6 +45,8 @@ export enum PolicyId {
     NzButtonModule,
     DocumentTypeList,
     DesignationList,
+    RoleList,
+    EmployeeList,
     CabinetStructureList,
   ],
   templateUrl: './approval-workflow-policy-external-users.html',
@@ -59,12 +61,18 @@ export enum PolicyId {
   ],
 })
 export class ApprovalWorkflowPolicyExternalUsers {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'workflowdocument';
+
   radioValue = '';
   showExclusionTable = false;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType?: string = '';
 
   selectedDesignation?: string[] = [];
@@ -89,7 +97,7 @@ export class ApprovalWorkflowPolicyExternalUsers {
   ];
   employees: any[] = [];
   designations: any[] = [];
-  roles: any[] = [];
+  userRoles: any[] = [];
   approvalSequenceData: any[] = [];
 
   workflowExclude: SelectList[] = [
@@ -102,16 +110,21 @@ export class ApprovalWorkflowPolicyExternalUsers {
   selectedWorkflowExclude: number | null = null;
 
   constructor(
-    private _userService: UserService,
-    private _notification: NotificationService,
-    private _designationServices: DesignationService,
-    private _roleService: RoleService,
+    private _permissionService: PermissionService,
+    private _notificationToastService: NotificationToastService, 
     private _workflowStepService: WorkflowStepService,
+    private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
   ngOnInit() {
-    //this.loadData(this.pageSize);
-    this.getAllUsersList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      //this.loadData(this.pageSize);
+      this.getAllUsersList();
+    });
   }
 
   onAuthorityTypeChange(value: number | null): void {
@@ -155,10 +168,8 @@ export class ApprovalWorkflowPolicyExternalUsers {
   onDocumentTypeChange(value: string): void {
     if (value != null) {
       this.selectedDocumentType = value;
-      debugger;
       const payLoad = {
-        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-        EntityType: 'Request',
+        EntityType: 'ExternalSharingDocument',
         documentTypeCode: this.selectedDocumentType,
         divisionCode: this.selectedDivisions,
         departmentCode: this.selectedDepartment,
@@ -178,10 +189,9 @@ export class ApprovalWorkflowPolicyExternalUsers {
   }
 
   addExclusion() {
-    debugger;
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
     if (!this.approvalPolicy) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an approval policy.',
@@ -189,11 +199,9 @@ export class ApprovalWorkflowPolicyExternalUsers {
       return;
     }
 
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      WorkflowPolicyId: 4, // Approval Workflow Policy – for sharing Documents to External Users
-      EntityType: 'REQUEST_FOR_DOCUMENT_SHARING_TO_EXTERNAL_USERS',
-      StepType: 'Review',
+    const payLoad = { 
+      EntityType: 'ExternalSharingDocument', //Dont modify it is used to identify the workflow steps for document sharing to external users
+      StepType: 'Review', //Dont modify it is used to identify the workflow steps for document sharing to external users
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -212,13 +220,39 @@ export class ApprovalWorkflowPolicyExternalUsers {
         if (response?.Success) {
           this.approvalSequenceData = [...response.Data];
 
-          this._notification.createNotification('success', 'Workflow', response.Message);
+          this._notificationToastService.createNotification('success', 'Workflow', response.Message);
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
       },
     });
+  }
+
+  resetAllFields() {
+    this.emptyInnerFields();
+  }
+
+  emptyInnerFields() {
+    this.approvalSequenceData = [];
+    this.showExclusionTable = false;
+    this.selectedAuthorityType = null;
+    this.selectedWorkflowExclude = null;
+    this.approvalPolicy = null;
+    this.selectedEmployeeSingle = null;
+    this.selectedDesignationSingle = null;
+    this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
+    this.radioValue = '';
+
+    //Cabinet Fields
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.selectedDocumentType = '';
   }
 
   private getEmployeeCodes(): string[] {
@@ -285,11 +319,11 @@ export class ApprovalWorkflowPolicyExternalUsers {
   }
 
   getAllDesignations = () => {
-    this._designationServices.getDesignationList().subscribe((res) => {
+    this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.designations = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+          CODE: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.designations = [];
@@ -299,25 +333,24 @@ export class ApprovalWorkflowPolicyExternalUsers {
   };
 
   getAllRoles = () => {
-    this._roleService.getRoleList().subscribe((res) => {
-      if (res?.Data) {
-        this.roles = (res.Data ?? []).map((d: any) => ({
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
+      if (res) {
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
           ID: d.Id,
           NAME: d.Value,
         }));
       } else {
-        this.roles = [];
+        this.userRoles = [];
       }
-      //this.cdr.detectChanges(); // force update
     });
   };
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+          CODE: d.Code || d.code,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.employees = [];

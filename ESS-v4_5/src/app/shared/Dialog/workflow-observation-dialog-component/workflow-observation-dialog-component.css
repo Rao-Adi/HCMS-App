@@ -1,80 +1,80 @@
-/* ===== Modal Content Padding ===== */
-.obs-table {
+.approval-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.approval-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
   font-size: 13px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI';
 }
 
-/* ===== Header ===== */
-.obs-table thead {
-  background: #f5f7fa;
-}
-
-.obs-table th {
+.approval-table th {
+  background: #f4f6f9;
   text-align: left;
-  padding: 12px 10px;
+  padding: 10px;
+  border-bottom: 2px solid #dee2e6;
   color: #5a6a85;
-  font-weight: 600;
-  border-bottom: 2px solid #e4e7ec;
 }
 
-/* ===== Body ===== */
-.obs-table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #eef1f5;
-  vertical-align: middle;
+.approval-table td {
+  padding: 10px;
+  border-bottom: 1px solid #edf1f5;
 }
 
-/* ===== Hover Effect ===== */
-.obs-table tbody tr:hover {
-  background-color: #f9fbfd;
-  transition: 0.2s ease-in-out;
+.approval-table tbody tr:hover {
+  background: #f9fbfd;
 }
 
-/* ===== Employee Name Highlight ===== */
 .emp {
   font-weight: 600;
   color: #2b3a55;
 }
 
-/* ===== Observation Text ===== */
 .obs {
-  color: #444;
   max-width: 300px;
   word-wrap: break-word;
 }
 
-/* ===== Action Badge ===== */
-.action-badge {
-  padding: 4px 10px;
-  border-radius: 14px;
+/* Decision Badge */
+.badge {
+  padding: 3px 10px;
+  border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
 }
 
-/* ===== Approved ===== */
-.action-badge.approve {
-  background-color: #e6f9f0;
+.badge.approve {
+  background: #e6f9f0;
   color: #00a86b;
 }
 
-/* ===== Rejected ===== */
-.action-badge.reject {
-  background-color: #fdecea;
+.badge.reject {
+  background: #fdecea;
   color: #e74c3c;
 }
 
-/* ===== Review ===== */
-.action-badge.review {
-  background-color: #e8f1ff;
+.badge.pending {
+  background: #fff4e5;
+  color: #f39c12;
+}
+
+.badge.review {
+  background: #e8f1ff;
   color: #2f80ed;
 }
 
-/* ===== Date ===== */
-.obs-table td:last-child {
-  color: #888;
-  font-size: 12px;
+/* Status */
+.status {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status.done {
+  color: #2f80ed;
+}
+
+.status.active {
+  color: #00a86b;
 }

@@ -22,9 +22,13 @@ export class DivisionCacheService {
         Code: item.Code || item.code,
         Name: item.Name || item.name,
         CreatedBy: item.CreatedBy || item.createdBy || '',
+        CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
         CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
         LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-        LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || item.lastModifiedAt || ''),
+        LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || item.LastModifiedBy || item.lastModifiedBy || '',
+        LastModifiedAt: new CustomDateFormatPipe().transform(
+          item.LastModifiedAt || item.lastModifiedAt || '',
+        )
       }),
     });
   }

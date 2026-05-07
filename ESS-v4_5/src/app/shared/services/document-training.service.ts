@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentTraining } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,10 +11,22 @@ import { ApiResponse, DocumentTraining } from '../interfaces/interfaces';
 export class DocumentTrainingService {
   private _cabietStructureConfig = new ReplaySubject<DocumentTraining[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private _config: AppConfigService,
+  ) {}
 
   get cabietStructureConfig$(): Observable<DocumentTraining[]> {
     return this._cabietStructureConfig.asObservable();
+  }
+
+  // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
   }
 
   private getHeaders(): HttpHeaders {
@@ -28,22 +40,32 @@ export class DocumentTrainingService {
   }
 
   getAllDocumentTrainingsList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentTraining/get-all-document-training-list`;
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-all-document-training-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDocumentTrainingById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentTraining/get-document-training-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-document-training-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetTrainingAssessmentDetails(documentId: string): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  AcknowledgeAndSendForAuthorization(documentId: string): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentTraining/acknowledge-and-send-for-authorization/${documentId}`;
+    return this.http.post<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
   GetAllDocumentTrainings(
     searchText: string,
     sortBy: 'ASC' | 'DESC',
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    filters?: any
   ): Observable<any> {
     const body = {
       searchText,
@@ -52,9 +74,10 @@ export class DocumentTrainingService {
       isActive,
       pageNumber,
       pageSize,
+      ...filters
     };
 
-    const uri = `${environment.baseUrl}/DMSDocumentTraining/get-all-document-training`;
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-all-document-training`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,21 +86,21 @@ export class DocumentTrainingService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentTraining/create-document-training`,
-      payload
+      `${this.apiUrl}/DMSDocumentTraining/create-document-training`,
+      payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentTraining/update-document-training`,
-      payload
+      `${this.apiUrl}/DMSDocumentTraining/update-document-training`,
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentTraining/delete-document-training/${code}`
+      `${this.apiUrl}/DMSDocumentTraining/delete-document-training/${code}`,
     );
   }
 }

@@ -13,9 +13,8 @@ import {
 import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
 import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
@@ -23,6 +22,7 @@ import { DivisionCacheService } from '@app/shared/services/CacheServices/divisio
 import { BusinessDomainCacheService } from '@app/shared/services/CacheServices/business-domain-cache-service';
 import { DesignationService } from '@app/shared/services/designation.service';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-manual-manage-employee',
@@ -39,6 +39,12 @@ import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-g
 })
 export class ManualManageEmployee {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'users';
 
   manualUserData: any[] = [];
   divisions: any[] = [];
@@ -70,107 +76,6 @@ export class ManualManageEmployee {
     },
   ];
 
-  // private getColumns2(): GridColumn[] {
-  //   const columns: GridColumn[] = [];
-
-  //   // ─────────────────────────────────────────────
-  //   // 1️⃣ FIXED (NON-CABINET) COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'employeeCode',
-  //       headerName: 'Employee Code',
-  //       type: 'readonly',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: false,
-  //     },
-  //     {
-  //       field: 'employeeName',
-  //       headerName: 'Employee Name',
-  //       type: 'text',
-  //       minWidth: 250,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //   );
-
-  //   // ─────────────────────────────────────────────
-  //   // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   this.cabinetHierarchy.forEach((level, index) => {
-  //     const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
-
-  //     columns.push({
-  //       field: `level${level.level}Id`,
-  //       headerName: level.title,
-  //       type: 'dropdown',
-
-  //       // 🔥 level-based data source
-  //       dropdownOptions: this.dropdownDataSources[level.level],
-
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-
-  //       // 🔥 dynamic parent dependency
-  //       dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
-  //       filterKey: parentLevel ? 'parentId' : undefined,
-
-  //       minWidth: 200,
-  //       required: true,
-  //     });
-  //   });
-
-  //   // ─────────────────────────────────────────────
-  //   // 3️⃣ REMAINING FIXED COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'designationId',
-  //       headerName: 'Designation',
-  //       type: 'text',
-  //       minWidth: 200,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'email',
-  //       headerName: 'Email',
-  //       type: 'text',
-  //       minWidth: 200,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'reportingTo',
-  //       headerName: 'Reporting To',
-  //       type: 'text',
-  //       required: true,
-  //       minWidth: 200,
-  //       pinned: 'left',
-  //     },
-  //     {
-  //       field: 'dateOfJoining',
-  //       headerName: 'Date Of Joining',
-  //       type: 'date',
-  //       required: true,
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //     },
-  //     {
-  //       field: 'accessLevel',
-  //       headerName: 'Access Level',
-  //       type: 'button',
-  //       required: false,
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //     },
-  //   );
-  //   //console.log(JSON.stringify(columns));
-
-  //   return columns;
-  // }
-
   constructor(
     private _userService: UserService,
     private modal: NzModalService,
@@ -178,27 +83,33 @@ export class ManualManageEmployee {
     private _departmentCacheService: DepartmentCacheService,
     private _subDepartmentServices: SubDepartmentCacheService,
     private _businessDomainCacheService: BusinessDomainCacheService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _designationServices: DesignationService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.loadDropdownsAndGrid();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
 
-    this.GetAllManuallyManageEmployee({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
+      this.loadDropdownsAndGrid();
+      // this.GetAllManuallyManageEmployee({
+      //   pageNumber: 1,
+      //   pageSize: this.selectedPageSize,
+      //   sortModel: [], // or your current sort/filter model
+      //   filterModel: {},
+      // });
 
-    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
-      this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
+      this._cabinetHirarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
+        this.levelTitles = this._cabinetHirarchyService.getLevelTitles();
 
-      this.loadCabinetDropdownData(levels);
+        this.loadCabinetDropdownData(levels);
+      });
     });
   }
 
@@ -211,9 +122,9 @@ export class ManualManageEmployee {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -374,11 +285,9 @@ export class ManualManageEmployee {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
       employeeName: rowData.EmployeeName || rowData.employeeName,
       divisionCode: rowData.level1Id || rowData.level1Id,
@@ -395,7 +304,7 @@ export class ManualManageEmployee {
     };
     this._userService.create(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification('success', 'User', 'User created successfully!');
+        this._notificationToastService.createNotification('success', 'User', 'User created successfully!');
 
         const rowWithId = {
           ...rowData,
@@ -426,14 +335,13 @@ export class ManualManageEmployee {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     // Update display names
     const payLoad = {
       employeeCode: rowData.EmployeeCode || rowData.employeeCode,
@@ -451,8 +359,8 @@ export class ManualManageEmployee {
 
     this._userService.update(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification('success', 'User', 'User Updated successfully!');
-        debugger;
+        this._notificationToastService.createNotification('success', 'User', 'User Updated successfully!');
+        
         const rowWithId = {
           ...rowData,
           id: this.generateId(),
@@ -483,13 +391,13 @@ export class ManualManageEmployee {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    // console.log('Row deleted at index:', rowIndex);
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
   }

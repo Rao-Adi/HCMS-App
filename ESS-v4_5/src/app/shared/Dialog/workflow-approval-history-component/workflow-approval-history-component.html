@@ -30,8 +30,7 @@
             class="badge"
             [ngClass]="{
               approve: h.Decision === 'Approved',
-              reject: h.Decision === 'Rejected',
-              pending: !h.Decision,
+                reject: h.Decision === 'Rejected' || h.Decision === 'Reworked'
             }"
           >
             {{ h.Decision || 'Pending' }}

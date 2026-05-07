@@ -1,29 +1,62 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  Input,
+  Output,
+  Pipe,
+  PipeTransform,
+} from '@angular/core';
 import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { SelectList } from '@app/shared/interfaces/interfaces';
-import { UserService } from '@app/shared/services/user-service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { BehaviorSubject } from 'rxjs';
+
+@Pipe({
+  name: 'highlightSearch',
+  standalone: true,
+})
+export class HighlightSearchPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+
+  transform(text: string, search: string): SafeHtml | string {
+    if (!search || !text) return text;
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+    const highlighted = text.replace(regex, '<mark class="highlight">$1</mark>');
+    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
+  }
+}
 
 @Component({
   selector: 'app-employee-list',
-  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule],
+  imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule, HighlightSearchPipe],
   // templateUrl: './employee-list.html',
   // styleUrl: './employee-list.css'
   template: `<nz-select
-    nzMode="multiple"
-    nzPlaceHolder="Select users"
+    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
+    [nzPlaceHolder]="placeholder"
     nzAllowClear
     nzShowSearch
-    nzServerSearch
+    [nzFilterOption]="customFilter"
+    [nzDisabled]="disabled"
     [style.width]="width"
     [(ngModel)]="selectedUser"
-    (nzOnSearch)="onSearch($event)"
     (ngModelChange)="onSelectionChange($event)"
+    (nzOnSearch)="onSearch($event)"
+    nzVirtualHeight="300px"
+    nzVirtualItemSize="32"
   >
-    <nz-option *ngFor="let item of data" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+    <nz-option
+      *ngFor="let opt of options"
+      [nzValue]="opt.value"
+      [nzLabel]="opt.label"
+      nzCustomContent
+    >
+      <span [innerHTML]="opt.label | highlightSearch: searchTerm"></span>
+    </nz-option>
   </nz-select>`,
   styles: [
     `
@@ -33,6 +66,11 @@ import { BehaviorSubject } from 'rxjs';
 
       .loading-icon {
         margin-right: 8px;
+      }
+
+      mark.highlight {
+        background-color: #ffc107;
+        padding: 0;
       }
     `,
   ],
@@ -52,47 +90,35 @@ export class EmployeeList {
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
+  @Input() isMultiSelect = true;
 
-  data: SelectList[] = [];
-  
+  options: Array<{ label: string; value: string }> = [];
+
   @Output() valueChange = new EventEmitter<any>();
 
   value: any;
   disabled = false;
 
-  // randomUserUrl = 'https://api.randomuser.me/?results=5';
-  searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];
-  selectedUser: string[] = [];
-  loading = false;
+  selectedUser: any = null;
+  searchTerm = '';
 
-  constructor(private _userService: UserService) {}
+  constructor(private _peoplePartnerService: PeoplePartnersService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
-    // this.searchChange$
-    //   .pipe(
-    //     debounceTime(500),
-    //     switchMap((name) => this.getRandomNameList(name))
-    //   )
-    //   .subscribe((data) => {
-    //     this.optionList = data;
-    //     this.loading = false;
-    //   });
-
     this.getAllUsersList();
   }
 
-  onSelectionChange(value: string[]): void {
+  onSelectionChange(value: any): void {
     this.selectedUser = value;
     this.onChange(value); // VERY IMPORTANT
     this.onTouched();
   }
 
-  writeValue(value: string[]): void {
-    this.selectedUser = value || [];
+  writeValue(value: any): void {
+    this.selectedUser = value;
   }
 
   registerOnChange(fn: any): void {
@@ -107,6 +133,15 @@ export class EmployeeList {
     this.disabled = isDisabled;
   }
 
+  customFilter = (input: string, option: any): boolean => {
+    if (!option || !option.nzLabel) return false;
+    return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
+  };
+
+  onSearch(value: string): void {
+    this.searchTerm = value;
+  }
+
   // onSelectionChange(value: any): void {
   //   this.value = value;
   //   this.onChange(value);
@@ -114,20 +149,15 @@ export class EmployeeList {
   //   this.valueChange.emit(value);
   // }
 
-  onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
-  }
-
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
-        this.data = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+        this.options = (res.Data ?? []).map((d: any) => ({
+          value: d.Code || d.code,
+          label: d.Value + ' (' + d.Code + ')' || d.value,
         }));
       } else {
-        this.data = [];
+        this.options = [];
       }
     });
   };

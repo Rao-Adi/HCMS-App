@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms'; 
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
@@ -13,7 +12,7 @@ export interface WorkflowObservationDialogData {
   executionId: number;
   stepId?: number;
   mode: 'view' | 'input';
-  action?: 'Approve' | 'Reject' | 'SendBack';
+  action?: 'Approve' | 'Reject' | 'Rework';
 }
 
 @Component({
@@ -61,7 +60,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  ngOnInit(): void { 
     this.isViewMode = this.modalData.mode === 'view';
     this.isInputMode = this.modalData.mode === 'input';
 
@@ -75,12 +74,11 @@ export class WorkflowObservationDialogComponent implements OnInit {
   }
 
   loadObservations() {
-    this.loading = true;
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
-    const entityId = this.modalData.id;
+    this.loading = true; 
+    const entityId = this.modalData.id || this.modalData.Id;
     const entityType = this.modalData.entityType;
     this._doumentRequestService
-      .GetWorkflowObservationDetails(companyId, entityId, entityType)
+      .GetWorkflowObservationDetails(entityId, entityType)
       .subscribe({
         next: (response) => {
           if (response && response.Data) {
@@ -95,11 +93,11 @@ export class WorkflowObservationDialogComponent implements OnInit {
               EmployeeCode: item.EmployeeCode,
               Division: item.Division,
               Department: item.Department,
-              SubDepartment: item.SubDepartment,
+              roleName: item.RoleName,
               Designation: item.Designation,
               Decision: item.Decision,
               Observation: item.Observation,
-              ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.ActionAt || ''),
+              ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
               IsActive: item.isActive || item.IsActive,
             }));
           } else {
@@ -107,7 +105,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
           }
         },
         error: (err) => {
-          // this._notification.createNotification(
+          // this._notificationToastService.createNotification(
           //   'error',
           //   'Error',
           //   err?.Message || 'Failed to fetch document details.',
@@ -116,8 +114,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
       });
   }
 
-  submit() {
-    debugger;
+  submit() { 
     if (this.form.invalid) return;
 
     this.modalRef.close({

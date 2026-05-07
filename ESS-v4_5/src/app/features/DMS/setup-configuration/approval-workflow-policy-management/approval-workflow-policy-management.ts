@@ -13,14 +13,13 @@ import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces'
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
-import { UserService } from '@app/shared/services/user-service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
-import { DesignationService } from '@app/shared/services/designation.service';
-import { RoleService } from '@app/shared/services/role.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { CdkDragDrop, moveItemInArray, CdkDrag, CdkDropList, CdkDragHandle } from '@angular/cdk/drag-drop';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -51,6 +50,9 @@ export enum PolicyId {
     RoleList,
     EmployeeList,
     CabinetStructureList,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
   ],
   templateUrl: './approval-workflow-policy-management.html',
   styleUrl: './approval-workflow-policy-management.css',
@@ -60,11 +62,29 @@ export enum PolicyId {
         margin-right: 8px;
         margin-bottom: 12px;
       }
+      .cdk-drag-preview {
+        box-sizing: border-box;
+        border-radius: 4px;
+        background-color: white;
+        display: table;
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+      }
+      .cdk-drag-placeholder {
+        opacity: 0;
+      }
+      .cdk-drag-animating {
+        transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      }
     `,
   ],
 })
 export class ApprovalWorkflowPolicyManagement {
   public noRowsOverlay: string = '';
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'approvalworkflow';
 
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
@@ -74,10 +94,10 @@ export class ApprovalWorkflowPolicyManagement {
   optionList: string[] = [];
   approvalSequenceData: any[] = [];
   selectedUser?: string;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType?: string = '';
   selectedDesignation?: string[] = [];
   selectedRole?: string[] = [];
@@ -97,11 +117,8 @@ export class ApprovalWorkflowPolicyManagement {
   // single state
   activeMode: 'manual' | 'integration' | null = null;
 
-  pageSize = 10;
-  rowData: any[] = [];
-  totalRows = 0;
   designations: any[] = [];
-  roles: any[] = [];
+  userRoles: any[] = [];
   employees: any[] = [];
 
   authorityTypes: SelectList[] = [
@@ -127,30 +144,39 @@ export class ApprovalWorkflowPolicyManagement {
   };
 
   constructor(
-    private _userService: UserService,
+    private _permissionService: PermissionService,
     private _workflowStepService: WorkflowStepService,
-    private _notification: NotificationService,
-    private _designationServices: DesignationService,
-    private _roleService: RoleService,
+    private _notificationToastService: NotificationToastService,
+    private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+  }
 
   onAuthorityTypeChange(value: number | null): void {
     this.selectedAuthorityType = value;
     //reset preselected values
     if (value == 2) {
-      this.getAllUsersList();
+      //this.getAllUsersList();
     }
     if (value == 3) {
-      this.getAllRoles();
+      //this.getAllRoles();
     }
     if (value == 4) {
-      this.getAllDesignations();
+      //this.getAllDesignationList();
     }
     this.selectedUser = '';
+    this.selectedEmployeeSingle = null;
     this.selectedDesignationSingle = null;
     this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
     this.selectedWorkflowExclude = 0;
   }
 
@@ -185,27 +211,26 @@ export class ApprovalWorkflowPolicyManagement {
     this.switchValue1 = this.switchValue1 == true ? false : true;
   }
 
-  addExclusion() {
-    debugger;
+  addExclusion() { 
+    // if (!this.approvalPolicy) {
+    //   this._notificationToastService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please select an approval policy.',
+    //   );
+    //   return;
+    // }
+
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
-    if (!this.approvalPolicy) {
-      this._notification.createNotification(
-        'warning',
-        'Validation',
-        'Please select an approval policy.',
-      );
-      return;
-    }
 
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
           : this.selectedPolicyId == PolicyId.DocumentCreation
             ? 'Document'
             : 'Revision',
-      StepType: 'Review', // this will be discussed and sent from frontend, for now we are hardcoding it
+      StepType: 'Review', //
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -216,7 +241,7 @@ export class ApprovalWorkflowPolicyManagement {
       employeeCodes: this.getEmployeeCodes(),
       CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
       RequireCrossFunctionalHead: false,
-      IsParallelApproval: false,
+      IsParallelApproval: this.switchValue1,
     };
 
     this._workflowStepService.create(payLoad).subscribe({
@@ -225,11 +250,11 @@ export class ApprovalWorkflowPolicyManagement {
           this.showExclusionTable = true;
           this.approvalSequenceData = [...response.Data];
 
-          this._notification.createNotification('success', 'Workflow', response.Message);
+          this._notificationToastService.createNotification('success', 'Workflow', response.Message);
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to create workflow step.');
       },
     });
   }
@@ -238,17 +263,44 @@ export class ApprovalWorkflowPolicyManagement {
     // 1. Update the selected tab
     this.selectedPolicyId = policyId;
 
-    this.approvalSequenceData = [];
-    this.selectedDocumentType = '';
-    this.showExclusionTable = false;
-
-    // If you are using Reactive Forms, use:
-    // this.yourForm.reset();
+    this.resetAllFields();
   }
 
-  private getEmployeeCodes(): string[] {
+  resetAllFields() {
+    this.emptyInnerFields();
+  }
+
+  emptyInnerFields() {
+    this.approvalSequenceData = [];
+    this.showExclusionTable = false;
+    this.selectedAuthorityType = null;
+    this.selectedWorkflowExclude = null;
+    this.approvalPolicy = null;
+    this.selectedEmployeeSingle = null;
+    this.selectedDesignationSingle = null;
+    this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
+    this.selectedUser = '';
+    this.radioValue = '';
+    this.activeMode = null;
+
+    //Cabinet Fields
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.selectedDocumentType = '';
+  }
+
+  private getEmployeeCodes(): string[] { 
     // If multi-select has value
     if (this.selectedEmployee && this.selectedEmployee.length > 0) {
+      if (!Array.isArray(this.selectedEmployee)) {
+        return [this.selectedEmployee as any];
+      }
+
       // If app-employee-list returns objects
       if (typeof this.selectedEmployee[0] === 'object') {
         return this.selectedEmployee.map((emp: any) => emp.ID);
@@ -270,6 +322,10 @@ export class ApprovalWorkflowPolicyManagement {
   private getDesignationCodes(): string[] {
     // If multi-select has value
     if (this.selectedDesignation && this.selectedDesignation.length > 0) {
+      if (!Array.isArray(this.selectedDesignation)) {
+        return [this.selectedDesignation as any];
+      }
+
       // If app-designation-list returns objects
       if (typeof this.selectedDesignation[0] === 'object') {
         return this.selectedDesignation.map((emp: any) => emp.CODE);
@@ -291,6 +347,10 @@ export class ApprovalWorkflowPolicyManagement {
   private getRoleCodes(): string[] {
     // If multi-select has value
     if (this.selectedRole && this.selectedRole.length > 0) {
+      if (!Array.isArray(this.selectedRole)) {
+        return [this.selectedRole as any];
+      }
+
       // If app-role-list returns objects
       if (typeof this.selectedRole[0] === 'object') {
         return this.selectedRole.map((emp: any) => emp.ID);
@@ -312,31 +372,88 @@ export class ApprovalWorkflowPolicyManagement {
   onDocumentTypeChange(value: string): void {
     if (value != null) {
       this.selectedDocumentType = value;
-
-      const payLoad = {
-        companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-        EntityType:
-          this.selectedPolicyId == PolicyId.RequestForDocumentCreation
-            ? 'Request'
-            : this.selectedPolicyId == PolicyId.DocumentCreation
-              ? 'Document'
-              : 'Revision',
-        documentTypeCode: this.selectedDocumentType,
-        divisionCode: this.selectedDivisions,
-        departmentCode: this.selectedDepartment,
-        subDepartmentCode: this.selectedSubDepartment,
-        businessDomainCode: this.selectedBusinessDomain,
-      };
-      this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
-        // console.log('User Details:', res);
-        this.showExclusionTable = true;
-        this.approvalSequenceData = res?.Data ? res.Data : [];
-      });
+      this.fetchApprovalSequence();
     } else {
-      this.approvalSequenceData = [];
       this.selectedDocumentType = '';
+      this.approvalSequenceData = [];
       this.showExclusionTable = false;
     }
+  }
+
+  fetchApprovalSequence() {
+    if (!this.selectedDocumentType) {
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+      return;
+    }
+
+    const payLoad = {
+      EntityType:
+        this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+          ? 'Request'
+          : this.selectedPolicyId == PolicyId.DocumentCreation
+            ? 'Document'
+            : 'Revision',
+      documentTypeCode: this.selectedDocumentType,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
+    };
+
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+      this.showExclusionTable = true;
+      this.approvalSequenceData = res?.Data ? res.Data : [];
+    });
+  }
+
+  drop(event: CdkDragDrop<any[]>) {
+    if (event.previousIndex !== event.currentIndex) {
+      moveItemInArray(this.approvalSequenceData, event.previousIndex, event.currentIndex);
+      this.saveUpdatedSequence();
+    }
+  }
+
+  removeSequenceItem(index: number) {
+    const policyIdToFallback = this.approvalSequenceData[index]?.WorkflowPolicyId;
+    this.approvalSequenceData.splice(index, 1);
+    this.saveUpdatedSequence(policyIdToFallback);
+  }
+
+  saveUpdatedSequence(fallbackPolicyId?: number) {
+    // Re-assign step order based on new array indices
+    this.approvalSequenceData.forEach((item, index) => {
+      item.StepOrder = index + 1;
+    });
+
+    const workflowPolicyId = this.approvalSequenceData.length > 0 ? this.approvalSequenceData[0].WorkflowPolicyId : (fallbackPolicyId || 0);
+
+    const payLoad = {
+      workflowpolicyid: workflowPolicyId,
+      steps: this.approvalSequenceData.map(item => ({
+        steporder: item.StepOrder,
+        stepgroup: item.StepGroup || 0,
+        steptype: item.StepType || '',
+        roleid: item.RoleId || 0,
+        designationid: item.DesignationId || 0,
+        userid: item.EmployeeCode || item.UserId?.toString() || '',
+        requiresallapprovals: item.RequiresAllApprovals || false
+      }))
+    };
+
+    // Note: Assuming your WorkflowStepService has an `updateSequence` method. 
+    // Adjust the method name below as needed to match your service's actual implementation.
+    this._workflowStepService.updateApprovalSequence(payLoad).subscribe({
+      next: (response: any) => {
+        if (response?.Success) {
+          this.approvalSequenceData = response.Data || [];
+          this._notificationToastService.createNotification('success', 'Workflow', 'Approval sequence updated successfully.');
+        }
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to update approval sequence.');
+      }
+    });
   }
 
   // Function to handle the change
@@ -349,18 +466,19 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
-    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? '';
+    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? '';
+    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? '';
+    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? '';
+    this.fetchApprovalSequence();
   }
 
-  getAllDesignations = () => {
-    this._designationServices.getDesignationList().subscribe((res) => {
+  getAllDesignationList = () => {
+    this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
         this.designations = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
+          CODE: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.designations = [];
@@ -370,21 +488,21 @@ export class ApprovalWorkflowPolicyManagement {
   };
 
   getAllRoles = () => {
-    this._roleService.getRoleList().subscribe((res) => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
-        this.roles = (res.Data ?? []).map((d: any) => ({
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
           ID: d.Id,
           NAME: d.Value,
         }));
       } else {
-        this.roles = [];
+        this.userRoles = [];
       }
       //this.cdr.detectChanges(); // force update
     });
   };
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,

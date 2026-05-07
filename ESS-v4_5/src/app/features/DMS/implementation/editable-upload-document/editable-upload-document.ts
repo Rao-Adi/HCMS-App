@@ -116,7 +116,7 @@ export class EditableUploadDocument {
     return [
       {
         field: 'documentId',
-        headerName: 'Document Id',
+        headerName: 'Document ID',
         type: 'text',
         minWidth: 150,
         pinned: 'left',

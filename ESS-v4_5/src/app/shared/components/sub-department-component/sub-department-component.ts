@@ -6,11 +6,12 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice'; 
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -22,6 +23,12 @@ import { ColDef } from 'ag-grid-community';
 })
 export class SubDepartmentComponent {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure';
 
   selectedPageSize = 10;
   pageSize = 10;
@@ -82,11 +89,18 @@ export class SubDepartmentComponent {
     private _subDepartmentServices: SubDepartmentService,
     private _masterCacheService: Mastercacheservice,
     private _departmentService: DepartmentService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getAllDepartmeList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.getAllDepartmeList();
+    });
   }
 
   private buildGrid(): void {
@@ -94,9 +108,13 @@ export class SubDepartmentComponent {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: 10,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -140,7 +158,7 @@ export class SubDepartmentComponent {
         required: true,
       },
       {
-        field: 'LastModifiedBy',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -158,7 +176,7 @@ export class SubDepartmentComponent {
     ];
   }
 
-  loadSubDepartments(): void {
+  loadSubDepartments(): void { 
     this._masterCacheService
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
@@ -170,10 +188,12 @@ export class SubDepartmentComponent {
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Department: item.Department || item.Department || '',
-          DepartmeCode: item.DepartmeCode || item.DepartmeCode || '',
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          DepartmentCode: item.DepartmentCode || item.DepartmentCode || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -233,9 +253,13 @@ export class SubDepartmentComponent {
           Department: item.Department || item.department || '',
           DepartmentCode: item.DepartmentCode || item.departmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedAt: new CustomDateFormatPipe().transform(item.lastModifiedAt || item.LastModifiedAt || '')
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedAt: new CustomDateFormatPipe().transform(
+            item.lastModifiedAt || item.LastModifiedAt || '',
+          ),
         }),
       })
       .subscribe((data) => {
@@ -251,7 +275,6 @@ export class SubDepartmentComponent {
     const { rowData } = event;
 
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Name: rowData.Name,
       DepartmentCode: rowData.Department,
       IsActive: true,
@@ -261,7 +284,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
           'Sub-Department created successfully!',
@@ -281,7 +304,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -290,7 +313,6 @@ export class SubDepartmentComponent {
     //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.Department,
@@ -301,7 +323,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
           'Sub-Department updated successfully!',
@@ -321,7 +343,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -332,7 +354,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
           'Sub-Department updated successfully!',
@@ -352,7 +374,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

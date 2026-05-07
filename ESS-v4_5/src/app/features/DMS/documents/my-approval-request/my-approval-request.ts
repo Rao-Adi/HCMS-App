@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -12,16 +12,16 @@ import { CabinetSelection, ColumnToggle, SelectList } from '@app/shared/interfac
 import { FormsModule } from '@angular/forms';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { MyPendingRequestForApproval } from './my-pending-request-for-approval/my-pending-request-for-approval';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NzModalService } from 'ng-zorro-antd/modal';
-import { ObservationModalPopup } from './observation-modal-popup/observation-modal-popup';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -36,16 +36,23 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
     NzRadioModule,
     NzButtonModule,
     DocumentTypeList,
-    MyPendingRequestForApproval,
     CabinetStructureList,
     DMSRichTextEdit,
-    NzSelectModule,
+    NzModalModule,
   ],
   templateUrl: './my-approval-request.html',
   styleUrl: './my-approval-request.css',
 })
 export class MyApprovalRequest {
+  @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
   selectedTab: string = 'Pending';
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'myapprovalrequest';
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -55,7 +62,7 @@ export class MyApprovalRequest {
   templateHtml: string = '';
   draftFileUrl: string = '';
   requestId: number = 0;
-  documentName: string = '';
+  currentDocumentName: string = '';
   selectedDocumentTypeCode: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
@@ -65,15 +72,26 @@ export class MyApprovalRequest {
     editable: false,
   };
 
-  pageSize = 10;
   totalPendingDocuments = 0;
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
   rowData: any[] = [];
   public noRowsOverlay: string = '';
+  selectedPageSize = 10;
+  LoginEmpId: string = '';
 
   documentRequestsData: any[] = [];
   totalRows = 0;
+  pageNumber = 1;
+
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 10,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: '',
+  };
+
   // Track selection state
   hasSelectedRows = false;
   stepId: number = 0;
@@ -82,19 +100,14 @@ export class MyApprovalRequest {
   selectedEmployee?: string = '';
   observation: string = '';
 
-  companies: SelectList[] = [
-    { CODE: '1', NAME: 'ATCO' },
-    { CODE: '2', NAME: 'Softronic' },
-  ];
-
   documentColumnDefs = [
     {
       field: 'documentType',
-      headerName: 'Document Type'
+      headerName: 'Document Type',
     },
     {
-      field: 'requestId',
-      headerName: 'Request Id',
+      field: 'documentRequestId',
+      headerName: 'Request ID',
     },
     {
       field: 'documentName',
@@ -196,8 +209,8 @@ export class MyApprovalRequest {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'requestId', label: 'Request Id', visible: true },
-    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'documentRequestId', label: 'Request ID', visible: true },
+    { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
@@ -217,178 +230,221 @@ export class MyApprovalRequest {
   constructor(
     private _doumentRequestService: DocumentRequestService,
     private modal: NzModalService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _userService: UserService,
+    private _UtilitiesService: UtilitiesService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getAllUsersList();
-    // this.GetAllPendingDocuments({
-    //   pageNumber: 1,
-    //   pageSize: this.pageSize,
-    //   sortModel: [],
-    //   filterModel: {},
-    // });
-
+    // 1. Fetch synchronous data BEFORE any UI component can trigger an API call
     this.hasSelectedRows = false;
+    this.GetLoginEmpId();
+
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
+    });
   }
 
-  onDivisionChange(value: string): void {
-    this.selectedDivisions = value;
-    this.emptyAllFileds();
-  }
-  onDepartmentsChange(value: string): void {
-    this.selectedDepartment = value;
-    this.emptyAllFileds();
+  GetLoginEmpId() {
+    this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   emptyAllFileds() {
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
+    this.clearSelection();
+  }
+
+  clearSelection() {
     this.templateHtml = '';
     this.draftFileUrl = '';
     this.requestId = 0;
-    this.documentName = '';
+    this.currentDocumentName = '';
     this.selectedDocumentTypeCode = '';
+    this.stepId = 0;
+    this.selectedRow = null;
+    this.hasSelectedRows = false;
+
+    // Safely clear the selection from the ag-grid API to prevent row-index selection preservation
+    if (this.agGridWrapper) {
+      const wrapper = this.agGridWrapper as any;
+      const api = wrapper.gridApi || wrapper.api || wrapper.agGrid?.api;
+      if (api && typeof api.deselectAll === 'function') {
+        api.deselectAll();
+      }
+    }
   }
 
   async onDocumentTypeChange(value: string) {
     // this.loading = true;
     this.selectedDocumentType = value;
-    await this.GetAllPendingDocuments('');
     this.emptyAllFileds();
+    this.pageNumber = 1;
+    this.currentGridQuery.pageNumber = 1;
+    // this.GetAllPendingDocuments();
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    }
   }
 
   async onTabChange(status: string) {
     this.selectedTab = status;
-    await this.GetAllPendingDocuments('');
     this.emptyAllFileds();
+    this.pageNumber = 1;
+    this.currentGridQuery.pageNumber = 1;
+    // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically.
   }
 
-  onEmployeeChange(value: string): void {
-    this.selectedEmployee = value;
-    this.emptyAllFileds();
-    if (value != null) {
-      this.GetAllPendingDocuments(value);
-    }
-  }
+  GetAllPendingDocuments(query?: any) {
+    let searchText = '';
+    let sortColumn = '';
+    let sortBy = 'DESC';
 
-  GetAllPendingDocuments(query: any) {
-    if(this.selectedEmployee == ""){
-      return;
+    // If grid triggers the query, extract pagination parameters
+    if (query && typeof query === 'object') {
+      if (query.pageNumber) this.pageNumber = query.pageNumber;
+      if (query.pageSize) this.selectedPageSize = query.pageSize;
+      searchText = query.searchText || '';
+      if (query.sortModel && query.sortModel.length > 0) {
+        sortColumn = query.sortModel[0].colId;
+        sortBy = query.sortModel[0].sort;
+      }
+    } else {
+      // Otherwise, reset to page 1 for fresh filters
+      this.pageNumber = 1;
     }
+
     const payload = {
-      companyId: 1,
-      userId: 1,
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType,
-      employeeCode: this.selectedEmployee,
-      RequestStatus: this.selectedTab,
+      searchtext: searchText,
+      sortby: sortBy,
+      sortcolumn: sortColumn,
+      isactive: true,
+      pagenumber: this.pageNumber,
+      pagesize: this.selectedPageSize || 10,
+      divisioncode: this.selectedDivisions || '',
+      departmentcode: this.selectedDepartment || '',
+      subdepartmentcode: this.selectedSubDepartment || '',
+      businessdomaincode: this.selectedBusinessDomain || '',
+      documenttypecode: this.selectedDocumentType || '',
+      requeststatus: this.selectedTab,
+      empId: this.LoginEmpId || '',
     };
+
     this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
       next: (response) => {
         if (response?.Success) {
-          if (response?.Data) {
-            this.totalRows = response.Data.TotalCount;
-            this.documentRequestsData = response.Data.map((item: any) => ({
-              Id: item.id || item.Id,
-              requestId: item.Id || item.id,
-              documentType: item.DocumentType || item.documentType,
-              proposedDocumentNumber: item.RequestNumber || item.requestNumber,
-              stepId: item.StepId || item.stepId,
-              stepOrder: item.StepOrder || item.stepOrder,
-              startedAt: item.StartedAt || item.startedAt,
-              division: item.Division,
-              documentId: item.DocumentNumber,
-              documentName: item.DocumentName,
-              proposedContent: item.ProposedContent,
-              department: item.Department,
-              departmentId: item.DepartmentCode,
-              subdepartment: item.SubDepartment,
-              justification: item.Justification,
-              businessdomainId: item.BusinessDomainCode,
-              documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
-              templateType: item.TemplateType || item.templateType,
-              draftFileUrl: item.DraftFileUrl || item.draftFileUrl || ((String(item.TemplateType || item.templateType) === '1' || String(item.TemplateType || item.templateType) === '2') ? item.ProposedContent : ''),
-              requestCreatedBy: item.createdBy || item.CreatedBy || '',
-              dateOfCreation: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              requestCreatedOn: new CustomDateFormatPipe().transform(
-                item.createdAt || item.CreatedAt || '',
-              ),
-              previousVersionCreatedOn:
-                item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-              proposedVersionNumber: item.RowVersion || item.rowVersion,
-            }));
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+
+          this.totalRows = data?.TotalCount ?? items.length;
+          if (this.totalRows > 0) {
+            this.documentRequestsData = items.map((item: any) => {
+              // Case-insensitive helper to match backend keys
+              const get = (keys: string[], defaultValue: any = ''): any => {
+                for (const key of keys) {
+                  if (item[key] !== undefined && item[key] !== null) return item[key];
+                  const lower = key.toLowerCase();
+                  if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+                }
+                return defaultValue;
+              };
+
+              return {
+                id: get(['Id', 'id']),
+                documentRequestId: get(['RequestNumber', 'requestNumber', 'Id', 'id']),
+                documentType: get(['DocumentType', 'documentType']),
+                documentName: get(['DocumentName', 'documentName', 'Title', 'title']),
+                observation: '',
+                justification: get(['Justification', 'justification']),
+                proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+                proposedVersionNumber: get(
+                  ['ProposedVersionNumber', 'proposedVersionNumber', 'RowVersion', 'rowVersion'],
+                  '1.0',
+                ),
+                division: get(['Division', 'division']),
+                department: get(['Department', 'department']),
+                subdepartment: get(['SubDepartment', 'subdepartment', 'subDepartment']),
+                dateOfCreation: this.formatDate(get(['CreatedAt', 'createdAt'])),
+                requestCreatedBy: get([
+                  'CreatedBy',
+                  'createdBy',
+                  'RequestCreatedBy',
+                  'requestCreatedBy',
+                ]),
+                requestCreatedOn: new CustomDateFormatPipe().transform(
+                  get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
+                ),
+                previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                  get([
+                    'DraftContentLastModifiedAt',
+                    'draftContentLastModifiedAt',
+                    'LastModifiedAt',
+                    'lastModifiedAt',
+                  ]),
+                ),
+                previousVersionCreatedBy: get([
+                  'DraftContentLastModifiedBy',
+                  'draftContentLastModifiedBy',
+                  'LastModifiedBy',
+                  'lastModifiedBy',
+                ]),
+                stepId: get(['StepId', 'stepId']),
+                stepOrder: get(['StepOrder', 'stepOrder']),
+                startedAt: get(['StartedAt', 'startedAt']),
+                proposedContent: get([
+                  'ProposedContent',
+                  'proposedContent',
+                  'VersionContent',
+                  'versionContent',
+                  'Content',
+                  'content',
+                ]),
+                draftFileUrl: get(['DraftFileUrl', 'draftFileUrl', 'draftfileurl', 'DraftFileURL']),
+              };
+            });
           } else {
+            this.documentRequestsData = [];
+            this.totalRows = 0;
           }
+        } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
-        this._notification.createNotification(
+        this.documentRequestsData = [];
+        this.totalRows = 0;
+        this._notificationToastService.createNotification(
           'error',
           'Error',
-          err?.Message || 'Failed to fetch documents.',
+          'Failed to fetch documents.',
         );
       },
     });
   }
-  GetAllApprovedDocuments(query: any) {}
-  GetAllDisApprovedDocuments(query: any) {}
-  GetAllDocuments(query: any) {}
-
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
-
-    switch (gridId) {
-      case 'pendingGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllPendingDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-
-      case 'approvedGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllApprovedDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'disapprovedGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDisApprovedDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
+    if (event && event.pageSize) {
+      this.selectedPageSize = event.pageSize;
+      this.currentGridQuery.pageSize = this.selectedPageSize;
     }
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
+    this.emptyAllFileds();
+
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    }
   }
 
   // handleGridAction(event: { action: string; rowData: any }) {
@@ -403,17 +459,17 @@ export class MyApprovalRequest {
     const row = selectedRows[0];
     if (row) {
       this.templateHtml = row.proposedContent || '';
-      this.stepId = row.stepId || 0; // Assuming stepId is part of rowData
+      this.stepId = row.stepId || 0;
       this.selectedRow = row;
       this.draftFileUrl = row.draftFileUrl || '';
       this.requestId = row.requestId || row.Id || row.id;
-      this.documentName = row.documentName || '';
+      this.currentDocumentName = row.documentName || '';
       this.selectedDocumentTypeCode = row.documentTypeCode || '';
     } else {
       this.templateHtml = '';
       this.draftFileUrl = '';
       this.requestId = 0;
-      this.documentName = '';
+      this.currentDocumentName = '';
       this.selectedDocumentTypeCode = '';
       this.stepId = 0;
       this.selectedRow = null;
@@ -425,8 +481,10 @@ export class MyApprovalRequest {
     this.templateHtml = row?.proposedContent || '';
     this.draftFileUrl = row?.draftFileUrl || '';
     this.requestId = row?.requestId || row?.Id || row?.id;
-    this.documentName = row?.documentName || '';
+    this.currentDocumentName = row?.documentName || '';
     this.selectedDocumentTypeCode = row?.documentTypeCode || '';
+    this.stepId = row?.stepId || 0;
+    this.selectedRow = row;
   }
 
   openWorkflowDeatilsModal(rowData: any) {
@@ -436,7 +494,7 @@ export class MyApprovalRequest {
       nzTitle: 'Workflow History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        id: rowData.Id,
+        id: rowData.id,
         entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
@@ -461,7 +519,7 @@ export class MyApprovalRequest {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 850,
+      nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -472,14 +530,17 @@ export class MyApprovalRequest {
 
   submitWorkflowAction(action: string, observation: string) {
     if (!observation || observation.trim() === '') {
-      this._notification.createNotification('error', 'Validation', 'Observation is required');
+      this._notificationToastService.createNotification(
+        'error',
+        'Validation',
+        'Observation is required',
+      );
       return;
     }
 
     const payLoad = {
-      companyId: 1,
+      empId: this.LoginEmpId,
       stepId: this.stepId,
-      userId: 1,
       action: action,
       observation: observation,
     };
@@ -487,18 +548,36 @@ export class MyApprovalRequest {
     this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification('success', 'Request', response.Message);
-          this.GetAllPendingDocuments('');
+          this._notificationToastService.createNotification('success', 'Request', response.Message);
+          this.clearSelection();
+          if (this.agGridWrapper) {
+            this.agGridWrapper.refresh();
+          } else {
+            this.GetAllPendingDocuments(this.currentGridQuery);
+          }
         }
       },
       error: (err) => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Request',
-          'Failed to create workflow step.',
+          err.error?.Message || 'Failed to take action on the request.',
+          // 'Failed to create workflow step.',
         );
       },
     });
+  }
+
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '';
+    try {
+      const [datePart, timePart = ''] = value.split(' ');
+      const [month, day, year] = datePart.split('/');
+      if (!year || !month || !day) return value;
+      return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year} ${timePart.trim()}`.trim();
+    } catch {
+      return value;
+    }
   }
 
   export() {}
@@ -510,6 +589,18 @@ export class MyApprovalRequest {
           CODE: d.Code,
           NAME: d.Value,
         }));
+        const currentUserCode = this._UtilitiesService.GetUserEmpId();
+        if (currentUserCode && this.employees.some((e) => e.CODE === currentUserCode)) {
+          this.selectedEmployee = currentUserCode;
+        } else if (this.employees.length > 0) {
+          this.selectedEmployee = this.employees[0].CODE;
+        }
+
+        if (this.selectedEmployee && this.agGridWrapper) {
+          this.agGridWrapper.refresh();
+        } else if (this.selectedEmployee) {
+          this.GetAllPendingDocuments();
+        }
       } else {
         this.employees = [];
       }
@@ -522,13 +613,13 @@ export class MyApprovalRequest {
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
-        id: rowData.Id,
+        id: rowData.id,
         entityType: 'Request',
         mode: 'view',
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 850,
+      nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -539,7 +630,11 @@ export class MyApprovalRequest {
 
   downloadDraft(): void {
     if (!this.requestId) {
-      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      this._notificationToastService.createNotification(
+        'warning',
+        'Draft',
+        'No drafted file available for download.',
+      );
       return;
     }
 
@@ -556,19 +651,29 @@ export class MyApprovalRequest {
 
         if (blob) {
           if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
-            blob.text().then(text => {
+            blob.text().then((text) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
               } catch {
-                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
               }
             });
             return;
           }
 
-          let filename = `Draft_${this.documentName || this.requestId}`;
-          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          let filename = `Draft_${this.currentDocumentName || this.requestId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
           if (contentDisposition) {
             const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
             if (matches != null && matches[1]) {
@@ -585,24 +690,43 @@ export class MyApprovalRequest {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
         } else {
-          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
         }
       },
       error: (err: any) => {
-        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
             } catch {
-              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
         }
-      }
+      },
     });
   }
 }

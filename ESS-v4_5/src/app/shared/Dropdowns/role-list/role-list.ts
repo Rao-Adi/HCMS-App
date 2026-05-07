@@ -1,28 +1,46 @@
-import { Component, Input, Output, EventEmitter, forwardRef, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, input, Pipe, PipeTransform } from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { SelectList2 } from '@app/shared/interfaces/interfaces';
-import { RoleService } from '@app/shared/services/role.service';
-import { BehaviorSubject } from 'rxjs';
+import { SelectList2 } from '@app/shared/interfaces/interfaces';  
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Pipe({
+  name: 'highlightSearch',
+  standalone: true
+})
+export class HighlightSearchPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+  
+  transform(text: string, search: string): SafeHtml | string {
+    if (!search || !text) return text;
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+    const highlighted = text.replace(regex, '<mark class="highlight">$1</mark>');
+    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
+  }
+}
 
 @Component({
   selector: 'app-role-list',
-  imports: [CommonModule, FormsModule, NzSelectModule],
+  imports: [CommonModule, FormsModule, NzSelectModule, HighlightSearchPipe],
   // templateUrl: './role-list.html',
   // styleUrl: './role-list.css',
   template: `<nz-select
-    nzMode="multiple"
+    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
     nzPlaceHolder="Select Roles"
     nzAllowClear
     nzShowSearch
-    nzServerSearch
+    [nzFilterOption]="customFilter"
     [style.width]="width"
     [(ngModel)]="selectedUser"
-    (nzOnSearch)="onSearch($event)"
     (ngModelChange)="onSelectionChange($event)"
+    (nzOnSearch)="onSearch($event)"
   >
-    <nz-option *ngFor="let item of data" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
+    <nz-option *ngFor="let item of data" [nzValue]="item.ID" [nzLabel]="item.NAME" nzCustomContent>
+      <span [innerHTML]="item.NAME | highlightSearch:searchTerm"></span>
+    </nz-option>
   </nz-select>`,
   styles: [
     `
@@ -32,6 +50,11 @@ import { BehaviorSubject } from 'rxjs';
 
       .loading-icon {
         margin-right: 8px;
+      }
+
+      mark.highlight {
+        background-color: #ffc107;
+        padding: 0;
       }
     `,
   ],
@@ -51,17 +74,18 @@ export class RoleList implements ControlValueAccessor {
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
+  @Input() isMultiSelect = true;
 
   data: SelectList2[] = [];
   @Output() valueChange = new EventEmitter<any>();
 
   value: any;
   disabled = false;
-  selectedUser: string[] = [];
-  loading = false;
-  searchChange$ = new BehaviorSubject('');
+  selectedUser: any = null;
+  searchTerm = '';
 
-  constructor(private _roleService: RoleService) {}
+  constructor(private _peoplePartnerService: PeoplePartnersService
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -71,7 +95,7 @@ export class RoleList implements ControlValueAccessor {
   }
 
   writeValue(value: any): void {
-    this.value = value;
+    this.selectedUser = value;
   }
 
   registerOnChange(fn: any): void {
@@ -86,7 +110,7 @@ export class RoleList implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  onSelectionChange(value: string[]): void {
+  onSelectionChange(value: any): void {
     this.selectedUser = value;
     this.onChange(value); // VERY IMPORTANT
     this.onTouched();
@@ -98,17 +122,21 @@ export class RoleList implements ControlValueAccessor {
   //   this.valueChange.emit(value);
   // }
 
+  customFilter = (input: string, option: any): boolean => {
+    if (!option || !option.nzLabel) return false;
+    return option.nzLabel.toLowerCase().indexOf(input.toLowerCase()) > -1;
+  };
+
   onSearch(value: string): void {
-    this.loading = true;
-    this.searchChange$.next(value);
+    this.searchTerm = value;
   }
 
   getAllRoles = () => {
-    this._roleService.getRoleList().subscribe((res) => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
         this.data = (res.Data ?? []).map((d: any) => ({
-          ID: d.Id,
-          NAME: d.Value,
+          ID: d.Id || d.id,
+          NAME: d.Value || d.value,
         }));
       } else {
         this.data = [];

@@ -21,28 +21,26 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { DivisionService } from '@app/shared/services/division.services';
-import { DepartmentService } from '@app/shared/services/department.service';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { CompanyList } from '@app/shared/Dropdowns/company-list/company-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { DocumentRequestTypeService } from '@app/shared/services/document-request-type.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
 import { DocumentService } from '@app/shared/services/document.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
-import { ApprovalHistoryModal } from '../approval-history-modal/approval-history-modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 // Define interface for request types
 interface RequestType {
@@ -65,10 +63,10 @@ interface RequestType {
     DocumentTypeList,
     CompanyList,
     DMSRichTextEdit,
-    MyPendingRequestForApproval,
     CabinetStructureList,
     ReactiveFormsModule,
     DynamicFormByDocumentAttribute,
+    NzModalModule,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -82,6 +80,12 @@ interface RequestType {
   ],
 })
 export class CreateUpdateDocument {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'uploadorcreate';
+
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
@@ -105,6 +109,7 @@ export class CreateUpdateDocument {
   documentId: string = '';
   documentName: string = '';
   requestId: number = 0;
+  loginEmpId: string = '';
 
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
@@ -116,7 +121,15 @@ export class CreateUpdateDocument {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
+  };
+
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 10,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: '',
   };
 
   pageSize = 10;
@@ -190,7 +203,7 @@ export class CreateUpdateDocument {
       onCellClicked: (event: any) => {
         this.openWorkflowDeatilsModal(event.data);
       },
-    }
+    },
   ];
 
   DocumentObsoletionGridColumnDefs = [
@@ -232,22 +245,34 @@ export class CreateUpdateDocument {
       }),
     },
   ];
+
   DocumentObseletionData: any[] = [];
 
   constructor(
     private modal: NzModalService,
     private _documentAttributeService: DocumentAttributeService,
     private _workflowStepService: WorkflowStepService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _documentService: DocumentService,
     private documentTemplateService: TemplateService,
-    private _documentRequestService: DocumentRequestService
+    private _documentRequestService: DocumentRequestService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    // this.getAllDocumentRequestTypes();
-    this.loadRequestTypes();
+    this.GetLoginEmpId();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      // this.getAllDocumentRequestTypes();
+      this.loadRequestTypes();
+    });
+  }
+
+  GetLoginEmpId() {
+    this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   loadRequestTypes() {
@@ -276,7 +301,7 @@ export class CreateUpdateDocument {
       if (!this.selectedRequestId) {
         return true;
       }
-      
+
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return true;
@@ -304,7 +329,7 @@ export class CreateUpdateDocument {
       case 'DRT-0002': // Revision of existing document
         this.trainingContent = false;
         this.showExclusionTable = false;
-        this.GetAllApprovedDocuments('');
+        this.GetEffectiveDocumentsForRevision('');
         break;
       case 'DRT-0003': // Obsoletion of existing document
         this.trainingContent = false;
@@ -391,7 +416,6 @@ export class CreateUpdateDocument {
     this.GetDocumentTemplate();
 
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       EntityType: 'Document',
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
@@ -401,7 +425,7 @@ export class CreateUpdateDocument {
     };
 
     this._workflowStepService
-      .getWorkflowStepByDocumentTypeCode(
+      .getWorkflowPolicyByDocumentTypeCode(
         payLoad,
         // value,
         // this.selectedRequestType === '1' ? 1 : this.selectedRequestType === '2' ? 2 : 3,
@@ -435,8 +459,6 @@ export class CreateUpdateDocument {
       return;
     }
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      UserId: 1,
       documentTypeCode: this.selectedDocumentType,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
@@ -458,8 +480,7 @@ export class CreateUpdateDocument {
   onRequestIdChange(value: string): void {
     // this.loading = true;
     const requestId = value;
-    const companyId = MASTER_DEFAULT_KEYS.COMPANYID;
-    this._documentService.GerFinalizedDocumentByRequestId(companyId, requestId).subscribe((res) => {
+    this._documentService.GerFinalizedDocumentByRequestId(requestId).subscribe((res) => {
       if (res) {
         if (!res?.Data) return;
         this.documentId = res.Data[0].documentid;
@@ -552,7 +573,7 @@ export class CreateUpdateDocument {
     }
     const payload = this.buildPayload();
 
-    console.log(this.dynamicForm.value);
+    //console.log(this.dynamicForm.value);
   }
 
   buildPayload() {
@@ -566,10 +587,9 @@ export class CreateUpdateDocument {
   }
 
   AddTrainingUsers() {
-    debugger;
     this.showTrainingUserTable = this.showTrainingUserTable == true ? false : true;
     // if (!this.approvalPolicy) {
-    //   this._notification.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select an approval policy.',
@@ -603,32 +623,33 @@ export class CreateUpdateDocument {
     //     if (response?.Success) {
     //       this.trainingUsersData = [...response.Data];
 
-    //       this._notification.createNotification('success', 'Workflow', response.Message);
+    //       this._notificationToastService.createNotification('success', 'Workflow', response.Message);
     //     }
     //   },
     //   error: (err) => {
-    //     this._notification.createNotification('error', 'Error', 'Failed to create workflow step.');
+    //     this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
     //   },
     // });
   }
 
   SubmiteDocumentRequests() {
-    debugger;
-
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
       documentid: this.documentId,
-      userid: 1,
+      userid: this.loginEmpId,
       attributes: attributeValues,
     };
 
     this._documentService.submitDocument(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notification.createNotification('success', 'Document', response.Message);
+          this._notificationToastService.createNotification(
+            'success',
+            'Document',
+            response.Message,
+          );
           this.emptyFields();
           this.selectedRequestType = '';
           this.attributes = [];
@@ -638,13 +659,16 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to approve document.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to approve document.',
+        );
       },
     });
   }
 
   private buildAttributePayload(): any[] {
-    debugger;
     const result: any[] = [];
     const formValues = this.dynamicForm.value;
 
@@ -741,10 +765,111 @@ export class CreateUpdateDocument {
     });
   }
 
+  GetEffectiveDocumentsForRevision(query?: any) {
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      status: 0, // 0 = Draft
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: searchText || '',
+    };
+
+    this._documentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
+      next: (response) => {
+        if (response?.Success || response?.Data) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRevisionData = items.map((item: any) => ({
+            Id: item.id || item.Id,
+            companyId: item.companyId || item.CompanyId,
+            requestNumber: item.RequestNumber || item.requestNumber,
+            documentType: item.DocumentType || item.documentType,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber,
+            stepId: item.StepId || item.stepId,
+            stepOrder: item.StepOrder || item.stepOrder,
+            startedAt: item.StartedAt || item.startedAt,
+            division: item.Division,
+            documentId: item.DocumentNumber,
+            documentName: item.DocumentName,
+            proposedContent: item.ProposedContent,
+            department: item.Department,
+            departmentId: item.DepartmentCode,
+            subdepartment: item.SubDepartment,
+            justification: item.Justification,
+            businessdomainId: item.BusinessDomainCode,
+            documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
+            pendingWith: item.CurrentAssignedUser,
+            sumbittedby: item.CreatedBy,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.createdAt || item.CreatedAt || '',
+            ),
+            previousVersionCreatedOn:
+              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+            proposedVersionNumber: item.RowVersion || item.rowVersion,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            draftFileUrl:
+              item.DraftFileUrl ||
+              item.draftFileUrl ||
+              (String(item.TemplateType || item.templateType) === '1' ||
+              String(item.TemplateType || item.templateType) === '2'
+                ? item.ProposedContent
+                : ''),
+            // Map backend fields back to the frontend keys expected by the component
+            distributionListPayload: (item.DistributionList || []).map((x: any) => ({
+              ...x,
+              level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+              level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+              level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+              level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+              roleId: x.roleId || x.RoleId,
+              distributiontypeId:
+                x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+            })),
+            distributionUserList: item.UserList,
+          }));
+        } else {
+          this.documentRevisionData = [];
+          this.totalRows = 0;
+        }
+      },
+      error: (err) => {
+        this.documentRevisionData = [];
+        this.totalRows = 0;
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.Message || 'Failed to fetch draft documents.',
+        );
+      },
+    });
+  }
+
   GetAllApprovedDocuments(query: any) {
     const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      userId: 1,
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
@@ -752,6 +877,17 @@ export class CreateUpdateDocument {
       documentTypeCode: this.selectedDocumentType,
       employeeCode: 'EMP-0001',
       RequestStatus: 'Approved',
+
+      // pageNumber: this.currentGridQuery.pageNumber,
+      // pageSize: this.currentGridQuery.pageSize,
+      // sortModel: this.currentGridQuery.sortModel || [],
+      // filterModel: this.currentGridQuery.filterModel || {},
+      // searchTerm: this.currentGridQuery.searchTerm || '',
+      // // Map to satisfy backend validation
+      // sortBy: sortBy,
+      // sortColumn: sortColumn,
+      // searchText: this.currentGridQuery.searchTerm || '',
+      empid: this.loginEmpId,
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
@@ -837,7 +973,11 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
@@ -859,10 +999,9 @@ export class CreateUpdateDocument {
     }
   }
 
-  
-  emptyFields() { 
+  emptyFields() {
     this.showDocumentContent = false;
-    this.selectedCompany = ''; 
+    this.selectedCompany = '';
     this.selectedDocumentType = '';
     this.selectedDivisions = '';
     this.selectedDepartment = '';
@@ -882,7 +1021,11 @@ export class CreateUpdateDocument {
     const idToDownload = this.selectedRequestId ? Number(this.selectedRequestId) : this.requestId;
 
     if (!idToDownload) {
-      this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+      this._notificationToastService.createNotification(
+        'warning',
+        'Draft',
+        'No drafted file available for download.',
+      );
       return;
     }
 
@@ -902,16 +1045,26 @@ export class CreateUpdateDocument {
             blob.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notification.createNotification('warning', 'Draft', res.Message || 'Draft not available.');
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
               } catch {
-                this._notification.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
               }
             });
             return;
           }
 
           let filename = `Draft_${this.documentName || idToDownload}`;
-          const contentDisposition = response?.headers?.get('content-disposition') || response?.headers?.get('Content-Disposition');
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
           if (contentDisposition) {
             const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
             if (matches != null && matches[1]) {
@@ -928,24 +1081,43 @@ export class CreateUpdateDocument {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
         } else {
-          this._notification.createNotification('warning', 'Draft', 'No drafted file available for download.');
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
         }
       },
       error: (err: any) => {
-        if (err.error instanceof Blob && (err.error.type === 'application/json' || err.error.type === 'application/problem+json')) {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
           err.error.text().then((text: string) => {
             try {
               const res = JSON.parse(text);
-              this._notification.createNotification('error', 'Draft', res.Message || 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
             } catch {
-              this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notification.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
         }
-      }
+      },
     });
   }
 }

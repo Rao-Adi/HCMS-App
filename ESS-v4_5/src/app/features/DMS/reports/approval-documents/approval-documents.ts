@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -14,6 +14,7 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { MyPendingRequestForApproval } from '../../documents/my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-approval-documents',
@@ -43,6 +44,12 @@ import { MyPendingRequestForApproval } from '../../documents/my-approval-request
   ],
 })
 export class ApprovalDocuments {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'viewapproved';
+
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
   dateFormat = 'dd/MMM/yyyy';
@@ -53,7 +60,7 @@ export class ApprovalDocuments {
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = ''; 
+  selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
@@ -70,6 +77,12 @@ export class ApprovalDocuments {
   selectedUser?: string;
   documentTypeData: any[] = [];
 
+  requestCreators: SelectList[] = [
+    { CODE: '1', NAME: 'Ali' },
+    { CODE: '2', NAME: 'Ahmed' },
+    { CODE: '3', NAME: 'Naveed' },
+  ];
+
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
     { CODE: '2', NAME: 'Employee' },
@@ -78,24 +91,6 @@ export class ApprovalDocuments {
     { CODE: '5', NAME: 'Head of Division' },
     { CODE: '6', NAME: 'Head of Department' },
     { CODE: '7', NAME: 'Head of Sub-Department' },
-  ];
-
-  employees: SelectList[] = [
-    { CODE: '1', NAME: 'John Doe' },
-    { CODE: '2', NAME: 'Jane Smith' },
-    { CODE: '3', NAME: 'Alice Johnson' },
-  ];
-
-  workflowExclude: SelectList[] = [
-    { CODE: '1', NAME: 'Designation' },
-    { CODE: '2', NAME: 'Role' },
-    { CODE: '3', NAME: 'Specific Employee' },
-  ];
-
-  requestCreators: SelectList[] = [
-    { CODE: '1', NAME: 'Ali' },
-    { CODE: '2', NAME: 'Ahmed' },
-    { CODE: '3', NAME: 'Naveed' },
   ];
 
   documentsColumnDefs = [
@@ -129,10 +124,16 @@ export class ApprovalDocuments {
   radioValue = '';
   // single state
 
-  constructor() {}
+  constructor(private _permissionService: PermissionService) {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      
+      this.loadData(this.pageSize);
+    });
   }
 
   public noRowsOverlay: string = '';

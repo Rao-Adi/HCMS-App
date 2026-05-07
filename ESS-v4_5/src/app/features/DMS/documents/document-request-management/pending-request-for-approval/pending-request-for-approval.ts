@@ -3,13 +3,13 @@ import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { UserService } from '@app/shared/services/user-service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { CommonModule } from '@angular/common'; 
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -28,23 +28,29 @@ export enum DocumentRequestStatus {
 export class PendingRequestForApproval {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
-  pageSize = 1;
+  pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   currentGridQuery: any = {
     pageNumber: 1,
-    pageSize: 1,
+    pageSize: 10,
     sortModel: [],
     filterModel: {},
-    searchTerm: ''
+    searchTerm: '',
   };
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-    editable: true,
+    editable: false,
   };
 
   employees: any[] = [];
@@ -84,31 +90,39 @@ export class PendingRequestForApproval {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Created On' },
+    { field: 'createdOn', headerName: 'Last Saved On' },
     { field: 'pendingWith', headerName: 'Pending with' },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide:true },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestId', label: 'Request Id', visible: true },
+    { field: 'requestId', label: 'Request ID', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
-    { field: 'createdOn', label: ' Created On', visible: true },
+    { field: 'createdOn', label: 'Last Saved On', visible: true },
     { field: 'pendingWith', label: 'Pending with', visible: true },
   ];
 
   constructor(
     private _doumentRequestService: DocumentRequestService,
-    private _notification: NotificationService,
-    private _userService: UserService,
+    private _notificationToastService: NotificationToastService,
+    private _peoplePartnerService: PeoplePartnersService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getAllUsersList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      
+      // this.getAllUsersList();
+      this.GetAllPendingRequests('');
+    });
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -119,11 +133,9 @@ export class PendingRequestForApproval {
   }
 
   GetAllPendingRequests(query?: any) {
-    if (!this.selectedEmployee) {
-      this.documentRequestsData = [];
-      this.totalRows = 0;
-      return;
-    }
+      
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -140,19 +152,17 @@ export class PendingRequestForApproval {
     }
 
     const payload = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      initiator: this.selectedEmployee,
+      //initiator: this.selectedEmployee,
       divisionCode: null,
       departmentCode: null,
       status: this.selectedStatus,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {},
-      searchTerm: this.currentGridQuery.searchTerm || '',
+      filterModel: this.currentGridQuery.filterModel || {}, 
       sortBy: sortBy,
       sortColumn: sortColumn,
-      searchText: this.currentGridQuery.searchTerm || '',
+      searchText: searchText || '',
     };
 
     this._doumentRequestService.GetMyRequestsPendingApproval(payload).subscribe({
@@ -160,7 +170,7 @@ export class PendingRequestForApproval {
         if (response?.Success || response?.Data) {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
-          
+
           this.totalRows = data?.TotalCount ?? items.length;
           this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
@@ -197,7 +207,7 @@ export class PendingRequestForApproval {
         }
       },
       error: (err) => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.Message || 'Failed to fetch pending requests.',
@@ -218,7 +228,6 @@ export class PendingRequestForApproval {
   }
 
   onSelectionChange(selectedRows: any): void {
-
     this.requestId = selectedRows[0].requestId;
     this.submittedby = selectedRows[0].sumbittedby;
     // this.hasSelectedRows = selectedRows && selectedRows.length > 0;
@@ -236,7 +245,7 @@ export class PendingRequestForApproval {
   }
 
   getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,

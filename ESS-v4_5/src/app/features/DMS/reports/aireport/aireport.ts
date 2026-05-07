@@ -15,6 +15,12 @@ interface Message {
   styleUrl: './aireport.css',
 })
 export class AIReport {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'aireport';
+
   messages: Message[] = [
     { role: 'assistant', content: 'Hi! How can I help you today?', time: new Date() },
   ];

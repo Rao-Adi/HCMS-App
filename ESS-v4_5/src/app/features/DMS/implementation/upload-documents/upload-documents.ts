@@ -1,17 +1,17 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core'; 
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DocumentTypeCacheService } from '@app/shared/services/CacheServices/document-type-cache-service';
 import { DocumentService } from '@app/shared/services/document.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 
 @Component({
@@ -22,6 +22,12 @@ import { ColDef } from 'ag-grid-community';
 })
 export class UploadDocuments {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'uploadolddocument';
 
   uploadedDocumentsData: any[] = [];
 
@@ -61,31 +67,38 @@ export class UploadDocuments {
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getAllDocumentTypes();
-    // this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-    //   this.cabinetHierarchy = levels;
-    //   this.levelTitles = this.hierarchyService.getLevelTitles();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
 
-    //   this.loadCabinetDropdownData(levels);
-    // });
+      this.getAllDocumentTypes();
+      // this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      //   this.cabinetHierarchy = levels;
+      //   this.levelTitles = this.hierarchyService.getLevelTitles();
 
-    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
+      //   this.loadCabinetDropdownData(levels);
+      // });
 
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
+      this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
 
-    this.GetAllUploadedDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      });
+
+      this.GetAllUploadedDocuments({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
     });
   }
 
@@ -93,11 +106,11 @@ export class UploadDocuments {
     return [
       {
         field: 'documentId',
-        headerName: 'Document Id',
-        type: 'readonly',
+        headerName: 'Document Number',
+        type: 'text',
         minWidth: 150,
         pinned: 'left',
-        required: false,
+        required: true,
       },
       {
         field: 'documentName',
@@ -154,9 +167,9 @@ export class UploadDocuments {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: false,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -164,191 +177,6 @@ export class UploadDocuments {
       suppressCellFocus: true,
     };
   }
-
-  // private getColumns(): GridColumn[] {
-  //   const columns: GridColumn[] = [];
-
-  //   // ─────────────────────────────────────────────
-  //   // 1️⃣ FIXED (NON-CABINET) COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'documentId',
-  //       headerName: 'Document Id',
-  //       type: 'readonly',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: false,
-  //     },
-  //     {
-  //       field: 'documentName',
-  //       headerName: 'Document Name',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'version',
-  //       headerName: 'Version',
-  //       type: 'text',
-  //       minWidth: 120,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'documentTypeId',
-  //       headerName: 'Document Type',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.documentTypes,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //   );
-
-  //   // ─────────────────────────────────────────────
-  //   // 2️⃣ DYNAMIC CABINET STRUCTURE COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   this.cabinetHierarchy.forEach((level, index) => {
-  //     const parentLevel = index > 0 ? this.cabinetHierarchy[index - 1].level : null;
-
-  //     columns.push({
-  //       field: `level${level.level}Id`,
-  //       headerName: level.title,
-  //       type: 'dropdown',
-
-  //       // 🔥 level-based data source
-  //       dropdownOptions: this.dropdownDataSources[level.level],
-
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-
-  //       // 🔥 dynamic parent dependency
-  //       dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
-  //       filterKey: parentLevel ? 'parentId' : undefined,
-
-  //       minWidth: 180,
-  //       required: true,
-  //     });
-  //   });
-
-  //   // ─────────────────────────────────────────────
-  //   // 3️⃣ REMAINING FIXED COLUMNS
-  //   // ─────────────────────────────────────────────
-  //   columns.push(
-  //     {
-  //       field: 'nextReviewDate',
-  //       headerName: 'Next Review Date',
-  //       type: 'date',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'uploadDocument',
-  //       headerName: 'Upload Document',
-  //       type: 'file',
-  //       required: true,
-  //     },
-  //   );
-  //   //console.log(JSON.stringify(columns));
-
-  //   return columns;
-  // }
-
-  // private getColumns(): GridColumn[] {
-
-  //   return [
-  //     {
-  //       field: 'documentId',
-  //       headerName: 'Document Id',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'documentName',
-  //       headerName: 'Document Name',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     {
-  //       field: 'version',
-  //       headerName: 'Version',
-  //       type: 'text',
-  //       minWidth: 150,
-  //       pinned: 'left',
-  //       required: true,
-  //     },
-  //     // DOCUMENT TYPES
-  //     {
-  //       field: 'documentTypeId',
-  //       headerName: 'Document Type',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.documentTypes,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DIVISION
-  //     {
-  //       field: 'divisionName',
-  //       headerName: 'Division',
-  //       type: 'dropdown',
-  //       dropdownOptions: this.divisions,
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     // ✅ DEPARTMENT
-  //     {
-  //       field: 'departmentName',
-  //       headerName: 'Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'divisionName',
-  //       dataSourceKey: 'departments',
-  //       filterKey: 'divisionId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-  //     // ✅ SUB DEPARTMENT
-  //     {
-  //       field: 'subDepartmentName',
-  //       headerName: 'Sub Department',
-  //       type: 'dropdown',
-  //       dependsOn: 'departmentName',
-  //       dataSourceKey: 'subDepartments',
-  //       filterKey: 'departmentId',
-  //       dropdownValueField: 'id',
-  //       dropdownDisplayField: 'text',
-  //       minWidth: 180,
-  //       required: true,
-  //     },
-
-  //     {
-  //       field: 'nextReviewDate',
-  //       headerName: 'Next Review Date',
-  //       type: 'date',
-  //       required: true,
-  //     },
-
-  //     {
-  //       field: 'uploadDocument',
-  //       headerName: 'Upload Document',
-  //       type: 'file',
-  //       required: true,
-  //     },
-  //   ];
-  // }
 
   private getColumns(): GridColumn[] {
     return [
@@ -423,9 +251,9 @@ export class UploadDocuments {
 
   onRowAdded(event: { rowData: any; file?: File }): void {
     const { rowData, file } = event;
-    debugger;
+    // debugger;
     if (!file) {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'error',
         'Document',
         'Please select a file before saving.',
@@ -435,10 +263,11 @@ export class UploadDocuments {
 
     const formData = new FormData();
 
-    formData.append('CompanyId', MASTER_DEFAULT_KEYS.COMPANYID);
+    formData.append('DocumentNumber', rowData.documentId);
     formData.append('DocumentName', rowData.documentName);
     formData.append('DocumentTypeCode', rowData.documentTypeId);
-    formData.append('Status', rowData.version);
+    formData.append('Version', rowData.version);
+    formData.append('Status', 'Approved'); // Assuming legacy docs are active/approved. Adjust as per your API rules.
     formData.append('DivisionCode', rowData.level1Id);
     formData.append('DepartmentCode', rowData.level2Id);
     formData.append('SubDepartmentCode', rowData.level3Id);
@@ -454,7 +283,7 @@ export class UploadDocuments {
     formData.append('DocumentFile', file, file.name);
 
     this._documentService.create(formData).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'success',
         'Document',
         'Document created successfully!',
@@ -481,8 +310,8 @@ export class UploadDocuments {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
-    debugger;
+    //console.log('Row updated:', event);
+    // debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.level1Id);
     event.rowData.departmentName = this.getDisplayName(this.departments, event.rowData.level2Id);
@@ -501,7 +330,7 @@ export class UploadDocuments {
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    //console.log('Row deleted at index:', rowIndex);
     this.uploadedDocumentsData.splice(rowIndex, 1);
     this.uploadedDocumentsData = [...this.uploadedDocumentsData];
   }

@@ -1,18 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DivisionService } from '@app/shared/services/division.services';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
-import { filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-division-component',
@@ -22,6 +22,12 @@ import { filter, map, tap } from 'rxjs';
 })
 export class DivisionComponent {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure';
 
   selectedPageSize = 10;
   pageSize = 10;
@@ -48,10 +54,28 @@ export class DivisionComponent {
   constructor(
     private _divisionServices: DivisionService,
     private _masterCacheService: Mastercacheservice,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      // Now that permissions are set, build the grid and fetch the initial data
+      this.buildGrid();
+      this.getAllDivisions({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
+    });
+  }
+
+  private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
@@ -60,22 +84,15 @@ export class DivisionComponent {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
     };
-
-    this.getAllDivisions({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
-    });
   }
 
   private getColumns(): GridColumn[] {
@@ -96,7 +113,7 @@ export class DivisionComponent {
         minWidth: 200,
       },
       {
-        field: 'LastModifiedBy',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -124,9 +141,11 @@ export class DivisionComponent {
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -151,9 +170,11 @@ export class DivisionComponent {
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -191,10 +212,8 @@ export class DivisionComponent {
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Name: rowData.Name,
       IsActive: true,
       IsDeleted: false,
@@ -203,7 +222,7 @@ export class DivisionComponent {
     this._divisionServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Division',
           'Division created successfully!',
@@ -223,7 +242,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -231,7 +250,6 @@ export class DivisionComponent {
   onRowUpdated(event: { rowData: any }): void {
     const { rowData } = event;
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       IsActive: true,
@@ -241,7 +259,7 @@ export class DivisionComponent {
     this._divisionServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Division',
           'Division updated successfully!',
@@ -261,7 +279,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -272,7 +290,7 @@ export class DivisionComponent {
     this._divisionServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Division',
           'Division deleted successfully!',
@@ -292,7 +310,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

@@ -10,6 +10,8 @@ import { CommonModule } from '@angular/common';
 import { NzColor, NzColorPickerModule } from 'ng-zorro-antd/color-picker';
 import SignaturePad from 'signature_pad';
 import { HttpClient } from '@angular/common/http';
+import { UtilitiesService } from '@app/core/services/utilities.service';
+import { ESignatureService } from '@app/shared/services/esignature.service';
 
 @Component({
   selector: 'app-esignature',
@@ -30,6 +32,13 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ESignature implements AfterViewInit {
   selectedTab: string = 'TrainingPoliciy';
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'esignature';
+
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
   uploadedApiUrl = '/api/documents/uploaded-grid';
@@ -48,7 +57,20 @@ export class ESignature implements AfterViewInit {
   constructor(
     private http: HttpClient,
     private messageService: NzMessageService,
+    private _utilities: UtilitiesService,
+    private _esignatureService : ESignatureService
   ) {}
+
+  ngOnInit() {
+    this.checkPermissions();
+    //this.sig = new SignaturePad(this.canvas.nativeElement);
+  }
+
+  private checkPermissions(): void {
+    this._utilities.CanInsert(this.formId).subscribe((res) => (this.canAdd = res));
+    this._utilities.CanEdit(this.formId).subscribe((res) => (this.canEdit = res));
+    this._utilities.CanDelete(this.formId).subscribe((res) => (this.canDelete = res));
+  }
 
   ngAfterViewInit(): void {
     this.initSignaturePad();
@@ -73,14 +95,24 @@ export class ESignature implements AfterViewInit {
   }
 
   // 🔥 COLOR FIX
-  onColorChange(color: NzColor): void {
-    const hex = color.toHexString();
+  onColorChange(color: any): void {
+    let hex = '#000000';
+
+    // Safely extract the hex string regardless of what ng-zorro emits
+    if (typeof color === 'string') {
+      hex = color;
+    } else if (typeof color?.toHexString === 'function') {
+      hex = color.toHexString();
+    } else if (typeof color?.color?.toHexString === 'function') {
+      hex = color.color.toHexString();
+    } else if (color?.hex) {
+      hex = color.hex;
+    }
 
     this.penColor = hex;
 
     if (this.sig) {
       this.sig.penColor = hex;
-      (this.sig as any)._ctx.strokeStyle = hex; // 🔥 REQUIRED
     }
   }
 
@@ -118,17 +150,27 @@ export class ESignature implements AfterViewInit {
   // =====================
   save(): void {
     const base64 = this.sig.toDataURL('image/png');
-    console.log('BASE64:', base64);
+    //console.log('BASE64:', base64);
 
     this.upload(base64);
   }
 
   upload(base64: string): void {
-    this.http
-      .post('/api/signature/upload', {
-        imageBase64: base64,
-      })
-      .subscribe();
+    const payload = {
+      // Note: You may need to adjust "SignatureBase64" to match your exact C# backend DTO property
+      SignatureBase64: base64,
+      IsActive: true,
+    };
+
+    this._esignatureService.create(payload).subscribe({
+      next: (res) => {
+        this.messageService.success('Signature saved successfully!');
+      },
+      error: (err) => {
+        console.error('Failed to save signature:', err);
+        this.messageService.error(err?.error?.Message || 'Something went wrong. Please try again.');
+      },
+    });
   }
 
   load(base64: string): void {
@@ -143,10 +185,6 @@ export class ESignature implements AfterViewInit {
 
   isEmpty(): boolean {
     return this.sig.isEmpty();
-  }
-
-  ngOnInit() {
-    //this.sig = new SignaturePad(this.canvas.nativeElement);
   }
 
   loadSignatureFromFile(file: File): void {

@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, ESignature } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,23 @@ import { ApiResponse, ESignature } from '../interfaces/interfaces';
 export class ESignatureService {
   private _cabietStructureConfig = new ReplaySubject<ESignature[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
   get cabietStructureConfig$(): Observable<ESignature[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -26,14 +38,9 @@ export class ESignatureService {
     });
     return headers;
   }
-
-  getAllESignaturesList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSESignature/get-all-esignatures-list`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
-
+ 
   getESignatureById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSESignature/get-esignatures-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSESignature/get-esignature-by-id/id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -54,7 +61,7 @@ export class ESignatureService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSESignature/get-all-esignatures`;
+    const uri = `${this.apiUrl}/DMSESignature/get-all-esignatures`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -63,21 +70,21 @@ export class ESignatureService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSESignature/create-esignatures`,
+      `${this.apiUrl}/DMSESignature/create-esignature`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSESignature/update-esignatures`,
+      `${this.apiUrl}/DMSESignature/update-esignature`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSESignature/delete-esignatures/${code}`
+      `${this.apiUrl}/DMSESignature/delete-esignature/${code}`
     );
   }
 }

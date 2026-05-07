@@ -5,17 +5,14 @@ import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AttributeMandatoryScopeService } from '@app/shared/services/attribute-mandatory-scope.service';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
-import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { DepartmentCacheService } from '@app/shared/services/CacheServices/department-cache-service';
-import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
-import { SubDepartmentCacheService } from '@app/shared/services/CacheServices/sub-department-cache-service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 
@@ -27,6 +24,12 @@ import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 })
 export class MandatoryCabinetWisePopup {
   @Input() data: any;
+
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure';
 
   cabinetId!: number;
 
@@ -64,48 +67,38 @@ export class MandatoryCabinetWisePopup {
     private modalRef: NzModalRef,
     @Inject(NZ_MODAL_DATA) public modalData: any,
     private _attributeMandatoryService: AttributeMandatoryScopeService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
     private readonly hierarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService
   ) {
     this.cabinetId = modalData.data;
     //console.log('Received cabinet id:', this.cabinetId);
-
-    this.gridConfig = {
-      columns: this.getColumns(),
-      enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
-      enableSorting: true,
-      enableFiltering: true,
-      enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
-      rowHeight: 47,
-      headerHeight: 40,
-      domLayout: 'autoHeight',
-      theme: 'ag-theme-alpine',
-      suppressCellFocus: true,
-    };
+ 
   }
 
   ngOnInit() {
-    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      this.cabinetHierarchy = levels;
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
 
-      this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
-    });
+      this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+        this.cabinetHierarchy = levels;
 
-    this.GetAllAttributeMandatoryScopes({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+      });
+
+      this.GetAllAttributeMandatoryScopes({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [], // or your current sort/filter model
+        filterModel: {},
+      });
+      // this.getAllDivisionList();
+      // this.getAllDepartmentList();
+      // this.getAllSubDepartmentList();
     });
-    // this.getAllDivisionList();
-    // this.getAllDepartmentList();
-    // this.getAllSubDepartmentList();
   }
 
   private getColumns(): GridColumn[] {
@@ -150,9 +143,9 @@ export class MandatoryCabinetWisePopup {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -179,7 +172,6 @@ export class MandatoryCabinetWisePopup {
     const { rowData } = event;
     debugger;
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       documentAttributeId: this.cabinetId,
       divisionCode: rowData.level1Id || rowData.level1Id,
       departmentCode: rowData.level2Id || rowData.level2Id,
@@ -191,7 +183,7 @@ export class MandatoryCabinetWisePopup {
     };
     this._attributeMandatoryService.create(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document Attribute',
           'Document Attribute created successfully!',
@@ -222,7 +214,7 @@ export class MandatoryCabinetWisePopup {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -230,7 +222,7 @@ export class MandatoryCabinetWisePopup {
   onRowUpdated(event: { rowData: any }): void {
     const { rowData } = event;
 
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     // Update display names
     const payLoad = {
       documentAttributeId: this.cabinetId,
@@ -243,7 +235,7 @@ export class MandatoryCabinetWisePopup {
     };
     this._attributeMandatoryService.update(payLoad).subscribe({
       next: () => {
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Document Attribute',
           'Document Attribute created successfully!',
@@ -274,13 +266,13 @@ export class MandatoryCabinetWisePopup {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
+    // console.log('Row deleted at index:', rowIndex);
     this.mandatoryCabinetData.splice(rowIndex, 1);
     this.mandatoryCabinetData = [...this.mandatoryCabinetData];
   }

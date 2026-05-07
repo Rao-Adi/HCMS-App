@@ -15,7 +15,16 @@ export class UtilitiesService {
   // This avoids breaking your existing constructor
   private http = inject(HttpClient);
   private config = inject(AppConfigService);
-  private apiUrl = this.config.baseUrl || '';
+  private get apiUrl(): string {
+    // The base URL should be retrieved only when it's needed (i.e., inside a method).
+    // This prevents errors during service initialization if the config is loaded asynchronously.
+    // This is the standard pattern used in other services like `department.service.ts`.
+    if (!this.config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no baseUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this.config.baseUrl;
+  }
 
   // --- In-Memory State for SPA navigation ---
   private empId: string | null = null;
@@ -98,7 +107,7 @@ export class UtilitiesService {
 
   // --- Permission Checks (Wrapper around DataService calls) ---
   // (Unchanged, this logic is good)
-  private checkPermission(apiMethod: string, FormId: string, applicationCode: string = 'ESSv4.5'): Observable<boolean> {
+  private checkPermission(apiMethod: string, FormId: string, applicationCode: string = 'DMS-b'): Observable<boolean> {
     return new Observable((observer: Observer<boolean>) => {
       this._UserService.get(`Utilities/${apiMethod}/${FormId}/${applicationCode}`).subscribe({
         next: (response: any) => {

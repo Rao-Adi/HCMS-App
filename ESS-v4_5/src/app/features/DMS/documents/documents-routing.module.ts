@@ -11,5 +11,5 @@ const routes: Routes = [
   { path: 'create-update-document', component: CreateUpdateDocument },
   { path: 'my-approvals-documents', component: MyApprovalDocument },
   { path: 'sop-training', component: SOPDocumentTraining },
-  { path: 'authorization-post-training', component: DocumentAuthorizationPostTraining }
+  { path: 'trainingauthorization', component: DocumentAuthorizationPostTraining }
 ];

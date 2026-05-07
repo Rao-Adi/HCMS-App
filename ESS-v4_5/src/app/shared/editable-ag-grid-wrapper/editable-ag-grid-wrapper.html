@@ -1,10 +1,10 @@
-<div class="row mb-2">
+<div class="row mb-2" *ngIf="showSearchBar">
   <div class="col-sm-3">
     <div class="example-header">
       <span>Search</span>
       <input
         nz-input
-        placeholder="Basic usage"
+        placeholder="Search"
         [(ngModel)]="value"
         (input)="onFilterTextBoxChanged()"
       />

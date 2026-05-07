@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-   baseUrl: 'http://localhost:5190/api',
+   //baseUrl: 'http://localhost:5190/api',
   // baseUrl: 'http://10.10.0.80:82/api',
   //baseUrl: 'https://api.dms.org/api',
   // baseUrl: 'https://dms-api.azurewebsites.net/api',

@@ -1,16 +1,14 @@
 import { Component } from '@angular/core';
-import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
-import { ApprovalHistoryModal } from '../../approval-history-modal/approval-history-modal';
+import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal'; 
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { ColDef } from 'ag-grid-community';
-import { NotificationService } from '@app/shared/notification/notification.service';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { ColDef } from 'ag-grid-community'; 
 import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
-
+import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+ 
 @Component({
   selector: 'app-documents-component',
   imports: [AgGridWrapper],
@@ -18,6 +16,12 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
   styleUrl: './documents-component.css',
 })
 export class DocumentsComponent {
+   // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -27,6 +31,7 @@ export class DocumentsComponent {
   pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
+  loginEmpId: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -133,12 +138,24 @@ export class DocumentsComponent {
 
   constructor(
     private modal: NzModalService,
-    private _notification: NotificationService,
-    private _documentService: DocumentService,
+    private _notificationToastService: NotificationToastService,
+    private _documentService: DocumentService, 
+    private _permissionService: PermissionService
   ) {}
 
   ngOnInit() {
-    this.GetAllApprovedDocuments('');
+    this.GetLoginEmpId(); 
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      
+      this.GetAllApprovedDocuments('');
+    });
+  }
+ 
+  GetLoginEmpId() {
+    this.loginEmpId = localStorage.getItem('HRISEmpId') || '';
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -146,16 +163,23 @@ export class DocumentsComponent {
   }
 
   GetAllApprovedDocuments(query: any) {
-    const payLoad = {
-      companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      userId: 1,
+    const payLoad = { 
       // divisionCode: this.selectedDivisions,
       // departmentCode: this.selectedDepartment,
       // subDepartmentCode: this.selectedSubDepartment,
       // businessDomainCode: this.selectedBusinessDomain,
-      // documentTypeCode: this.selectedDocumentType,
-      employeeCode: 'EMP-0001',
-      RequestStatus: 'Approved',
+      // documentTypeCode: this.selectedDocumentType,        
+      RequestStatus: 'Approved', 
+      // pageNumber: this.currentGridQuery.pageNumber,
+      // pageSize: this.currentGridQuery.pageSize,
+      // sortModel: this.currentGridQuery.sortModel || [],
+      // filterModel: this.currentGridQuery.filterModel || {},
+      // searchTerm: this.currentGridQuery.searchTerm || '',
+      // // Map to satisfy backend validation
+      // sortBy: sortBy,
+      // sortColumn: sortColumn,
+      // searchText: this.currentGridQuery.searchTerm || '',
+      empid: this.loginEmpId,
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
@@ -240,7 +264,7 @@ export class DocumentsComponent {
         }
       },
       error: (err) => {
-        this._notification.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToastService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
   }

@@ -2,15 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="card-custom">
-          <div class="clearfix">
-            <div class="pull-left">
-              <h3 class="mt-0">E-Signature</h3>
-              <small class="text-muted">E-Signature</small>
-            </div>
-          </div>
-          <br />
-          <hr />
+        <div class="card-custom"> 
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="main-content d-flex flex-column min-vw-0">
               <!-- <div class="custom-tab-container">
@@ -37,22 +29,26 @@
                   <div class="justify-content-center align-items-center signature-container">
                     <nz-color-picker
                       [(ngModel)]="penColor"
+                      nzFormat="hex"
                       (ngModelChange)="onColorChange($event)"
                     ></nz-color-picker>
                     <canvas #canvas class="signature-canvas"></canvas>
                   </div>
                   <div class="d-flex justify-content-center">
                     <div class="signature-toolbar btn-group mt-2">
-                      <button class="btn btn-sm btn-primary" nz-button (click)="undo()">
+                      <button class="btn btn-sm btn-primary" nz-button (click)="undo()"
+                      [disabled]="!this.canAdd">
                         Undo
                       </button>
-                      <button class="btn btn-sm btn-primary" nz-button (click)="redo()">
+                      <button class="btn btn-sm btn-primary" nz-button (click)="redo()"
+                      [disabled]="!this.canAdd">
                         Redo
                       </button>
                       <button
                         class="btn btn-sm btn-primary"
                         nz-button
                         nzType="default"
+                        [disabled]="!this.canAdd"
                         (click)="clear()"
                       >
                         Clear
@@ -61,6 +57,7 @@
                         class="btn btn-sm btn-primary"
                         nz-button
                         nzType="primary"
+                        [disabled]="!this.canAdd"
                         (click)="save()"
                       >
                         Save
@@ -70,6 +67,7 @@
                       <button
                         class="btn btn-sm btn-secondary"
                         nz-button
+                        [disabled]="!this.canAdd"
                         (click)="fileInput.click()"
                       >
                         Upload

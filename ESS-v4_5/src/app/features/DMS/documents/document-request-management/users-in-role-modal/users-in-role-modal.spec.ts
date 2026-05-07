@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RivisionHistoryPopup } from './rivision-history-popup';
+import { UsersInRoleModal } from './users-in-role-modal';
 
-describe('RivisionHistoryPopup', () => {
-  let component: RivisionHistoryPopup;
-  let fixture: ComponentFixture<RivisionHistoryPopup>;
+describe('UsersInRoleModal', () => {
+  let component: UsersInRoleModal;
+  let fixture: ComponentFixture<UsersInRoleModal>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RivisionHistoryPopup]
+      imports: [UsersInRoleModal]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(RivisionHistoryPopup);
+    fixture = TestBed.createComponent(UsersInRoleModal);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

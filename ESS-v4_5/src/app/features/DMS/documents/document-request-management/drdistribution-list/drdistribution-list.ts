@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UtilitiesService } from '@app/core/services/utilities.service';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -8,12 +9,14 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { DistributionListService } from '@app/shared/services/distribution-list.service';
 import { DistributionTypeService } from '@app/shared/services/distribution-type.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { RoleService } from '@app/shared/services/role.service';
 import { ColDef } from 'ag-grid-community';
 import { forkJoin } from 'rxjs';
@@ -42,13 +45,22 @@ export class DRDistributionList {
   @Input() selectedDistributionList: any[] = [];
   @Output() distributionChanged = new EventEmitter<any[]>();
 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'requestdocumentcreation';
+
   private isInternalUpdate = false;
 
   gridConfig: GridConfig = {} as GridConfig;
 
   distributionListData: DistributionGridRow[] = [];
+  userRoles: string[] = [];
   divisions: any[] = [];
   departments: any[] = [];
+  subDepartments: any[]=[];
+  businessDomains: any[] = [];
   roles: { id: any; text: string }[] = [];
   distributionTypeList: { id: any; text: string }[] = [];
   selectedPageSize = 1; // default value
@@ -78,17 +90,25 @@ export class DRDistributionList {
 
   constructor(
     private _distributionList: DistributionListService,
-    private _distributionTypeService: DistributionTypeService,
-    private _roleServices: RoleService,
-    private _notification: NotificationService,
+    private _distributionTypeService: DistributionTypeService, 
+    private _notificationToastService: NotificationToastService,
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
+    private _permissionService: PermissionService,
+    private _peoplePartnerService: PeoplePartnersService
   ) {
-    //this.loadSampleData();
+    
   }
 
   ngOnInit() {
-    this.loadDropdownsAndGrid();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.loadDropdownsAndGrid(); 
+    });
+
     // this.GetAllDistributionList({
     //   pageNumber: 1,
     //   pageSize: this.selectedPageSize,
@@ -102,8 +122,9 @@ export class DRDistributionList {
     //   this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
     // });
   }
+ 
 
-  ngOnChanges(changes: SimpleChanges) { 
+  ngOnChanges(changes: SimpleChanges) {
     if (changes['selectedDistributionList']) {
       if (this.isInternalUpdate) {
         this.isInternalUpdate = false;
@@ -114,7 +135,7 @@ export class DRDistributionList {
     }
   }
 
-  private setGridData() { 
+  private setGridData() {
     if (!this.selectedDistributionList.length) return;
     // console.log(JSON.stringify(this.selectedDistributionList));
     this.distributionListData = this.selectedDistributionList.map((item: any) => ({
@@ -138,7 +159,7 @@ export class DRDistributionList {
         field: 'roleId',
         headerName: 'Role',
         type: 'dropdown',
-        dropdownOptions: this.roles,
+        dropdownOptions: this.userRoles,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -167,9 +188,9 @@ export class DRDistributionList {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -243,10 +264,9 @@ export class DRDistributionList {
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     // console.log('Row added:', rowData);
-    debugger;
+    // debugger;
     // Add logic to generate IDs, validate, etc.
     // const payLoad = {
-    //   CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
     //   distributionType: rowData.DistributiontypeId || rowData.distributiontypeId,
     //   divisionCode: rowData.level1Id || rowData.level1Id,
     //   departmentCode: rowData.level2Id || rowData.level2Id,
@@ -288,7 +308,7 @@ export class DRDistributionList {
     this.notifyParent();
 
     // this._distributionList.create(payLoad).subscribe(() => {
-    //   this._notification.createNotification(
+    //   this._notificationToasService.createNotification(
     //     'sucess',
     //     'Distribution List',
     //     'Distribution list added successfully!',
@@ -312,8 +332,8 @@ export class DRDistributionList {
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
-    debugger;
+    //console.log('Row updated:', event);
+    // debugger;
     // Update display names
     event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     event.rowData.departmentName = this.getDisplayName(
@@ -375,13 +395,13 @@ export class DRDistributionList {
 
   private loadDropdownsAndGrid(): void {
     forkJoin({
-      roles: this._roleServices.getRoleList(),
+      userRoles: this._peoplePartnerService.GetAllRoles(),
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
-    }).subscribe(({ roles, distributionTypes, hierarchy }) => {
+    }).subscribe(({ userRoles, distributionTypes, hierarchy }) => {
       // ✅ Normalize Roles
-      this.roles =
-        roles?.Data?.map((d: any) => ({
+      this.userRoles =
+        userRoles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
         })) ?? [];
@@ -414,7 +434,22 @@ export class DRDistributionList {
     // }));
 
     // this.distributionChanged.emit(cleanList);
-  }
+  };
+
+  
+  
+  GetAllUserRoles = () => {
+    this._peoplePartnerService.GetAllRoles().subscribe((res) => {
+      if (res) {
+        this.userRoles = (res.Data ?? []).map((d: any) => ({
+          id: d.Id,
+          text: d.Value,
+        }));
+      } else {
+        this.userRoles = [];
+      }
+    });
+  };
 }
 
 class DistributionColumns {

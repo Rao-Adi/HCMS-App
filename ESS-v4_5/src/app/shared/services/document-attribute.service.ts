@@ -1,10 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { catchError, map, Observable, ReplaySubject, switchMap, take, tap, throwError } from 'rxjs';
-import { ApiResponse, DocumentAttribute } from '../interfaces/interfaces';
-import { NotificationService } from '../notification/notification.service';
+import { ApiResponse, DocumentAttribute } from '../interfaces/interfaces'; 
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Injectable({
   providedIn: 'root',
@@ -13,13 +12,23 @@ export class DocumentAttributeService {
   private _cabietStructureConfig = new ReplaySubject<DocumentAttribute[]>(1);
 
   constructor(
-    private http: HttpClient,
-    private _notification: NotificationService,
+    private http: HttpClient, 
+    private _config: AppConfigService
   ) {}
 
   get cabietStructureConfig$(): Observable<DocumentAttribute[]> {
     return this._cabietStructureConfig.asObservable();
   }
+
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
+
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -32,25 +41,24 @@ export class DocumentAttributeService {
   }
 
   getDocumentAttributeList(): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-all-document-attributes-list`;
+    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-all-document-attributes-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDocumentAttributeById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-id/${Id}`;
+    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-document-attributes-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDocumentAttributeByDocumentType(code: string): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-code/${code}`;
+    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-document-attributes-by-code/${code}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  getDocumentAttributeByDocumentId(
-    companyId: string,
+  getDocumentAttributeByDocumentId( 
     documentId: number,
   ): Observable<GenericResponse<any>> {
-    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-document-attributes-by-documentId?companyId=${companyId}&documentId=${documentId}`;
+    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-document-attributes-by-documentId?documentId=${documentId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -71,37 +79,31 @@ export class DocumentAttributeService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSDocumentAttribute/get-all-document-attributes`;
+    const uri = `${this.apiUrl}/DMSDocumentAttribute/get-all-document-attributes`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
     });
   }
-
-  // create(payload: any) {
-  //   return this.http.post(
-  //     `${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`,
-  //     payload
-  //   );
-  // }
+ 
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentAttribute/create-document-attributes`,
+      `${this.apiUrl}/DMSDocumentAttribute/create-document-attributes`,
       payload,
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentAttribute/update-document-attributes`,
+      `${this.apiUrl}/DMSDocumentAttribute/update-document-attributes`,
       payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`,
+      `${this.apiUrl}/DMSDocumentAttribute/delete-document-attributes/${code}`,
     );
   }
 }

@@ -10,11 +10,11 @@ import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
   styleUrl: './revision-history-modal.css',
 })
 export class RevisionHistoryModal {
-  averateDocumentScoreData: any[] = [];
+  revisionHistoryData: any[] = []; // Changed to match likely HTML binding
   pageSize = 10;
   selectedPageSize = 10;
   totalRows = 0;
-
+  averateDocumentScoreData: any[] = [];
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
@@ -40,23 +40,35 @@ export class RevisionHistoryModal {
     },
   ];
 
-
   constructor(@Inject(NZ_MODAL_DATA) public modalData: any) {}
 
-
   ngOnInit() {
-    this.loadData(this.pageSize);
+    this.loadData({ pageNumber: 1 });
   }
 
-  loadData(pageNumber: number) {
+  GetAllDocuments(query: any) {
+    this.loadData(query);
+  }
+
+  onPageSizeChanged(event: { gridId: string; pageSize: number }) {
+    if (event && event.pageSize) {
+      this.pageSize = event.pageSize;
+    }
+    this.loadData({ pageNumber: 1, pageSize: this.pageSize });
+  }
+
+  loadData(query: any = {}) {
+    const pageNumber = Number(query.pageNumber) || 1;
+    const pageSize = Number(query.pageSize) || this.pageSize;
+
     // 🔹 TEMP: Dummy data mode
     const allData = this.getDummyData();
 
     // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
+    const start = (pageNumber - 1) * pageSize;
+    const end = start + pageSize;
 
-    this.averateDocumentScoreData = allData.slice(start, end);
+    this.revisionHistoryData = allData.slice(start, end);
     this.totalRows = allData.length;
 
     // 🔹 REMOVE THIS when backend is ready

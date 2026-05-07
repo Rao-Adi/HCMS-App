@@ -34,7 +34,7 @@ export const authGuard: CanActivateFn = (
   };
 
   const formId = route.data['formId'];
-  const apiUrl = `Security/CanViewForAuthGuard?FormId=${formId}&AppCode=ESSv4.5`;
+  const apiUrl = `Security/CanViewForAuthGuard?FormId=${formId}&AppCode=DMS-b`;
 
   return data.get<string>(apiUrl).pipe(
     map((resp: any): boolean | UrlTree => {

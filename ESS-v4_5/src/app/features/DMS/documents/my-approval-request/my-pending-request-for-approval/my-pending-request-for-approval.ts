@@ -5,7 +5,8 @@ import { ColDef } from 'ag-grid-community';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { ObservationModalPopup } from '../observation-modal-popup/observation-modal-popup';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzIconModule } from 'ng-zorro-antd/icon'; 
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-my-pending-request-for-approval',
@@ -14,6 +15,12 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
   styleUrl: './my-pending-request-for-approval.css',
 })
 export class MyPendingRequestForApproval {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'create-update-document';
+
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -40,7 +47,7 @@ export class MyPendingRequestForApproval {
     },
     {
       field: 'requestId',
-      headerName: 'Request Id',
+      headerName: 'Request ID',
     },
     {
       field: 'documentName',
@@ -120,8 +127,8 @@ export class MyPendingRequestForApproval {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentTypeId', label: 'document Type', visible: true },
-    { field: 'requestId', label: 'Request Id', visible: true },
-    { field: 'documentName', label: 'documentName', visible: true },
+    { field: 'requestId', label: 'Request ID', visible: true },
+    { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'viewDocument', label: 'Document Content', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -140,10 +147,19 @@ export class MyPendingRequestForApproval {
     { field: 'approvalHistory', label: 'Approval History', visible: true },
   ];
 
-  constructor(private modal: NzModalService) {}
+  constructor(
+    private modal: NzModalService,
+    private _permissionService: PermissionService,
+  ) {}
 
   ngOnInit() {
-    this.loadData(this.pageSize);
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+      
+      this.loadData(this.pageSize);
+    });
   }
 
   GetAllDocuments(query: any) {}

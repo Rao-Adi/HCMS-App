@@ -6,12 +6,11 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
-import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzModalModule } from 'ng-zorro-antd/modal';
@@ -31,6 +30,12 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
   styleUrl: './misc-policies.css',
 })
 export class MiscPolicies {
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'trainingpolicy';
+
   gridConfig: GridConfig = {} as GridConfig;
   selectedTab: string = 'TrainingPoliciy';
   // 🔹 API endpoints
@@ -89,11 +94,18 @@ export class MiscPolicies {
   constructor(
     private _trainingPolicyService: TrainingPolicyService,
     private _documentTypes: DocumentTypeService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getDocumentTypeList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.getDocumentTypeList();
+    });
   }
 
   private buildGrid(): void {
@@ -105,9 +117,9 @@ export class MiscPolicies {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -136,7 +148,7 @@ export class MiscPolicies {
       },
       {
         field: 'traningRequired',
-        headerName: 'traningRequired',
+        headerName: 'Traning Required',
         type: 'switch',
         required: false,
         minWidth: 150,
@@ -144,7 +156,7 @@ export class MiscPolicies {
       },
       {
         field: 'minimumscoreforpassing',
-        headerName: 'minimumscoreforpassing',
+        headerName: 'Minimum Score for Passing',
         type: 'number',
         minWidth: 150,
         pinned: 'left',
@@ -182,9 +194,9 @@ export class MiscPolicies {
         if (res?.Success && res.Data?.Items) {
           this.trainingPolicesData = res.Data.Items.map((item: any) => ({
             Id: item.id || item.Id,
-            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode, 
-            traningRequired: item.trainingRequired || item.TrainingRequired, 
-            minimumscoreforpassing :item.minimumScore ||item.MinimumScore,
+            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
+            traningRequired: item.trainingRequired || item.TrainingRequired,
+            minimumscoreforpassing: item.minimumScore || item.MinimumScore,
             IsActive: item.isActive || item.IsActive,
             IsDeleted: item.isDeleted || item.IsDeleted,
             CreatedBy: item.createdBy || item.CreatedBy || '',
@@ -197,8 +209,6 @@ export class MiscPolicies {
         //this.cdr.detectChanges(); // force update
       });
   }
-
-   
 
   getDocumentTypeList = () => {
     this._documentTypes.getDocumentTypeList().subscribe((res) => {
@@ -222,18 +232,16 @@ export class MiscPolicies {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event; 
-    debugger;
+    const { rowData } = event;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
-      documentTypeCode: rowData.documentType || rowData.documentType,
+      documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
 
     this._trainingPolicyService.create(payLoad).subscribe(() => {
-      this._notification.createNotification(
+      this._notificationToastService.createNotification(
         'sucess',
         'Distribution List',
         'Distribution list added successfully!',
@@ -252,7 +260,7 @@ export class MiscPolicies {
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     console.log('Row updated:', event);
-    debugger;
+
     // Update display names
     // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     // event.rowData.departmentName = this.getDisplayName(

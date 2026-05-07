@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { UserService } from '@app/shared/services/user-service';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -15,6 +14,8 @@ import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-l
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColumnToggle } from '@app/shared/interfaces/interfaces';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 
 @Component({
   selector: 'app-people-partners-employee',
@@ -32,6 +33,13 @@ import { ColumnToggle } from '@app/shared/interfaces/interfaces';
 })
 export class PeoplePartnersEmployee {
   gridConfig: GridConfig = {} as GridConfig;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'users';
+
   employeeData: any[] = [];
   loading = false;
   integrationUserData: any[] = [];
@@ -46,53 +54,43 @@ export class PeoplePartnersEmployee {
     cellDataType: false,
   };
 
+  //  columnToggles?: ColumnToggle[] = [
+  //   { field: 'EmployeeCode', label: 'Employee Code', visible: true },
+  //   { field: 'EmployeeName', label: 'Employee Name', visible: true },
+  //   { field: 'DivisionName', label: 'Division', visible: true },
+  //   { field: 'DepartmentName', label: 'Department', visible: true },
+  //   { field: 'SubDepartmentName', label: 'Sub-Department', visible: true },
+  //   { field: 'Designation', label: 'Designation', visible: true },
+  //   { field: 'Grade', label: 'Grade', visible: true },
+  //   { field: 'ReportingTo', label: 'Reporting To', visible: true },
+  //   { field: 'DateOfJoining', label: 'Date Of Joining', visible: true },
+  //   { field: 'accessLevel', label: 'AccessLevel', visible: true },
+  // ];
+
   columnToggles?: ColumnToggle[] = [
-    { field: 'EmployeeCode', label: 'Employee Code', visible: true },
-    { field: 'EmployeeName', label: 'Employee Name', visible: true },
-    { field: 'DivisionName', label: 'Division', visible: true },
-    { field: 'DepartmentName', label: 'Department', visible: true },
-    { field: 'SubDepartmentName', label: 'Sub-Department', visible: true },
-    { field: 'Designation', label: 'Designation', visible: true },
-    { field: 'Grade', label: 'Grade', visible: true },
-    { field: 'ReportingTo', label: 'Reporting To', visible: true },
-    { field: 'DateOfJoining', label: 'Date Of Joining', visible: true },
-    { field: 'accessLevel', label: 'AccessLevel', visible: true },
+    { field: 'empcode', label: 'Employee Code', visible: true },
+    { field: 'fname', label: 'Employee Name', visible: true },
+    { field: 'designation', label: 'Designation', visible: true },
+    { field: 'role', label: 'Role', visible: true },
+    { field: 'nicnew', label: 'CNIC', visible: true },
+    { field: 'mobile', label: 'Mobile', visible: true },
+    { field: 'email', label: 'Email', visible: true },
+    { field: 'datejoin', label: 'Date Of Joining', visible: true },
+    { field: 'accessLevel', label: 'Access Level', visible: true },
   ];
 
   documentColumnDefs = [
-    { field: 'EmployeeCode', headerName: 'Employee Code' },
-    { field: 'EmployeeName', headerName: 'Employee Name' },
-    {
-      field: 'DivisionName',
-      headerName: 'Division',
-    },
-    {
-      field: 'DepartmentName',
-      headerName: 'Department',
-    },
-    {
-      field: 'SubDepartmentName',
-      headerName: 'Sub-Department',
-    },
-    {
-      field: 'Designation',
-      headerName: 'Designation',
-    },
-    {
-      field: 'Grade',
-      headerName: 'Grade',
-    },
-    {
-      field: 'ReportingTo',
-      headerName: 'Reporting Manager',
-    },
-    {
-      field: 'DateOfJoining',
-      headerName: 'Date of Joining',
-    },
+    { field: 'empcode', headerName: 'Employee Code' },
+    { field: 'fname', headerName: 'Employee Name' },
+    { field: 'designation', headerName: 'Designation' },
+    { field: 'role', headerName: 'Role' },
+    { field: 'nicnew', headerName: 'CNIC' },
+    { field: 'mobile', headerName: 'Mobile' },
+    { field: 'email', headerName: 'Email' },
+    { field: 'datejoin', headerName: 'Date of Joining' },
     {
       field: 'accessLevel',
-      headerName: 'Access Level', 
+      headerName: 'Access Level',
       editable: false,
       cellRenderer: (params: any) => {
         return `
@@ -110,7 +108,7 @@ export class PeoplePartnersEmployee {
     },
   ];
 
-  pinnedTopRowDataPlanning: UsersColumns[] = [
+  pinnedTopRowDataPlanning: any[] = [
     {
       employeeCode: '',
       employeeName: '',
@@ -121,34 +119,51 @@ export class PeoplePartnersEmployee {
       grade: '',
       reportingTo: null,
       dateOfJoining: null,
+      empcode: '',
+      fname: '',
+      designation: '',
+      role: '',
+      nicnew: '',
+      mobile: '',
+      email: '',
+      datejoin: null,
       isNewRow: true,
     },
   ];
 
   constructor(
-    private _userService: UserService,
+    private _permissionService: PermissionService,
+    private _peoplePartnersEmployeeService: PeoplePartnersService,
     private modal: NzModalService,
   ) {}
 
   ngOnInit() {
-    this.GetAllIntegeratedPeoplepartners({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.GetAllIntegeratedPeoplepartners({
+        pageNumber: 10,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
   }
 
-  GetAllIntegeratedPeoplepartners(query: any) {
+  GetAllIntegeratedPeoplepartners(query: any = {}) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
+    const pageSize = Number(query?.pageSize) || this.pageSize;
 
-    this._userService
-      .GetAllUser(
-        query?.filterModel?.Name?.filter || '',
+    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+
+    this._peoplePartnersEmployeeService
+      .GetAllEmployees(
+        searchText,
         sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
+        sort?.colId || 'fname',
         true,
         pageNumber,
         pageSize,
@@ -156,37 +171,24 @@ export class PeoplePartnersEmployee {
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
           this.totalIntergrated = res.Data.TotalCount;
+          this.totalRows = res.Data.TotalCount;
 
           this.integrationUserData = res.Data.Items.map((item: any) => ({
-            Id: item.id || item.Id,
-            EmployeeCode: item.employeeCode || item.EmployeeCode,
-            EmployeeName: item.employeeName || item.EmployeeName,
-            Grade: item.grade || item.Grade,
-            DivisionCode: item.divisionCode || item.DivisionCode,
-            DivisionName: item.division || item.Division,
-            DepartmentCode: item.departmentCode || item.DepartmentCode,
-            DepartmentName: item.department || item.Department,
-            SubDepartmentCode: item.subDepartmentCode || item.SubDepartmentCode,
-            SubDepartmentName: item.subDepartment || item.SubDepartment,
-            DesignationCode: item.designationCode || item.DesignationCode,
-            Designation: item.designation || item.Designation,
-            ReportingTo:
-              item.ReportingTo + '-' + item.EmployeeName ||
-              item.ReportingTo + '-' + item.EmployeeName,
-            DateOfJoining: new CustomDateFormatPipe().transform(
-              item.dateOfJoining || item.DateOfJoining || '',
-            ),
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            Description: item.description || item.Description,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+            empid: item.empid,
+            empcode: item.empcode,
+            fname: item.firstname + ' ' + item.midname + ' ' + item.lastname,
+            designation: item.designation,
+            role: item.role,
+            nicnew: item.nicnew,
+            mobile: item.mobile,
+            email: item.email,
+            datejoin: new CustomDateFormatPipe().transform(item.datejoin || ''),
+            accessLevel: true, // Forces the cellRenderer link to show up
           }));
-          //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {
           this.integrationUserData = [];
+          this.totalRows = 0;
         }
-        //this.cdr.detectChanges(); // force update
       });
   }
 
@@ -212,17 +214,16 @@ export class PeoplePartnersEmployee {
 
   openMandatoryCabinetModal(rowData: any) {
     //console.log('Row clicked:', rowData);
-
     const modalRef = this.modal.create({
-      nzTitle: 'Access Level to ' + (rowData.employeeName || rowData.EmployeeName),
+      nzTitle: 'Access Level to ' + rowData.fname,
       nzContent: AccessLevelModalDialog,
       nzData: {
-        employeeCode: rowData.employeeCode || rowData.EmployeeCode
+        employeeCode: rowData.empcode,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
-    }); 
- 
+    });
+
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });
@@ -243,5 +244,12 @@ class UsersColumns {
   grade: string = '';
   reportingTo: any = null;
   dateOfJoining: string | null = null;
+
+  empcode: string = '';
+  fname: string = '';
+  nicnew: string = '';
+  mobile: string = '';
+  email: string = '';
+  datejoin: string | null = null;
   isNewRow: boolean = false;
 }

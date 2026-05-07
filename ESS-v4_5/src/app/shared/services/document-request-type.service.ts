@@ -1,11 +1,11 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { environment } from '@app/core/environments/environment';
+import { Injectable } from '@angular/core'; 
 import { GenericResponse } from '@app/core/models/response';
 import { ApiResponse, SelectList } from '../interfaces/interfaces';
 //import { isArray } from 'lodash';
 import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
 import { DocumentType } from '../interfaces/interfaces';
+import { AppConfigService } from '@app/core/services/app-config';
 
 // import { Customer } from './customer';
 
@@ -13,8 +13,20 @@ import { DocumentType } from '../interfaces/interfaces';
 export class DocumentRequestTypeService {
   private _departments: ReplaySubject<DocumentType[]> = new ReplaySubject<DocumentType[]>(1);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private _config: AppConfigService
+  ) {}
 
+   // We make apiUrl a getter. It's only called when needed.
+  private get apiUrl(): string {
+    if (!this._config.baseUrl) {
+      console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
+      return ''; // Failsafe
+    }
+    return this._config.baseUrl;
+  }
+
+  
   get departments$(): Observable<DocumentType[]> {
     return this._departments.asObservable();
   }
@@ -30,19 +42,15 @@ export class DocumentRequestTypeService {
   }
 
   getDocumentTypeList(): Observable<any> {
-    const uri = `${environment.baseUrl}/DMSDocumentRequestType/get-all-document-request-type-list`;
+    const uri = `${this.apiUrl}/DMSDocumentRequestType/get-all-document-request-type-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   getDocumentTypeCount(): Observable<GenericResponse<Number>> {
-    const uri = `${environment.baseUrl}/DMSDocumentRequestType/get-doucment-type-count`;
+    const uri = `${this.apiUrl}/DMSDocumentRequestType/get-doucment-type-count`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
-
-  //   getDocumentTypesByDivisionCode(departmentCode: string): Observable<GenericResponse<any>> {
-  //     const uri = `${environment.baseUrl}/get-documentType-by-department-code?departmentCode=${departmentCode}`;
-  //     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  //   }
+ 
 
   GetAllDocumentTypes(
     searchText: string,
@@ -61,7 +69,7 @@ export class DocumentRequestTypeService {
       pageSize,
     };
 
-    const uri = `${environment.baseUrl}/DMSDocumentRequestType/get-all-document-request-types`;
+    const uri = `${this.apiUrl}/DMSDocumentRequestType/get-all-document-request-types`;
 
     return this.http.post(uri, body, {
       headers: this.getHeaders(),
@@ -70,21 +78,21 @@ export class DocumentRequestTypeService {
 
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequestType/create-document-request-type`,
+      `${this.apiUrl}/DMSDocumentRequestType/create-document-request-type`,
       payload
     );
   }
 
   update(payload: any) {
     return this.http.put<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequestType/update-document-request-type`,
+      `${this.apiUrl}/DMSDocumentRequestType/update-document-request-type`,
       payload
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${environment.baseUrl}/DMSDocumentRequestType/delete-document-request-type/${code}`
+      `${this.apiUrl}/DMSDocumentRequestType/delete-document-request-type/${code}`
     );
   } 
 }

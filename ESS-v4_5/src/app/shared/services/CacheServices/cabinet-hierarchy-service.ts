@@ -43,9 +43,11 @@ export class CabinetHierarchyService {
       level: Number(d.Id),
       title: d.Name?.trim() || `Level ${d.Id}`,
       createdBy: d.CreatedBy,
+      createdByName: d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
       createdAt: d.CreatedAt,
       lastModifiedAt: d.LastModifiedAt,
       lastModifiedBy: d.LastModifiedBy,
+      lastModifiedByName: d.LastModifiedByName || d.lastModifiedByName || d.LastModifiedBy || d.lastModifiedBy || '',
     }));
 
     dbLevels.forEach((l) => (levelTitles[l.level] = l.title));
@@ -58,8 +60,10 @@ export class CabinetHierarchyService {
           level: l.level + 1,
           title: this.getDefaultChildTitle(l.level + 1),
           createdBy: null,
+          createdByName: null,
           createdAt: null,
           lastModifiedBy: null,
+          lastModifiedByName: null,
           lastModifiedAt: null,
         });
       }

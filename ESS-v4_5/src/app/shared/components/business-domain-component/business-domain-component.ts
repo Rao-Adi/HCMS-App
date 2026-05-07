@@ -6,11 +6,12 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
-import { MASTER_CACHE_KEYS, MASTER_DEFAULT_KEYS } from '@app/shared/interfaces/const';
+import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
-import { NotificationService } from '@app/shared/notification/notification.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { BusinessDomainService } from '@app/shared/services/businessDomain.service';
+import { PermissionService } from '@app/shared/services/permission.service';
 import { SubDepartmentService } from '@app/shared/services/subdepartment.service';
 import { ColDef } from 'ag-grid-community';
 
@@ -34,7 +35,12 @@ export class BusinessDomainComponent {
     cellDataType: false,
   };
 
- 
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'cabinetstructure';
+
   pinnedTopRowDataPlanning: BusinessDomainColumns[] = [
     {
       Code: '',
@@ -51,11 +57,18 @@ export class BusinessDomainComponent {
     private _businessDomainService: BusinessDomainService,
     private _masterCacheService: Mastercacheservice,
     private _subDepartmentServices: SubDepartmentService,
-    private _notification: NotificationService,
+    private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
   ) {}
 
   ngOnInit() {
-    this.getAllDepartmeList();
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+
+      this.getAllDepartmeList();
+    });    
   }
 
   private buildGrid(): void {
@@ -63,9 +76,13 @@ export class BusinessDomainComponent {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: 10,
-      enableInlineAdd: true,
-      enableInlineEdit: true,
-      enableInlineDelete: true,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -109,7 +126,7 @@ export class BusinessDomainComponent {
         required: true,
       },
       {
-        field: 'LastModifiedBy',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -145,8 +162,10 @@ export class BusinessDomainComponent {
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
           CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -172,9 +191,11 @@ export class BusinessDomainComponent {
           Name: item.name || item.Name,
           SubDepartment: item.SubDepartment || item.SubDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.SubDepartmentCode || '',
-          CreatedBy: item.createdBy || item.CreatedBy || '',
+          CreatedBy: item.CreatedBy || item.createdBy || '',
+          CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -220,10 +241,8 @@ export class BusinessDomainComponent {
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event;
-    debugger;
+    const { rowData } = event; 
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: rowData.Code,
       Name: rowData.Name,
       SubDepartmentCode: rowData.SubDepartment,
@@ -234,7 +253,7 @@ export class BusinessDomainComponent {
     this._businessDomainService.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Business Domain',
           'Business Domain updated successfully!',
@@ -254,7 +273,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -263,7 +282,6 @@ export class BusinessDomainComponent {
     //console.log('✏️ Row Updated:', event.rowData);
 
     const payLoad = {
-      CompanyId: MASTER_DEFAULT_KEYS.COMPANYID,
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.SubDepartment,
@@ -274,7 +292,7 @@ export class BusinessDomainComponent {
     this._businessDomainService.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Business Domain',
           'Business Domain updated successfully!',
@@ -294,7 +312,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }
@@ -307,7 +325,7 @@ export class BusinessDomainComponent {
     this._businessDomainService.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
-        this._notification.createNotification(
+        this._notificationToastService.createNotification(
           'success',
           'Business Domain',
           'Business Domain deleted successfully!',
@@ -327,7 +345,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notification.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Attribute', message);
       },
     });
   }

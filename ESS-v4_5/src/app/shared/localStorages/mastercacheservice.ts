@@ -31,8 +31,11 @@ export class Mastercacheservice {
         switchMap((res) => {
           const dbCount = res?.Data ?? res;
 
-          // ✅ Cache valid
-          if (parsed.count === dbCount) {
+            // Verify the cached data contains the new schema fields
+            const isStaleSchema = parsed.data.length > 0 && !('CreatedByName' in (parsed.data[0] as any));
+
+            // ✅ Cache valid (count matches AND schema is up to date)
+            if (parsed.count === dbCount && !isStaleSchema) {
             return of(parsed.data);
           }
 
@@ -60,7 +63,7 @@ export class Mastercacheservice {
 ): Observable<T[]> {
   return config.getData$().pipe(
     switchMap((res) => {
-      const items = res?.Data?.Items ?? [];
+      const items = Array.isArray(res?.Data) ? res.Data : (res?.Data?.Items ?? []);
       const totalCount = knownCount ?? res?.Data?.TotalCount ?? items.length;
 
       // 🔒 HARD STOP: do NOT cache empty data
