@@ -69,11 +69,14 @@ export class PeoplePartnersEmployee {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'empcode', label: 'Employee Code', visible: true },
-    { field: 'fname', label: 'Employee Name', visible: true },
+    { field: 'employeeName', label: 'Employee Name', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'department', label: 'Department', visible: true },
+    { field: 'subDepartment', label: 'Sub-Department', visible: true },
     { field: 'designation', label: 'Designation', visible: true },
     { field: 'role', label: 'Role', visible: true },
-    { field: 'nicnew', label: 'CNIC', visible: true },
-    { field: 'mobile', label: 'Mobile', visible: true },
+    // { field: 'nicnew', label: 'CNIC', visible: true },
+    // { field: 'mobile', label: 'Mobile', visible: true },
     { field: 'email', label: 'Email', visible: true },
     { field: 'datejoin', label: 'Date Of Joining', visible: true },
     { field: 'accessLevel', label: 'Access Level', visible: true },
@@ -81,11 +84,14 @@ export class PeoplePartnersEmployee {
 
   documentColumnDefs = [
     { field: 'empcode', headerName: 'Employee Code' },
-    { field: 'fname', headerName: 'Employee Name' },
+    { field: 'employeeName', headerName: 'Employee Name' },
+    { field: 'division', label: 'Division'},
+    { field: 'department', label: 'Department'},
+    { field: 'subDepartment', label: 'Sub-Department'},
     { field: 'designation', headerName: 'Designation' },
     { field: 'role', headerName: 'Role' },
-    { field: 'nicnew', headerName: 'CNIC' },
-    { field: 'mobile', headerName: 'Mobile' },
+    // { field: 'nicnew', headerName: 'CNIC' },
+    // { field: 'mobile', headerName: 'Mobile' },
     { field: 'email', headerName: 'Email' },
     { field: 'datejoin', headerName: 'Date of Joining' },
     {
@@ -119,8 +125,7 @@ export class PeoplePartnersEmployee {
       grade: '',
       reportingTo: null,
       dateOfJoining: null,
-      empcode: '',
-      fname: '',
+      empcode: '', 
       designation: '',
       role: '',
       nicnew: '',
@@ -157,13 +162,13 @@ export class PeoplePartnersEmployee {
     const pageNumber = Number(query?.pageNumber) || 1;
     const pageSize = Number(query?.pageSize) || this.pageSize;
 
-    const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
+    const searchText = query?.searchText || query?.filterModel?.employeeName?.filter || '';
 
     this._peoplePartnersEmployeeService
       .GetAllEmployees(
         searchText,
         sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'fname',
+        sort?.colId || 'employeeName',
         true,
         pageNumber,
         pageSize,
@@ -176,8 +181,11 @@ export class PeoplePartnersEmployee {
           this.integrationUserData = res.Data.Items.map((item: any) => ({
             empid: item.empid,
             empcode: item.empcode,
-            fname: item.firstname + ' ' + item.midname + ' ' + item.lastname,
+            employeeName: item.firstname + ' ' + item.midname + ' ' + item.lastname,
             designation: item.designation,
+            division: item.division,
+            department: item.department,
+            subDepartment: item.subdepartment,
             role: item.role,
             nicnew: item.nicnew,
             mobile: item.mobile,
@@ -215,7 +223,7 @@ export class PeoplePartnersEmployee {
   openMandatoryCabinetModal(rowData: any) {
     //console.log('Row clicked:', rowData);
     const modalRef = this.modal.create({
-      nzTitle: 'Access Level to ' + rowData.fname,
+      nzTitle: 'Access Level to ' + rowData.employeeName,
       nzContent: AccessLevelModalDialog,
       nzData: {
         employeeCode: rowData.empcode,
@@ -245,8 +253,7 @@ class UsersColumns {
   reportingTo: any = null;
   dateOfJoining: string | null = null;
 
-  empcode: string = '';
-  fname: string = '';
+  empcode: string = ''; 
   nicnew: string = '';
   mobile: string = '';
   email: string = '';

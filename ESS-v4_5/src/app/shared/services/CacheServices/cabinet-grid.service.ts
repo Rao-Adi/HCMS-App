@@ -36,7 +36,7 @@ export class CabinetGridService {
         dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
         filterKey: parentLevel ? 'parentId' : undefined,
         minWidth: 200,
-        required: true,
+        required: false,
       } as GridColumn;
     });
   }

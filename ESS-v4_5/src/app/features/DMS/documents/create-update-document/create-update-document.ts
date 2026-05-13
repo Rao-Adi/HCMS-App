@@ -425,7 +425,7 @@ export class CreateUpdateDocument {
     };
 
     this._workflowStepService
-      .getWorkflowPolicyByDocumentTypeCode(
+      .getWorkflowStepByDocumentTypeCode(
         payLoad,
         // value,
         // this.selectedRequestType === '1' ? 1 : this.selectedRequestType === '2' ? 2 : 3,
