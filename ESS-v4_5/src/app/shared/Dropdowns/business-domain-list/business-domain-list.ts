@@ -114,12 +114,12 @@ export class BusinessDomainList implements ControlValueAccessor {
         // If it doesn't exist yet → implement getDepartmentsBysubdepartmentCodeCached or similar
         getData$: () =>
           this._businessDomainService.GetAllBusinessDomains(
-            subdepartmentCode, // filter parameter – adjust according to your real API
+            '', 
             'ASC',
             'Name',
             true,
             1,
-            1000, // ← or use a higher limit / pagination if needed
+            1000, 
           ),
 
         // Same mapping logic as in GetAllDepartments

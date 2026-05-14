@@ -86,6 +86,8 @@ export class ApprovalWorkflowPolicyManagement {
   canDelete = false;
   formId = 'approvalworkflow';
 
+  policyName: string = '';
+
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
   loading = false;
@@ -212,6 +214,15 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   addExclusion() { 
+    if (!this.policyName || this.policyName.trim() === '') {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter a Policy Name.',
+      );
+      return;
+    }
+
     // if (!this.approvalPolicy) {
     //   this._notificationToastService.createNotification(
     //     'warning',
@@ -224,6 +235,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
     const payLoad = {
+      PolicyName: this.policyName.trim(),
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
@@ -271,6 +283,7 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   emptyInnerFields() {
+    this.policyName = '';
     this.approvalSequenceData = [];
     this.showExclusionTable = false;
     this.selectedAuthorityType = null;
@@ -404,6 +417,11 @@ export class ApprovalWorkflowPolicyManagement {
     this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
+      if (this.approvalSequenceData.length > 0) {
+        this.policyName = this.approvalSequenceData[0].WorkflowPolicyName || '';
+      } else {
+        this.policyName = '';
+      }
     });
   }
 

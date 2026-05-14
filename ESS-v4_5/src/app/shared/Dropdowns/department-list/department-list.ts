@@ -111,12 +111,12 @@ export class DepartmentList implements ControlValueAccessor {
         // If it doesn't exist yet → implement getDepartmentsByDivisionCodeCached or similar
         getData$: () =>
           this._departmentServices.GetAllDepartments(
-            divisionCode, // filter parameter – adjust according to your real API
+            '', // Fetch all so the global cache is complete
             'ASC',
             'Name',
             true,
             1,
-            1000, // ← or use a higher limit / pagination if needed
+            1000,
           ),
 
         // Same mapping logic as in GetAllDepartments

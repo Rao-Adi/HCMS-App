@@ -70,6 +70,20 @@
                   <div class="row">
                     <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                       <div class="PnlHeading">
+                        <label>{{ 'labels.Policy Name' | safeTranslate }} <span class="text-danger">*</span></label>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          class="form-control input-sm"
+                          style="width: 250px"
+                          placeholder="Enter Policy Name"
+                          [(ngModel)]="policyName"
+                        />
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
                         <label>{{ 'labels.Document Type' | safeTranslate }} </label>
                       </div>
                       <div>
@@ -84,7 +98,9 @@
                         </app-document-type-list>
                       </div>
                     </div>
-                    <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                       <app-cabinet-structure-list
                         [divisionCode]="selectedDivisions"
                         [departmentCode]="selectedDepartment"
