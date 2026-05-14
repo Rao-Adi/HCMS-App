@@ -414,28 +414,49 @@ export class CreateUpdateDocument {
     this.GetDocumentAttributes(value);
     this.GetAllApprovedRequests();
     this.GetDocumentTemplate();
+    this.loadWorkflowAuthorities(this.selectedDocumentType);
+    // const payLoad = {
+    //   EntityType: 'Document',
+    //   documentTypeCode: this.selectedDocumentType,
+    //   divisionCode: this.selectedDivisions,
+    //   departmentCode: this.selectedDepartment,
+    //   subDepartmentCode: this.selectedSubDepartment,
+    //   businessDomainCode: this.selectedBusinessDomain,
+    // };
+
+    // this._workflowStepService
+    //   .getWorkflowStepByDocumentTypeCode(
+    //     payLoad,
+    //     // value,
+    //     // this.selectedRequestType === '1' ? 1 : this.selectedRequestType === '2' ? 2 : 3,
+    //   )
+    //   .subscribe((res) => {
+    //     // console.log('User Details:', res);
+    //     this.showExclusionTable = true;
+    //     // this.totalDistribution = res?.Data ? res.Data.length : 0;
+    //     this.approvalSequenceData = res?.Data ? res.Data : [];
+    //   });
+  }
+
+  loadWorkflowAuthorities(documentType: string) {
+    if (!documentType) {
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+      return;
+    }
 
     const payLoad = {
-      EntityType: 'Document',
-      documentTypeCode: this.selectedDocumentType,
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
+      EntityType: 'Request',
+      documentTypeCode: documentType,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
     };
-
-    this._workflowStepService
-      .getWorkflowStepByDocumentTypeCode(
-        payLoad,
-        // value,
-        // this.selectedRequestType === '1' ? 1 : this.selectedRequestType === '2' ? 2 : 3,
-      )
-      .subscribe((res) => {
-        // console.log('User Details:', res);
-        this.showExclusionTable = true;
-        // this.totalDistribution = res?.Data ? res.Data.length : 0;
-        this.approvalSequenceData = res?.Data ? res.Data : [];
-      });
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+      this.showExclusionTable = true;
+      this.approvalSequenceData = res?.Data ? res.Data : [];
+    });
   }
 
   GetDocumentAttributes(value: string) {
@@ -562,6 +583,10 @@ export class CreateUpdateDocument {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
     this.GetAllApprovedRequests();
+
+    if (this.selectedDocumentType) {
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+    }
   }
 
   submitDynamicForm() {

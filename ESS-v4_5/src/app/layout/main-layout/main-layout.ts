@@ -499,7 +499,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         }
         this.cdRef.detectChanges();
       },
-      error: (err: any) => console.error('Failed to fetch notifications', err),
+      error: (err: any) => console.error('Failed to fetch notifications', err?.error?.Message || err?.Message),
     });
   }
 

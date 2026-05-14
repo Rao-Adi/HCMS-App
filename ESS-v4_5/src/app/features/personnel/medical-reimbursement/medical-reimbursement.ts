@@ -522,7 +522,7 @@ export class MedicalReimbursement implements OnInit {
         }
       },
       error: (err: any) => {
-        console.error('Error fetching record for edit:', err);
+        console.error('Error fetching record for edit:', err?.error?.Message || err?.Message);
         this.isSaveDisabled = false;
       },
     });

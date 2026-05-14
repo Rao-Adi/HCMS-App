@@ -281,7 +281,7 @@ export class ResponsibilityTransferForm {
           this.loading = false;
           this.submittedApprovalData = [];
           this.totalSubmittedApprovals = 0;
-          this._notificationToastService.createNotification('error', 'Error', 'Failed to fetch submitted requests.');
+          this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message);
         }
       });
   }
@@ -338,7 +338,7 @@ export class ResponsibilityTransferForm {
           this.loading = false;
           this.pendingApprovalData = [];
           this.totalPendingApprovals = 0;
-          this._notificationToastService.createNotification('error', 'Error', 'Failed to fetch pending approvals.');
+          this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message);
         }
       });
   }
@@ -572,7 +572,7 @@ export class ResponsibilityTransferForm {
         }
       },
       error: (err: any) => {
-        this._notificationToastService.createNotification('error', 'Error', err?.Message || 'Action failed.');
+        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message);
       },
     });
   }

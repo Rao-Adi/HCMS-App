@@ -490,7 +490,7 @@ export class MyApprovalDocument {
           this._notificationToastService.createNotification(
             'error',
             'Workflow',
-            'Failed to execute workflow action.',
+            err?.error?.Message || err?.Message
           );
         },
       });
