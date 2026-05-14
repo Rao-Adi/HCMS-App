@@ -114,6 +114,7 @@ export interface GridConfig {
   enableInlineAdd?: boolean;
   enableInlineEdit?: boolean;
   enableInlineDelete?: boolean;
+  serverSide?: boolean;
   rowHeight?: number;
   headerHeight?: number;
   domLayout?: 'normal' | 'autoHeight' | 'print';
@@ -151,6 +152,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     rowData: any;
     file?: File;
   }>();
+  @Output() dataRequest = new EventEmitter<any>();
 
   @Input() gridId: string = 'grid-' + Math.random().toString(36).substr(2, 9);
   @Input() config: GridConfig = {
@@ -201,6 +203,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   editingRowId: any = null;
   editingRowData: any = null;
   editingRowIndex: number = -1;
+  private currentPage = 1;
+  private isUpdatingRowData = false;
 
   gridContext: any;
 
@@ -231,6 +235,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.gridContext = this.getContextData();
     if (changes['config'] || changes['isSelectionRequired']) {
       this.buildColumnDefs();
+    }
+    // Temporarily pause pagination loops while rowData is replacing
+    if (changes['rowData']) {
+      this.isUpdatingRowData = true;
+      setTimeout(() => {
+        this.isUpdatingRowData = false;
+      }, 50);
     }
   }
 
@@ -817,21 +828,77 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     return span;
   }
 
-  onFilterTextBoxChanged() {
-    this.gridApi.setGridOption(
-      'quickFilterText',
-      (document.getElementById('filter-text-box') as HTMLInputElement).value,
-    );
+  onFilterTextBoxChanged(event?: any) {
+    const val = event?.target?.value ?? '';
+
+    this.value.set(val);
+
+    if (this.config.serverSide) {
+      if (this.currentPage !== 1) {
+        this.gridApi?.paginationGoToPage(0);
+      } else {
+        this.emitDataRequest();
+      }
+    } else {
+      this.gridApi?.setGridOption('quickFilterText', val);
+    }
   }
 
   readonly value = signal('');
+  
   onSearch(event: any): void {
-    console.log(event);
+    this.onFilterTextBoxChanged(event);
   }
 
   onGridReady(event: GridReadyEvent): void {
     this.gridApi = event.api;
+    
+    // Register listeners for server-side features
+    this.gridApi.addEventListener('sortChanged', this.onSortOrFilterChanged.bind(this));
+    this.gridApi.addEventListener('filterChanged', this.onSortOrFilterChanged.bind(this));
+    this.gridApi.addEventListener('paginationChanged', this.onPaginationChanged.bind(this));
+
     this.gridReady.emit(this.gridApi);
+  }
+
+  private onSortOrFilterChanged() {
+    if (this.config.serverSide) {
+      if (this.currentPage !== 1) {
+        this.gridApi?.paginationGoToPage(0);
+      } else {
+        this.emitDataRequest();
+      }
+    }
+  }
+
+  private onPaginationChanged(event: any) {
+    if (this.isUpdatingRowData || !this.config.serverSide) return;
+    
+    const newPage = (this.gridApi?.paginationGetCurrentPage() || 0) + 1;
+    if (event.newPage && newPage !== this.currentPage) {
+        this.currentPage = newPage;
+        this.emitDataRequest();
+    } else if (event.newPageSize) {
+        this.currentPage = 1;
+        this.emitDataRequest();
+    }
+  }
+
+  private emitDataRequest() {
+    if (!this.gridApi) return;
+    const sortModel = this.gridApi.getColumnState()
+      .filter((s: any) => s.sort != null)
+      .sort((a: any, b: any) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0));
+    const filterModel = this.gridApi.getFilterModel();
+    const pageSize = this.gridApi.paginationGetPageSize() || this.config.pageSize || 10;
+
+    this.dataRequest.emit({
+        pageNumber: this.currentPage,
+        pageSize,
+        sortModel,
+        filterModel,
+        searchText: this.value()
+    });
   }
 
   onCellClicked(event: CellClickedEvent): void {

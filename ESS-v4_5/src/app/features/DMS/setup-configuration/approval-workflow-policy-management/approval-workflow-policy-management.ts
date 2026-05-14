@@ -19,7 +19,17 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
-import { CdkDragDrop, moveItemInArray, CdkDrag, CdkDropList, CdkDragHandle } from '@angular/cdk/drag-drop';
+import {
+  CdkDragDrop,
+  moveItemInArray,
+  CdkDrag,
+  CdkDropList,
+  CdkDragHandle,
+} from '@angular/cdk/drag-drop';
+import { NzModalService, NzModalModule } from 'ng-zorro-antd/modal';
+import { ManageWorkflowPolicyModal } from '../manage-workflow-policy-modal/manage-workflow-policy-modal';
+import { WorkflowPolicyService } from '@app/shared/services/workflow-policy-service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 export enum ApprovalPolicy {
   ObserveOnly = 'OBSERVE_ONLY',
@@ -53,6 +63,8 @@ export enum PolicyId {
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
+    ManageWorkflowPolicyModal,
+    NzModalModule,
   ],
   templateUrl: './approval-workflow-policy-management.html',
   styleUrl: './approval-workflow-policy-management.css',
@@ -67,7 +79,10 @@ export enum PolicyId {
         border-radius: 4px;
         background-color: white;
         display: table;
-        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+        box-shadow:
+          0 5px 5px -3px rgba(0, 0, 0, 0.2),
+          0 8px 10px 1px rgba(0, 0, 0, 0.14),
+          0 3px 14px 2px rgba(0, 0, 0, 0.12);
       }
       .cdk-drag-placeholder {
         opacity: 0;
@@ -85,8 +100,6 @@ export class ApprovalWorkflowPolicyManagement {
   canEdit = false;
   canDelete = false;
   formId = 'approvalworkflow';
-
-  policyName: string = '';
 
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
@@ -108,7 +121,7 @@ export class ApprovalWorkflowPolicyManagement {
 
   selectedAuthorityType: number | null = null;
   selectedWorkflowExclude: number | null = null;
-
+  selectedWorkflowPolicy: string | null = null;
   approvalPolicy: ApprovalPolicy | null = null;
   PolicyId = PolicyId; // 👈 REQUIRED
   selectedPolicyId: PolicyId = PolicyId.RequestForDocumentCreation;
@@ -122,6 +135,8 @@ export class ApprovalWorkflowPolicyManagement {
   designations: any[] = [];
   userRoles: any[] = [];
   employees: any[] = [];
+  workflowPolicies: any[] = [];
+  workflowPoliciesData: any[] = [];
 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
@@ -150,6 +165,8 @@ export class ApprovalWorkflowPolicyManagement {
     private _workflowStepService: WorkflowStepService,
     private _notificationToastService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
+    private modal: NzModalService,
+    private _workflowPolicyService: WorkflowPolicyService,
   ) {}
 
   ngOnInit() {
@@ -157,6 +174,7 @@ export class ApprovalWorkflowPolicyManagement {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      this.GetWorkflowPoliciesByEntity();
     });
   }
 
@@ -213,16 +231,30 @@ export class ApprovalWorkflowPolicyManagement {
     this.switchValue1 = this.switchValue1 == true ? false : true;
   }
 
-  addExclusion() { 
-    if (!this.policyName || this.policyName.trim() === '') {
-      this._notificationToastService.createNotification(
-        'warning',
-        'Validation',
-        'Please enter a Policy Name.',
-      );
-      return;
-    }
+  openManagePolicyModal() {
+    const entityTypeStr =
+      this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+        ? 'Request'
+        : this.selectedPolicyId == PolicyId.DocumentCreation
+          ? 'Document'
+          : 'Revision';
 
+    const modalRef = this.modal.create({
+      nzTitle: `Manage Policy (${entityTypeStr})`,
+      nzContent: ManageWorkflowPolicyModal,
+      nzData: {
+        entityType: entityTypeStr,
+      },
+      nzFooter: null,
+      nzWidth: 1200,
+    });
+    modalRef.afterClose.subscribe((result) => {
+      // console.log('Modal closed with:', result);
+      this.GetWorkflowPoliciesByEntity();
+    });
+  }
+
+  addExclusion() {
     // if (!this.approvalPolicy) {
     //   this._notificationToastService.createNotification(
     //     'warning',
@@ -235,7 +267,6 @@ export class ApprovalWorkflowPolicyManagement {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
     const payLoad = {
-      PolicyName: this.policyName.trim(),
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
@@ -262,11 +293,19 @@ export class ApprovalWorkflowPolicyManagement {
           this.showExclusionTable = true;
           this.approvalSequenceData = [...response.Data];
 
-          this._notificationToastService.createNotification('success', 'Workflow', response.Message);
+          this._notificationToastService.createNotification(
+            'success',
+            'Workflow',
+            response.Message,
+          );
         }
       },
       error: (err) => {
-        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to create workflow step.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to create workflow step.',
+        );
       },
     });
   }
@@ -276,6 +315,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedPolicyId = policyId;
 
     this.resetAllFields();
+    this.GetWorkflowPoliciesByEntity();
   }
 
   resetAllFields() {
@@ -283,7 +323,6 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   emptyInnerFields() {
-    this.policyName = '';
     this.approvalSequenceData = [];
     this.showExclusionTable = false;
     this.selectedAuthorityType = null;
@@ -298,6 +337,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedUser = '';
     this.radioValue = '';
     this.activeMode = null;
+    this.selectedWorkflowPolicy = null;
 
     //Cabinet Fields
     this.selectedDivisions = '';
@@ -307,7 +347,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedDocumentType = '';
   }
 
-  private getEmployeeCodes(): string[] { 
+  private getEmployeeCodes(): string[] {
     // If multi-select has value
     if (this.selectedEmployee && this.selectedEmployee.length > 0) {
       if (!Array.isArray(this.selectedEmployee)) {
@@ -393,6 +433,33 @@ export class ApprovalWorkflowPolicyManagement {
     }
   }
 
+  onWorkflowPolicyChange(value: string): void {
+    if (value != null) {
+      this.selectedWorkflowPolicy = value;
+
+      // Auto-fill cabinet structure based on selected policy
+      const policyDetails = this.workflowPoliciesData.find((p) => String(p.Id) === String(value));
+      if (policyDetails) {
+        this.selectedDocumentType = policyDetails.documentTypeId || '';
+        this.selectedDivisions = policyDetails.level1Id || '';
+        this.selectedDepartment = policyDetails.level2Id || '';
+        this.selectedSubDepartment = policyDetails.level3Id || '';
+        this.selectedBusinessDomain = policyDetails.level4Id || '';
+      }
+
+      this.fetchApprovalSequence();
+    } else {
+      this.selectedWorkflowPolicy = '';
+      this.selectedDocumentType = '';
+      this.selectedDivisions = '';
+      this.selectedDepartment = '';
+      this.selectedSubDepartment = '';
+      this.selectedBusinessDomain = '';
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+    }
+  }
+
   fetchApprovalSequence() {
     if (!this.selectedDocumentType) {
       this.approvalSequenceData = [];
@@ -417,11 +484,6 @@ export class ApprovalWorkflowPolicyManagement {
     this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
-      if (this.approvalSequenceData.length > 0) {
-        this.policyName = this.approvalSequenceData[0].WorkflowPolicyName || '';
-      } else {
-        this.policyName = '';
-      }
     });
   }
 
@@ -444,33 +506,44 @@ export class ApprovalWorkflowPolicyManagement {
       item.StepOrder = index + 1;
     });
 
-    const workflowPolicyId = this.approvalSequenceData.length > 0 ? this.approvalSequenceData[0].WorkflowPolicyId : (fallbackPolicyId || 0);
+    const workflowPolicyId =
+      this.approvalSequenceData.length > 0
+        ? this.approvalSequenceData[0].WorkflowPolicyId
+        : fallbackPolicyId || 0;
 
     const payLoad = {
       workflowpolicyid: workflowPolicyId,
-      steps: this.approvalSequenceData.map(item => ({
+      steps: this.approvalSequenceData.map((item) => ({
         steporder: item.StepOrder,
         stepgroup: item.StepGroup || 0,
         steptype: item.StepType || '',
         roleid: item.RoleId || 0,
         designationid: item.DesignationId || 0,
         userid: item.EmployeeCode || item.UserId?.toString() || '',
-        requiresallapprovals: item.RequiresAllApprovals || false
-      }))
+        requiresallapprovals: item.RequiresAllApprovals || false,
+      })),
     };
 
-    // Note: Assuming your WorkflowStepService has an `updateSequence` method. 
+    // Note: Assuming your WorkflowStepService has an `updateSequence` method.
     // Adjust the method name below as needed to match your service's actual implementation.
     this._workflowStepService.updateApprovalSequence(payLoad).subscribe({
       next: (response: any) => {
         if (response?.Success) {
           this.approvalSequenceData = response.Data || [];
-          this._notificationToastService.createNotification('success', 'Workflow', 'Approval sequence updated successfully.');
+          this._notificationToastService.createNotification(
+            'success',
+            'Workflow',
+            'Approval sequence updated successfully.',
+          );
         }
       },
       error: (err: any) => {
-        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to update approval sequence.');
-      }
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to update approval sequence.',
+        );
+      },
     });
   }
 
@@ -530,5 +603,64 @@ export class ApprovalWorkflowPolicyManagement {
         this.employees = [];
       }
     });
+  };
+
+  GetWorkflowPoliciesByEntity = () => {
+    const entityTypeStr =
+      this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+        ? 'Request'
+        : this.selectedPolicyId == PolicyId.DocumentCreation
+          ? 'Document'
+          : 'Revision';
+
+    this._workflowPolicyService
+      .GetAllWorkflowPolicies('', 'ASC', '', true, 1, 10000, entityTypeStr)
+      .subscribe((res) => {
+        const data = res?.Data;
+        const items = data?.Items || (Array.isArray(data) ? data : []);
+
+        if (Array.isArray(items)) {
+          this.workflowPoliciesData = items.map((item: any) => ({
+            Id: item.Id,
+            policyName: item.Name,
+            documentTypeId: item.DocumentTypeCode,
+            documentTypeName: item.DocumentType,
+            level1Id: item.DivisionCode,
+            divisionName: item.Division,
+            level2Id: item.DepartmentCode,
+            departmentName: item.Department,
+            level3Id: item.SubDepartmentCode,
+            subDepartmentName: item.SubDepartment,
+            level4Id: item.BusinessDomainCode,
+            businessDomainName: item.BusinessDomain,
+            IsActive: item.IsActive,
+            IsDeleted: item.IsDeleted,
+            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
+            CreatedBy: item.CreatedBy,
+            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
+            LastModifiedBy: item.LastModifiedBy,
+          }));
+
+          // Map workflow policies for dropdown
+          this.workflowPolicies = items.map((d: any) => ({
+            CODE: d.Id,
+            NAME: d.Name,
+          }));
+        } else {
+          this.workflowPoliciesData = [];
+          this.workflowPolicies = [];
+        }
+      });
+    // this._workflowPolicyService.GetWorkflowPoliciesByEntityType(entityTypeStr).subscribe((res) => {
+    //   if (res?.Data) {
+    //     this.workflowPolicies = (res.Data ?? []).map((d: any) => ({
+    //       CODE: d.Id,
+    //       NAME: d.Value,
+    //     }));
+    //   } else {
+    //     this.workflowPolicies = [];
+    //   }
+    //   //this.cdr.detectChanges(); // force update
+    // });
   };
 }

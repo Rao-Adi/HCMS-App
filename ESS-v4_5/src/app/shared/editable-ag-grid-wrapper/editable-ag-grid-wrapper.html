@@ -5,8 +5,10 @@
       <input
         nz-input
         placeholder="Search"
-        [(ngModel)]="value"
-        (input)="onFilterTextBoxChanged()"
+        [value]="value()"
+        (input)="onFilterTextBoxChanged($event)"
+        [value]="value()"
+        (input)="onFilterTextBoxChanged($event)"
       />
     </div>
   </div>
