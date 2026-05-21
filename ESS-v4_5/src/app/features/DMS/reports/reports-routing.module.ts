@@ -5,8 +5,8 @@ import { AIReport } from "./aireport/aireport";
 import { ApprovalDocuments } from "./approval-documents/approval-documents";
 
 const routes: Routes = [
-  { path: 'view-document', component: ApprovalDocuments },
+  { path: 'viewapproved', component: ApprovalDocuments },
   { path: 'personalized-email-alerts', component: PersonalizedEmailAlerts },
   { path: 'ai-report', component: AIReport }, 
-  { path: 'pending-approval', component: ViewDocumentPendingApproval }
+  { path: 'pendingapproval', component: ViewDocumentPendingApproval }
 ];

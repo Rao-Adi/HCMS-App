@@ -99,7 +99,7 @@ export class MyPendingRequestForApproval {
     },
     {
       field: 'proposedVersionNumber',
-      headerName: 'Proposed Versioin Number',
+      headerName: 'Proposed Version Number',
     },
     {
       field: 'division',
@@ -117,7 +117,7 @@ export class MyPendingRequestForApproval {
       cellEditor: 'agSelectCellEditor',
     },
     { field: 'dateOfCreation', headerName: 'Date Of Creation' },
-    { field: 'dateOfApproval', headerName: 'Date of Approval' },
+    // { field: 'dateOfApproval', headerName: 'Date of Approval' },
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
     { field: 'requestCreatedOn', headerName: 'Request Created On' },
     { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
@@ -139,7 +139,7 @@ export class MyPendingRequestForApproval {
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
-    { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },

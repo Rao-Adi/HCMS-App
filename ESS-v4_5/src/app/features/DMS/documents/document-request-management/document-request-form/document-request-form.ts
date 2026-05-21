@@ -534,6 +534,14 @@ export class DocumentRequestForm {
       );
       return;
     }
+     if (!this.inputJustificationValue) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter a Justification.',
+      );
+      return;
+    }
     // if (!this.selectedDivisions) {
     //   this._notificationToasService.createNotification(
     //     'warning',

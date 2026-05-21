@@ -40,7 +40,7 @@ const routes: Routes = [
     component: ApprovalWorkflowPolicyExternalUsers,
   },
   {
-    path: 'misc-policies',
+    path: 'trainingpolicy',
     component: MiscPolicies,
   },
   {

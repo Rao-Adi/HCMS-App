@@ -106,6 +106,16 @@ export class DocumentService {
     );
   }
 
+  
+
+   GetAllDocumentPendingApprovals(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-approval`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
   AuthorizeDocumentPostTraining(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/authorize-document-post-training`,

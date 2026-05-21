@@ -88,7 +88,7 @@ export class ResponsibilityTransferForm {
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   pageSize = 10;
   rowData: any[] = [];

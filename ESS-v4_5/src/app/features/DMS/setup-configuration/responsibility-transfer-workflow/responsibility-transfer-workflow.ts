@@ -273,7 +273,7 @@ export class ResponsibilityTransferWorkflow {
           this.manualUserData = res.Data.Items.map((item: any) => ({
             id: item.Id,
             divisionCode: item.DivisionCode,
-            approvalAuthority: item.DivisionHeadName ? item.DivisionHeadName.toString() : null,
+            approvalAuthority: item.DivisionHeadName +"("+ item.DivisionHeadDesignation + ")" ? item.DivisionHeadName.toString() +"("+ item.DivisionHeadDesignation + ")"  : null,
           }));
         } else {
           this.manualUserData = [];
@@ -297,11 +297,11 @@ export class ResponsibilityTransferWorkflow {
   };
 
   GetEmployeesByDivisionId = (divId: string) => {
-    this._peoplePartnersService.GetHeadByDivisionId(divId).subscribe((res) => {
+    this._peoplePartnersService.GetEmployeesByDivisionId(divId).subscribe((res) => {
       if (res?.Data) {
         this.approvalAuthority = (res.Data ?? []).map((d: any) => ({
           id: d.EmployeeCode || d.employeecode,
-          text: d.FullName || d.fullname,
+          text: d.employeecode + "-"+ (d.FullName || d.fullname) + "(" + (d.Designation || d.designation) + ")" ,
         }));
       } else {
         this.approvalAuthority = [];

@@ -446,7 +446,7 @@ export class CreateUpdateDocument {
     }
 
     const payLoad = {
-      EntityType: 'Request',
+      EntityType: 'Document',
       documentTypeCode: documentType,
       divisionCode: this.selectedDivisions || '',
       departmentCode: this.selectedDepartment || '',

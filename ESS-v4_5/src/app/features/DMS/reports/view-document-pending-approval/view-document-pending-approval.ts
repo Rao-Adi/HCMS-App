@@ -10,11 +10,16 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { CabinetSelection } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { DocumentService } from '@app/shared/services/document.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -31,6 +36,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
     NzDatePickerModule,
     CabinetStructureList,
     DocumentTypeList,
+    NzModalModule,
   ],
   templateUrl: './view-document-pending-approval.html',
   styleUrl: './view-document-pending-approval.css',
@@ -52,17 +58,10 @@ export class ViewDocumentPendingApproval {
   selectedDocumentType?: string = '';
 
   pageSize = 10;
-  rowData: any[] = [];
+  documentRequestsData: any[] = [];
   totalDocuments = 0;
+  totalRows = 0;
 
-  // Default Column Definitions: Apply configuration across all columns
-  defaultColDef: ColDef = {
-    filter: true,
-    cellDataType: false,
-  };
-
-  switchValue1 = false;
-  switchValue2 = false;
   loading = false;
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
@@ -82,36 +81,81 @@ export class ViewDocumentPendingApproval {
     { field: 'RequestCreatedOn', headerName: 'Request Created On' },
     { field: 'PrevisionVersionCreatedBy', headerName: 'Prevision Version Created By' },
     { field: 'PrevisionVersionCreatedOn', headerName: 'Prevision Version Created On' },
-    { field: 'ApprovalHistory', headerName: 'Approval History' },
-    { field: 'Revision History', headerName: 'Revision History', filter: 'agSetColumnFilter' },
-    // {
-    //   field: 'CreatedAt',
-    //   headerName: 'Last Saved On',
-    //   valueFormatter: (params: any) => {
-    //     if (!params.value) return '';
-    //     // Parse string to Date and format as desired
-    //     const date = new Date(params.value);
-    //     if (isNaN(date.getTime())) return params.value; // fallback to raw string
-    //     return date.toLocaleString(); // or format however you want
-    //   },
-    // },
+    {
+      field: 'approvalHistory',
+      headerName: 'Approval History',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+            Approval History
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openWorkflowDeatilsModal(event.data);
+      },
+    },
   ];
 
-  radioValue = '';
+  columnToggles?: ColumnToggle[] = [
+    { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'documentId', label: 'Document ID', visible: true },
+    { field: 'documentName', label: 'Document Name', visible: true },
+    { field: 'observation', label: 'Observation', visible: true },
+    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'division', label: 'Division', visible: true },
+    { field: 'department', label: 'Department', visible: true },
+    { field: 'subdepartment', label: 'Sub-Department', visible: true },
+    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
+    // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+    { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'approvalHistory', label: 'Approval History', visible: true },
+  ];
 
-  constructor(private _permissionService: PermissionService) {}
+  currentGridQuery: any = {
+    pageNumber: 1,
+    pageSize: 1,
+    sortModel: [],
+    filterModel: {},
+    searchTerm: '',
+  };
+
+  // Default Column Definitions: Apply configuration across all columns
+  defaultColDef: ColDef = {
+    filter: true,
+    cellDataType: false,
+    editable: false,
+  };
+
+  totalPendingDocuments = 0;
+  totalApprovedDocuments = 0;
+  totalDisApprovedDocuments = 0;
+  public noRowsOverlay: string = '';
+
+  constructor(
+    private _permissionService: PermissionService,
+    private modal: NzModalService,
+    private _documentService: DocumentService,
+    private _notificationToastService: NotificationToastService,
+  ) {}
 
   ngOnInit() {
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
-      this.loadData(this.pageSize);
     });
   }
-
-  public noRowsOverlay: string = '';
 
   selectedAuthorityType: number | null = null;
 
@@ -124,35 +168,141 @@ export class ViewDocumentPendingApproval {
     this.selectedWorkflowExclude = value;
   }
 
-  loadData(pageNumber: number) {
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
+  GetAllPendingDocuments(query?: any) {
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
 
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * this.pageSize;
-    const end = start + this.pageSize;
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
 
-    this.rowData = allData.slice(start, end);
-    this.totalDocuments = allData.length;
+    const payLoad = {
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      documentTypeCode: this.selectedDocumentType,
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      // Map to satisfy backend validation
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
+    };
 
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
-  }
+    this._documentService.GetAllDocumentPendingApprovals(payLoad).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
 
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      documentId: `DOC-${i + 1}`,
-      documentName: `Policy Document ${i + 1}`,
-      version: `v${Math.floor(Math.random() * 5) + 1}.0`,
-      documentType: ['Policy', 'SOP', 'Manual'][i % 3],
-      division: ['North', 'South', 'East', 'West'][i % 4],
-      department: ['HR', 'IT', 'Finance', 'Legal'][i % 4],
-      subDepartment: ['Ops', 'Admin', 'Support'][i % 3],
-      nextReviewDate: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28))
-        .toISOString()
-        .split('T')[0],
-      uploadDocument: 'Upload',
-    }));
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.documentRequestsData = items.map((item: any) => {
+            // Helper to get value with case-insensitive fallback
+            const get = (keys: string[], defaultValue: any = ''): any => {
+              for (const key of keys) {
+                if (item[key] !== undefined && item[key] !== null) return item[key];
+                const lower = key.toLowerCase();
+                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+              }
+              return defaultValue;
+            };
+
+            const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
+            const startedAtRaw = get(['StartedAt', 'startedAt']);
+
+            return {
+              // ──────────────────────────────────────────────
+              // Identification & Request
+              // ──────────────────────────────────────────────
+              ExecutionId: get(['ExecutionId', 'executionId']),
+              Id: get(['Id', 'id']),
+              documentId: get(['Id', 'id']), // often same as Id
+              stepId: get(['StepId', 'stepId']),
+              stepOrder: get(['StepOrder', 'stepOrder']),
+              ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
+
+              // ──────────────────────────────────────────────
+              // Document metadata
+              // ──────────────────────────────────────────────
+              documentType: get(['DocumentType', 'documentType']),
+              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
+              documentName: get(['Title', 'title']),
+              company: get(['Company', 'company'], ''),
+              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
+
+              // ──────────────────────────────────────────────
+              // Organizational context
+              // ──────────────────────────────────────────────
+              division: get(['Division']),
+              department: get(['Department']),
+              departmentId: get(['DepartmentCode', 'departmentCode']),
+              subDepartment: get(['SubDepartment', 'subDepartment']),
+              subDepartmentId: get(['SubDepartmentCode', 'subDepartmentCode']),
+              businessDomain: get(['BusinessDomain', 'businessDomain']),
+              businessDomainId: get(['BusinessDomainCode', 'businessDomainCode']),
+              // ──────────────────────────────────────────────
+              // Content / Justification
+              // ──────────────────────────────────────────────
+
+              proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+              draftFileUrl: get(
+                ['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'],
+                '',
+              ),
+
+              // ──────────────────────────────────────────────
+              // Audit / History fields
+              // ──────────────────────────────────────────────
+              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
+              requestCreatedOn: new CustomDateFormatPipe().transform(
+                get(['RequestCreatedAt', 'requestCreatedAt']),
+              ),
+              startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
+
+              // Previous version info (only if present in real payloads)
+              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                get(['RequestCreatedAt', 'requestCreatedAt']),
+              ),
+
+              // ──────────────────────────────────────────────
+              // Placeholder / missing fields from your original
+              // (add real data source when available)
+              // ──────────────────────────────────────────────
+              observation: '', // ← not in sample → populate when available
+              requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
+              dateOfApproval: '', // ← not present
+              approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
+            };
+          });
+        } else {
+          this.documentRequestsData = [];
+          this.totalRows = 0;
+        }
+      },
+      error: (err) => {
+        this.documentRequestsData = [];
+        this.totalRows = 0;
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to fetch documents.',
+        );
+      },
+    });
   }
 
   onDivisionChange(value: string): void {
@@ -199,5 +349,24 @@ export class ViewDocumentPendingApproval {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
+
+  openWorkflowDeatilsModal(rowData: any) {
+    //console.log('Row clicked:', rowData);
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Workflow History',
+      nzContent: WorkflowApprovalHistoryComponent,
+      nzData: {
+        id: rowData.Id,
+        entityType: 'Document',
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      console.log('Modal closed with:', result);
+    });
   }
 }
