@@ -21,6 +21,14 @@
               >
                 Uploaded Documents
               </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'BulkUpload' }"
+                (click)="selectedTab = 'BulkUpload'"
+              >
+                Bulk Upload
+              </button>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'Upload'">
@@ -34,6 +42,123 @@
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <app-uploaded-documents>
                 </app-uploaded-documents>
+              </div>
+            </div>
+
+            <div class="row mt-3" *ngIf="selectedTab === 'BulkUpload'">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h3 class="PnlHeader m-0">Bulk Document Upload</h3>
+                  <button type="button" class="btn btn-outline-primary shadow-sm" (click)="downloadTemplate()">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Download Template
+                  </button>
+                </div>
+                
+                <div class="alert alert-primary d-flex align-items-center mb-4 shadow-sm border-0" role="alert">
+                  <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                  <div>
+                    <h5 class="alert-heading mb-1 fs-6 fw-bold">How it works</h5>
+                    <span style="font-size: 14px;">Download the Excel template, fill in your records, upload the completed file below, and then attach the corresponding documents.</span>
+                  </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                  <!-- Step 1: Excel File -->
+                  <div class="col-md-6">
+                    <div class="card h-100 shadow-sm rounded-4" style="border: 2px dashed #cbd5e1; background-color: #f8fafc;">
+                      <div class="card-body p-5 text-center d-flex flex-column justify-content-center align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-4 shadow-sm" style="width: 50px; height: 50px;">
+                          <span class="fw-bold fs-5">1</span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-2">Upload Excel Template</h5>
+                        <p class="text-muted small mb-4 px-3">Select the completed template containing your document metadata.</p>
+                        
+                        <div class="d-flex justify-content-center gap-3 w-100 flex-wrap">
+                          <button type="button" class="btn btn-outline-primary px-4 py-2 rounded-pill shadow-sm fw-semibold" (click)="excelFileInput.click()">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Browse Template
+                          </button>
+                          
+                          <button
+                            type="button"
+                            tabindex="0"
+                            class="btn btn-primary px-4 py-2 shadow-sm rounded-pill fw-semibold"
+                            (click)="submitBulkUpload()"
+                            [disabled]="!excelFile || bulkDocuments.length === 0 || isUploading"
+                          >
+                            <span *ngIf="!isUploading"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Submit Upload</span>
+                            <span *ngIf="isUploading"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...</span>
+                          </button>
+                        </div>
+                        <input #excelFileInput type="file" class="d-none" accept=".xlsx, .xls" (change)="onExcelFileSelected($event)">
+                        
+                        <div *ngIf="excelFile" class="mt-4 p-2 bg-success bg-opacity-10 text-success rounded-3 small fw-semibold w-100 border border-success border-opacity-25 d-flex justify-content-between align-items-center">
+                          <div class="text-truncate" [title]="excelFile.name"><i class="bi bi-check-circle-fill me-2"></i> {{ excelFile.name }}</div>
+                          <i class="bi bi-x-lg text-danger ms-2" style="cursor: pointer;" (click)="clearExcelFile()" title="Remove Template"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Step 2: Documents -->
+                  <div class="col-md-6">
+                    <div class="card h-100 shadow-sm rounded-4" style="border: 2px dashed #cbd5e1; background-color: #f8fafc;">
+                      <div class="card-body p-5 text-center d-flex flex-column justify-content-center align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-4 shadow-sm" style="width: 50px; height: 50px;">
+                          <span class="fw-bold fs-5">2</span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-2">Upload Documents</h5>
+                        <p class="text-muted small mb-4 px-3">Select all files referenced in your Excel template.</p>
+                        
+                        <div class="d-flex justify-content-center gap-3 w-100 flex-wrap">
+                          <button type="button" class="btn btn-outline-primary px-4 py-2 rounded-pill shadow-sm fw-semibold" (click)="documentsInput.click()">
+                            <i class="bi bi-files me-2"></i> Browse Documents
+                          </button>
+
+                          <button
+                            type="button"
+                            tabindex="0"
+                            class="btn btn-primary px-4 py-2 shadow-sm rounded-pill fw-semibold"
+                            (click)="submitBulkUpload()"
+                            [disabled]="!excelFile || bulkDocuments.length === 0 || isUploading"
+                          >
+                            <span *ngIf="!isUploading"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Submit Upload</span>
+                            <span *ngIf="isUploading"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...</span>
+                          </button>
+                        </div>
+                        <input #documentsInput type="file" class="d-none" multiple (change)="onBulkDocumentsSelected($event)">
+                        
+                        <div *ngIf="bulkDocuments.length > 0" class="mt-4 w-100">
+                          <div class="d-flex justify-content-between align-items-center p-2 bg-success bg-opacity-10 text-success rounded-3 border border-success border-opacity-25 mb-3 small fw-semibold">
+                            <div><i class="bi bi-check-circle-fill me-2"></i> {{ bulkDocuments.length }} file(s) selected</div>
+                            <i class="bi bi-x-lg text-danger ms-2" style="cursor: pointer;" (click)="clearBulkDocuments()" title="Remove All Documents"></i>
+                          </div>
+                          
+                          <div class="d-flex flex-wrap gap-2 justify-content-center" style="max-height: 120px; overflow-y: auto; padding: 2px;">
+                            <div *ngFor="let doc of bulkDocuments" class="badge bg-white text-secondary border shadow-sm d-flex align-items-center px-2 py-1" style="max-width: 150px;" [title]="doc.name">
+                              <i class="bi bi-file-earmark-text me-1 text-primary"></i>
+                              <span class="text-truncate fw-normal text-start" style="font-size: 12px; max-width: 115px;">{{ doc.name }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- <div class="row mt-4">
+                  <div class="col-12 d-flex justify-content-end">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-primary btn-lg px-5 shadow-sm rounded-pill"
+                      (click)="submitBulkUpload()"
+                      [disabled]="!excelFile || bulkDocuments.length === 0 || isUploading"
+                    >
+                      <span *ngIf="!isUploading"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Submit Bulk Upload</span>
+                      <span *ngIf="isUploading"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...</span>
+                    </button>
+                  </div>
+                </div> -->
               </div>
             </div>
           </div>

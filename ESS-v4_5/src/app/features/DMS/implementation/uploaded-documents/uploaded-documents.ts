@@ -1,5 +1,4 @@
-import { Component } from '@angular/core';
-import { UtilitiesService } from '@app/core/services/utilities.service';
+import { Component } from '@angular/core'; 
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
@@ -7,9 +6,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
-import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
 import { DocumentService } from '@app/shared/services/document.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';

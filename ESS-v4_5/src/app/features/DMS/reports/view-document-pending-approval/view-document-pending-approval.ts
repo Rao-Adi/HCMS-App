@@ -58,8 +58,7 @@ export class ViewDocumentPendingApproval {
   selectedDocumentType?: string = '';
 
   pageSize = 10;
-  documentRequestsData: any[] = [];
-  totalDocuments = 0;
+  documentRequestsData: any[] = []; 
   totalRows = 0;
 
   loading = false;
@@ -69,18 +68,17 @@ export class ViewDocumentPendingApproval {
   documentTypeData: any[] = [];
 
   documentsColumnDefs = [
-    { field: 'DocumentType', headerName: 'DocumentType' },
-    { field: 'DocumentName', headerName: 'DocumentName' },
-    { field: 'Version', headerName: 'Version' },
-    { field: 'Division', headerName: 'Division' },
-    { field: 'Department', headerName: 'Department' },
-    { field: 'SubDepartment', headerName: 'Sub-Department' },
-    { field: 'URL', headerName: 'URL' },
-    { field: 'DistributionList', headerName: 'Distribution List' },
-    { field: 'RequestCreatedBy', headerName: 'Request Create dBy' },
-    { field: 'RequestCreatedOn', headerName: 'Request Created On' },
-    { field: 'PrevisionVersionCreatedBy', headerName: 'Prevision Version Created By' },
-    { field: 'PrevisionVersionCreatedOn', headerName: 'Prevision Version Created On' },
+    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentName', headerName: 'Document Name' },
+    { field: 'version', headerName: 'Version' },
+    { field: 'division', headerName: 'Division' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'subDepartment', headerName: 'Sub-Department' },
+    { field: 'url', headerName: 'URL' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -104,17 +102,12 @@ export class ViewDocumentPendingApproval {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'documentId', label: 'Document ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
-    { field: 'observation', label: 'Observation', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
-    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
-    { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'version', label: 'Version', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
-    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
-    // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
+    { field: 'subDepartment', label: 'Sub-Department', visible: true },
+    { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
@@ -136,11 +129,7 @@ export class ViewDocumentPendingApproval {
     cellDataType: false,
     editable: false,
   };
-
-  totalPendingDocuments = 0;
-  totalApprovedDocuments = 0;
-  totalDisApprovedDocuments = 0;
-  public noRowsOverlay: string = '';
+  
 
   constructor(
     private _permissionService: PermissionService,
@@ -235,47 +224,45 @@ export class ViewDocumentPendingApproval {
               // ──────────────────────────────────────────────
               // Document metadata
               // ──────────────────────────────────────────────
-              documentType: get(['DocumentType', 'documentType']),
-              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
-              documentName: get(['Title', 'title']),
+              documentType: get(['DocumentType', 'documenttype']),
+              documentTypeCode: get(['DocumentTypeCode', 'documenttypecode']),
+              documentName: get(['Title', 'title', 'documentname']),
+              version: get(['Version', 'version', 'proposedVersionNumber']),
               company: get(['Company', 'company'], ''),
-              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+              proposedDocumentNumber: get(['DocumentNumber', 'documentnumber']),
               proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
 
               // ──────────────────────────────────────────────
               // Organizational context
               // ──────────────────────────────────────────────
-              division: get(['Division']),
-              department: get(['Department']),
-              departmentId: get(['DepartmentCode', 'departmentCode']),
-              subDepartment: get(['SubDepartment', 'subDepartment']),
-              subDepartmentId: get(['SubDepartmentCode', 'subDepartmentCode']),
-              businessDomain: get(['BusinessDomain', 'businessDomain']),
-              businessDomainId: get(['BusinessDomainCode', 'businessDomainCode']),
+              division: get(['Division', 'division']),
+              department: get(['Department', 'department']),
+              departmentId: get(['DepartmentCode', 'departmentcode']),
+              subDepartment: get(['SubDepartment', 'subdepartment']),
+              subDepartmentId: get(['SubDepartmentCode', 'subdepartmentcode']),
+              businessDomain: get(['BusinessDomain', 'businessdomain']),
+              businessDomainId: get(['BusinessDomainCode', 'businessdomaincode']),
               // ──────────────────────────────────────────────
               // Content / Justification
               // ──────────────────────────────────────────────
 
               proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
-              draftFileUrl: get(
-                ['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'],
-                '',
-              ),
+              url: get(['DocumentURL', 'documenturl', 'DraftFileURL', 'draftFileURL']),
 
               // ──────────────────────────────────────────────
               // Audit / History fields
               // ──────────────────────────────────────────────
-              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              requestCreatedBy: get(['CreatedByName', 'createdbyname', 'RequestCreatedBy']),
               dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
               requestCreatedOn: new CustomDateFormatPipe().transform(
-                get(['RequestCreatedAt', 'requestCreatedAt']),
+                get(['CreatedAt', 'createdat', 'RequestCreatedAt'])
               ),
               startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
-              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              previousVersionCreatedBy: get(['LastModifiedByName', 'lastmodifiedbyname', 'PreviousVersionCreatedBy']),
               previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                get(['RequestCreatedAt', 'requestCreatedAt']),
+                get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn'])
               ),
 
               // ──────────────────────────────────────────────
@@ -285,7 +272,7 @@ export class ViewDocumentPendingApproval {
               observation: '', // ← not in sample → populate when available
               requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
               dateOfApproval: '', // ← not present
-              approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
+              approvalHistory: true, // Used to render the link in the cell
             };
           });
         } else {

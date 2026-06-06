@@ -1,7 +1,7 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom"> 
+      <div class="card-custom">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <!-- <div class="custom-tab-container">
@@ -81,13 +81,14 @@
                     />
                     <button
                       aria-label="Save tabs name"
-                      title="Save tabs name"
+                      class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       [disabled]="!(this.canAdd || this.canEdit)"
+                      title="Approve"
                       (click)="saveTabTitle()"
-                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!this.canAdd"
                     >
-                      <i class="bi bi-file-earmark-plus"></i>
-                    </button>
+                      <i class="bi bi-pencil-square"></i>
+                    </button> 
                   </div>
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-4" style="opacity: 0.65; font-size: 0.85em">
@@ -138,11 +139,13 @@
                     />
                     <button
                       aria-label="Save tabs name"
-                      title="Save tabs name"
+                      class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!(this.canAdd || this.canEdit)"
+                      title="Approve"
                       (click)="saveTabTitle()"
-                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!this.canAdd"
                     >
-                      <i class="bi bi-file-earmark-plus"></i>
+                      <i class="bi bi-pencil-square"></i>
                     </button>
                   </div>
                 </div>
@@ -196,11 +199,13 @@
                     />
                     <button
                       aria-label="Save tabs name"
-                      title="Save tabs name"
+                      class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!(this.canAdd || this.canEdit)"
+                      title="Approve"
                       (click)="saveTabTitle()"
-                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!this.canAdd"
                     >
-                      <i class="bi bi-file-earmark-plus"></i>
+                      <i class="bi bi-pencil-square"></i>
                     </button>
                   </div>
                 </div>
@@ -252,11 +257,13 @@
                     />
                     <button
                       aria-label="Save tabs name"
-                      title="Save tabs name"
+                      class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!(this.canAdd || this.canEdit)"
+                      title="Approve"
                       (click)="saveTabTitle()"
-                      class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
+                      [disabled]="!this.canAdd"
                     >
-                      <i class="bi bi-file-earmark-plus"></i>
+                      <i class="bi bi-pencil-square"></i>
                     </button>
                   </div>
                 </div>

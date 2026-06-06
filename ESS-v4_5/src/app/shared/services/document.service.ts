@@ -106,11 +106,17 @@ export class DocumentService {
     );
   }
 
-  
-
-   GetAllDocumentPendingApprovals(payload: any): Observable<ApiResponse<any>> {
+  GetAllDocumentPendingApprovals(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-documents-pending-approval`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetApprovedEffectiveDocuments(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-approved-effective-documents`,
       payload,
       { headers: this.getHeaders() },
     );
@@ -175,5 +181,41 @@ export class DocumentService {
       observe: 'response',
       responseType: 'blob',
     });
+  }
+
+  /**
+   * Uploads the CSV file for bulk metadata import.
+   * Connects to: BulkImportDocumentMetadataAsync(IFormFile csvFile)
+   *
+   * @param csvFile The CSV File object selected from an <input type="file">
+   * @returns An observable of string array containing import logs/results
+   */
+  bulkImportDocumentMetadata(csvFile: File): Observable<string[]> {
+    const formData = new FormData();
+
+    // The key 'csvFile' MUST match the parameter name defined in your C# Controller.
+    // e.g. public async Task<IActionResult> ImportMetadata(IFormFile csvFile)
+    formData.append('csvFile', csvFile, csvFile.name);
+
+    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/BulkImportMetadata`, formData);
+  }
+
+  /**
+   * Uploads multiple physical files to attach to previously imported metadata.
+   * Connects to: BulkUploadDocumentFilesAsync(List<IFormFile> files)
+   *
+   * @param files An array of File objects selected from an <input type="file" multiple>
+   * @returns An observable of string array containing upload logs/results
+   */
+  bulkUploadDocumentFiles(files: File[]): Observable<string[]> {
+    const formData = new FormData();
+
+    // The key 'files' MUST match the parameter name defined in your C# Controller.
+    // e.g. public async Task<IActionResult> UploadBulkFiles(List<IFormFile> files)
+    files.forEach((file) => {
+      formData.append('files', file, file.name);
+    });
+
+    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/BulkUploadFiles`, formData);
   }
 }
