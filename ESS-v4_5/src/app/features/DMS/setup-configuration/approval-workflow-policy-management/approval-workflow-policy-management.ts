@@ -182,13 +182,13 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedAuthorityType = value;
     //reset preselected values
     if (value == 2) {
-      //this.getAllUsersList();
+      this.getAllUsersList();
     }
     if (value == 3) {
-      //this.getAllRoles();
+      this.getAllRoles();
     }
     if (value == 4) {
-      //this.getAllDesignationList();
+      this.getAllDesignationList();
     }
     this.selectedUser = '';
     this.selectedEmployeeSingle = null;
@@ -202,6 +202,15 @@ export class ApprovalWorkflowPolicyManagement {
 
   onWorkflowExcludeChange(value: number | null): void {
     this.selectedWorkflowExclude = value;
+    if (value == 1) {
+      this.getAllDesignationList();
+    }
+    if (value == 2) {
+      this.getAllRoles();
+    }
+    if (value == 3) {
+      this.getAllUsersList();
+    }
   }
 
   onDesignationChange(value: string): void {

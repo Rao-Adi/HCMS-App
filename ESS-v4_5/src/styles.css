@@ -6642,7 +6642,12 @@ html.ant-scrolling-effect {
 }
 
 .ant-select-multiple.ant-select .ant-select-selection-item {
-  height: 19px !important;
+  height: auto !important;
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  line-height: 22px !important;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Hide search input in multi-select */

@@ -41,6 +41,9 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
+import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 // Define interface for request types
 interface RequestType {
@@ -67,6 +70,7 @@ interface RequestType {
     ReactiveFormsModule,
     DynamicFormByDocumentAttribute,
     NzModalModule,
+    RoleList,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -104,7 +108,7 @@ export class CreateUpdateDocument {
   selectedRequestId: string = '';
   templateHtml: string = '';
   draftFileUrl: string = '';
-  trainingContent: boolean = false;
+  trainingRequired: boolean = false;
   showDocumentContent: boolean = false;
   documentId: string = '';
   documentName: string = '';
@@ -144,12 +148,17 @@ export class CreateUpdateDocument {
   attributes: DocumentAttribute[] = [];
   dynamicForm!: FormGroup;
 
+  selectedRole?: string = '';
+  selectedUser: string[] = [];
+
+  trainingModes: SelectList[] = [
+    { CODE: 'Classroom', NAME: 'Classroom' },
+    { CODE: 'Online', NAME: 'Online' },
+  ];
+
   trainers: SelectList[] = [];
 
-  users: SelectList[] = [
-    { CODE: '1', NAME: 'Digital Marketing' },
-    { CODE: '2', NAME: 'Software Marketing' },
-  ];
+  users: SelectList[] = [];
 
   requestTypes: any[] = [];
   requestIds: any[] = [];
@@ -258,6 +267,8 @@ export class CreateUpdateDocument {
     private documentTemplateService: TemplateService,
     private _documentRequestService: DocumentRequestService,
     private _permissionService: PermissionService,
+    private _trainingPolicyService: TrainingPolicyService,
+    private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
   ngOnInit() {
@@ -308,7 +319,7 @@ export class CreateUpdateDocument {
         }
       }
 
-      if (this.trainingContent && !this.selectedTrainingMode) {
+      if (this.trainingRequired && !this.selectedTrainingMode) {
         return true;
       }
     }
@@ -323,20 +334,20 @@ export class CreateUpdateDocument {
     // Control visibility of conditional sections based on request type
     switch (code) {
       case 'DRT-0001': // Creation of new document
-        this.trainingContent = false;
+        //this.trainingRequired = false;
         this.showExclusionTable = true;
         break;
       case 'DRT-0002': // Revision of existing document
-        this.trainingContent = false;
+        //this.trainingRequired = false;
         this.showExclusionTable = false;
         this.GetEffectiveDocumentsForRevision('');
         break;
       case 'DRT-0003': // Obsoletion of existing document
-        this.trainingContent = false;
+        //this.trainingRequired = false;
         this.showExclusionTable = true;
         break;
       default:
-        this.trainingContent = false;
+        //this.trainingRequired = false;
         this.showExclusionTable = false;
         break;
     }
@@ -405,13 +416,11 @@ export class CreateUpdateDocument {
 
   onDocumentTypeChange(value: string): void {
     this.selectedDocumentType = value;
-    if (value === 'SOP') {
-      this.trainingContent = true;
-    } else {
-      this.trainingContent = false;
-    }
+
+    this.CheckTrainingPolicy(value);
     //Get the Document Type's template
     this.GetDocumentAttributes(value);
+
     this.GetAllApprovedRequests();
     this.GetDocumentTemplate();
     this.loadWorkflowAuthorities(this.selectedDocumentType);
@@ -471,6 +480,29 @@ export class CreateUpdateDocument {
         //this.attributes = res.Data;
       } else {
         this.attributes = [];
+      }
+    });
+  }
+
+  CheckTrainingPolicy(value: string) {
+    this._trainingPolicyService.GetTrainingPolicyByDocumentType(value).subscribe((res) => {
+      if (res && res.Data) {
+        const data = res.Data;
+
+        // 1. Assign the TrainingRequired value safely
+        this.trainingRequired = !!data.TrainingRequired;
+
+        // 2. Handle object mapping safely (if attributes expects an array)
+        this.attributes = [
+          {
+            ...data,
+            ControlType: data.ControlType?.toLowerCase() as ControlTypes,
+            options: data.ListValues ? data.ListValues.split(',').map((v: string) => v.trim()) : [],
+          },
+        ];
+      } else {
+        this.attributes = [];
+        this.trainingRequired = false;
       }
     });
   }
@@ -612,49 +644,48 @@ export class CreateUpdateDocument {
   }
 
   AddTrainingUsers() {
-    this.showTrainingUserTable = this.showTrainingUserTable == true ? false : true;
-    // if (!this.approvalPolicy) {
-    //   this._notificationToastService.createNotification(
-    //     'warning',
-    //     'Validation',
-    //     'Please select an approval policy.',
-    //   );
-    //   return;
-    // }
+    if (!this.selectedTrainingMode) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Training Mode.',
+      );
+      return;
+    }
+    if (!this.selectedRole) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Trainer.',
+      );
+      return;
+    }
+    if (!this.selectedUser || this.selectedUser.length === 0) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select at least one User.',
+      );
+      return;
+    }
 
-    // const payLoad = {
-    //   companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-    //   // EntityType: this.selectedPolicyId == PolicyId.RequestForDocumentCreation
-    //   //             ? 'Request'
-    //   //             : this.selectedPolicyId == PolicyId.DocumentCreation
-    //   //               ? 'Document'
-    //   //               : 'Revision',
-    //   StepType: 'Review', // this will be discussed and sent from frontend, for now we are hardcoding it
-    //   documentTypeCode: this.selectedDocumentType,
-    //   divisionCode: this.selectedDivisions,
-    //   departmentCode: this.selectedDepartment,
-    //   subDepartmentCode: this.selectedSubDepartment,
-    //   businessDomainCode: this.selectedBusinessDomain,
-    //   // designationCodes: this.getDesignationCodes(),
-    //   // roles: this.getRoleCodes(),
-    //   // employeeCodes: this.getEmployeeCodes(),
-    //   // CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
-    //   RequireCrossFunctionalHead: false,
-    //   IsParallelApproval: false,
-    // };
+    this.showTrainingUserTable = true;
 
-    // this._workflowStepService.create(payLoad).subscribe({
-    //   next: (response) => {
-    //     if (response?.Success) {
-    //       this.trainingUsersData = [...response.Data];
+    const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
 
-    //       this._notificationToastService.createNotification('success', 'Workflow', response.Message);
-    //     }
-    //   },
-    //   error: (err) => {
-    //     this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
-    //   },
-    // });
+    this.selectedUser.forEach((userCode) => {
+      const user = this.users.find((u) => u.CODE === userCode);
+      this.trainingUsersData.push({
+        TrainingMode: mode?.NAME,
+        TrainerName: this.selectedRole, // valueKey="NAME" bounds the actual role name
+        UserName: user?.NAME,
+        TrainerCode: this.selectedRole,
+        UserCode: user?.CODE,
+      });
+    });
+
+    this.selectedRole = '';
+    this.selectedUser = [];
   }
 
   SubmiteDocumentRequests() {
@@ -665,6 +696,7 @@ export class CreateUpdateDocument {
       documentid: this.documentId,
       userid: this.loginEmpId,
       attributes: attributeValues,
+      traininguserids: this.trainingUsersData.map((user) => user.UserCode), // Included in Payload as requested
     };
 
     this._documentService.submitDocument(payLoad).subscribe({
@@ -1040,6 +1072,8 @@ export class CreateUpdateDocument {
     this.approvalSequenceData = [];
     this.trainingUsersData = [];
     this.selectedTrainingMode = '';
+    this.selectedRole = '';
+    this.selectedUser = [];
   }
 
   downloadDraft(): void {
@@ -1143,6 +1177,60 @@ export class CreateUpdateDocument {
           );
         }
       },
+    });
+  }
+
+  loadUsersWhenRoleIdChanges(query: any = {}) {
+    const roleId = this.selectedRole;
+    if (!roleId) {
+      this.users = [];
+      this.totalRows = 0;
+      this.selectedUser = []; // Clear selected user
+      return;
+    }
+    const sort = query.sortModel?.[0];
+    const payload = {
+      searchtext: query.searchTerm || query.searchText || '',
+      sortby: sort?.sort?.toUpperCase() || 'ASC',
+      sortcolumn: sort?.colId || 'empid', // Fallback to ensure query works smoothly
+      isactive: true,
+      pagenumber: Number(query.pageNumber) || 1,
+      pagesize: Number(query.pageSize) || this.pageSize,
+      divisionCode: null,
+      departmentCode: null,
+      subDepartmentCode: null,
+      businessDomainCode: null,
+      documentTypeCode: this.selectedDocumentType,
+    };
+
+    this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe((res) => {
+      if (res?.Success && res.Data) {
+        const data = res.Data;
+        const users = (Array.isArray(data) ? data : data.Items || []).filter((u: any) => u != null);
+
+        if (users.length > 0) {
+          this.totalRows = data.TotalCount ?? users.length;
+          this.users = users.map((u: any) => {
+            // Ensure we never receive undefined codes/names by exhausting all possible API casing variants
+            const code = u.empcode || u.empCode || u.EmployeeCode || u.employeeCode || u.empid || u.empId || u.EmployeeId || u.id || u.Id || u.UserId || u.userId || u.UserCode || u.userCode || u.CODE;
+            const name = u.firstname
+              ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
+              : u.EmployeeName || u.employeeName || u.empName || u.EmpName || u.UserName || u.userName || u.Name || u.name || u.NAME || code;
+            
+            return {
+              ...u, 
+              CODE: code,
+              NAME: name,
+            };
+          });
+        } else {
+          this.users = [];
+          this.totalRows = 0;
+        }
+      } else {
+        this.users = [];
+        this.totalRows = 0;
+      }
     });
   }
 }

@@ -218,43 +218,49 @@
                             <div *ngSwitchCase="'1'">
                               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <span class="d-flex">Designation</span>
-                                <app-designation-list
-                                  valueKey="CODE"
-                                  labelKey="NAME"
-                                  [isMultiSelect]="true"
-                                  placeholder="Select Designation"
+                                <nz-select
+                                  style="width: 350px"
+                                  nzMode="multiple"
+                                  [nzMaxTagCount]="3"
+                                  nzPlaceHolder="Select Designation"
                                   [(ngModel)]="selectedDesignation"
-                                  width="350px"
+                                  nzAllowClear
+                                  nzShowSearch
                                 >
-                                </app-designation-list>
+                                  <nz-option *ngFor="let item of designations" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+                                </nz-select>
                               </div>
                             </div>
                             <div *ngSwitchCase="'2'">
                               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <span class="d-flex">Role</span>
-                                <app-role-list
-                                  valueKey="ID"
-                                  labelKey="NAME"
-                                  placeholder="Select Role"
-                                  [isMultiSelect]="true"
+                                <nz-select
+                                  style="width: 350px"
+                                  nzMode="multiple"
+                                  [nzMaxTagCount]="3"
+                                  nzPlaceHolder="Select Role"
                                   [(ngModel)]="selectedRole"
-                                  width="350px"
+                                  nzAllowClear
+                                  nzShowSearch
                                 >
-                                </app-role-list>
+                                  <nz-option *ngFor="let item of userRoles" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
+                                </nz-select>
                               </div>
                             </div>
                             <div *ngSwitchCase="'3'">
                               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                                 <span class="d-flex">Employee</span>
-                                <app-employee-list
-                                  valueKey="ID"
-                                  labelKey="NAME"
-                                  placeholder="Select Employee"
-                                  [isMultiSelect]="true"
+                                <nz-select
+                                  style="width: 350px"
+                                  nzMode="multiple"
+                                  [nzMaxTagCount]="3"
+                                  nzPlaceHolder="Select Employee"
                                   [(ngModel)]="selectedEmployee"
-                                  width="350px"
+                                  nzAllowClear
+                                  nzShowSearch
                                 >
-                                </app-employee-list>
+                                  <nz-option *ngFor="let item of employees" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+                                </nz-select>
                               </div>
                             </div>
                             <div *ngSwitchDefault>
@@ -268,16 +274,7 @@
                       <ng-container *ngSwitchCase="'2'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Employee</span>
-                          <app-employee-list
-                            valueKey="ID"
-                            labelKey="NAME"
-                            placeholder="Select Employee"
-                            [isMultiSelect]="false"
-                            [(ngModel)]="selectedEmployeeSingle"
-                            width="350px"
-                          >
-                          </app-employee-list>
-                          <!-- <nz-select
+                          <nz-select
                             style="width: 350px"
                             [(ngModel)]="selectedEmployeeSingle"
                             nzPlaceHolder="Select Employee"
@@ -291,7 +288,7 @@
                               [nzLabel]="dep.NAME"
                             >
                             </nz-option>
-                          </nz-select> -->
+                          </nz-select>
                         </div>
                       </ng-container>
 
@@ -299,16 +296,7 @@
                       <ng-container *ngSwitchCase="'3'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Role</span>
-                          <app-role-list
-                            valueKey="ID"
-                            labelKey="NAME"
-                            placeholder="Select Role"
-                            [isMultiSelect]="false"
-                            [(ngModel)]="selectedRoleSingle"
-                            width="350px"
-                          >
-                          </app-role-list>
-                          <!-- <nz-select
+                          <nz-select
                             style="width: 350px"
                             [(ngModel)]="selectedRoleSingle"
                             nzPlaceHolder="Select Role"
@@ -322,7 +310,7 @@
                               [nzLabel]="dep.NAME"
                             >
                             </nz-option>
-                          </nz-select> -->
+                          </nz-select>
                         </div>
                       </ng-container>
 
@@ -330,16 +318,7 @@
                       <ng-container *ngSwitchCase="'4'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Designation</span>
-                          <app-designation-list
-                            valueKey="CODE"
-                            labelKey="NAME"
-                            placeholder="Select Designation"
-                            [isMultiSelect]="false"
-                            [(ngModel)]="selectedDesignationSingle"
-                            width="350px"
-                          >
-                          </app-designation-list>
-                          <!-- <nz-select
+                          <nz-select
                             style="width: 350px"
                             [(ngModel)]="selectedDesignationSingle"
                             nzPlaceHolder="Select Designation"
@@ -353,7 +332,7 @@
                               [nzLabel]="dep.NAME"
                             >
                             </nz-option>
-                          </nz-select> -->
+                          </nz-select>
                         </div>
                       </ng-container>
 

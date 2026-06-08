@@ -7,13 +7,13 @@
             <div class="row row-space">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="row">
-                  <div class="col-lg-2 col-md-2 col-sm-2 mb-10">
+                      <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                     <div class="PnlHeading">
                       <label>{{ 'labels.Activity Type' | safeTranslate }} </label>
                     </div>
                     <div>
                       <nz-select
-                        style="width: 250px"
+                            style="width: 100%; max-width: 250px;"
                         [(ngModel)]="selectedRequestType"
                         nzPlaceHolder="Select Activity Type"
                         (ngModelChange)="onRequestTypeChange($event)"
@@ -29,18 +29,18 @@
                       </nz-select>
                     </div>
                   </div>
-                  <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                      <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                     <div class="PnlHeading">
                       <label>{{ 'labels.Document Type' | safeTranslate }} </label>
                     </div>
-                    <div>
+                        <div style="width: 100%; max-width: 250px;">
                       <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
                         placeholder="Select Document Type"
                         [(ngModel)]="selectedDocumentType"
                         (valueChange)="onDocumentTypeChange($event)"
-                        width="250px"
+                            width="100%"
                       >
                       </app-document-type-list>
                     </div>
@@ -54,18 +54,18 @@
                     </div>
                     <br />
                     <div class="row">
-                      <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                      <div class="col-lg-9 col-md-8 col-sm-12 mb-10">
                         <app-cabinet-structure-list
                           [hierarchy]="cabinetHierarchy"
                           (hierarchyChange)="onHierarchyChange($event)"
                         >
                         </app-cabinet-structure-list>
                       </div>
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                         <div class="PnlHeading">
                           <label>{{ 'labels.Company' | safeTranslate }} </label>
                         </div>
-                        <div style="width: 250px">
+                        <div style="width: 100%; max-width: 250px;">
                           <div>
                             <app-company-list
                               valueKey="CODE"
@@ -73,7 +73,7 @@
                               placeholder="Select Division"
                               [(ngModel)]="selectedDivisions"
                               (valueChange)="onCompanyChange($event)"
-                              width="250px"
+                              width="100%"
                             >
                             </app-company-list>
                           </div>
@@ -83,63 +83,68 @@
                   </div>
                 </div>
                 <!--User List for training-->
-                <div class="row row-space">
-                  <div *ngIf="trainingContent">
+                <div class="row row-space status-box-leftColmd6-standard">
+                  <div *ngIf="trainingRequired">
                     <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                       <div class="PnlHeading">
-                        <h3 class="PnlHeader">Trainers</h3>
+                        <h3 class="PnlHeader">Trainers (Document Training)</h3>
                       </div>
                       <br />
                       <div class="row">
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                           <div class="PnlHeading">
                             <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
                           </div>
                           <div>
-                            <app-document-type-list
-                              valueKey="CODE"
-                              labelKey="NAME"
-                              placeholder="Select Training Mode"
+                            <nz-select
+                              style="width: 100%; max-width: 250px;"
+                              [nzPlaceHolder]="'Select Training Mode'"
                               [(ngModel)]="selectedTrainingMode"
-                              (valueChange)="onTrainingModeChange($event)"
-                              width="250px"
+                              nzAllowClear
+                              nzShowSearch
                             >
-                            </app-document-type-list>
+                              <nz-option
+                                *ngFor="let mode of trainingModes"
+                                [nzValue]="mode.CODE"
+                                [nzLabel]="mode.NAME"
+                              >
+                              </nz-option>
+                            </nz-select>
                           </div>
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                           <div class="PnlHeading">
                             <label>{{ 'labels.Trainers' | safeTranslate }} </label>
                           </div>
-                          <div class="Divtxtemployeeschright" style="width: 250px">
+                          <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px;">
                             <div>
-                              <nz-select
-                                style="width: 250px"
-                                [nzPlaceHolder]="'Select Trainers'"
-                                nzAllowClear
-                                nzShowSearch
+                              <app-role-list
+                                valueKey="NAME"
+                                labelKey="NAME"
+                                [isMultiSelect]="false"
+                                placeholder="Select Role"
+                                [(ngModel)]="selectedRole"
+                                (ngModelChange)="loadUsersWhenRoleIdChanges()"
+                                width="100%"
                               >
-                                <nz-option
-                                  *ngFor="let dep of trainers"
-                                  [nzValue]="dep.CODE"
-                                  [nzLabel]="dep.NAME"
-                                >
-                                </nz-option>
-                              </nz-select>
+                              </app-role-list>
                             </div>
                           </div>
                         </div>
 
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                        <div class="col-lg-4 col-md-4 col-sm-12 mb-10">
                           <div class="PnlHeading">
                             <label>{{ 'labels.User' | safeTranslate }}</label>
                           </div>
-                          <div>
+                          <div class="d-flex align-items-start w-100" style="max-width: 350px;">
                             <nz-select
-                              style="width: 250px"
+                              style="width: 100%;"
                               [nzPlaceHolder]="'Select User'"
+                              [(ngModel)]="selectedUser"
                               nzAllowClear
                               nzShowSearch
+                              nzMode="multiple"
+                              [nzMaxTagCount]="3"
                             >
                               <nz-option
                                 *ngFor="let dep of users"
@@ -148,50 +153,44 @@
                               >
                               </nz-option>
                             </nz-select>
-                          </div>
-                        </div>
-                        <div class="col-lg-1 col-md-1 col-sm-1 mt-4">
-                          <button
-                            class="grid-icon-btn"
-                            title="Approve"
+
+                            <button
+                            class="grid-icon-btn ms-2 flex-shrink-0"
+                            title="Add"
                             (click)="AddTrainingUsers()"
                           >
                             <i class="bi bi-plus-circle"></i>
                           </button>
-                        </div>
+                          </div>
+                          
+                        </div> 
                       </div>
                     </div>
                     <div
                       *ngIf="showTrainingUserTable"
                       class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
                     >
+                      <div class="table-responsive">
                       <table
                         class="table"
                         *ngIf="trainingUsersData && trainingUsersData.length > 0"
                       >
                         <thead>
-                          <th>Approval Sequence</th>
-                          <th></th>
+                          <th>Training Mode</th>
+                          <th>Trainer</th>
+                          <th>User</th>
                         </thead>
                         <tbody>
-                          <!-- Use keyvalue pipe to convert the object -->
-                          @for (
-                            item of trainingUsersData | keyvalue;
-                            track item.key;
-                            let i = $index
-                          ) {
+                          @for (item of trainingUsersData; track $index; let i = $index) {
                             <tr>
-                              <td>{{ i + 1 }}</td>
-                              <td>
-                                <!-- Access data using item.value -->
-                                {{ item.value.EmployeeName }}<br />
-                                Role: {{ item.value.UserRole }}<br />
-                                Designation: {{ item.value.Designation }}
-                              </td>
+                              <td>{{ item.TrainingMode }}</td>
+                              <td>{{ item.TrainerName }}</td>
+                              <td>{{ item.UserName }}</td>
                             </tr>
                           }
                         </tbody>
                       </table>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -203,13 +202,13 @@
                     <ng-container *ngSwitchCase="'DRT-0001'">
                       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <div class="row mb-10">
-                          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                          <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                             <div class="PnlHeading">
                               <label>{{ 'labels.Request ID' | safeTranslate }} </label>
                             </div>
                             <div>
                               <nz-select
-                                style="width: 250px"
+                                style="width: 100%; max-width: 250px;"
                                 [(ngModel)]="selectedRequestId"
                                 nzPlaceHolder="Select Request ID"
                                 (ngModelChange)="onRequestIdChange($event)"
@@ -300,6 +299,7 @@
                               {{ 'labels.Workflow Authorities' | safeTranslate }}
                             </h3>
                             <br />
+                            <div class="table-responsive">
                             <table
                               class="table"
                               *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
@@ -331,6 +331,7 @@
                                 }
                               </tbody>
                             </table>
+                            </div>
                           </div>
                         </div>
                       </div>
