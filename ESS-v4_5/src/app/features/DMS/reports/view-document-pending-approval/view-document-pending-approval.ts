@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
@@ -20,6 +20,9 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -37,11 +40,14 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
     CabinetStructureList,
     DocumentTypeList,
     NzModalModule,
+    DMSRichTextEdit,
   ],
   templateUrl: './view-document-pending-approval.html',
   styleUrl: './view-document-pending-approval.css',
 })
 export class ViewDocumentPendingApproval {
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+
   plainFooter = 'plain extra footer';
   footerRender = (): string => 'extra footer';
 
@@ -51,6 +57,14 @@ export class ViewDocumentPendingApproval {
   canDelete = false;
   formId = 'pendingapproval';
 
+  templateHtml: string = '';
+  draftFileUrl: string = '';
+  documentId: number = 0;
+  currentDocumentName: string = '';
+  safeDraftFileUrl?: SafeResourceUrl;
+  isPdf: boolean = false;
+  isDocx: boolean = false;
+
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
   selectedSubDepartment?: string = '';
@@ -58,7 +72,7 @@ export class ViewDocumentPendingApproval {
   selectedDocumentType?: string = '';
 
   pageSize = 10;
-  documentRequestsData: any[] = []; 
+  documentRequestsData: any[] = [];
   totalRows = 0;
 
   loading = false;
@@ -69,7 +83,25 @@ export class ViewDocumentPendingApproval {
 
   documentsColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentName', headerName: 'Document Name' },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+                ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'version', headerName: 'Version' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
@@ -129,13 +161,14 @@ export class ViewDocumentPendingApproval {
     cellDataType: false,
     editable: false,
   };
-  
 
   constructor(
     private _permissionService: PermissionService,
     private modal: NzModalService,
     private _documentService: DocumentService,
     private _notificationToastService: NotificationToastService,
+    private sanitizer: DomSanitizer,
+    private _config: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -255,14 +288,18 @@ export class ViewDocumentPendingApproval {
               requestCreatedBy: get(['CreatedByName', 'createdbyname', 'RequestCreatedBy']),
               dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
               requestCreatedOn: new CustomDateFormatPipe().transform(
-                get(['CreatedAt', 'createdat', 'RequestCreatedAt'])
+                get(['CreatedAt', 'createdat', 'RequestCreatedAt']),
               ),
               startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
-              previousVersionCreatedBy: get(['LastModifiedByName', 'lastmodifiedbyname', 'PreviousVersionCreatedBy']),
+              previousVersionCreatedBy: get([
+                'LastModifiedByName',
+                'lastmodifiedbyname',
+                'PreviousVersionCreatedBy',
+              ]),
               previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn'])
+                get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn']),
               ),
 
               // ──────────────────────────────────────────────
@@ -290,6 +327,14 @@ export class ViewDocumentPendingApproval {
         );
       },
     });
+  }
+
+  onCellClicked(event: any): void {
+    const row = event.data;
+    this.templateHtml = row?.proposedContent || '';
+    this.draftFileUrl = row?.draftFileUrl || '';
+    this.documentId = row?.RequestId || row?.Id || row?.id;
+    this.currentDocumentName = row?.documentName || '';
   }
 
   onDivisionChange(value: string): void {
@@ -354,6 +399,134 @@ export class ViewDocumentPendingApproval {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    let fileUrl = rowData.url || '';
+
+    if (fileUrl && !fileUrl.startsWith('http')) {
+      const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+      fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+    }
+    this.draftFileUrl = fileUrl;
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    if (this.draftFileUrl) {
+      const lowerUrl = this.draftFileUrl.toLowerCase();
+      if (lowerUrl.endsWith('.pdf')) {
+        this.isPdf = true;
+        this.safeDraftFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.draftFileUrl);
+      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc')) {
+        this.isDocx = true;
+      }
+    }
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '80%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
+  downloadDraft(): void {
+    debugger;
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
     });
   }
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
@@ -56,11 +56,11 @@ export class DocumentAuthorizationPostTraining {
   canDelete = false;
   formId = 'trainingauthorization';
 
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedbusinessDomain?: string = '';
-  selectedDocumentType?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedbusinessDomain: string = '';
+  selectedDocumentType: string = '';
   selectedAuthorizationStatus: string = '1'; // Default to '1' (SOP)
 
   loginEmpId: string = '';
@@ -205,6 +205,7 @@ export class DocumentAuthorizationPostTraining {
     private _notificationToastService: NotificationToastService,
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
@@ -219,6 +220,20 @@ export class DocumentAuthorizationPostTraining {
 
   GetLoginEmpId() {
     this.loginEmpId = this._UtilitiesService.GetEmpid() || '';
+  }
+
+  onTabChange(tab: string) {
+    this.selectedTab = tab;
+    this.emptyAllFields();
+  }
+
+  emptyAllFields() {
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedbusinessDomain = '';
+    this.selectedDocumentType = '';
+    this.selectedAuthorizationStatus = '1';
   }
 
   onGridReady(event: GridReadyEvent) {
@@ -255,6 +270,11 @@ export class DocumentAuthorizationPostTraining {
   GetAllDocuments(query: any) {
     const sort = query.sortModel?.[0];
     const payload = {
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedbusinessDomain,
+      documentTypeCode: this.selectedDocumentType,
       documentcategoryfilter: Number(this.selectedAuthorizationStatus),
       searchText: query?.searchTerm || '',
       sortBy: sort?.sort?.toUpperCase() || 'DESC',
@@ -262,65 +282,79 @@ export class DocumentAuthorizationPostTraining {
       isActive: true,
       pageNumber: query?.pageNumber || 1,
       pageSize: query?.pageSize || this.pageSize,
-      IsAuthorized : this.selectedTab =='Pending Authorization' ? false : true,
-    }; 
+      IsAuthorized: this.selectedTab == 'Pending Authorization' ? false : true,
+    };
+
+    // Show loading overlay natively
+    if (this.gridApi) {
+      this.gridApi.showLoadingOverlay();
+    }
 
     this._documentService.GetPendingAuthorizations(payload).subscribe({
       next: (res: any) => {
         if (res?.Success && res?.Data) {
           const data = res.Data;
           const items = data.Items || (Array.isArray(data) ? data : []);
-          this.totalRows = data.TotalCount ?? items.length;
-          this.pendingAuthorizationData = items.map((item: any) => ({
-            ...item,
-            Id: item.id || item.Id,
-            trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
-            averageDocumentScore: item.averagescore || item.averagescore || 0,
-            userAssigned: item.totalassigned || item.totalassigned,
-            companyId: item.companyId || item.CompanyId,
-            company: item.Company || item.company,
-            requestNumber: item.RequestNumber || item.requestNumber,
-            documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
-            documentType: item.DocumentType || item.documenttype,
-            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
-            division: item.Division || item.division,
-            divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
-            documentId: item.DocumentNumber || item.documentid,
-            documentName: item.DocumentName || item.documentname || item.title,
-            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
-            department: item.Department || item.department,
-            departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
-            subDepartment: item.subdepartment || item.subdepartment,
-            subDepartmentCode:
-              item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
-            justification: item.Justification || item.justification,
-            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
-            businessDomainCode:
-              item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
-            pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
-            sumbittedby: item.CreatedBy || item.createdby,
-            status: item.IsReworked ? 'Reworked' : 'Draft',
-            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
-            requestCreatedOn: new CustomDateFormatPipe().transform(
-              item.CreatedAt || item.createdat || '',
-            ),
-            requestCreatedBy: item.createdbyname || item.createdByName,
-            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
-            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              item.draftContentLastModifiedAt ||
-                item.DraftContentLastModifiedAt ||
-                item.lastmodifiedat ||
-                '',
-            ),
-            version: item.Version || item.version || item.RowVersion || item.rowVersion,
-            nextReviewDate: new CustomDateFormatPipe().transform(
-              item.NextReviewDate || item.nextreviewdate || '',
-            ),
-            url: item.DocumentURL || item.documenturl,
-            proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
-            templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
-          }));
+
+          if (items.length > 0) {
+            this.totalRows = data.TotalCount ?? items.length;
+            this.pendingAuthorizationData = items.map((item: any) => ({
+              ...item,
+              Id: item.id || item.Id,
+              trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+              averageDocumentScore: item.averagescore || item.averagescore || 0,
+              userAssigned: item.totalassigned || item.totalassigned,
+              companyId: item.companyId || item.CompanyId,
+              company: item.Company || item.company,
+              requestNumber: item.RequestNumber || item.requestNumber,
+              documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
+              documentType: item.DocumentType || item.documenttype,
+              proposedDocumentNumber:
+                item.RequestNumber || item.requestNumber || item.documentnumber,
+              division: item.Division || item.division,
+              divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
+              documentId: item.DocumentNumber || item.documentid,
+              documentName: item.DocumentName || item.documentname || item.title,
+              proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+              department: item.Department || item.department,
+              departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
+              subDepartment: item.subdepartment || item.subdepartment,
+              subDepartmentCode:
+                item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
+              justification: item.Justification || item.justification,
+              businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
+              businessDomainCode:
+                item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
+              pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
+              sumbittedby: item.CreatedBy || item.createdby,
+              status: item.IsReworked ? 'Reworked' : 'Draft',
+              createdOn: new CustomDateFormatPipe().transform(
+                item.CreatedAt || item.createdat || '',
+              ),
+              requestCreatedOn: new CustomDateFormatPipe().transform(
+                item.CreatedAt || item.createdat || '',
+              ),
+              requestCreatedBy: item.createdbyname || item.createdByName,
+              previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                item.draftContentLastModifiedAt ||
+                  item.DraftContentLastModifiedAt ||
+                  item.lastmodifiedat ||
+                  '',
+              ),
+              version: item.Version || item.version || item.RowVersion || item.rowVersion,
+              nextReviewDate: new CustomDateFormatPipe().transform(
+                item.NextReviewDate || item.nextreviewdate || '',
+              ),
+              url: item.DocumentURL || item.documenturl,
+              proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
+              templateType: item.TemplateType || item.templateType,
+              templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            }));
+          } else {
+            this.pendingAuthorizationData = [];
+            this.totalRows = 0;
+          }
         } else {
           this.pendingAuthorizationData = [];
           this.totalRows = 0;
@@ -329,6 +363,10 @@ export class DocumentAuthorizationPostTraining {
       error: (err) => {
         this.pendingAuthorizationData = [];
         this.totalRows = 0;
+        if (this.gridApi) {
+          this.gridApi.showNoRowsOverlay();
+        }
+        this.cdr.detectChanges();
         this._notificationToastService.createNotification(
           'error',
           'Error',
@@ -367,28 +405,14 @@ export class DocumentAuthorizationPostTraining {
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
 
-    switch (gridId) {
-      case 'documentGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      case 'authorizationStatusGrid':
-        this.employeePageSize = pageSize;
-        this.GetAllDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
-    }
+    // Direct update: fixes the grid freezing bug when pagination changes
+    this.pageSize = pageSize;
+    this.GetAllDocuments({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
   }
 
   openTrainingProofModal(row: any): void {
@@ -458,7 +482,7 @@ export class DocumentAuthorizationPostTraining {
     });
   }
 
-  openAverageScoreModal(row: any): void { 
+  openAverageScoreModal(row: any): void {
     this.modal.create({
       nzTitle: 'Average Document Score',
       nzContent: AverageDocumentScoreModal,
@@ -504,5 +528,12 @@ export class DocumentAuthorizationPostTraining {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+
+    this.GetAllDocuments({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
   }
 }

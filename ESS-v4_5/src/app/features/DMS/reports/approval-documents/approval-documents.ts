@@ -20,6 +20,10 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { AppConfigService } from '@app/core/services/app-config';
+import { RevisionHistoryModal } from '../../documents/revision-history-modal/revision-history-modal';
 
 @Component({
   selector: 'app-approval-documents',
@@ -37,6 +41,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
     NzDatePickerModule,
     CabinetStructureList,
     DocumentTypeList,
+    DMSRichTextEdit,
   ],
   templateUrl: './approval-documents.html',
   styleUrl: './approval-documents.css',
@@ -51,6 +56,15 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 })
 export class ApprovalDocuments {
   @ViewChild('distributionListModalTpl') distributionListModalTpl!: TemplateRef<any>;
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+
+  templateHtml: string = '';
+  draftFileUrl: string = '';
+  documentId: number = 0;
+  currentDocumentName: string = '';
+  safeDraftFileUrl?: SafeResourceUrl;
+  isPdf: boolean = false;
+  isDocx: boolean = false;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -129,7 +143,25 @@ export class ApprovalDocuments {
 
   documentsColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentName', headerName: 'Document Name' },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+                ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'version', headerName: 'Version' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
@@ -192,7 +224,7 @@ export class ApprovalDocuments {
         `;
       },
       onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
+        this.openRevisionHistoryModal(event.data);
       },
     },
   ];
@@ -205,6 +237,8 @@ export class ApprovalDocuments {
     private _documentService: DocumentService,
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
+    private sanitizer: DomSanitizer,
+    private _config: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -266,92 +300,103 @@ export class ApprovalDocuments {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
 
-          this.totalRows = data?.TotalCount ?? items.length;
-          this.documentRequestsData = items.map((item: any) => {
-            // Helper to get value with case-insensitive fallback
-            const get = (keys: string[], defaultValue: any = ''): any => {
-              for (const key of keys) {
-                if (item[key] !== undefined && item[key] !== null) return item[key];
-                const lower = key.toLowerCase();
-                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
-              }
-              return defaultValue;
-            };
+          if (items.length > 0) {
+            this.totalRows = data?.TotalCount ?? items.length;
+            this.documentRequestsData = items.map((item: any) => {
+              // Helper to get value with case-insensitive fallback
+              const get = (keys: string[], defaultValue: any = ''): any => {
+                for (const key of keys) {
+                  if (item[key] !== undefined && item[key] !== null) return item[key];
+                  const lower = key.toLowerCase();
+                  if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+                }
+                return defaultValue;
+              };
 
-            const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
-            const startedAtRaw = get(['StartedAt', 'startedAt']);
+              const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
+              const startedAtRaw = get(['StartedAt', 'startedAt']);
 
-            return {
-              // ──────────────────────────────────────────────
-              // Identification & Request
-              // ──────────────────────────────────────────────
-              ExecutionId: get(['ExecutionId', 'executionId']),
-              RequestId: get(['requestid', 'Requestid']),
-              documentId: get(['Id', 'id']), // often same as Id
-              stepId: get(['StepId', 'stepId']),
-              stepOrder: get(['StepOrder', 'stepOrder']),
-              ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
+              return {
+                // ──────────────────────────────────────────────
+                // Identification & Request
+                // ──────────────────────────────────────────────
+                ExecutionId: get(['ExecutionId', 'executionId']),
+                RequestId: get(['requestid', 'Requestid']),
+                documentId: get(['Id', 'id']), // often same as Id
+                stepId: get(['StepId', 'stepId']),
+                stepOrder: get(['StepOrder', 'stepOrder']),
+                ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
 
-              // ──────────────────────────────────────────────
-              // Document metadata
-              // ──────────────────────────────────────────────
-              documentType: get(['DocumentType', 'documenttype']),
-              documentTypeCode: get(['DocumentTypeCode', 'documenttypecode']),
-              documentName: get(['Title', 'title', 'documentname']),
-              version: get(['Version', 'version', 'proposedVersionNumber']),
-              company: get(['Company', 'company'], ''),
-              proposedDocumentNumber: get(['DocumentNumber', 'documentnumber']),
-              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
+                // ──────────────────────────────────────────────
+                // Document metadata
+                // ──────────────────────────────────────────────
+                documentType: get(['DocumentType', 'documenttype']),
+                documentTypeCode: get(['DocumentTypeCode', 'documenttypecode']),
+                documentName: get(['Title', 'title', 'documentname']),
+                version: get(['Version', 'version', 'proposedVersionNumber']),
+                company: get(['Company', 'company'], ''),
+                proposedDocumentNumber: get(['DocumentNumber', 'documentnumber']),
+                proposedVersionNumber: get(
+                  ['ProposedVersionNumber', 'proposedVersionNumber'],
+                  '1.0',
+                ), // fallback
 
-              // ──────────────────────────────────────────────
-              // Organizational context
-              // ──────────────────────────────────────────────
-              division: get(['Division', 'division']),
-              department: get(['Department', 'department']),
-              departmentId: get(['DepartmentCode', 'departmentcode']),
-              subDepartment: get(['SubDepartment', 'subdepartment']),
-              subDepartmentId: get(['SubDepartmentCode', 'subdepartmentcode']),
-              businessDomain: get(['BusinessDomain', 'businessdomain']),
-              businessDomainId: get(['BusinessDomainCode', 'businessdomaincode']),
-              // ──────────────────────────────────────────────
-              // Content / Justification
-              // ──────────────────────────────────────────────
+                // ──────────────────────────────────────────────
+                // Organizational context
+                // ──────────────────────────────────────────────
+                division: get(['Division', 'division']),
+                department: get(['Department', 'department']),
+                departmentId: get(['DepartmentCode', 'departmentcode']),
+                subDepartment: get(['SubDepartment', 'subdepartment']),
+                subDepartmentId: get(['SubDepartmentCode', 'subdepartmentcode']),
+                businessDomain: get(['BusinessDomain', 'businessdomain']),
+                businessDomainId: get(['BusinessDomainCode', 'businessdomaincode']),
+                // ──────────────────────────────────────────────
+                // Content / Justification
+                // ──────────────────────────────────────────────
 
-              proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
-              url: get(['DocumentURL', 'documenturl', 'DraftFileURL', 'draftFileURL']),
+                proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
+                url: get(['DocumentURL', 'documenturl', 'DraftFileURL', 'draftFileURL']),
 
-              // ──────────────────────────────────────────────
-              // Audit / History fields
-              // ──────────────────────────────────────────────
-              requestCreatedBy: get(['CreatedByName', 'createdbyname', 'RequestCreatedBy']),
-              dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
-              requestCreatedOn: new CustomDateFormatPipe().transform(
-                get(['CreatedAt', 'createdat', 'RequestCreatedAt']),
-              ),
-              startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
+                // ──────────────────────────────────────────────
+                // Audit / History fields
+                // ──────────────────────────────────────────────
+                requestCreatedBy: get(['CreatedByName', 'createdbyname', 'RequestCreatedBy']),
+                dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
+                requestCreatedOn: new CustomDateFormatPipe().transform(
+                  get(['CreatedAt', 'createdat', 'RequestCreatedAt']),
+                ),
+                startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
-              // Previous version info (only if present in real payloads)
-              previousVersionCreatedBy: get([
-                'LastModifiedByName',
-                'lastmodifiedbyname',
-                'PreviousVersionCreatedBy',
-              ]),
-              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn']),
-              ),
+                // Previous version info (only if present in real payloads)
+                previousVersionCreatedBy: get([
+                  'LastModifiedByName',
+                  'lastmodifiedbyname',
+                  'PreviousVersionCreatedBy',
+                ]),
+                previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                  get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn']),
+                ),
 
-              // ──────────────────────────────────────────────
-              // Placeholder / missing fields from your original
-              // (add real data source when available)
-              // ──────────────────────────────────────────────
-              observation: '', // ← not in sample → populate when available
-              requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
-              dateOfApproval: '', // ← not present
-              approvalHistory: true, // Used to render the link in the cell
-              distributionList: true,
-              userDistributions: get(['UserDistributions', 'userdistributions', 'userDistributions'], []),
-            };
-          });
+                // ──────────────────────────────────────────────
+                // Placeholder / missing fields from your original
+                // (add real data source when available)
+                // ──────────────────────────────────────────────
+                observation: '', // ← not in sample → populate when available
+                requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
+                dateOfApproval: '', // ← not present
+                approvalHistory: true, // Used to render the link in the cell
+                distributionList: true,
+                userDistributions: get(
+                  ['UserDistributions', 'userdistributions', 'userDistributions'],
+                  [],
+                ),
+              };
+            });
+          } else {
+            this.documentRequestsData = [];
+            this.totalRows = 0;
+          }
         } else {
           this.documentRequestsData = [];
           this.totalRows = 0;
@@ -369,6 +414,14 @@ export class ApprovalDocuments {
     });
   }
 
+  onCellClicked(event: any): void {
+    const row = event.data;
+    this.templateHtml = row?.proposedContent || '';
+    this.draftFileUrl = row?.draftFileUrl || '';
+    this.documentId = row?.RequestId || row?.Id || row?.id;
+    this.currentDocumentName = row?.documentName || '';
+  }
+
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
     this.selectedDepartment = '';
@@ -383,8 +436,6 @@ export class ApprovalDocuments {
     this.selectedDocumentType = value;
   }
 
-  GetAllDocuments(query: any) {}
-
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   // add more as needed...
@@ -396,7 +447,7 @@ export class ApprovalDocuments {
     switch (gridId) {
       case 'documentGrid':
         this.divisionPageSize = pageSize;
-        this.GetAllDocuments({
+        this.GetAllPendingDocuments({
           pageNumber: 1,
           pageSize: this.selectedPageSize,
           sortModel: [], // or your current sort/filter model
@@ -414,6 +465,46 @@ export class ApprovalDocuments {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+
+    this.GetAllPendingDocuments({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
+    });
+  }
+
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    let fileUrl = rowData.url || '';
+
+    if (fileUrl && !fileUrl.startsWith('http')) {
+      const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+      fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+    }
+    this.draftFileUrl = fileUrl;
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    if (this.draftFileUrl) {
+      const lowerUrl = this.draftFileUrl.toLowerCase();
+      if (lowerUrl.endsWith('.pdf')) {
+        this.isPdf = true;
+        this.safeDraftFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.draftFileUrl);
+      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc')) {
+        this.isDocx = true;
+      }
+    }
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '80%',
+      nzStyle: { top: '20px' },
+    });
   }
 
   openWorkflowDeatilsModal(rowData: any) {
@@ -434,6 +525,18 @@ export class ApprovalDocuments {
     });
   }
 
+  openRevisionHistoryModal(row: any): void {
+    this.modal.create({
+      nzTitle: 'Revision History',
+      nzContent: RevisionHistoryModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+  }
+
   openDistributionListModal(rowData: any) {
     this.selectedUserDistributions = rowData.userDistributions || [];
     this.modal.create({
@@ -441,6 +544,112 @@ export class ApprovalDocuments {
       nzContent: this.distributionListModalTpl,
       nzFooter: null,
       nzWidth: 800,
+    });
+  }
+
+  downloadDocumentUrl() {
+    if (!this.draftFileUrl) return;
+    const a = document.createElement('a');
+    a.href = this.draftFileUrl;
+    a.target = '_blank';
+    const parts = this.draftFileUrl.split('/');
+    a.download = parts[parts.length - 1];
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
     });
   }
 }

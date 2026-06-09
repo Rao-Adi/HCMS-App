@@ -688,14 +688,15 @@ export class CreateUpdateDocument {
     this.selectedUser = [];
   }
 
-  SubmiteDocumentRequests() {
+  SubmiteDocument() {    
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
-
+    const trainingMode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
     const payLoad = {
       documentid: this.documentId,
       userid: this.loginEmpId,
       attributes: attributeValues,
+      TrainingMode: trainingMode?.NAME == 'Classroom' ? 1 : 0, // Assuming 1 for Classroom and 0 for Online, adjust as needed
       traininguserids: this.trainingUsersData.map((user) => user.UserCode), // Included in Payload as requested
     };
 
@@ -1212,13 +1213,36 @@ export class CreateUpdateDocument {
           this.totalRows = data.TotalCount ?? users.length;
           this.users = users.map((u: any) => {
             // Ensure we never receive undefined codes/names by exhausting all possible API casing variants
-            const code = u.empcode || u.empCode || u.EmployeeCode || u.employeeCode || u.empid || u.empId || u.EmployeeId || u.id || u.Id || u.UserId || u.userId || u.UserCode || u.userCode || u.CODE;
+            const code =
+              u.empcode ||
+              u.empCode ||
+              u.EmployeeCode ||
+              u.employeeCode ||
+              u.empid ||
+              u.empId ||
+              u.EmployeeId ||
+              u.id ||
+              u.Id ||
+              u.UserId ||
+              u.userId ||
+              u.UserCode ||
+              u.userCode ||
+              u.CODE;
             const name = u.firstname
               ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
-              : u.EmployeeName || u.employeeName || u.empName || u.EmpName || u.UserName || u.userName || u.Name || u.name || u.NAME || code;
-            
+              : u.EmployeeName ||
+                u.employeeName ||
+                u.empName ||
+                u.EmpName ||
+                u.UserName ||
+                u.userName ||
+                u.Name ||
+                u.name ||
+                u.NAME ||
+                code;
+
             return {
-              ...u, 
+              ...u,
               CODE: code,
               NAME: name,
             };

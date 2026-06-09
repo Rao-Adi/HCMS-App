@@ -20,6 +20,8 @@ import { RevisionHistoryModal } from '../revision-history-modal/revision-history
 import { DocumentService } from '@app/shared/services/document.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
+import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -44,7 +46,7 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 export class SOPDocumentTraining {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
-  selectedTab: string = 'Class Room';
+  selectedTab: string = 'Classroom';
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -103,8 +105,32 @@ export class SOPDocumentTraining {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'version', headerName: 'Version' },
     { field: 'trainingMode', headerName: 'Training Mode' },
-    { field: 'userAssigned', headerName: 'User Assigned' },
-    { field: 'averageDocumentScore', headerName: 'Average Document Score' },
+    {
+      field: 'userAssigned',
+      headerName: 'User Assigned',
+      cellRendererSelector: (params: any) => ({
+        component: LinkRenderer,
+        params: {
+          label: params.value ?? 'View',
+          onClick: () => {
+            this.openTrainingProofModal(params.data);
+          },
+        },
+      }),
+    },
+    {
+      field: 'averageDocumentScore',
+      headerName: 'Average Document Score',
+      cellRendererSelector: (params: any) => ({
+        component: LinkRenderer,
+        params: {
+          label: params.value ?? 'View',
+          onClick: () => {
+            this.openAverageScoreModal(params.data);
+          },
+        },
+      }),
+    },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
@@ -147,7 +173,7 @@ export class SOPDocumentTraining {
       `;
       },
       onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
+        this.openRevisionHistoryModal(event.data);
       },
     },
   ];
@@ -264,7 +290,7 @@ export class SOPDocumentTraining {
       subdepartmentcode: this.selectedSubDepartment || '',
       businessdomaincode: this.selectedBusinessDomain || '',
       documenttypecode: this.selectedDocumentType || '',
-      requeststatus: this.selectedTab,
+      Requeststatus: this.selectedTab,
     };
 
     this._documentService
@@ -275,6 +301,7 @@ export class SOPDocumentTraining {
           this.classRoomData = res.Data.Items.map((item: any) => ({
             ...item,
             Id: item.id || item.Id,
+            requestId: item.requestId || item.RequestId,
             trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
             averageDocumentScore: item.averagescore || item.averagescore || 0,
             userAssigned: item.totalassigned || item.totalassigned,
@@ -330,52 +357,97 @@ export class SOPDocumentTraining {
   }
 
   GetAllOnline(query: any = {}) {
-    const sort = query.sortModel?.[0];
-    
-    if (query && typeof query === 'object' && Object.keys(query).length > 0) {
+    let searchText = '';
+    let sortColumn = '';
+    let sortBy = 'DESC';
+
+    // If grid triggers the query, extract pagination parameters
+    if (query && typeof query === 'object') {
       if (query.pageNumber) this.pageNumber = query.pageNumber;
       if (query.pageSize) this.selectedPageSize = query.pageSize;
+      searchText = query.searchText || '';
+      if (query.sortModel && query.sortModel.length > 0) {
+        sortColumn = query.sortModel[0].colId;
+        sortBy = query.sortModel[0].sort?.toUpperCase() || 'DESC';
+      }
     } else {
+      // Otherwise, reset to page 1 for fresh filters
       this.pageNumber = 1;
     }
 
     const pageNumber = this.pageNumber || 1;
-    const pageSize = this.selectedPageSize || this.employeePageSize || 10;
-    const searchText = query?.searchText || '';
+    const pageSize = this.selectedPageSize || this.divisionPageSize || 10;
 
-    const filters = {
-      divisionCode: this.selectedDivisions || '',
-      departmentCode: this.selectedDepartment || '',
-      subDepartmentCode: this.selectedSubDepartment || '',
-      businessDomainCode: this.selectedBusinessDomain || '',
-      documentTypeCode: this.selectedDocumentType || ''
+    const payload = {
+      searchtext: searchText,
+      sortby: sortBy,
+      sortcolumn: sortColumn,
+      isactive: true,
+      pagenumber: pageNumber,
+      pagesize: pageSize,
+      divisioncode: this.selectedDivisions || '',
+      departmentcode: this.selectedDepartment || '',
+      subdepartmentcode: this.selectedSubDepartment || '',
+      businessdomaincode: this.selectedBusinessDomain || '',
+      documenttypecode: this.selectedDocumentType || '',
+      requeststatus: this.selectedTab,
     };
 
-    this._documentTrainingService
-      .GetAllDocumentTrainings(
-        searchText,
-        sort?.sort?.toUpperCase() || 'DESC',
-        sort?.colId || 'Id',
-        true,
-        pageNumber,
-        pageSize,
-        filters
-      )
+    this._documentService
+      .GetDocumentsPendingTrainingAcknowledgmentAsync(payload)
       .subscribe((res) => {
         if (res?.Success && res.Data?.Items) {
           this.totalOnline = res.Data.TotalCount;
           this.onlineData = res.Data.Items.map((item: any) => ({
             ...item,
-            documentId: item.DocumentId || item.documentId || item.Id || item.id,
-            companyId: item.CompanyId || item.companyId,
-            documentName: item.DocumentName || item.documentName,
-            version: item.Version || item.version || item.RowVersion || item.rowVersion,
-            documentType: item.DocumentType || item.documentType,
+            Id: item.id || item.Id,
+            requestId: item.requestId || item.RequestId,
+            trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+            averageDocumentScore: item.averagescore || item.averagescore || 0,
+            userAssigned: item.totalassigned || item.totalassigned,
+            companyId: item.companyId || item.CompanyId,
+            company: item.Company || item.company,
+            requestNumber: item.RequestNumber || item.requestNumber,
+            documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
+            documentType: item.DocumentType || item.documenttype,
+            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
             division: item.Division || item.division,
+            divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
+            documentId: item.DocumentNumber || item.documentid,
+            documentName: item.DocumentName || item.documentname || item.title,
+            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
             department: item.Department || item.department,
-            subDepartment: item.SubDepartment || item.subDepartment,
-            lmsStatus: item.LmsStatus || item.lmsStatus || 'Completed',
-            averageScore: item.AverageScore || item.averageScore || 0,
+            departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
+            subDepartment: item.subdepartment || item.subdepartment,
+            subDepartmentCode:
+              item.SubDepartmentCode || item.subDepartmentCode || item.subdepartmentcode,
+            justification: item.Justification || item.justification,
+            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
+            businessDomainCode:
+              item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
+            pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
+            sumbittedby: item.CreatedBy || item.createdby,
+            status: item.IsReworked ? 'Reworked' : 'Draft',
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
+            requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.CreatedAt || item.createdat || '',
+            ),
+            requestCreatedBy: item.createdbyname || item.createdByName,
+            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+              item.draftContentLastModifiedAt ||
+                item.DraftContentLastModifiedAt ||
+                item.lastmodifiedat ||
+                '',
+            ),
+            version: item.Version || item.version || item.RowVersion || item.rowVersion,
+            nextReviewDate: new CustomDateFormatPipe().transform(
+              item.NextReviewDate || item.nextreviewdate || '',
+            ),
+            url: item.DocumentURL || item.documenturl,
+            proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
+            templateType: item.TemplateType || item.templateType,
+            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
           }));
         } else {
           this.onlineData = [];
@@ -507,13 +579,11 @@ export class SOPDocumentTraining {
   }
 
   openWorkflowDeatilsModal(rowData: any) {
-    //console.log('Row clicked:', rowData);
-
     const modalRef = this.modal.create({
       nzTitle: 'Workflow History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        id: rowData.id,
+        id: rowData.requestid || rowData.RequestId,
         entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
@@ -522,6 +592,43 @@ export class SOPDocumentTraining {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  openRevisionHistoryModal(rowData: any): void {
+    this.modal.create({
+      nzTitle: 'Revision History',
+      nzContent: RevisionHistoryModal,
+      nzData: {
+        data: rowData.requestid || rowData.RequestId,
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+  }
+
+  openTrainingProofModal(row: any): void {
+    // TODO: Implement logic to open training proof file/report
+    this.modal.create({
+      nzTitle: 'Average Document Score',
+      nzContent: AverageDocumentScoreModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
+    });
+  }
+
+  openAverageScoreModal(row: any): void {
+    this.modal.create({
+      nzTitle: 'Average Document Score',
+      nzContent: AverageDocumentScoreModal,
+      nzData: {
+        data: row, // 👈 this is what we’ll read inside modal
+      },
+      nzFooter: null, // custom footer handled inside component
+      nzWidth: 1200,
     });
   }
 

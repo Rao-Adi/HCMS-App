@@ -8,8 +8,8 @@
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Class Room' }"
-                (click)="selectedTab = 'Class Room'"
+                [ngClass]="{ 'active-tab': selectedTab === 'Classroom' }"
+                (click)="selectedTab = 'Classroom'"
               >
                 Class Room
               </button>
@@ -54,7 +54,7 @@
               </div>
             </div>
             <br>
-            <div class="row row-space" *ngIf="selectedTab === 'Class Room'">
+            <div class="row row-space" *ngIf="selectedTab === 'Classroom'">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '450px' }"

@@ -147,13 +147,8 @@ export class PeoplePartnersEmployee {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-
-      this.GetAllIntegeratedPeoplepartners({
-        pageNumber: 10,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
+      
+      // Removed manual call to prevent double API call. AgGridWrapper triggers it automatically on init.
     });
   }
 
