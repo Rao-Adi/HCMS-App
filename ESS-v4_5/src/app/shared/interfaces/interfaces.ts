@@ -305,6 +305,22 @@ export interface DocumentTraining extends AuditableEntity {
   validationStatus: number;
   readyForAuthorization: boolean;
 }
+export interface DocumentTrainingAuthorization extends AuditableEntity {
+  id: string;
+  companyId: string;
+  documentTypeCode: string;
+  authorizationRequired: boolean; 
+  authorizingUserId: string | null; 
+}
+
+
+export interface DocumentReviewPolicy extends AuditableEntity {
+  id: string;
+  companyId: string;
+  documentTypeCode: string; 
+  ReviewPeriodYears: number; 
+}
+
 
 export interface DocumentVersion {
   id: string;

@@ -8,7 +8,10 @@ import {
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
+import { DocumentTrainingAuthorizationService } from '@app/shared/services/document-training-authorization.service';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
@@ -37,25 +40,32 @@ export class MiscPolicies {
   formId = 'trainingpolicy';
 
   gridConfig: GridConfig = {} as GridConfig;
+  authGridConfig: GridConfig = {} as GridConfig;
+  documentReviewGridConfig: GridConfig = {} as GridConfig;
   selectedTab: string = 'TrainingPoliciy';
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
   value!: boolean;
   pageSize = 10;
   trainingPolicesData: any[] = [];
-  documentAttributeData: any[] = [];
   documentTypesList: any[] = [];
+  documentReviewRowData: any[] = [];
+  authorizationPolicyData: any[] = [];
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
   // add more as needed...
   selectedPageSize = 10; // default value
 
   totalDocumentReview = 0;
   totalTrainingPolicies = 0;
-  public noRowsOverlay: string = '';
+
+  pinnedTopRowDataAuthorization: any[] = [
+    {
+      documentTypeCode: '',
+      authorizationRequired: false,
+      authorizingAuthority: '',
+    },
+  ];
+
+  AuthorizationPolicyList: any[] = [];
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: false,
@@ -63,22 +73,9 @@ export class MiscPolicies {
     editable: true,
   };
 
-  documentReviewColumnDef = [
-    { field: 'documentType', headerName: 'Document Types', flex: 1 },
-    { field: 'reviewAfter', headerName: 'Review After (in years)', flex: 1 },
-  ];
-
-  documentReviewRowData: any[] = [
+  pinnedTopRowDataDocumentReview: any[] = [
     {
-      documentType: 'SOP',
-      reviewAfter: 0,
-    },
-    {
-      documentType: 'Playbooks',
-      reviewAfter: 0,
-    },
-    {
-      documentType: 'Policies',
+      documentType: '',
       reviewAfter: 0,
     },
   ];
@@ -96,6 +93,9 @@ export class MiscPolicies {
     private _documentTypes: DocumentTypeService,
     private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
+    private _documentTrainingAuthorizationService: DocumentTrainingAuthorizationService,
+    private _peoplePartnerService: PeoplePartnersService,
+    private _documentReviewPolicyService: DocumentReviewPolicyService,
   ) {}
 
   ngOnInit() {
@@ -108,9 +108,20 @@ export class MiscPolicies {
     });
   }
 
-  private buildGrid(): void {
+  onTabChange(tab: string) {
+    this.selectedTab = tab;
+    if (tab === 'TrainingPoliciy') {
+      this.buildTrainingPolicyGrid();
+    } else if (tab === 'DocumentReview') {
+      this.buildDocumentReviewGrid();
+    } else {
+      this.buildAuthorizationPolicyGrid();
+    }
+  }
+
+  private buildTrainingPolicyGrid(): void {
     this.gridConfig = {
-      columns: this.getColumns(),
+      columns: this.getTrainingPolicyColumns(),
       enablePagination: true,
       pageSize: 10,
       pageSizeOptions: [10, 20, 50, 100],
@@ -135,7 +146,7 @@ export class MiscPolicies {
     });
   }
 
-  private getColumns(): GridColumn[] {
+  private getTrainingPolicyColumns(): GridColumn[] {
     return [
       {
         field: 'documentTypeCode',
@@ -165,6 +176,111 @@ export class MiscPolicies {
     ];
   }
 
+  private buildDocumentReviewGrid(): void {
+    this.documentReviewGridConfig = {
+      columns: this.getDocumentReviewColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+
+    this.GetAllDocumentReviewPolicies({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
+  }
+
+  private getDocumentReviewColumns(): GridColumn[] {
+    return [
+      {
+        field: 'documentType',
+        headerName: 'Document Type',
+        type: 'dropdown',
+        dropdownOptions: this.documentTypesList,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        required: true,
+      },
+      {
+        field: 'reviewAfter',
+        headerName: 'Review After (in years)',
+        type: 'number',
+        required: false,
+      },
+    ];
+  }
+
+  private buildAuthorizationPolicyGrid(): void {
+    this.authGridConfig = {
+      columns: this.getAuthorizationPolicyColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+
+    this.getAllUsersList();
+
+    this.GetDocumentTrainingAuthorization({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
+  }
+
+  private getAuthorizationPolicyColumns(): GridColumn[] {
+    return [
+      {
+        field: 'documentTypeCode',
+        headerName: 'Document Type',
+        type: 'dropdown',
+        dropdownOptions: this.documentTypesList,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        required: true,
+      },
+      {
+        field: 'authorizationRequired',
+        headerName: 'Authorization Required',
+        type: 'switch',
+        required: false,
+      },
+      {
+        field: 'authorizingAuthority',
+        headerName: 'Authorizing Authority',
+        type: 'dropdown',
+        dropdownOptions: this.AuthorizationPolicyList,
+        dropdownValueField: 'value',
+        dropdownDisplayField: 'label',
+        required: false,
+      },
+    ];
+  }
+
   private generateId(): number {
     return Date.now();
   }
@@ -174,7 +290,37 @@ export class MiscPolicies {
     return option ? option.text : '';
   }
 
-  GetAllDocumentReview(query: any) {}
+  GetAllDocumentReviewPolicies(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._documentReviewPolicyService
+      .GetAllDocumentReviewPolicies(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        const items = res?.Data?.Items || res?.Items;
+        if (items) {
+          this.documentReviewRowData = items.map((item: any) => ({
+            Id: item.id || item.Id,
+            documentType: item.documentTypeCode || item.DocumentTypeCode, 
+            reviewAfter: item.reviewPeriodYears || item.ReviewPeriodYears,
+            IsActive: item.isActive || item.IsActive,
+            IsDeleted: item.isDeleted || item.IsDeleted,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+          }));
+        } else {
+          this.documentReviewRowData = [];
+        }
+      });
+  }
 
   GetAllTrainingPolicy(query: any) {
     const sort = query.sortModel?.[0];
@@ -191,8 +337,9 @@ export class MiscPolicies {
         pageSize,
       )
       .subscribe((res) => {
-        if (res?.Success && res.Data?.Items) {
-          this.trainingPolicesData = res.Data.Items.map((item: any) => ({
+        const items = res?.Data?.Items || res?.Items;
+        if (items) {
+          this.trainingPolicesData = items.map((item: any) => ({
             Id: item.id || item.Id,
             documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
             traningRequired: item.trainingRequired || item.TrainingRequired,
@@ -202,11 +349,42 @@ export class MiscPolicies {
             CreatedBy: item.createdBy || item.CreatedBy || '',
             CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           }));
-          //console.log('Mapped documentTypeData:', this.documentTypeData);
         } else {
           this.trainingPolicesData = [];
         }
-        //this.cdr.detectChanges(); // force update
+      });
+  }
+
+  GetDocumentTrainingAuthorization(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._documentTrainingAuthorizationService
+      .GetAllDocumentTrainingAuthorizations(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        const items = res?.Data?.Items || res?.Items;
+        if (items) {
+          this.authorizationPolicyData = items.map((item: any) => ({
+            Id: item.id || item.Id,
+            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
+            authorizationRequired: item.authorizationRequired || item.AuthorizationRequired,
+            authorizingAuthority: item.authorizingUser || item.AuthorizingUser,
+            IsActive: item.isActive || item.IsActive,
+            IsDeleted: item.isDeleted || item.IsDeleted,
+            CreatedBy: item.createdBy || item.CreatedBy || '',
+            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
+          }));
+        } else {
+          this.authorizationPolicyData = [];
+        }
       });
   }
 
@@ -222,7 +400,36 @@ export class MiscPolicies {
       }
 
       // ✅ build grid AFTER dropdown data is ready
-      this.buildGrid();
+      this.buildTrainingPolicyGrid();
+      this.buildDocumentReviewGrid();
+      this.buildAuthorizationPolicyGrid();
+      // if (this.selectedTab === 'DocumentReview') {
+      //   this.documentReviewGridConfig = {
+      //     ...this.documentReviewGridConfig,
+      //     columns: this.getDocumentReviewColumns(),
+      //   };
+      // }
+    });
+  };
+
+  getAllUsersList = () => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
+      if (res?.Data) {
+        this.AuthorizationPolicyList = (res.Data ?? []).map((d: any) => ({
+          value: d.Code || d.code,
+          label: d.Value + ' (' + d.Code + ')' || d.value,
+        }));
+      } else {
+        this.AuthorizationPolicyList = [];
+      }
+
+      // ✅ Update grid columns after dropdown data is ready
+      if (this.selectedTab !== 'TrainingPoliciy' && this.selectedTab !== 'DocumentReview') {
+        this.authGridConfig = {
+          ...this.authGridConfig,
+          columns: this.getAuthorizationPolicyColumns(),
+        };
+      }
     });
   };
 
@@ -231,7 +438,7 @@ export class MiscPolicies {
     // Store grid API if needed for external operations
   }
 
-  onRowAdded(event: { rowData: any }): void {
+  onTrainingPoliciyRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
@@ -242,9 +449,9 @@ export class MiscPolicies {
 
     this._trainingPolicyService.create(payLoad).subscribe(() => {
       this._notificationToastService.createNotification(
-        'sucess',
-        'Distribution List',
-        'Distribution list added successfully!',
+        'success',
+        'Training Policy',
+        'Training policy added successfully!',
       );
     });
     const rowWithId = {
@@ -255,28 +462,155 @@ export class MiscPolicies {
       minimumscoreforpassing: rowData.minimumscoreforpassing,
     };
 
-    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
+    this.trainingPolicesData = [rowWithId, ...this.trainingPolicesData];
   }
 
-  onRowUpdated(event: { rowData: any; index: number }): void {
+  onAuthPolicyRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
+    const payLoad = {
+      documentTypeCode: rowData.documentTypeCode,
+      authorizationRequired: rowData.authorizationRequired,
+      authorizingUserId: rowData.authorizingAuthority,
+    };
+
+    this._documentTrainingAuthorizationService.create(payLoad).subscribe(() => {
+      this._notificationToastService.createNotification(
+        'success',
+        'Authorization Policy',
+        'Authorization policy added successfully!',
+      );
+    });
+
+    const rowWithId = { ...rowData, id: this.generateId() };
+    this.authorizationPolicyData = [rowWithId, ...this.authorizationPolicyData];
+  }
+
+  onAuthPolicyRowUpdated(event: { rowData: any; index: number }): void {
+    const { rowData } = event;
+    const payLoad = {
+      id: rowData.Id,
+      documentTypeCode: rowData.documentTypeCode,
+      authorizationRequired: rowData.authorizationRequired,
+      authorizingUserId: rowData.authorizingAuthority,
+    };
+
+    this._documentTrainingAuthorizationService.update(payLoad).subscribe(() => {
+      this._notificationToastService.createNotification(
+        'success',
+        'Authorization Policy',
+        'Authorization policy updated successfully!',
+      );
+    });
+
+    this.authorizationPolicyData[event.index] = { ...event.rowData };
+    this.authorizationPolicyData = [...this.authorizationPolicyData];
+  }
+
+  onAuthPolicyRowDeleted(rowIndex: number): void {
+    const row = this.authorizationPolicyData[rowIndex];
+    if (row && row.Id) {
+      this._documentTrainingAuthorizationService.delete(row.Id).subscribe(() => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Authorization Policy',
+          'Authorization policy deleted successfully!',
+        );
+      });
+    }
+    this.authorizationPolicyData.splice(rowIndex, 1);
+    this.authorizationPolicyData = [...this.authorizationPolicyData];
+  }
+
+  onDocReviewRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
+    const payLoad = {
+      documentTypeCode: rowData.documentType,
+      reviewPeriodYears: rowData.reviewAfter,
+    };
+
+    this._documentReviewPolicyService.create(payLoad).subscribe(() => {
+      this._notificationToastService.createNotification(
+        'success',
+        'Document Review',
+        'Document review policy added successfully!',
+      );
+    });
+
+    const rowWithId = { ...rowData, id: this.generateId() };
+    this.documentReviewRowData = [rowWithId, ...this.documentReviewRowData];
+  }
+
+  onDocReviewRowUpdated(event: { rowData: any; index: number }): void {
+    const { rowData } = event;
+    const payLoad = {
+      id: rowData.Id,
+      documentTypeCode: rowData.documentType,
+      reviewPeriodYears: rowData.reviewAfter,
+    };
+
+    this._documentReviewPolicyService.update(payLoad).subscribe(() => {
+      this._notificationToastService.createNotification(
+        'success',
+        'Document Review',
+        'Document review policy updated successfully!',
+      );
+    });
+
+    this.documentReviewRowData[event.index] = { ...event.rowData };
+    this.documentReviewRowData = [...this.documentReviewRowData];
+  }
+
+  onDocReviewRowDeleted(rowIndex: number): void {
+    const row = this.documentReviewRowData[rowIndex];
+    if (row && row.Id) {
+      this._documentReviewPolicyService.delete(row.Id).subscribe(() => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Document Review',
+          'Document review policy deleted successfully!',
+        );
+      });
+    }
+    this.documentReviewRowData.splice(rowIndex, 1);
+    this.documentReviewRowData = [...this.documentReviewRowData];
+  }
+
+  onTrainingPoliciyRowUpdated(event: { rowData: any; index: number }): void {
     console.log('Row updated:', event);
+    const { rowData } = event;
+    const payLoad = {
+      id: rowData.Id,
+      documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,
+      trainingRequired: rowData.traningRequired || rowData.traningRequired,
+      minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
+    };
 
-    // Update display names
-    // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    // event.rowData.departmentName = this.getDisplayName(
-    //   this.departments,
-    //   event.rowData.departmentId,
-    // );
-    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
+    this._trainingPolicyService.update(payLoad).subscribe(() => {
+      this._notificationToastService.createNotification(
+        'success',
+        'Training Policy',
+        'Training policy updated successfully!',
+      );
+    });
 
-    this.documentAttributeData[event.index] = { ...event.rowData };
-    this.documentAttributeData = [...this.documentAttributeData]; // Trigger change detection
+    this.trainingPolicesData[event.index] = { ...event.rowData };
+    this.trainingPolicesData = [...this.trainingPolicesData]; // Trigger change detection
   }
 
-  onRowDeleted(rowIndex: number): void {
+  onTrainingPoliciyRowDeleted(rowIndex: number): void {
     console.log('Row deleted at index:', rowIndex);
-    this.documentAttributeData.splice(rowIndex, 1);
-    this.documentAttributeData = [...this.documentAttributeData];
+    const row = this.trainingPolicesData[rowIndex];
+    if (row && row.Id) {
+      this._trainingPolicyService.delete(row.Id).subscribe(() => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Training Policy',
+          'Training policy deleted successfully!',
+        );
+      });
+    }
+    this.trainingPolicesData.splice(rowIndex, 1);
+    this.trainingPolicesData = [...this.trainingPolicesData];
   }
 
   onCellValueChanged(event: any): void {
@@ -300,8 +634,8 @@ export class MiscPolicies {
 
     switch (gridId) {
       case 'TrainingPoliciyGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDocumentReview({
+        this.selectedPageSize = pageSize;
+        this.GetAllTrainingPolicy({
           pageNumber: 1,
           pageSize: this.selectedPageSize,
           sortModel: [], // or your current sort/filter model
@@ -309,9 +643,19 @@ export class MiscPolicies {
         });
         break;
 
-      case 'DocumentReview':
-        this.employeePageSize = pageSize;
-        this.GetAllDocumentReview({
+      case 'DocumentReviewPoliciyGrid':
+        this.selectedPageSize = pageSize;
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+
+      case 'AuthorizationPolicyGrid':
+        this.selectedPageSize = pageSize;
+        this.GetDocumentTrainingAuthorization({
           pageNumber: 1,
           pageSize: this.selectedPageSize,
           sortModel: [], // or your current sort/filter model

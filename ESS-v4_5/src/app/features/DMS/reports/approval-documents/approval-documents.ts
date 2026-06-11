@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, TemplateRef } from '@angular/core';
+import { Component, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -57,7 +57,9 @@ import { RevisionHistoryModal } from '../../documents/revision-history-modal/rev
 export class ApprovalDocuments {
   @ViewChild('distributionListModalTpl') distributionListModalTpl!: TemplateRef<any>;
   @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+  @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
 
+  gridApi!: GridApi;
   templateHtml: string = '';
   draftFileUrl: string = '';
   documentId: number = 0;
@@ -65,6 +67,11 @@ export class ApprovalDocuments {
   safeDraftFileUrl?: SafeResourceUrl;
   isPdf: boolean = false;
   isDocx: boolean = false;
+
+  approvedFromDate: Date | null = null;
+  approvedToDate: Date | null = null;
+  requestCreatedFromDate: Date | null = null;
+  requestCreatedToDate: Date | null = null;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -79,10 +86,10 @@ export class ApprovalDocuments {
   documentRequestsData: any[] = [];
   totalRows = 0;
 
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType?: string = '';
 
   // Default Column Definitions: Apply configuration across all columns
@@ -93,7 +100,7 @@ export class ApprovalDocuments {
 
   currentGridQuery: any = {
     pageNumber: 1,
-    pageSize: 1,
+    pageSize: 10,
     sortModel: [],
     filterModel: {},
     searchTerm: '',
@@ -239,6 +246,7 @@ export class ApprovalDocuments {
     private _notificationToastService: NotificationToastService,
     private sanitizer: DomSanitizer,
     private _config: AppConfigService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
@@ -253,8 +261,9 @@ export class ApprovalDocuments {
 
   selectedAuthorityType: number | null = null;
 
-  onAuthorityTypeChange(value: number | null): void {
+  onAuthorityTypeChange(value: any): void {
     this.selectedAuthorityType = value;
+    this.onFilterChange();
   }
 
   selectedWorkflowExclude: number | null = null;
@@ -283,6 +292,15 @@ export class ApprovalDocuments {
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
       documentTypeCode: this.selectedDocumentType,
+      requestCreatedBy: this.selectedAuthorityType,
+      approvedFromDate: this.approvedFromDate ? this.approvedFromDate.toISOString() : null,
+      approvedToDate: this.approvedToDate ? this.approvedToDate.toISOString() : null,
+      requestCreatedFromDate: this.requestCreatedFromDate
+        ? this.requestCreatedFromDate.toISOString()
+        : null,
+      requestCreatedToDate: this.requestCreatedToDate
+        ? this.requestCreatedToDate.toISOString()
+        : null,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
@@ -293,6 +311,10 @@ export class ApprovalDocuments {
       sortColumn: sortColumn,
       searchText: this.currentGridQuery.searchTerm || '',
     };
+
+    if (this.gridApi) {
+      this.gridApi.showLoadingOverlay();
+    }
 
     this._documentService.GetApprovedEffectiveDocuments(payLoad).subscribe({
       next: (response) => {
@@ -320,6 +342,8 @@ export class ApprovalDocuments {
                 // ──────────────────────────────────────────────
                 // Identification & Request
                 // ──────────────────────────────────────────────
+              Id: get(['Id', 'id']),
+              id: get(['Id', 'id']),
                 ExecutionId: get(['ExecutionId', 'executionId']),
                 RequestId: get(['requestid', 'Requestid']),
                 documentId: get(['Id', 'id']), // often same as Id
@@ -386,6 +410,7 @@ export class ApprovalDocuments {
                 requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
                 dateOfApproval: '', // ← not present
                 approvalHistory: true, // Used to render the link in the cell
+              revisionHistory: true,
                 distributionList: true,
                 userDistributions: get(
                   ['UserDistributions', 'userdistributions', 'userDistributions'],
@@ -401,16 +426,40 @@ export class ApprovalDocuments {
           this.documentRequestsData = [];
           this.totalRows = 0;
         }
+
+        // Force AG grid updates bypass
+        if (this.gridApi) { 
+          if (this.documentRequestsData.length === 0) {
+            this.gridApi.showNoRowsOverlay();
+          } else {
+            this.gridApi.hideOverlay();
+          }
+        }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
+        if (this.gridApi) { 
+          this.gridApi.showNoRowsOverlay();
+        }
+        this.cdr.detectChanges();
         this._notificationToastService.createNotification(
           'error',
           'Error',
           'Failed to fetch documents.',
         );
       },
+    });
+  }
+
+  onGridReady(event: GridReadyEvent) {
+    this.gridApi = event.api;
+    this.GetAllPendingDocuments({
+      pageNumber: 1,
+      pageSize: this.selectedPageSize,
+      sortModel: [], // or your current sort/filter model
+      filterModel: {},
     });
   }
 
@@ -434,12 +483,13 @@ export class ApprovalDocuments {
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
+    this.onFilterChange();
   }
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   // add more as needed...
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
@@ -466,12 +516,24 @@ export class ApprovalDocuments {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
 
-    this.GetAllPendingDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
+      this.onFilterChange();
+    }
+  }
+
+  onFilterChange() {
+    if (this.agGridWrapper) {
+      this.agGridWrapper.refresh();
+    } else {
+      this.GetAllPendingDocuments({
+        pageNumber: 1,
+        pageSize: this.selectedPageSize,
+        sortModel: [],
+        filterModel: {},
+      });
+    }
   }
 
   openDocumentModal(rowData: any) {

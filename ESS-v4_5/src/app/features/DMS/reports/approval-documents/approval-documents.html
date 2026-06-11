@@ -37,7 +37,12 @@
                       </div>
                     </div>
                     <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                      <app-cabinet-structure-list 
+                        [divisionCode]="selectedDivisions"
+                        [departmentCode]="selectedDepartment"
+                        [subDepartmentCode]="selectedSubDepartment"
+                        [businessDomainCode]="selectedBusinessDomain"
+                        (hierarchyChange)="onHierarchyChange($event)">
                       </app-cabinet-structure-list>
                     </div>
                   </div>
@@ -78,6 +83,8 @@
                             <span>From Date</span>
                             <br />
                             <nz-date-picker
+                              [(ngModel)]="approvedFromDate"
+                              (ngModelChange)="onFilterChange()"
                               [nzRenderExtraFooter]="footerRender"
                               [nzFormat]="dateFormat"
                             ></nz-date-picker>
@@ -88,6 +95,8 @@
                             <span>To Date</span>
                             <br />
                             <nz-date-picker
+                              [(ngModel)]="approvedToDate"
+                              (ngModelChange)="onFilterChange()"
                               [nzRenderExtraFooter]="footerRender"
                               [nzFormat]="dateFormat"
                             ></nz-date-picker>
@@ -105,6 +114,8 @@
                             <span>From Date</span>
                             <br />
                             <nz-date-picker
+                              [(ngModel)]="requestCreatedFromDate"
+                              (ngModelChange)="onFilterChange()"
                               [nzRenderExtraFooter]="footerRender"
                               [nzFormat]="dateFormat"
                             ></nz-date-picker>
@@ -115,6 +126,8 @@
                             <span>To Date</span>
                             <br />
                             <nz-date-picker
+                              [(ngModel)]="requestCreatedToDate"
+                              (ngModelChange)="onFilterChange()"
                               [nzRenderExtraFooter]="footerRender"
                               [nzFormat]="dateFormat"
                             ></nz-date-picker>
@@ -147,6 +160,7 @@
                           [pageSizeOptions]="[10, 20, 50, 100]"
                           [totalRows]="totalRows"
                           gridId="documentGridPending"
+                          (gridReady)="onGridReady($event)"
                           (pageSizeChange)="onPageSizeChanged($event)"
                           (serverQuery)="GetAllPendingDocuments($event)"
                           (cellClicked)="onCellClicked($event)"
