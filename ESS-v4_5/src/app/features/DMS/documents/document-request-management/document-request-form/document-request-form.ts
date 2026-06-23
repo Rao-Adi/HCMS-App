@@ -359,7 +359,21 @@ export class DocumentRequestForm {
 
   GetTemplate(value: string, isRevision: boolean = false) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
-      next: (response) => {
+      next: (response: any) => {
+        if (!response?.Data) {
+          this.selectedTemplateType = '';
+          this.templateFileUrl = '';
+          if (!isRevision) {
+            this.templateHtml = '';
+          }
+          this._notificationToasService.createNotification(
+            'warning',
+            'Template Missing',
+            'Please first upload the template against this Document Type. Document request cannot be created.'
+          );
+          return;
+        }
+
         this.selectedTemplateType =
           response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
         this.templateFileUrl =
@@ -542,6 +556,14 @@ export class DocumentRequestForm {
       );
       return;
     }
+    if (!this.selectedTemplateType) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Template Missing',
+        'Please first upload the template against this Document Type.'
+      );
+      return;
+    }
     // if (!this.selectedDivisions) {
     //   this._notificationToasService.createNotification(
     //     'warning',
@@ -674,6 +696,15 @@ export class DocumentRequestForm {
         'warning',
         'Validation',
         'Please enter Document Name.',
+      );
+      return;
+    }
+
+    if (!this.selectedTemplateType) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Template Missing',
+        'Please first upload the template against this Document Type.'
       );
       return;
     }

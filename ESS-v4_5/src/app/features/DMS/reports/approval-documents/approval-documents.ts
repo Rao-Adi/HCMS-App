@@ -25,6 +25,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { AppConfigService } from '@app/core/services/app-config';
 import { RevisionHistoryModal } from '../../documents/revision-history-modal/revision-history-modal';
 
+
 @Component({
   selector: 'app-approval-documents',
   imports: [

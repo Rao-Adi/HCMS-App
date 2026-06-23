@@ -182,7 +182,7 @@ export class SubDepartmentComponent {
         cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
         getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
         getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+          this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'LastModifiedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,

@@ -1014,25 +1014,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       file: uploadedFile,
     });
 
-    //this.resetPinnedRow();
-    // const pinnedData = this.pinnedTopRowData?.[0];
-    // if (!pinnedData) return;
-
-    // //console.log('pinnedData:', JSON.stringify(pinnedData));
-
-    // // Validate required fields
-    // const requiredColumns = this.config.columns.filter((col) => col.required);
-    // const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
-
-    // //console.log('Missing Fields:', missingFields);
-    // if (missingFields.length > 0) {
-    //   alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
-    //   return;
-    // }
-
-    // const newRow = { ...pinnedData, isNewRow: false };
-    // this.rowAdded.emit(newRow);
-    // this.resetPinnedRow();
+    // After emitting, reset the pinned row to clear the input fields.
+    this.resetPinnedRow();
   }
 
   resetPinnedRow(): void {

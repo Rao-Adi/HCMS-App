@@ -1,3 +1,366 @@
+<!-- Grid View -->
+<div class="alert-config-container" *ngIf="!showForm">
+  <div class="header-bar">
+    <div class="title-area">
+      <!-- <h2>Personalized Email Alerts</h2>
+      <p class="subtitle">Manage Customized Email Alerts</p> -->
+    </div>
+    <div class="action-buttons">
+      <button type="button" class="btn-save" (click)="onCreateNew()">Create New Alert</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="grid-card-container">
+      <table class="dms-responsive-grid">
+        <thead>
+          <tr>
+            <th class="col-status">STATUS</th>
+            <th class="col-name">ALERT NAME</th>
+            <th class="col-schedule">SCHEDULE</th>
+            <th class="col-author">LAST SAVED BY</th>
+            <th class="col-date">LAST SAVED ON</th>
+            <th class="col-actions">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alert of alertsList">
+            <!-- Status Switch Column -->
+            <td class="col-status">
+              <label class="switch-toggle">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="alert.isActive"
+                  (change)="onToggleStatus(alert)"
+                />
+                <span class="slider-round"></span>
+              </label>
+            </td>
+
+            <!-- Alert Identity Column -->
+            <td class="col-name text-bold">
+              {{ alert.alertName }}
+            </td>
+
+            <!-- Schedule Configuration Details Meta Column -->
+            <td class="col-schedule">
+              <div class="schedule-main">
+                {{ alert.scheduleFrequency }} At {{ alert.scheduleTime }}
+              </div>
+              <div class="schedule-sub">To: {{ alert.recipientEmail }}</div>
+            </td>
+
+            <!-- Last Saved Author Identity Column -->
+            <td class="col-author text-muted">
+              {{ alert.lastSavedBy }}
+            </td>
+
+            <!-- Date Timestamp Formatting Column -->
+            <td class="col-date text-secondary">
+              {{ alert.lastSavedOn | date: 'dd MMM yyyy hh:mm a' }}
+            </td>
+
+            <!-- Structural Operations Modification Actions Column -->
+            <td class="col-actions">
+              <div class="action-btn-wrapper">
+                <!-- Edit Button Icon -->
+                <button
+                  type="button"
+                  class="action-icon-btn edit-btn"
+                  title="Edit Alert"
+                  (click)="onEditAlert(alert)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <!-- Delete Button Icon -->
+                <button
+                  type="button"
+                  class="action-icon-btn delete-btn"
+                  title="Delete Alert"
+                  (click)="onDeleteAlert(alert)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Form View -->
+<div class="alert-config-container" [formGroup]="alertForm" *ngIf="showForm">
+  <div class="header-bar">
+    <div class="title-area">
+      <h2>Personalized Email Alerts</h2>
+      <p class="subtitle">Create New Alert Configuration</p>
+    </div>
+    <div class="action-buttons">
+      <button type="button" class="btn-cancel" (click)="onCancel()">Cancel</button>
+      <button type="button" class="btn-save" (click)="onSaveAlert()">Save Alert</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title"><span class="step-num">1</span> General Information</div>
+    <div class="form-group max-w-md">
+      <label>Name of Alert</label>
+      <input
+        type="text"
+        formControlName="name"
+        placeholder="e.g., Weekly Overdue Review Reminder"
+        class="form-control"
+      />
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title"><span class="step-num">2</span> Cabinet (Document Scope)</div>
+    <p class="section-desc">Select which documents this alert should monitor.</p>
+    <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+    </app-cabinet-structure-list>
+    <!-- <div class="grid-4-col">
+      <div class="form-group">
+        <label>Division</label>
+        <select formControlName="divisionId" class="form-control">
+          <option [ngValue]="null">-- All Divisions --</option>
+          <option *ngFor="let div of divisions" [ngValue]="div.id">{{div.name}}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <select formControlName="departmentId" class="form-control">
+          <option [ngValue]="null">-- All Departments --</option>
+          <option *ngFor="let dept of departments" [ngValue]="dept.id">{{dept.name}}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Sub-Department</label>
+        <select formControlName="subDepartmentId" class="form-control">
+          <option [ngValue]="null">-- All Sub-Departments --</option>
+          <option *ngFor="let sub of subDepartments" [ngValue]="sub.id">{{sub.name}}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Document Type</label>
+        <select formControlName="documentType_id" class="form-control">
+          <option [ngValue]="null">-- All Types --</option>
+          <option *ngFor="let type of documentTypes" [ngValue]="type.id">{{type.name}}</option>
+        </select>
+      </div>
+    </div> -->
+  </div>
+
+  <div class="section-card">
+    <div class="section-title"><span class="step-num">3</span> Filter Criteria</div>
+    <p class="section-desc">
+      Define when this alert should fire. Fill only the fields you need; leave others blank.
+    </p>
+
+    <div class="grid-2-col">
+      <div class="sub-panel">
+        <h4 class="panel-header text-orange">DELAYS & PENDING ACTIONS</h4>
+
+        <div class="inline-row mb-4">
+          <span>Document has been pending:</span>
+          <select formControlName="pendingState" class="form-control sm-select">
+            <option *ngFor="let state of pendingStates" [value]="state">{{ state }}</option>
+          </select>
+          <span>for</span>
+          <input
+            type="number"
+            formControlName="pendingDays"
+            placeholder="X"
+            class="form-control xs-input"
+          />
+          <span>days.</span>
+        </div>
+
+        <div class="inline-row mb-4">
+          <span>Review Required: Document Review required in the next</span>
+          <input
+            type="number"
+            formControlName="reviewWithinDays"
+            placeholder="X"
+            class="form-control xs-input"
+          />
+          <span>days.</span>
+        </div>
+
+        <div class="inline-row">
+          <span>Document has been inactive (Draft state): For more than</span>
+          <input
+            type="number"
+            formControlName="inactiveDays"
+            placeholder="X"
+            class="form-control xs-input"
+          />
+          <span>days.</span>
+        </div>
+      </div>
+
+      <div class="sub-panel">
+        <h4 class="panel-header text-blue">STATUS & DATES</h4>
+
+        <div class="form-group max-w-sm mb-4">
+          <label>Status changed to:</label>
+          <select formControlName="statusChangedTo" class="form-control">
+            <option [ngValue]="null">-- Not Applicable --</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="inline-row">
+          <span>Date Range: Previous</span>
+          <input
+            type="number"
+            formControlName="lookbackDays"
+            placeholder="X"
+            class="form-control xs-input"
+          />
+          <span>days.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title"><span class="step-num">4</span> Email Action Setup</div>
+    <p class="section-desc">Configure who receives the alert and what it says.</p>
+
+    <div class="form-section-group mb-4">
+      <h5 class="panel-subheading">Recipient Settings</h5>
+      <div class="flex-row gap-3 mb-3">
+        <label class="radio-container">
+          <input type="radio" value="self" formControlName="recipientType" />
+          <span class="radio-tile">{{ currentUserEmail }} (Self)</span>
+        </label>
+        <label class="radio-container">
+          <input type="radio" value="custom" formControlName="recipientType" />
+          <span class="radio-tile">Custom Email Address(es)</span>
+        </label>
+      </div>
+
+      <div class="grid-2-col" *ngIf="alertForm.get('recipientType')?.value === 'custom'">
+        <div class="form-group">
+          <label>Custom Email Address(es)</label>
+          <input
+            type="text"
+            formControlName="customEmails"
+            placeholder="e.g., manager@company.com"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
+          <label>CC (Optional)</label>
+          <input
+            type="text"
+            formControlName="ccEmails"
+            placeholder="e.g., secondary@company.com"
+            class="form-control"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section-group mb-4">
+      <h5 class="panel-subheading">Schedule Settings</h5>
+      <div class="grid-2-col max-w-2xl">
+        <div class="form-group">
+          <label>Frequency</label>
+          <select formControlName="frequency" class="form-control">
+            <option *ngFor="let freq of frequencies" [value]="freq">{{ freq }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Send At (Time)</label>
+          <div class="time-input-wrapper">
+            <input type="time" formControlName="sendAtTime" class="form-control" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group max-w-2xl mb-4">
+      <label>Alert Data Format</label>
+      <select formControlName="deliveryFormat" class="form-control">
+        <option *ngFor="let format of deliveryFormats" [value]="format">{{ format }}</option>
+      </select>
+    </div>
+
+    <div class="form-group mb-4">
+      <label>Email Subject</label>
+      <input
+        type="text"
+        formControlName="emailSubject"
+        placeholder="Enter subject line..."
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-group mb-3">
+      <label>Email Body / Template</label>
+      <textarea
+        formControlName="emailBody"
+        rows="5"
+        placeholder="Type your message here..."
+        class="form-control text-area-editor"
+      ></textarea>
+    </div>
+
+    <div class="token-container">
+      <span class="token-label">Insert Variable:</span>
+      <div class="token-chips">
+        <button
+          type="button"
+          class="token-chip"
+          *ngFor="let t of dynamicTokens"
+          (click)="insertToken(t.token, 'emailBody')"
+        >
+          {{ t.token }}
+        </button>
+      </div>
+      <p class="token-help-text">
+        Use the buttons below to insert dynamic data that will auto-fill when the email sends.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
@@ -93,10 +456,9 @@
                       </div>
                     </div>
                     <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <div class="row row-space">
-                        <!-- Dynamic Columns -->
+                      <div class="row row-space"> 
                         <ng-container [ngSwitch]="selectedAuthorityType">
-                          <!-- CASE 1: 3 Columns -->
+                 
                           <ng-container *ngSwitchCase="'1'">
                             <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                               <span class="d-flex"> Documents approved in previous(Days)</span>
@@ -114,8 +476,7 @@
                               <label nz-checkbox [(ngModel)]="checked">View only those</label>
                             </div>
                           </ng-container>
-
-                          <!-- CASE 2: 1 Column -->
+ 
                           <ng-container *ngSwitchCase="'2'">
                             <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                               <span class="d-flex">Send email if number is(Days)</span>
@@ -129,8 +490,7 @@
                               </nz-select>
                             </div>
                           </ng-container>
-
-                          <!-- CASE 3 -->
+ 
                           <ng-container *ngSwitchCase="'3'">
                             <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                               <span class="d-flex"> Send email if textbox contains</span>
@@ -252,4 +612,4 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->

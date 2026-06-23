@@ -396,7 +396,7 @@
         <button
           type="button"
           tabindex="0"
-              [disabled]="!selectedDocumentType"
+          [disabled]="!selectedDocumentType || !selectedTemplateType"
           class="btn btn-sm btn-outline-secondary shadow-sm"
           (click)="DraftDocumentRequests()"
         >
@@ -408,7 +408,7 @@
         <button
           type="button"
           tabindex="0"
-              [disabled]="!selectedDocumentType"
+          [disabled]="!selectedDocumentType || !selectedTemplateType"
           class="btn btn-sm btn-primary shadow-sm"
           (click)="SubmitDocumentRequests()"
         >

@@ -159,8 +159,7 @@ export class DepartmentComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.DEPARTMENTS,
         getCount$: () => this._departmentServices.getDepartmentCount(),
-        getData$: () =>
-          this._departmentServices.GetAllDepartments('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () => this._departmentServices.GetAllDepartments('', 'DESC', 'LastModifiedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
