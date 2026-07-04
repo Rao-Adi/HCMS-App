@@ -42,7 +42,7 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
                 (click)="onTabChange('Pending')"
               >
-                Pending
+                Pending <span *ngIf="pendingRequestCount > 0" class="badge bg-danger ms-1">{{ pendingRequestCount }}</span>
               </button>
               <button
                 class="tab-button"
@@ -88,44 +88,40 @@
                         (cellClicked)="onCellClicked($event)"
                       >
                         <div grid-actions class="grid-action-icons">
-                          <button
-                            class="grid-icon-btn"
+                          <button class="btn btn-success btn-sm"
                             [class.disabled]="!hasSelectedRows"
                             title="Approve"
                             (click)="promptAction('APPROVED')"
                             [disabled]="hasSelectedRows === false"
                           >
-                            <i class="bi bi-check2-square"></i>
+                            <i class="bi bi-check-circle"></i> Approve
                           </button>
 
-                          <button
-                            class="grid-icon-btn"
+                          <button class="btn btn-danger btn-sm"
                             [class.disabled]="!hasSelectedRows"
                             title="Disapprove"
                             (click)="promptAction('REJECTED')"
                             [disabled]="hasSelectedRows === false"
                           >
-                            <i class="bi bi-x-square"></i>
+                            <i class="bi bi-x-circle"></i> Reject
                           </button>
 
-                          <button
-                            class="grid-icon-btn"
+                          <button class="btn btn-warning btn-sm"
                             [class.disabled]="!hasSelectedRows"
                             title="REWORK"
                             (click)="promptAction('REWORKED')"
                             [disabled]="hasSelectedRows === false"
                           >
-                            <i class="bi bi-reply"></i>
+                            <i class="bi bi-arrow-return-left"></i> Revert
                           </button>
 
-                          <button
-                            class="grid-icon-btn"
+                          <button class="btn btn-success btn-sm"
                             [class.disabled]="!hasSelectedRows"
                             title="Export"
                             (click)="export()"
                             [disabled]="hasSelectedRows === false"
                           >
-                            <i class="bi bi-filetype-xls"></i>
+                            <i class="bi bi-file-earmark-excel"></i> Export
                           </button>
                         </div>
                       </app-ag-grid-wrapper>

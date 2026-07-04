@@ -103,6 +103,9 @@ export class MyApprovalDocument {
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
   rowData: any[] = [];
+  pendingDocumentCount: number = 0;
+  approvedDocumentCount: number = 0;
+  disapprovedDocumentCount: number = 0;
   public noRowsOverlay: string = '';
 
   columnToggles?: ColumnToggle[] = [
@@ -203,6 +206,34 @@ export class MyApprovalDocument {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
+      this.getDocumentCounts();
+    });
+  }
+
+  getDocumentCounts() {
+    const basePayload = {
+      divisionCode: '',
+      departmentCode: '',
+      subDepartmentCode: '',
+      businessDomainCode: '',
+      documentTypeCode: '',
+      RequestStatus: 'Pending',
+      pageNumber: 1,
+      pageSize: 1, // Only need the count
+      sortModel: [],
+      filterModel: {},
+      searchTerm: '',
+      sortBy: 'DESC',
+      sortColumn: 'Id',
+      searchText: '',
+      empid: this.loginEmpId,
+    };
+
+    // Pending
+    this._documentService.GetDocumentByStatus({ ...basePayload, RequestStatus: 'Pending' }).subscribe({
+      next: (response) => {
+        this.pendingDocumentCount = response?.Data?.TotalCount ?? 0;
+      },
     });
   }
 
@@ -433,6 +464,11 @@ export class MyApprovalDocument {
   promptAction(action: string) {
     if (!this.documentId) return;
 
+    if (action === 'Approve') {
+      this.submitWorkflowAction(action, ''); // Send empty observation for approve action
+      return;
+    }
+
     const modalRef = this.modal.create({
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
@@ -453,7 +489,7 @@ export class MyApprovalDocument {
   }
 
   submitWorkflowAction(action: string, observation: string) {
-    if (!observation || observation.trim() === '') {
+    if (action !== 'Approve' && (!observation || observation.trim() === '')) {
       this._notificationToastService.createNotification('error', 'Validation', 'Observation is required');
       return;
     }
@@ -467,7 +503,7 @@ export class MyApprovalDocument {
     };
 
     let actionObservable;
-    if (action === 'APPROVE') {
+    if (action === 'Approve') {
       actionObservable = this._documentService.approveDocument(payLoad);
     } else if (action === 'Rejected') {
       actionObservable = this._documentService.rejectDocument(payLoad);

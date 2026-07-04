@@ -21,7 +21,6 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -76,6 +75,9 @@ export class MyApprovalRequest {
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
   rowData: any[] = [];
+  pendingRequestCount: number = 0;
+  approvedRequestCount: number = 0;
+  disapprovedRequestCount: number = 0;
   public noRowsOverlay: string = '';
   selectedPageSize = 10;
   LoginEmpId: string = '';
@@ -246,6 +248,7 @@ export class MyApprovalRequest {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
+      this.getRequestCounts();
     });
   }
 
@@ -297,6 +300,45 @@ export class MyApprovalRequest {
     this.pageNumber = 1;
     this.currentGridQuery.pageNumber = 1;
     // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically.
+  }
+
+  getRequestCounts() {
+    const basePayload = {
+      searchtext: '',
+      sortby: 'DESC',
+      sortcolumn: 'Id',
+      isactive: true,
+      pagenumber: 1,
+      pagesize: 1, // Only need the count
+      divisioncode: '',
+      departmentcode: '',
+      subdepartmentcode: '',
+      businessdomaincode: '',
+      documenttypecode: '',
+      requeststatus: 'Pending',
+      empId: this.LoginEmpId || '',
+    };
+
+    // Pending
+    this._doumentRequestService.getMyPendingDocumentRequest({ ...basePayload, requeststatus: 'Pending' }).subscribe({
+      next: (response) => {
+        this.pendingRequestCount = response?.Data?.TotalCount ?? 0;
+      },
+    });
+
+    // Approved
+    this._doumentRequestService.getMyPendingDocumentRequest({ ...basePayload, requeststatus: 'Approved' }).subscribe({
+      next: (response) => {
+        this.approvedRequestCount = response?.Data?.TotalCount ?? 0;
+      },
+    });
+
+    // Rejected
+    this._doumentRequestService.getMyPendingDocumentRequest({ ...basePayload, requeststatus: 'Rejected' }).subscribe({
+      next: (response) => {
+        this.disapprovedRequestCount = response?.Data?.TotalCount ?? 0;
+      },
+    });
   }
 
   GetAllPendingDocuments(query?: any) {
@@ -375,15 +417,13 @@ export class MyApprovalRequest {
                   'RequestCreatedBy',
                   'requestCreatedBy',
                 ]),
-                requestCreatedOn: new CustomDateFormatPipe().transform(
+                requestCreatedOn: this.formatDate(
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
                 ),
-                previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                previousVersionCreatedOn: this.formatDate(
                   get([
                     'DraftContentLastModifiedAt',
                     'draftContentLastModifiedAt',
-                    'LastModifiedAt',
-                    'lastModifiedAt',
                   ]),
                 ),
                 previousVersionCreatedBy: get([
@@ -509,6 +549,11 @@ export class MyApprovalRequest {
   promptAction(action: string) {
     if (!this.selectedRow) return;
 
+    if (action === 'APPROVED') {
+      this.submitWorkflowAction(action, ''); // Send empty observation for approve action
+      return;
+    }
+
     const modalRef = this.modal.create({
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
@@ -529,7 +574,7 @@ export class MyApprovalRequest {
   }
 
   submitWorkflowAction(action: string, observation: string) {
-    if (!observation || observation.trim() === '') {
+    if (action !== 'APPROVED' && (!observation || observation.trim() === '')) {
       this._notificationToastService.createNotification(
         'error',
         'Validation',
@@ -569,14 +614,17 @@ export class MyApprovalRequest {
   }
 
   private formatDate(value: string | null | undefined): string {
-    if (!value) return '';
+    if (!value) {
+      return '';
+    }
     try {
-      const [datePart, timePart = ''] = value.split(' ');
-      const [month, day, year] = datePart.split('/');
-      if (!year || !month || !day) return value;
-      return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year} ${timePart.trim()}`.trim();
+      const date = new Date(value);
+      if (isNaN(date.getTime())) {
+        return value; // Return original value if parsing fails
+      }
+      return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(date);
     } catch {
-      return value;
+      return value; // Return original value on any other error
     }
   }
 
