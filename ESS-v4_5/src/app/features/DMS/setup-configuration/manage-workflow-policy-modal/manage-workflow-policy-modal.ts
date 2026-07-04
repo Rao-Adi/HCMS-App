@@ -99,7 +99,7 @@ export class ManageWorkflowPolicyModal {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        required: true,
+        required: false,
       },
     ];
   }

@@ -143,6 +143,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
   @Input() isSelectionRequired: boolean = true;
   @Input() showSearchBar: Boolean = true;
+  @Input() autoSizeColumns: boolean = false;
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -376,7 +377,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 //value: params.data?.[column.dropdownValueField || column.field],
 
                 disabled: params.data?.disabled,
-                placeholder: column.placeholder || '--Select--',
+                placeholder: column.placeholder || '--any--',
                 emptyValue: 0,
 
                 // Enable search by default, but allow override via GridColumn config
@@ -858,6 +859,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.gridApi.addEventListener('filterChanged', this.onSortOrFilterChanged.bind(this));
     this.gridApi.addEventListener('paginationChanged', this.onPaginationChanged.bind(this));
 
+    if (this.autoSizeColumns) {
+      this.gridApi.autoSizeAllColumns();
+    }
+
     this.gridReady.emit(this.gridApi);
   }
 
@@ -956,14 +961,16 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   updateRow(event: CellClickedEvent): void {
-    this.rowUpdated.emit({
-      rowData: event.data,
-      index: event.rowIndex!,
-    });
-    this.editingRowId = null;
-    this.editingRowData = null;
-    this.editingRowIndex = -1;
-    this.gridApi?.refreshCells({ force: true });
+    if (confirm('Are you sure you want to update this record?')) {
+      this.rowUpdated.emit({
+        rowData: event.data,
+        index: event.rowIndex!,
+      });
+      this.editingRowId = null;
+      this.editingRowData = null;
+      this.editingRowIndex = -1;
+      this.gridApi?.refreshCells({ force: true });
+    }
   }
 
   cancelEdit(event: CellClickedEvent): void {
