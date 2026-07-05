@@ -114,8 +114,8 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
         getData$: () =>
           this._subDepartmentServices.GetAllSubDepartments(
             '', 
-            'ASC',
-            'Name',
+            'DESC',
+            'CreatedAt',
             true,
             1,
             1000, 

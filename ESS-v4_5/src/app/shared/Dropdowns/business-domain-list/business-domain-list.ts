@@ -115,8 +115,8 @@ export class BusinessDomainList implements ControlValueAccessor {
         getData$: () =>
           this._businessDomainService.GetAllBusinessDomains(
             '', 
-            'ASC',
-            'Name',
+            'DESC',
+            'CreatedAt',
             true,
             1,
             1000, 

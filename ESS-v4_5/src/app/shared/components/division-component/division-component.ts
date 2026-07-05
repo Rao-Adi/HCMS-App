@@ -136,7 +136,7 @@ export class DivisionComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.DIVISIONS,
         getCount$: () => this._divisionServices.getDivisionCount(),
-        getData$: () => this._divisionServices.GetAllDivisions('', 'DESC', 'LastModifiedAt', true, 1, 1000),
+        getData$: () => this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
@@ -165,7 +165,7 @@ export class DivisionComponent {
         getCount$: () => this._divisionServices.getDivisionCount(),
 
         // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._divisionServices.GetAllDivisions('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () => this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,

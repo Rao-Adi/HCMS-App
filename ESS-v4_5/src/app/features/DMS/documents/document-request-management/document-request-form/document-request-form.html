@@ -118,8 +118,7 @@
             </div>
             <br />
             <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-              <h3 class="PnlHeader">Cabinet</h3>
-              <br />
+              <h3 class="PnlHeader">Cabinet</h3> 
               <div class="row" *ngIf="!showDocumentDiv">
                 <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                   <div class="PnlHeading">
@@ -256,8 +255,7 @@
 
             <br />
             <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-              <h3 class="PnlHeader">Document Users</h3>
-              <br />
+              <h3 class="PnlHeader">Document Users</h3> 
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-drusers-component
                   [selectedUsers]="distributionUserList"
@@ -265,14 +263,12 @@
                   (usersChanged)="distributionUserList = $event"
                 ></app-drusers-component>
               </div>
-            </div>
-            <br />
+            </div> 
             <br />
             <hr />
 
             <div class="row-space">
-              <h3 class="PnlHeader">Distribution List</h3>
-              <br />
+              <h3 class="PnlHeader">Distribution List</h3> 
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-drdistribution-list
                   [DocumentTypeCode]="selectedDocumentType"
@@ -282,13 +278,11 @@
                 </app-drdistribution-list>
               </div>
             </div>
-            <br />
-            <br />
+            <br /> 
             <hr />
             <div class="row mb-4">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <h3 class="PnlHeader">Document Content (Optional)</h3>
-                <br />
+                <h3 class="PnlHeader">Document Content (Optional)</h3> 
 
                 <!-- HTML Template Editor -->
               <ng-container *ngIf="selectedTemplateType === '3' || (!selectedTemplateType && !draftFileUrl)">
@@ -345,8 +339,7 @@
                 </ng-container>
               </div>
             </div>
-            <br />
-            <br />
+            <br /> 
             <hr />
             <div class="row mt-4">
               <div class="col-lg-12 col-md-12 col-sm-12">

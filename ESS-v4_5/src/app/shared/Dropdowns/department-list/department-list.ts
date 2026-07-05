@@ -112,8 +112,8 @@ export class DepartmentList implements ControlValueAccessor {
         getData$: () =>
           this._departmentServices.GetAllDepartments(
             '', // Fetch all so the global cache is complete
-            'ASC',
-            'Name',
+            'DESC',
+            'CreatedAt',
             true,
             1,
             1000,

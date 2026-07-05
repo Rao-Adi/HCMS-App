@@ -181,8 +181,7 @@ export class SubDepartmentComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
         getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
-        getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'LastModifiedAt', true, 1, 1000),
+        getData$: () => this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
@@ -244,7 +243,7 @@ export class SubDepartmentComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+          this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'CreatedAt', true, 1, 1000),
         // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
           Id: item.Id || item.id,

@@ -137,8 +137,7 @@ export class DocumentTypeComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.DOCUMENT_TYPES,
         getCount$: () => this._documentTypeService.getDocumentTypeCount(),
-        getData$: () =>
-          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'LastModifiedAt', true, 1, 1000),
+        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
@@ -169,7 +168,7 @@ export class DocumentTypeComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,

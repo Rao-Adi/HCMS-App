@@ -82,7 +82,7 @@ export class DocumentTypeList implements ControlValueAccessor {
           (this._documentTypeService as any).getDocumentTypeCount
             ? (this._documentTypeService as any).getDocumentTypeCount()
             : of(1000),
-        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (d: any) => ({
           Id: d.Id || d.id,
           Code: d.Code || d.code,

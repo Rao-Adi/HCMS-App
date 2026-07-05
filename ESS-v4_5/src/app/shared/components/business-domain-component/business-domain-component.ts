@@ -152,7 +152,7 @@ export class BusinessDomainComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
+          this._businessDomainService.GetAllBusinessDomains('', 'DESC', 'CreatedAt', true, 1, 1000),
 
         // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
@@ -184,7 +184,7 @@ export class BusinessDomainComponent {
         cacheKey: MASTER_CACHE_KEYS.BUSINESS_DOMAIN,
         getCount$: () => this._businessDomainService.getBusinessDomainCount(),
         getData$: () =>
-          this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
+          this._businessDomainService.GetAllBusinessDomains('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
