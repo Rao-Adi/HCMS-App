@@ -352,12 +352,18 @@ export class DocumentAuthorizationPostTraining {
               templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
             }));
           } else {
+            if (this.gridApi) {
+              this.gridApi.showNoRowsOverlay();
+            }
             this.pendingAuthorizationData = [];
             this.totalRows = 0;
           }
         } else {
           this.pendingAuthorizationData = [];
           this.totalRows = 0;
+        }
+        if (this.gridApi) {
+          this.gridApi.hideOverlay();
         }
       },
       error: (err) => {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -54,6 +54,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DocumentRequestForm {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() draftData: any;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -1079,5 +1080,21 @@ export class DocumentRequestForm {
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });
+  }
+
+  reviewDraftedFile(): void {
+    if (this.draftFile) {
+      const fileURL = URL.createObjectURL(this.draftFile);
+      window.open(fileURL, '_blank');
+      // Revoke the object URL after some time to free up memory
+      setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+    }
+  }
+
+  removeDraftedFile(): void {
+    this.draftFile = null;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 }

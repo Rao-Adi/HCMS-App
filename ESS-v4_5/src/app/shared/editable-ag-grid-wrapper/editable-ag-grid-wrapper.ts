@@ -380,6 +380,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 placeholder: column.placeholder || '--any--',
                 emptyValue: 0,
 
+                allowClear: true, // Allow clearing selection
                 // Enable search by default, but allow override via GridColumn config
                 showSearch: column.showSearch !== false,
                 customFilter: (input: string, option: any) => {

@@ -329,13 +329,32 @@
                   <div class="PnlHeading">
                     <label>Upload Drafted Document (DOCX/PDF)</label>
                   </div>
-                  <input
-                    type="file"
-                    class="form-control input-sm mt-2"
-                    (change)="onDraftFileSelected($event)"
-                    accept=".pdf,.doc,.docx"
-                    style="width: 350px"
-                  />
+                  <!-- File Input -->
+                  <div class="d-flex align-items-center gap-3 mt-2">
+                    <input
+                      #fileInput
+                      type="file"
+                      class="form-control input-sm"
+                      (change)="onDraftFileSelected($event)"
+                      accept=".pdf,.doc,.docx"
+                      style="width: 350px"
+                      [hidden]="draftFile"
+                    />
+
+                    <!-- File Info and Actions -->
+                    <div *ngIf="draftFile" class="d-flex align-items-center gap-2 p-2 border rounded-2 bg-light shadow-sm">
+                      <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
+                      <span class="fw-medium text-truncate" style="max-width: 250px;" [title]="draftFile.name">
+                        {{ draftFile.name }}
+                      </span>
+                      <button class="btn btn-sm btn-outline-primary p-1" (click)="reviewDraftedFile()" title="Review File">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger p-1" (click)="removeDraftedFile()" title="Remove File">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
                 </ng-container>
               </div>
             </div>
