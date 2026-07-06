@@ -157,6 +157,7 @@ export class SubDepartmentComponent {
         dropdownDisplayField: 'text',
         required: true,
       },
+      
       {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
@@ -280,7 +281,7 @@ export class SubDepartmentComponent {
     const payLoad = {
       Name: rowData.Name,
       DepartmentCode: rowData.Department,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
 

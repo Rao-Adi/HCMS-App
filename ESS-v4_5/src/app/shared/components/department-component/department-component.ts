@@ -136,6 +136,13 @@ export class DepartmentComponent {
         required: true,
       },
       {
+        field: 'IsActive',
+        headerName: 'Enable/Disable',
+        type: 'switch',
+        required: false,
+        minWidth: 150,
+      },
+      {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
@@ -301,7 +308,7 @@ export class DepartmentComponent {
     const payLoad = {
       Name: event.rowData.Name,
       DivisionCode: event.rowData.DivisionCode,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
 

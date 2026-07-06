@@ -339,9 +339,29 @@ export class DRUsersComponent {
   }
 
   onRowDeleted(rowIndex: number): void {
-    //console.log('Row deleted at index:', rowIndex);
+    const deletedRow = this.manualUserData[rowIndex];
+    if (!deletedRow) return;
+
+    // Remove the access rule from the grid data
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
+
+    // Find the actual role ID from the userRoles list
+    const role = this.userRoles.find(r => r.id === deletedRow.userId || r.text === deletedRow.userId);
+    const roleId = role ? role.id : null;
+
+    if (!roleId) return;
+
+    // Filter out employees that match the deleted rule's criteria
+    this.selectedEmployeeList = this.selectedEmployeeList.filter(emp => {
+      const matchesRole = emp.roleId === roleId;
+      const matchesDivision = (emp.divisionCode || null) === (deletedRow.level1Id || null);
+      const matchesDepartment = (emp.departmentCode || null) === (deletedRow.level2Id || null);
+      const matchesSubDepartment = (emp.subDepartmentCode || null) === (deletedRow.level3Id || null);
+      const matchesBusinessDomain = (emp.businessDomainCode || null) === (deletedRow.level4Id || null);
+
+      return !(matchesRole && matchesDivision && matchesDepartment && matchesSubDepartment && matchesBusinessDomain);
+    });
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {

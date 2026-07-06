@@ -114,6 +114,13 @@ export class DocumentTypeComponent {
         minWidth: 200,
       },
       {
+        field: 'IsActive',
+        headerName: 'Enable/Disable',
+        type: 'switch',
+        required: false,
+        minWidth: 150,
+      },
+      {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',

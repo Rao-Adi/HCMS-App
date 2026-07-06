@@ -51,6 +51,9 @@
                 (click)="onTabChange('Approved')"
               >
                 Approved
+                <span *ngIf="approvedRequestCount > 0" class="badge bg-danger ms-1">{{
+                  approvedRequestCount
+                }}</span>
               </button>
 
               <button
@@ -59,7 +62,11 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Revert/Rejected
+                Revert/Rejected<span
+                  *ngIf="disapprovedRequestCount > 0"
+                  class="badge bg-danger ms-1"
+                  >{{ disapprovedRequestCount }}</span
+                >
               </button>
             </div>
 
@@ -187,9 +194,7 @@
         <br />
         <div class="row mt-10" *ngIf="requestId">
           <div class="col-lg-12 col-md-12 col-sm-12">
-            <h3 class="PnlHeader">Document Content</h3>
-            <br />
-
+            <h3 class="PnlHeader">Document Content</h3> 
             <!-- HTML Template Editor -->
             <ng-container *ngIf="!draftFileUrl">
               <app-dmsrich-text-edit

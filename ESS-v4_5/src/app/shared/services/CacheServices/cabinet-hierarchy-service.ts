@@ -42,16 +42,19 @@ export class CabinetHierarchyService {
     const dbLevels: CabinetLevel[] = dbItems.map((d) => ({
       level: Number(d.Id),
       title: d.Name?.trim() || `Level ${d.Id}`,
+      isActive: d.isActive || d.IsActive || false,
+      isDeleted: d.isDeleted || d.IsDeleted || false,
       createdBy: d.CreatedBy,
       createdByName: d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
       createdAt: d.CreatedAt,
       lastModifiedAt: d.LastModifiedAt,
       lastModifiedBy: d.LastModifiedBy,
-      lastModifiedByName: d.LastModifiedByName || d.lastModifiedByName || d.LastModifiedBy || d.lastModifiedBy || '',
+      lastModifiedByName:
+        d.LastModifiedByName || d.lastModifiedByName || d.LastModifiedBy || d.lastModifiedBy || '',
     }));
 
     dbLevels.forEach((l) => (levelTitles[l.level] = l.title));
- 
+
     const derived: CabinetLevel[] = [];
     dbLevels.forEach((l) => {
       derived.push(l);
@@ -59,6 +62,8 @@ export class CabinetHierarchyService {
         derived.push({
           level: l.level + 1,
           title: this.getDefaultChildTitle(l.level + 1),
+          isActive: false,
+          isDeleted: false,
           createdBy: null,
           createdByName: null,
           createdAt: null,
@@ -79,7 +84,6 @@ export class CabinetHierarchyService {
    * You can subscribe to this in any component that needs the levels
    */
   public loadDropdownHierarchy(): Observable<CabinetLevel[]> {
- 
     return this._cabinetTabConfigService
       .GetAllCabietStructureTabs('', 'ASC', 'Id', true, 1, 10)
       .pipe(

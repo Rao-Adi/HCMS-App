@@ -126,6 +126,13 @@ export class BusinessDomainComponent {
         required: true,
       },
       {
+        field: 'IsActive',
+        headerName: 'Enable/Disable',
+        type: 'switch',
+        required: false,
+        minWidth: 150,
+      },
+      {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
@@ -250,7 +257,7 @@ export class BusinessDomainComponent {
       Code: rowData.Code,
       Name: rowData.Name,
       SubDepartmentCode: rowData.SubDepartment,
-      IsActive: true,
+      IsActive: rowData.IsActive,
       IsDeleted: false,
     };
 
@@ -289,7 +296,7 @@ export class BusinessDomainComponent {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       DepartmentCode: event.rowData.SubDepartment,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       // IsDeleted: false,
     };
 

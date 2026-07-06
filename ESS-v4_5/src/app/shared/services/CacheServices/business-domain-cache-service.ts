@@ -26,11 +26,19 @@ export class BusinessDomainCacheService {
         Name: item.Name || item.name,
         SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode,
         SubDepartment: item.SubDepartment || item.subDepartment,
+        IsActive: item.isActive || item.IsActive || false,
+        IsDeleted: item.isDeleted || item.IsDeleted || false,
         CreatedBy: item.CreatedBy || item.createdBy || '',
-        CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+        CreatedByName:
+          item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
         CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
         LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-        LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || item.LastModifiedBy || item.lastModifiedBy || '',
+        LastModifiedByName:
+          item.LastModifiedByName ||
+          item.lastModifiedByName ||
+          item.LastModifiedBy ||
+          item.lastModifiedBy ||
+          '',
         LastModifiedAt: new CustomDateFormatPipe().transform(
           item.LastModifiedAt || item.lastModifiedAt || '',
         ),

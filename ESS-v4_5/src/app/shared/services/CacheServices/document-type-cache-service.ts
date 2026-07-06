@@ -1,8 +1,7 @@
- 
 import { Injectable } from '@angular/core';
 import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { DocumentType } from '@app/shared/interfaces/interfaces';
-import { Observable } from 'rxjs'; 
+import { Observable } from 'rxjs';
 import { DocumentTypeService } from '../documentType.service';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -11,25 +10,38 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DocumentTypeCacheService {
   private readonly CACHE_KEY = MASTER_CACHE_KEYS.DOCUMENT_TYPES;
 
-  constructor(private masterCache: Mastercacheservice, private documentTypeService: DocumentTypeService) {}
+  constructor(
+    private masterCache: Mastercacheservice,
+    private documentTypeService: DocumentTypeService,
+  ) {}
 
   getDocumentTypes(): Observable<DocumentType[]> {
     return this.masterCache.getMasterData<DocumentType>({
       cacheKey: this.CACHE_KEY,
       getCount$: () => this.documentTypeService.getDocumentTypeCount(),
-      getData$: () => this.documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+      getData$: () =>
+        this.documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
       mapFn: (item) => ({
         Id: item.Id || item.id,
         Code: item.Code || item.code,
         Name: item.Name || item.name,
+        IsActive: item.isActive || item.IsActive || false,
+        IsDeleted: item.isDeleted || item.IsDeleted || false,
         CreatedBy: item.CreatedBy ?? item.createdBy ?? '',
-        CreatedByName: item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
-        CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt ?? item.createdAt ?? '') ?? '',
+        CreatedByName:
+          item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
+        CreatedAt:
+          new CustomDateFormatPipe().transform(item.CreatedAt ?? item.createdAt ?? '') ?? '',
         LastModifiedBy: item.LastModifiedBy ?? item.lastModifiedBy ?? '',
-        LastModifiedByName: item.LastModifiedByName ?? item.lastModifiedByName ?? item.LastModifiedBy ?? item.lastModifiedBy ?? '',
-        LastModifiedAt: new CustomDateFormatPipe().transform(
-          item.LastModifiedAt || item.lastModifiedAt || '',
-        ) ?? '',
+        LastModifiedByName:
+          item.LastModifiedByName ??
+          item.lastModifiedByName ??
+          item.LastModifiedBy ??
+          item.lastModifiedBy ??
+          '',
+        LastModifiedAt:
+          new CustomDateFormatPipe().transform(item.LastModifiedAt || item.lastModifiedAt || '') ??
+          '',
       }),
     });
   }

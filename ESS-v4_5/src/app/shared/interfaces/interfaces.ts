@@ -43,6 +43,8 @@ export interface CabinetTabVM {
 export interface CabinetLevel {
   level: number;
   title: string;
+  isActive: boolean;
+  isDeleted: boolean;
   createdBy: string | null;
   createdByName: string | null;
   createdAt: string | null;

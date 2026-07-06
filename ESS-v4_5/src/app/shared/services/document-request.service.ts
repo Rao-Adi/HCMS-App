@@ -44,6 +44,11 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetMyRequestCounts(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-request-counts`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   getDocumentRequestById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-request-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
@@ -83,10 +88,10 @@ export class DocumentRequestService {
 
   GetEffectiveDocumentDetailsForRevisionByIdAsync(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-details-by-id/${Id}`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });  
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
-  
-   GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
+
+  GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-for-revision`,
       payload,

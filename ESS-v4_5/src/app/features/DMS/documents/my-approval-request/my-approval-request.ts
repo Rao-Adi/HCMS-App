@@ -303,41 +303,16 @@ export class MyApprovalRequest {
   }
 
   getRequestCounts() {
-    const basePayload = {
-      searchtext: '',
-      sortby: 'DESC',
-      sortcolumn: 'Id',
-      isactive: true,
-      pagenumber: 1,
-      pagesize: 1, // Only need the count
-      divisioncode: '',
-      departmentcode: '',
-      subdepartmentcode: '',
-      businessdomaincode: '',
-      documenttypecode: '',
-      requeststatus: 'Pending',
-      empId: this.LoginEmpId || '',
-    };
-
-    // Pending
-    this._doumentRequestService.getMyPendingDocumentRequest({ ...basePayload, requeststatus: 'Pending' }).subscribe({
+    this._doumentRequestService.GetMyRequestCounts().subscribe({
       next: (response) => {
-        this.pendingRequestCount = response?.Data?.TotalCount ?? 0;
+        if (response && response.Data?.MyRequests) {
+          const counts = response.Data.MyRequests;
+          this.pendingRequestCount = counts.Pending ?? 0;
+          this.approvedRequestCount = counts.Approved ?? 0;
+          this.disapprovedRequestCount = counts.RejectedOrReverted ?? 0;
+        }
       },
-    });
-
-    // Approved
-    this._doumentRequestService.getMyPendingDocumentRequest({ ...basePayload, requeststatus: 'Approved' }).subscribe({
-      next: (response) => {
-        this.approvedRequestCount = response?.Data?.TotalCount ?? 0;
-      },
-    });
-
-    // Rejected
-    this._doumentRequestService.getMyPendingDocumentRequest({ ...basePayload, requeststatus: 'Rejected' }).subscribe({
-      next: (response) => {
-        this.disapprovedRequestCount = response?.Data?.TotalCount ?? 0;
-      },
+      error: (err) => console.error('Failed to get request counts', err),
     });
   }
 
@@ -595,6 +570,7 @@ export class MyApprovalRequest {
         if (response?.Success) {
           this._notificationToastService.createNotification('success', 'Request', response.Message);
           this.clearSelection();
+          this.getRequestCounts();
           if (this.agGridWrapper) {
             this.agGridWrapper.refresh();
           } else {

@@ -179,25 +179,8 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onAuthorityTypeChange(value: number | null): void {
+    this.emptyInnerFields();
     this.selectedAuthorityType = value;
-    //reset preselected values
-    if (value == 2) {
-      this.getAllUsersList();
-    }
-    if (value == 3) {
-      this.getAllRoles();
-    }
-    if (value == 4) {
-      this.getAllDesignationList();
-    }
-    this.selectedUser = '';
-    this.selectedEmployeeSingle = null;
-    this.selectedDesignationSingle = null;
-    this.selectedRoleSingle = null;
-    this.selectedDesignation = [];
-    this.selectedRole = [];
-    this.selectedEmployee = [];
-    this.selectedWorkflowExclude = 0;
   }
 
   onWorkflowExcludeChange(value: number | null): void {
