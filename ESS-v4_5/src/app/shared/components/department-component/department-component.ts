@@ -134,6 +134,7 @@ export class DepartmentComponent {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         required: true,
+        minWidth: 200,
       },
       {
         field: 'IsActive',

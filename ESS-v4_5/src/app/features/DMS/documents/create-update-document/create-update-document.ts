@@ -115,6 +115,7 @@ export class CreateUpdateDocument {
   documentName: string = '';
   requestId: number = 0;
   loginEmpId: string = '';
+  draftFile: File | null = null;
   reviewYear: number = 0;
 
   selectedRequestType: string = '';
@@ -704,6 +705,15 @@ export class CreateUpdateDocument {
       traininguserids: this.trainingUsersData.map((user) => user.UserCode), // Included in Payload as requested
     };
 
+  // Append the new draft file if it exists
+  const formData = new FormData();
+  Object.keys(payLoad).forEach((key) => {
+    formData.append(key, (payLoad as any)[key]);
+  });
+  if (this.draftFile) {
+    formData.append('DraftFile', this.draftFile, this.draftFile.name);
+  }
+
     this._documentService.submitDocument(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
@@ -728,6 +738,15 @@ export class CreateUpdateDocument {
         );
       },
     });
+  }
+
+  onDraftFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.draftFile = input.files[0];
+    } else {
+      this.draftFile = null;
+    }
   }
 
   private buildAttributePayload(): any[] {
@@ -1085,6 +1104,7 @@ export class CreateUpdateDocument {
     this.draftFileUrl = '';
     this.documentName = '';
     this.requestId = 0;
+    this.draftFile = null;
     this.selectedRequestId = '';
     this.approvalSequenceData = [];
     this.trainingUsersData = [];
