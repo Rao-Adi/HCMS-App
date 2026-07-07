@@ -242,9 +242,8 @@
           </div>
         </div>
         <div class="row mt-10" *ngIf="observationData.length > 0">
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <h3 class="PnlHeader">Observations</h3>
-            <div class="table-responsive" style="max-height: 300px; overflow-y: auto">
+          <div class="col-lg-12 col-md-12 col-sm-12"> 
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto">
               <div class="observation-container">
                 <div class="observation-title">
                   OBSERVATIONS WORKFLOW STATUS & HISTORY TRACKING REGISTRY
@@ -269,8 +268,8 @@
                       <span
                         class="status-badge"
                         [ngClass]="{
-                          'badge-rework': item.status == 'REWORK NEEDED',
-                          'badge-rejected': item.status == 'REJECTED / DISAPPROVED',
+                          'badge-rework': item.status == 'Reworked',
+                          'badge-rejected': item.status == 'Rejected',
                           'badge-approved': item.status == 'Approved',
                         }"
                       >
@@ -285,8 +284,8 @@
 
                   <!-- Body -->
 
-                  <div class="observation-body">
-                    {{ item.observation }}
+                  <div class="observation-body" [innerHTML]="item.observation">
+                    
                   </div>
                 </div>
               </div>

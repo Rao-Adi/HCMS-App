@@ -309,9 +309,9 @@ export class MyApprovalRequest {
           const myRequests = response.Data.MyRequests || { Pending: 0, Approved: 0, RejectedOrReverted: 0 };
           const myInbox = response.Data.MyInbox || { Pending: 0, Approved: 0, RejectedOrReverted: 0 };
 
-          this.pendingRequestCount = (myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
-          this.approvedRequestCount = (myRequests.Approved ?? 0) + (myInbox.Approved ?? 0);
-          this.disapprovedRequestCount = (myRequests.RejectedOrReverted ?? 0) + (myInbox.RejectedOrReverted ?? 0);
+          this.pendingRequestCount = myInbox.Pending ?? 0;//(myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
+          this.approvedRequestCount = myInbox.Approved ?? 0; //(myRequests.Approved ?? 0) + (myInbox.Approved ?? 0);
+          this.disapprovedRequestCount = myInbox.RejectedOrReverted ?? 0; //(myRequests.RejectedOrReverted ?? 0) + (myInbox.RejectedOrReverted ?? 0);
         }
       },
       error: (err) => console.error('Failed to get request counts', err),
