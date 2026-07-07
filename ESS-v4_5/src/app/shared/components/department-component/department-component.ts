@@ -326,7 +326,8 @@ export class DepartmentComponent {
 
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
-    const payLoad = {
+    const payLoad = { 
+      Code: event.rowData.Code,
       Name: event.rowData.Name,
       DivisionCode: event.rowData.DivisionCode,
       IsActive: event.rowData.IsActive,

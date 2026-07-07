@@ -73,25 +73,31 @@ export class PendingRequestForApproval {
     {
       field: 'requestId',
       headerName: 'RequestId',
+      minWidth: 100,
+      flex: 1,
     },
 
     {
       field: 'division',
       headerName: 'Division',
+        minWidth: 150,
+        flex: 1,
     },
     {
       field: 'department',
       headerName: 'Department',
+      minWidth: 150
     },
     {
       field: 'subdepartment',
       headerName: 'Sub-Department',
+      minWidth: 150
     },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentName', headerName: 'Document Title' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Last Saved On' },
-    { field: 'pendingWith', headerName: 'Pending with' },
+    { field: 'documentType', headerName: 'Document Type', minWidth: 150,flex: 1,},
+    { field: 'documentName', headerName: 'Document Title',minWidth: 200 },
+    { field: 'justification', headerName: 'Justification',minWidth: 150 },
+    { field: 'createdOn', headerName: 'Last Saved On',minWidth: 150 },
+    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150 },
     { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
   ];
 

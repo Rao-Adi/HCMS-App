@@ -665,7 +665,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
             return {
               component: column.customRenderer || SwitchRenderer,
               params: {
-                value: params.data?.[column.field],
+                value: params.value,
                 onValueChange: (value: any, data: any) => {
                   // debugger;
                   data[column.field] = value;

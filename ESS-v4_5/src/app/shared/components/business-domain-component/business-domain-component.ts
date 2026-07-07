@@ -315,7 +315,7 @@ export class BusinessDomainComponent {
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
-      DepartmentCode: event.rowData.SubDepartment,
+      SubDepartmentCode: event.rowData.SubDepartmentCode,
       IsActive: event.rowData.IsActive,
       // IsDeleted: false,
     };

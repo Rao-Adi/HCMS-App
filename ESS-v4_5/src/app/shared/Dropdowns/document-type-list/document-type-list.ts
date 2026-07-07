@@ -1,4 +1,11 @@
-import { Component, Input, Output, EventEmitter, forwardRef, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  forwardRef,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -39,7 +46,7 @@ export class DocumentTypeList implements ControlValueAccessor {
   constructor(
     private _documentTypeService: DocumentTypeService,
     private _masterCacheService: Mastercacheservice,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   private onChange = (_: any) => {};
@@ -82,11 +89,14 @@ export class DocumentTypeList implements ControlValueAccessor {
           (this._documentTypeService as any).getDocumentTypeCount
             ? (this._documentTypeService as any).getDocumentTypeCount()
             : of(1000),
-        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000),
+        getData$: () =>
+          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (d: any) => ({
           Id: d.Id || d.id,
           Code: d.Code || d.code,
           Name: d.Name || d.name,
+          IsActive: d.isActive || d.IsActive || false,
+          IsDeleted: d.isDeleted || d.IsDeleted || false,
           CreatedBy: d.CreatedBy || d.createdBy || '',
           CreatedByName:
             d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',

@@ -281,7 +281,7 @@ export class DocumentTypeComponent {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       Description: event.rowData.Description,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
     this._documentTypeService.update(payLoad).subscribe({

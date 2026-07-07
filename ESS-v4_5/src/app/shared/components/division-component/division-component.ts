@@ -102,7 +102,7 @@ export class DivisionComponent {
         headerName: 'Division Code',
         type: 'readonly',
         required: false,
-        minWidth: 100,
+        minWidth: 150,
         pinned: 'left',
       },
       {
@@ -117,7 +117,7 @@ export class DivisionComponent {
         headerName: 'Enable/Disable',
         type: 'switch',
         required: false,
-        minWidth: 100,
+        minWidth: 150,
       },
       {
         field: 'CreatedByName',
@@ -296,7 +296,6 @@ export class DivisionComponent {
           'Division updated successfully!',
         );
         this.loadDivisions();
-        this.getAllDivisions(null);
       },
       error: (err) => {
         console.error('Create Document Attribute failed:', err);

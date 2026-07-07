@@ -346,8 +346,8 @@ export class SubDepartmentComponent {
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
-      DepartmentCode: event.rowData.Department,
-      IsActive: true,
+      DepartmentCode: event.rowData.DepartmentCode,
+      IsActive: event.rowData.IsActive,
       // IsDeleted: false,
     };
 

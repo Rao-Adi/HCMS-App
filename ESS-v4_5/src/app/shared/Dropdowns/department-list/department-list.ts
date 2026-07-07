@@ -126,8 +126,15 @@ export class DepartmentList implements ControlValueAccessor {
           Name: item.Name || item.name,
           Division: item.Division || item.division || '',
           DivisionCode: item.DivisionCode || item.divisionCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedByName:
+            item.CreateByName ||
+            item.createByName ||
+            item.CreatedByName ||
+            item.createdByName ||
+            '',
           CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
           LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
           LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
@@ -160,5 +167,5 @@ export class DepartmentList implements ControlValueAccessor {
           this.isLoading = false;
         },
       });
-  }; 
+  };
 }

@@ -83,8 +83,8 @@
                   </div>
                 </div>
                 <!--User List for training-->
-                <div class="row row-space status-box-leftColmd6-standard">
-                  <div *ngIf="trainingRequired">
+                <div class="row row-space status-box-leftColmd6-standard"  *ngIf="trainingRequired">
+                  <div>
                     <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                       <div class="PnlHeading">
                         <h3 class="PnlHeader">Trainers (Document Training)</h3>
@@ -225,7 +225,8 @@
                           </div>
                           <br />
                           <div class="PnlHeading">
-                            <label> Next Review Date <strong> {{ reviewYear }} </strong>Years from the date of approval </label>
+                            <label> Next Review Date </label>
+                            <label> <strong> {{ reviewYear }} </strong>Years from the date of approval </label>
                           </div>
                         </div>
                         <br />

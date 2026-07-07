@@ -84,11 +84,14 @@ export class DivisionList implements ControlValueAccessor {
         getCount$: () => this._divisionServices.getDivisionCount(),
 
         // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 1000),
+        getData$: () =>
+          this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName:
             item.CreateByName ||
