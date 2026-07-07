@@ -89,6 +89,10 @@ export class SOPDocumentTraining {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+
+      // Set default document type to 'SOP' and fetch data
+      this.selectedDocumentType = 'SOP';
+      this.fetchDataForCurrentTab();
     });
   }
 

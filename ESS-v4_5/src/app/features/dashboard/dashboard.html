@@ -217,11 +217,54 @@
                   </div>
                 </div>
                 <div>
-                  <button class="btn btn-sm btn-outline-primary px-3 rounded-pill" (click)="onActionClick(task.EntityType)">View</button>
+                  <button
+                    class="btn btn-sm btn-outline-primary px-3 rounded-pill"
+                    (click)="onActionClick(task.EntityType)"
+                  >
+                    View
+                  </button>
                 </div>
               </div>
             </li>
           </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documents Approaching Review -->
+  <div class="row g-4 mt-2" *ngIf="documentsApproachingReview.length > 0">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-4 pb-2 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0">Documents Approaching Review (Next 60 Days)</h5>
+          <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill"
+            >{{ documentsApproachingReview.length }} Documents</span
+          >
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Document #</th>
+                  <th>Title</th>
+                  <th>Next Review Date</th>
+                  <th>Days Until Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let doc of documentsApproachingReview">
+                  <td>{{ doc.DocumentNumber }}</td>
+                  <td>{{ doc.Title }}</td>
+                  <td>{{ doc.NextReviewDate | date: 'mediumDate' }}</td>
+                  <td>
+                    <span class="badge rounded-pill" [ngClass]="doc.DaysUntilReview < 15 ? 'bg-danger' : 'bg-warning'">{{ doc.DaysUntilReview }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

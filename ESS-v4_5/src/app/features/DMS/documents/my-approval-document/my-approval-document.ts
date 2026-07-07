@@ -214,14 +214,14 @@ export class MyApprovalDocument {
     });
   }
 
-  getDocumentCounts() {
-    const basePayload = {
+  private getCountPayload(status: string): any {
+    return {
       divisionCode: '',
       departmentCode: '',
       subDepartmentCode: '',
       businessDomainCode: '',
       documentTypeCode: '',
-      RequestStatus: 'Pending',
+      RequestStatus: status,
       pageNumber: 1,
       pageSize: 1, // Only need the count
       sortModel: [],
@@ -232,11 +232,24 @@ export class MyApprovalDocument {
       searchText: '',
       empid: this.loginEmpId,
     };
+  }
 
-    // Pending
-    this._documentService.GetDocumentByStatus({ ...basePayload, RequestStatus: 'Pending' }).subscribe({
+  getDocumentCounts() {
+    this._documentService.GetDocumentByStatus(this.getCountPayload('Pending')).subscribe({
       next: (response) => {
         this.pendingDocumentCount = response?.Data?.TotalCount ?? 0;
+      },
+    });
+
+    this._documentService.GetDocumentByStatus(this.getCountPayload('Approved')).subscribe({
+      next: (response) => {
+        this.approvedDocumentCount = response?.Data?.TotalCount ?? 0;
+      },
+    });
+
+    this._documentService.GetDocumentByStatus(this.getCountPayload('Rejected')).subscribe({
+      next: (response) => {
+        this.disapprovedDocumentCount = response?.Data?.TotalCount ?? 0;
       },
     });
   }
@@ -588,31 +601,23 @@ export class MyApprovalDocument {
     });
   }
 
-  loadObservations(documentId: any) {
-    if (!documentId) {
+  loadObservations(requestId: any) {
+    if (!requestId) {
       this.observationData = [];
       return;
     }
-    this._documentRequestService.GetWorkflowObservationDetails(documentId, 'Document').subscribe({
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request').subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observationData = response.Data.map((item: any) => ({
-            Id: item.id || item.Id,
-            EntityId: item.EntityId,
-            EntityType: item.EntityType,
-            StepOrder: item.StepOrder,
-            StepType: item.StepType,
-            AssignedUserId: item.AssignedUserId,
-            EmployeeName: item.EmployeeName,
-            EmployeeCode: item.EmployeeCode,
-            Division: item.Division,
-            Department: item.Department,
-            roleName: item.RoleName,
-            Designation: item.Designation,
-            Decision: item.Decision,
-            Observation: item.Observation,
-            ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
-            IsActive: item.isActive || item.IsActive,
+            // Mapping to match the HTML template for observation cards
+            loggedBy: item.EmployeeName,
+            designation: item.Designation,
+            status: item.Decision,
+            date: item.ActionAt,
+            observation: item.Observation,
+            // You can keep other fields if needed for other logic
+            ...item,
           }));
         } else {
           this.observationData = [];

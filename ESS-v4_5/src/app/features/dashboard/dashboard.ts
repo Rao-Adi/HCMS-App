@@ -24,6 +24,7 @@ export class DashboardComponent implements OnInit {
   documentDistribution: any[] = [];
   pendingTasks: any[] = [];
   recentActivities: any[] = [];
+  documentsApproachingReview: any[] = [];
   isLoading: boolean = true;
 
   constructor(
@@ -58,6 +59,7 @@ export class DashboardComponent implements OnInit {
             EntityType : task.EntityType
           }));
           this.recentActivities = res.Data.RecentActivities || [];
+          this.documentsApproachingReview = res.Data.DocumentsApproachingReview || [];
         }
         this.isLoading = false;
       },

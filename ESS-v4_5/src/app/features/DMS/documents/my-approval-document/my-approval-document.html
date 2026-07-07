@@ -299,33 +299,57 @@
               </div>
             </ng-container>
           </div>
-        </div>
+        </div> 
+        
         <div class="row mt-10" *ngIf="observationData.length > 0">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <h3 class="PnlHeader">Observations</h3>
             <div class="table-responsive" style="max-height: 300px; overflow-y: auto">
-              <table class="table table-bordered table-striped table-hover align-middle">
-                <thead class="table-light">
-                  <tr>
-                    <th>Employee Name</th>
-                    <th>Role</th>
-                    <th>Observation</th>
-                    <th>Action</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let obs of observationData">
-                    <td>{{ obs.EmployeeName }}</td>
-                    <td>{{ obs.roleName }}</td>
-                    <td>
-                      <div [innerHTML]="obs.Observation"></div>
-                    </td>
-                    <td>{{ obs.Decision }}</td>
-                    <td>{{ obs.ActionAt }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="observation-container">
+                <div class="observation-title">
+                  OBSERVATIONS WORKFLOW STATUS & HISTORY TRACKING REGISTRY
+                </div>
+
+                <div class="observation-card" *ngFor="let item of observationData; let i = index">
+                  <!-- Header -->
+                  <div class="observation-header">
+                    <div class="left-section">
+                      <strong>[Observation {{ i + 1 }}]</strong>
+
+                      <span class="separator">|</span>
+
+                      <span>
+                        Logged By:
+                        <strong>{{ item.loggedBy }}</strong>
+                        ({{ item.designation }})
+                      </span>
+                    </div>
+
+                    <div class="right-section">
+                      <span
+                        class="status-badge"
+                        [ngClass]="{
+                          'badge-rework': item.status == 'REWORK NEEDED',
+                          'badge-rejected': item.status == 'REJECTED / DISAPPROVED',
+                          'badge-approved': item.status == 'Approved',
+                        }"
+                      >
+                        {{ item.status }}
+                      </span>
+
+                      <span class="date">
+                        {{ item.date | date: 'MMM dd, yyyy HH:mm:ss' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Body -->
+
+                  <div class="observation-body">
+                    {{ item.observation }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
