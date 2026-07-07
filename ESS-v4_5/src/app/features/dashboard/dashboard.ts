@@ -110,4 +110,8 @@ export class DashboardComponent implements OnInit {
   onLinkClick(linkName: string) {
     alert('This would navigate to the "' + linkName + '" page.');
   }
+
+  navigateTo(url: string, queryParams?: any): void {
+    this.router.navigate([url], { queryParams: queryParams });
+  }
 }

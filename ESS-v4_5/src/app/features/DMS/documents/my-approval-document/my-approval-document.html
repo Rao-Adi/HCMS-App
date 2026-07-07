@@ -300,6 +300,35 @@
             </ng-container>
           </div>
         </div>
+        <div class="row mt-10" *ngIf="observationData.length > 0">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <h3 class="PnlHeader">Observations</h3>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto">
+              <table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Employee Name</th>
+                    <th>Role</th>
+                    <th>Observation</th>
+                    <th>Action</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let obs of observationData">
+                    <td>{{ obs.EmployeeName }}</td>
+                    <td>{{ obs.roleName }}</td>
+                    <td>
+                      <div [innerHTML]="obs.Observation"></div>
+                    </td>
+                    <td>{{ obs.Decision }}</td>
+                    <td>{{ obs.ActionAt }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

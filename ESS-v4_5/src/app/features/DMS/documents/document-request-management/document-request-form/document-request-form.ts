@@ -751,17 +751,17 @@ export class DocumentRequestForm {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    if (
-      (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
-      !this.draftFile
-    ) {
-      this._notificationToasService.createNotification(
-        'warning',
-        'Validation',
-        'Please upload your drafted document before submitting.',
-      );
-      return;
-    }
+    // if (
+    //   (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
+    //   !this.draftFile
+    // ) {
+    //   this._notificationToasService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please upload your drafted document before submitting.',
+    //   );
+    //   return;
+    // }
 
     const formData = new FormData();
     formData.append('CompanyId', this.selectedCompany || '');

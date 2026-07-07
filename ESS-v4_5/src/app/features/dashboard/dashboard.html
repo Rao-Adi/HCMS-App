@@ -53,7 +53,7 @@
   <!-- Top Level Key Metrics -->
   <div class="row g-3 mb-4">
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateTo('/documents/my-approvals-request')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-primary bg-opacity-10 text-primary rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-files fs-4"></i>
@@ -63,10 +63,10 @@
             <h3 class="mb-0 fw-bold">{{ summary.MyTotalDocuments || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateTo('/documents/my-approvals-request')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-warning bg-opacity-10 text-warning rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-clock-history fs-4"></i>
@@ -76,10 +76,10 @@
             <h3 class="mb-0 fw-bold">{{ summary.PendingApprovals || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateTo('/documents/sop-training')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-info bg-opacity-10 text-info rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-book fs-4"></i>
@@ -89,10 +89,10 @@
             <h3 class="mb-0 fw-bold">{{ summary.PendingTrainings || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateTo('/documents/trainingauthorization')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-danger bg-opacity-10 text-danger rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-shield-lock fs-4"></i>
@@ -102,59 +102,59 @@
             <h3 class="mb-0 fw-bold">{{ summary.PendingAuthorizations || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
   </div>
 
   <!-- Secondary Metrics: Requests & Approvals History -->
   <div class="row g-3 mb-4">
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
+      <a (click)="navigateTo('/documents/request-for-document-creation-update')" class="card-link"> <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Total Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyTotalRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
+      <a (click)="navigateTo('/documents/request-for-document-creation-update', { tab: 'MyRequestPendingApproval' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Pending Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyPendingRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
+      <a (click)="navigateTo('/documents/my-approvals-request', { tab: 'Approved' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Approved Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyApprovedRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
+      <a (click)="navigateTo('/documents/my-approvals-request', { tab: 'Rejected' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Rejected Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyRejectedRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
+      <a (click)="navigateTo('/documents/my-approvals-request', { tab: 'Approved' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Approved By Me</p>
           <h4 class="mb-0 fw-bold">{{ summary.ApprovedByMe || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
+      <a (click)="navigateTo('/documents/my-approvals-request', { tab: 'Rejected' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Rejected By Me</p>
           <h4 class="mb-0 fw-bold">{{ summary.RejectedByMe || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
   </div>
 
@@ -213,7 +213,7 @@
                   <h6 class="mb-1 text-dark">{{ task.TaskName || 'Pending Action Required' }}</h6>
                   <div class="d-flex align-items-center text-muted" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-event me-1"></i>
-                    <span>{{ (task.DueDate | date: 'mediumDate') || 'No due date' }}</span>
+                    <span>{{ (task.DueDate | date: 'mediumDate') || 'No due date' }}</span> 
                   </div>
                 </div>
                 <div>

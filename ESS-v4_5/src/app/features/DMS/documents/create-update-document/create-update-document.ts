@@ -44,6 +44,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 
 // Define interface for request types
 interface RequestType {
@@ -114,6 +115,7 @@ export class CreateUpdateDocument {
   documentName: string = '';
   requestId: number = 0;
   loginEmpId: string = '';
+  reviewYear: number = 0;
 
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
@@ -269,6 +271,7 @@ export class CreateUpdateDocument {
     private _permissionService: PermissionService,
     private _trainingPolicyService: TrainingPolicyService,
     private _peoplePartnerService: PeoplePartnersService,
+    private _documentReviewPolicyService: DocumentReviewPolicyService
   ) {}
 
   ngOnInit() {
@@ -424,6 +427,7 @@ export class CreateUpdateDocument {
     this.GetAllApprovedRequests();
     this.GetDocumentTemplate();
     this.loadWorkflowAuthorities(this.selectedDocumentType);
+    this.GetDocumentReviewPolicy();
     // const payLoad = {
     //   EntityType: 'Document',
     //   documentTypeCode: this.selectedDocumentType,
@@ -688,7 +692,7 @@ export class CreateUpdateDocument {
     this.selectedUser = [];
   }
 
-  SubmiteDocument() {    
+  SubmiteDocument() {
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
     const trainingMode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
@@ -787,6 +791,18 @@ export class CreateUpdateDocument {
           // Promise.resolve().then(() => {
           //   this.templateHtml = response.Data.TemplateContent;
           // });
+        },
+        error: (err) => console.error(err),
+      });
+  }
+
+  GetDocumentReviewPolicy() {
+    const DocTypeCode = this.selectedDocumentType;
+    this._documentReviewPolicyService
+      .getDocumentReviewPolicyByDocumentTypeCode(DocTypeCode)
+      .subscribe({
+        next: (response) => {
+          this.reviewYear = response?.ReviewPeriodYears;
         },
         error: (err) => console.error(err),
       });

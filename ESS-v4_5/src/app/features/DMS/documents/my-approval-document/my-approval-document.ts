@@ -28,6 +28,7 @@ import { DocumentAttributeService } from '@app/shared/services/document-attribut
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -71,6 +72,7 @@ export class MyApprovalDocument {
   documentName: string = '';
   // Track selection state
   hasSelectedRows = false;
+  observationData: any[] = [];
   stepId: number = 0;
   documentId: number = 0;
   executionId: number = 0;
@@ -130,25 +132,26 @@ export class MyApprovalDocument {
 
   pendingDocumentsGridColumnDefs = [
     { field: 'executionId', headerName: 'ExecutionId', hide: true },
-    {
-      field: 'observation',
-      headerName: 'Observation',
-      editable: false,
-      cellRenderer: (params: any) => {
-        if (!params.data) return '';
-        return `
-        <span 
-          style="color:#1976d2; cursor:pointer; text-decoration:underline"
-          data-action="open"
-        >
-          Observation
-        </span>
-      `;
-      },
-      onCellClicked: (event: any) => {
-        this.openObservationModal(event.data);
-      },
-    },
+    { field: 'observation', headerName: 'Observation', hide: true },
+    // {
+    //   field: 'observation',
+    //   headerName: 'Observation',
+    //   editable: false,
+    //   cellRenderer: (params: any) => {
+    //     if (!params.data) return '';
+    //     return `
+    //     <span 
+    //       style="color:#1976d2; cursor:pointer; text-decoration:underline"
+    //       data-action="open"
+    //     >
+    //       Observation
+    //     </span>
+    //   `;
+    //   },
+    //   onCellClicked: (event: any) => {
+    //     this.openObservationModal(event.data);
+    //   },
+    // },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
     { field: 'documentId', headerName: 'Document ID' },
@@ -195,6 +198,7 @@ export class MyApprovalDocument {
     private _documentAttribute: DocumentAttributeService,
     private _documentAttributeService: DocumentAttributeService,
     private _permissionService: PermissionService,
+    private _documentRequestService: DocumentRequestService,
   ) {}
 
   ngOnInit() {
@@ -414,6 +418,7 @@ export class MyApprovalDocument {
     this.documentName = event.data?.documentName || '';
     this.documentId = event.data?.Id;
     this.GetDocumentAttributeByDocumentId(this.documentId);
+    this.loadObservations(this.documentId);
     this.GetDocumentAttributes(event.data?.documentTypeCode);
   }
 
@@ -458,6 +463,7 @@ export class MyApprovalDocument {
     this.documentName = '';
     this.documentId = 0;
     this.documentAttributeValues = [];
+    this.observationData = [];
     this.attributes = [];
   }
 
@@ -579,6 +585,39 @@ export class MyApprovalDocument {
     modalRef.afterClose.subscribe((result) => {
       if (!result) return;
       this.observation = result.observation;
+    });
+  }
+
+  loadObservations(documentId: any) {
+    if (!documentId) {
+      this.observationData = [];
+      return;
+    }
+    this._documentRequestService.GetWorkflowObservationDetails(documentId, 'Document').subscribe({
+      next: (response) => {
+        if (response && response.Data) {
+          this.observationData = response.Data.map((item: any) => ({
+            Id: item.id || item.Id,
+            EntityId: item.EntityId,
+            EntityType: item.EntityType,
+            StepOrder: item.StepOrder,
+            StepType: item.StepType,
+            AssignedUserId: item.AssignedUserId,
+            EmployeeName: item.EmployeeName,
+            EmployeeCode: item.EmployeeCode,
+            Division: item.Division,
+            Department: item.Department,
+            roleName: item.RoleName,
+            Designation: item.Designation,
+            Decision: item.Decision,
+            Observation: item.Observation,
+            ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
+            IsActive: item.isActive || item.IsActive,
+          }));
+        } else {
+          this.observationData = [];
+        }
+      },
     });
   }
 

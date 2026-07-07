@@ -97,6 +97,7 @@ export interface GridColumn<T = any> {
 
   // Validation
   required?: boolean;
+  cellClass?: string | string[];
 
   // Custom renderer
   customRenderer?: any;
@@ -347,6 +348,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       sortable: column.sortable ?? this.config.enableSorting,
       filter: column.filter ?? this.config.enableFiltering,
       editable: column.editable ?? false,
+      cellClass: column.cellClass,
     };
 
     // Set cell renderer based on column type

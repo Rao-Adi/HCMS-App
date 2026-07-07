@@ -21,6 +21,7 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 
 @Component({
   selector: 'app-my-approval-request',
@@ -100,6 +101,7 @@ export class MyApprovalRequest {
   selectedRow: any = null;
   employees: any[] = [];
   selectedEmployee?: string = '';
+  observationData: any[] = [];
   observation: string = '';
 
   documentColumnDefs = [
@@ -140,25 +142,22 @@ export class MyApprovalRequest {
       headerName: 'StartedAt',
       hide: true,
     },
-
-    {
-      field: 'observation',
-      headerName: 'Observation',
-      editable: false,
-      cellRenderer: (params: any) => {
-        return `
-          <span 
-            style="color:#1976d2; cursor:pointer; text-decoration:underline"
-            data-action="open"
-          >
-            ${params.value ? 'Observation' : 'Observation'}
-          </span>
-        `;
-      },
-      onCellClicked: (event: any) => {
-        this.openObservationModal(event.data);
-      },
-    },
+    { field: 'observation', headerName: 'Observation', hide: true },
+    // {
+    //   field: 'observation',
+    //   headerName: 'Observation',
+    //   editable: false,
+    //   cellRenderer: (params: any) => {
+    //     return `
+    //       <span
+    //         style="color:#1976d2; cursor:pointer; text-decoration:underline"
+    //         data-action="open"
+    //       >
+    //         ${params.value ? 'Observation' : 'Observation'}
+    //       </span>
+    //     `;
+    //   },
+    // },
     {
       field: 'justification',
       headerName: 'Justification',
@@ -230,7 +229,7 @@ export class MyApprovalRequest {
   ];
 
   constructor(
-    private _doumentRequestService: DocumentRequestService,
+    private _documentRequestService: DocumentRequestService,
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
     private _userService: UserService,
@@ -270,6 +269,7 @@ export class MyApprovalRequest {
     this.selectedDocumentTypeCode = '';
     this.stepId = 0;
     this.selectedRow = null;
+    this.observationData = [];
     this.hasSelectedRows = false;
 
     // Safely clear the selection from the ag-grid API to prevent row-index selection preservation
@@ -303,7 +303,7 @@ export class MyApprovalRequest {
   }
 
   getRequestCounts() {
-    this._doumentRequestService.GetMyRequestCounts().subscribe({
+    this._documentRequestService.GetMyRequestCounts().subscribe({
       next: (response) => {
         if (response && response.Data?.MyRequests) {
           const counts = response.Data.MyRequests;
@@ -351,7 +351,7 @@ export class MyApprovalRequest {
       empId: this.LoginEmpId || '',
     };
 
-    this._doumentRequestService.getMyPendingDocumentRequest(payload).subscribe({
+    this._documentRequestService.getMyPendingDocumentRequest(payload).subscribe({
       next: (response) => {
         if (response?.Success) {
           const data = response?.Data;
@@ -396,10 +396,7 @@ export class MyApprovalRequest {
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
                 ),
                 previousVersionCreatedOn: this.formatDate(
-                  get([
-                    'DraftContentLastModifiedAt',
-                    'draftContentLastModifiedAt',
-                  ]),
+                  get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt']),
                 ),
                 previousVersionCreatedBy: get([
                   'DraftContentLastModifiedBy',
@@ -499,6 +496,7 @@ export class MyApprovalRequest {
     this.currentDocumentName = row?.documentName || '';
     this.selectedDocumentTypeCode = row?.documentTypeCode || '';
     this.stepId = row?.stepId || 0;
+    this.loadObservations(row.id);
     this.selectedRow = row;
   }
 
@@ -518,6 +516,39 @@ export class MyApprovalRequest {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  loadObservations(requestId: any) {
+    if (!requestId) {
+      this.observationData = [];
+      return;
+    }
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request').subscribe({
+      next: (response) => {
+        if (response && response.Data) {
+          this.observationData = response.Data.map((item: any) => ({
+            Id: item.id || item.Id,
+            EntityId: item.EntityId,
+            EntityType: item.EntityType,
+            StepOrder: item.StepOrder,
+            StepType: item.StepType,
+            AssignedUserId: item.AssignedUserId,
+            EmployeeName: item.EmployeeName,
+            EmployeeCode: item.EmployeeCode,
+            Division: item.Division,
+            Department: item.Department,
+            roleName: item.RoleName,
+            Designation: item.Designation,
+            Decision: item.Decision,
+            Observation: item.Observation,
+            ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
+            IsActive: item.isActive || item.IsActive,
+          }));
+        } else {
+          this.observationData = [];
+        }
+      },
     });
   }
 
@@ -565,7 +596,7 @@ export class MyApprovalRequest {
       observation: observation,
     };
 
-    this._doumentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
+    this._documentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
           this._notificationToastService.createNotification('success', 'Request', response.Message);
@@ -598,7 +629,11 @@ export class MyApprovalRequest {
       if (isNaN(date.getTime())) {
         return value; // Return original value if parsing fails
       }
-      return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(date);
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+      }).format(date);
     } catch {
       return value; // Return original value on any other error
     }
@@ -662,7 +697,7 @@ export class MyApprovalRequest {
       return;
     }
 
-    this._doumentRequestService.DownloadDraftDocument(this.requestId).subscribe({
+    this._documentRequestService.DownloadDraftDocument(this.requestId).subscribe({
       next: (response: any) => {
         const body = response?.body || response;
         let blob: Blob | null = null;

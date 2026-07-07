@@ -44,6 +44,11 @@ export class DocumentReviewPolicyService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getDocumentReviewPolicyByDocumentTypeCode(doctypecode?: string): Observable<any> {
+    const uri = `${this.apiUrl}/DMSDocumentReviewPolicy/get-document-review-policy-by-documenttypecode?documentTypeCode=${doctypecode}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllDocumentReviewPolicies(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

@@ -685,3 +685,15 @@
   z-index: 900;
   display: none;
 }
+
+/* Global style for AG-Grid audit cells */
+.audit-cell {
+  color: #888 !important; /* A light grey color */
+  font-style: italic !important;
+}
+
+/* Global style for AG-Grid audit cells */
+.audit-cell {
+  color: #888 !important; /* A light grey color */
+  font-style: italic !important;
+}

@@ -6958,3 +6958,10 @@ html.ant-scrolling-effect {
   align-items: center;
   gap: 8px;
 }
+
+
+/* Global style for AG-Grid audit cells */
+.audit-cell {
+  color: #888 !important; /* A light grey color */
+  font-style: italic !important;
+}

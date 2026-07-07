@@ -7,13 +7,13 @@
             <div class="row row-space">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="row">
-                      <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+                  <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                     <div class="PnlHeading">
                       <label>{{ 'labels.Activity Type' | safeTranslate }} </label>
                     </div>
                     <div>
                       <nz-select
-                            style="width: 100%; max-width: 250px;"
+                        style="width: 100%; max-width: 250px"
                         [(ngModel)]="selectedRequestType"
                         nzPlaceHolder="Select Activity Type"
                         (ngModelChange)="onRequestTypeChange($event)"
@@ -29,18 +29,18 @@
                       </nz-select>
                     </div>
                   </div>
-                      <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+                  <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                     <div class="PnlHeading">
                       <label>{{ 'labels.Document Type' | safeTranslate }} </label>
                     </div>
-                        <div style="width: 100%; max-width: 250px;">
+                    <div style="width: 100%; max-width: 250px">
                       <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
                         placeholder="Select Document Type"
                         [(ngModel)]="selectedDocumentType"
                         (valueChange)="onDocumentTypeChange($event)"
-                            width="100%"
+                        width="100%"
                       >
                       </app-document-type-list>
                     </div>
@@ -65,7 +65,7 @@
                         <div class="PnlHeading">
                           <label>{{ 'labels.Company' | safeTranslate }} </label>
                         </div>
-                        <div style="width: 100%; max-width: 250px;">
+                        <div style="width: 100%; max-width: 250px">
                           <div>
                             <app-company-list
                               valueKey="CODE"
@@ -97,7 +97,7 @@
                           </div>
                           <div>
                             <nz-select
-                              style="width: 100%; max-width: 250px;"
+                              style="width: 100%; max-width: 250px"
                               [nzPlaceHolder]="'Select Training Mode'"
                               [(ngModel)]="selectedTrainingMode"
                               nzAllowClear
@@ -116,7 +116,7 @@
                           <div class="PnlHeading">
                             <label>{{ 'labels.Trainers' | safeTranslate }} </label>
                           </div>
-                          <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px;">
+                          <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px">
                             <div>
                               <app-role-list
                                 valueKey="NAME"
@@ -136,9 +136,9 @@
                           <div class="PnlHeading">
                             <label>{{ 'labels.User' | safeTranslate }}</label>
                           </div>
-                          <div class="d-flex align-items-start w-100" style="max-width: 350px;">
+                          <div class="d-flex align-items-start w-100" style="max-width: 350px">
                             <nz-select
-                              style="width: 100%;"
+                              style="width: 100%"
                               [nzPlaceHolder]="'Select User'"
                               [(ngModel)]="selectedUser"
                               nzAllowClear
@@ -155,15 +155,14 @@
                             </nz-select>
 
                             <button
-                            class="grid-icon-btn ms-2 flex-shrink-0"
-                            title="Add"
-                            (click)="AddTrainingUsers()"
-                          >
-                            <i class="bi bi-plus-circle"></i>
-                          </button>
+                              class="grid-icon-btn ms-2 flex-shrink-0"
+                              title="Add"
+                              (click)="AddTrainingUsers()"
+                            >
+                              <i class="bi bi-plus-circle"></i>
+                            </button>
                           </div>
-                          
-                        </div> 
+                        </div>
                       </div>
                     </div>
                     <div
@@ -171,25 +170,25 @@
                       class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
                     >
                       <div class="table-responsive">
-                      <table
-                        class="table"
-                        *ngIf="trainingUsersData && trainingUsersData.length > 0"
-                      >
-                        <thead>
-                          <th>Training Mode</th>
-                          <th>Trainer</th>
-                          <th>User</th>
-                        </thead>
-                        <tbody>
-                          @for (item of trainingUsersData; track $index; let i = $index) {
-                            <tr>
-                              <td>{{ item.TrainingMode }}</td>
-                              <td>{{ item.TrainerName }}</td>
-                              <td>{{ item.UserName }}</td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
+                        <table
+                          class="table"
+                          *ngIf="trainingUsersData && trainingUsersData.length > 0"
+                        >
+                          <thead>
+                            <th>Training Mode</th>
+                            <th>Trainer</th>
+                            <th>User</th>
+                          </thead>
+                          <tbody>
+                            @for (item of trainingUsersData; track $index; let i = $index) {
+                              <tr>
+                                <td>{{ item.TrainingMode }}</td>
+                                <td>{{ item.TrainerName }}</td>
+                                <td>{{ item.UserName }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
@@ -208,7 +207,7 @@
                             </div>
                             <div>
                               <nz-select
-                                style="width: 100%; max-width: 250px;"
+                                style="width: 100%; max-width: 250px"
                                 [(ngModel)]="selectedRequestId"
                                 nzPlaceHolder="Select Request ID"
                                 (ngModelChange)="onRequestIdChange($event)"
@@ -226,8 +225,7 @@
                           </div>
                           <br />
                           <div class="PnlHeading">
-                            <label> Next Review Date </label>
-                            <label>3 Years from the date of approval </label>
+                            <label> Next Review Date <strong> {{ reviewYear }} </strong>Years from the date of approval </label>
                           </div>
                         </div>
                         <br />
@@ -300,37 +298,37 @@
                             </h3>
                             <br />
                             <div class="table-responsive">
-                            <table
-                              class="table"
-                              *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
-                            >
-                              <thead>
-                                <th>Approval Sequence</th>
-                                <th>Employee Code</th>
-                                <th>Employee Name</th>
-                                <th>Designation</th>
-                              </thead>
-                              <tbody>
-                                @for (
-                                  item of approvalSequenceData | keyvalue;
-                                  track item.key;
-                                  let i = $index
-                                ) {
-                                  <tr>
-                                    <td>{{ item.value.StepOrder }}</td>
-                                    <td>
-                                      {{ item.value.EmployeeCode }}
-                                    </td>
-                                    <td>
-                                      {{ item.value.EmployeeName }}
-                                    </td>
-                                    <td>
-                                      {{ item.value.Designation }}
-                                    </td>
-                                  </tr>
-                                }
-                              </tbody>
-                            </table>
+                              <table
+                                class="table"
+                                *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                              >
+                                <thead>
+                                  <th>Approval Sequence</th>
+                                  <th>Employee Code</th>
+                                  <th>Employee Name</th>
+                                  <th>Designation</th>
+                                </thead>
+                                <tbody>
+                                  @for (
+                                    item of approvalSequenceData | keyvalue;
+                                    track item.key;
+                                    let i = $index
+                                  ) {
+                                    <tr>
+                                      <td>{{ item.value.StepOrder }}</td>
+                                      <td>
+                                        {{ item.value.EmployeeCode }}
+                                      </td>
+                                      <td>
+                                        {{ item.value.EmployeeName }}
+                                      </td>
+                                      <td>
+                                        {{ item.value.Designation }}
+                                      </td>
+                                    </tr>
+                                  }
+                                </tbody>
+                              </table>
                             </div>
                           </div>
                         </div>
