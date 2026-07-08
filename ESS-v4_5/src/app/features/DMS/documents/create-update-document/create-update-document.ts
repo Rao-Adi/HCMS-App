@@ -115,6 +115,7 @@ export class CreateUpdateDocument {
   documentName: string = '';
   requestId: number = 0;
   loginEmpId: string = '';
+  selectedTemplateType: string = '';
   draftFile: File | null = null;
   reviewYear: number = 0;
 
@@ -429,6 +430,7 @@ export class CreateUpdateDocument {
     this.GetDocumentTemplate();
     this.loadWorkflowAuthorities(this.selectedDocumentType);
     this.GetDocumentReviewPolicy();
+    this.GetTemplate(this.selectedDocumentType);
     // const payLoad = {
     //   EntityType: 'Document',
     //   documentTypeCode: this.selectedDocumentType,
@@ -489,6 +491,28 @@ export class CreateUpdateDocument {
     });
   }
 
+  GetTemplate(value: string) {
+    this.documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
+      next: (response: any) => {
+        if (!response?.Data) {
+          this.selectedTemplateType = '';
+          this._notificationToastService.createNotification(
+            'warning',
+            'Template Missing',
+            'Please first upload the template against this Document Type. Document request cannot be created.'
+          );
+          return;
+        }
+
+        this.selectedTemplateType =
+          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+      },
+      error: (err) => {
+        this.selectedTemplateType = '';
+        console.error(err);
+      },
+    });
+  }
   CheckTrainingPolicy(value: string) {
     this._trainingPolicyService.GetTrainingPolicyByDocumentType(value).subscribe((res) => {
       if (res && res.Data) {

@@ -136,7 +136,7 @@ export class DraftRequestList {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Last Saved On' },
+    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell' },
     {
       field: 'status',
       headerName: 'Status',

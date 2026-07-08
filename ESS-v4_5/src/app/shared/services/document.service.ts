@@ -121,6 +121,12 @@ export class DocumentService {
       { headers: this.getHeaders() },
     );
   }
+  
+ GetMyDocumentCounts(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-my-document-counts`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+  
 
   AuthorizeDocumentPostTraining(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(

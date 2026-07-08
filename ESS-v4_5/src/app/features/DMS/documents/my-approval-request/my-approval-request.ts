@@ -108,10 +108,14 @@ export class MyApprovalRequest {
     {
       field: 'documentType',
       headerName: 'Document Type',
+      minWidth: 150,
+      flex: 1
     },
     {
       field: 'documentRequestId',
       headerName: 'Request ID',
+      minWidth: 150,
+      flex: 1
     },
     {
       field: 'documentName',
@@ -162,13 +166,16 @@ export class MyApprovalRequest {
       field: 'justification',
       headerName: 'Justification',
     },
-    {
-      field: 'proposedDocumentNumber',
-      headerName: 'Proposed Document Number',
-    },
+    // {
+    //   field: 'proposedDocumentNumber',
+    //   headerName: 'Proposed Document Number',
+      
+    // },
     {
       field: 'proposedVersionNumber',
       headerName: 'Proposed Version Number',
+      minWidth: 150,
+      flex: 1
     },
     {
       field: 'division',
@@ -182,12 +189,17 @@ export class MyApprovalRequest {
       field: 'subdepartment',
       headerName: 'Sub-Department',
     },
-    { field: 'dateOfCreation', headerName: 'Date Of Creation' },
+    { field: 'dateOfCreation', headerName: 'Date Of Creation', minWidth: 150,
+      flex: 1, cellClass: 'audit-cell', },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150,
+      flex: 1, cellClass: 'audit-cell', },
+    { field: 'requestCreatedOn', headerName: 'Request Created On',minWidth: 150,
+      flex: 1, cellClass: 'audit-cell', },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By',minWidth: 180,
+      flex: 1, cellClass: 'audit-cell', },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On',minWidth: 180,
+      flex: 1, cellClass: 'audit-cell', },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',

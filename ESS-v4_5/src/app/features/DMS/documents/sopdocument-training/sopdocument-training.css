@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   gap: 10px; /* 👈 spacing between buttons */
+  padding-left: 35px;
 }
 
 .grid-icon-btn {

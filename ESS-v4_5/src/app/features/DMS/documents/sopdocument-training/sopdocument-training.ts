@@ -139,8 +139,8 @@ export class SOPDocumentTraining {
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'url', headerName: 'URL' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
     { field: 'preVersionOn', headerName: 'Prev. Version On' },
     {
       field: 'approvalHistory',

@@ -4,11 +4,11 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common'; 
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { CommonModule } from '@angular/common';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 
 export enum DocumentRequestStatus {
@@ -80,25 +80,25 @@ export class PendingRequestForApproval {
     {
       field: 'division',
       headerName: 'Division',
-        minWidth: 150,
-        flex: 1,
+      minWidth: 150,
+      flex: 1,
     },
     {
       field: 'department',
       headerName: 'Department',
-      minWidth: 150
+      minWidth: 150,
     },
     {
       field: 'subdepartment',
       headerName: 'Sub-Department',
-      minWidth: 150
+      minWidth: 150,
     },
-    { field: 'documentType', headerName: 'Document Type', minWidth: 150,flex: 1,},
-    { field: 'documentName', headerName: 'Document Title',minWidth: 200 },
-    { field: 'justification', headerName: 'Justification',minWidth: 150 },
-    { field: 'createdOn', headerName: 'Last Saved On',minWidth: 150 },
-    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150 },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
+    { field: 'documentType', headerName: 'Document Type', minWidth: 150, flex: 1 },
+    { field: 'documentName', headerName: 'Document Title', minWidth: 200 },
+    { field: 'justification', headerName: 'Justification', minWidth: 150 },
+    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150 , cellClass: 'audit-cell'},
+    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell' },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell' },
   ];
 
   columnToggles?: ColumnToggle[] = [
@@ -125,7 +125,7 @@ export class PendingRequestForApproval {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       // this.getAllUsersList();
       this.GetAllPendingRequests('');
     });
@@ -139,9 +139,7 @@ export class PendingRequestForApproval {
   }
 
   GetAllPendingRequests(query?: any) {
-      
     const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
-
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -165,7 +163,7 @@ export class PendingRequestForApproval {
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {}, 
+      filterModel: this.currentGridQuery.filterModel || {},
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: searchText || '',

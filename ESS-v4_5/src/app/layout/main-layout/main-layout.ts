@@ -36,8 +36,11 @@ interface HeaderDetailsResponse {
   formdescription: string;
 }
 
-interface DisplayNotification extends AppNotification { 
+interface DisplayNotification extends AppNotification {
+  id?: number;
   isRead: boolean;
+  createdAt?: string;
+  relatedEntityType?: string;
 }
 
 @Component({

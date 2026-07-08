@@ -108,14 +108,19 @@
                   (gridReady)="onGridReady($event)"
                   (pageSizeChange)="onPageSizeChanged($event)"
                   (serverQuery)="GetAllDocuments($event)"
+                   (selectionChange)="onSelectionChange($event)"
                 >
                   <div grid-actions class="grid-action-icons">
-                    <button class="btn btn-success btn-sm" title="Approve" (click)="approve()">
-                      <i class="bi bi-check2-square"></i>
+                    <button class="btn btn-success btn-sm" title="Approve" (click)="approve()"
+                    [class.disabled]="!hasSelectedRows"
+                    [disabled]="hasSelectedRows === false">
+                      <i class="bi bi-check2-square"></i>  Approve
                     </button>
 
-                    <button class="btn btn-danger btn-sm" title="Disapprove" (click)="approve()">
-                      <i class="bi bi-x-square"></i>
+                    <button class="btn btn-danger btn-sm" title="Disapprove" (click)="approve()"
+                    [class.disabled]="!hasSelectedRows"
+                    [disabled]="hasSelectedRows === false">
+                      <i class="bi bi-x-square"></i>  Disapprove
                     </button> 
                   </div>
                 </app-ag-grid-wrapper>
@@ -138,6 +143,7 @@
                   (gridReady)="onGridReady($event)"
                   (pageSizeChange)="onPageSizeChanged($event)"
                   (serverQuery)="GetAllDocuments($event)"
+                   (selectionChange)="onSelectionChange($event)"
                 > 
                 </app-ag-grid-wrapper>
               </div>

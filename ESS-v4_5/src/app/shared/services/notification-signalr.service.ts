@@ -163,27 +163,19 @@
 //     }
 //   }
 // }
-
-
 import { Injectable, Inject, PLATFORM_ID, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
-import { Subject }from 'rxjs';
-import { NotificationService } from './notification.service';
+import { Subject } from 'rxjs';
+import { NotificationService } from './notification.service'; // Your existing UI notification service (e.g., ng-zorro)
 
 /**
- * Defines the structure for a notification object used within the application.
+ * Defines the structure for a notification object used within the Angular app.
  */
 export interface AppNotification {
-  id: number;
   title: string;
   message: string;
   type?: 'success' | 'info' | 'warning' | 'error';
-  notificationType: number;
-  relatedEntityType: string;
-  relatedEntityId: number;
-  redirectionUrl: string;
-  createdAt: string;
 }
 
 @Injectable({
@@ -194,8 +186,8 @@ export class NotificationSignalrService {
   private notificationSubject = new Subject<AppNotification>();
 
   /**
-   * Observable that components can subscribe to for receiving real-time notifications.
-   * This is ideal for updating UI elements like a notification dropdown list.
+   * Observable for components to subscribe to for real-time notification updates.
+   * Ideal for updating a notification dropdown or list.
    */
   public notification$ = this.notificationSubject.asObservable();
 
@@ -206,13 +198,12 @@ export class NotificationSignalrService {
   ) {}
 
   /**
-   * Starts the SignalR connection to the notification hub.
-   * This method should be called after a user successfully logs in.
+   * Starts the SignalR connection to the specified hub URL.
    * @param hubUrl The full URL of the SignalR hub.
-   * @param token The JWT token for authentication.
+   * @param token The JWT authentication token.
    */
-  public startConnection(hubUrl: string, token: string): void {
-    // 1. Production safety: Prevent running SignalR during Angular SSR (Server-Side Rendering).
+  public startConnection(hubUrl: string, token: string = ''): void {
+    // 1. Production safety: Prevent running SignalR during Angular SSR.
     if (!isPlatformBrowser(this.platformId)) {
       console.log('[SignalR] Skipping connection attempt on the server (SSR).');
       return;
@@ -220,94 +211,122 @@ export class NotificationSignalrService {
 
     // 2. Production safety: Prevent starting multiple concurrent connections.
     if (this.hubConnection && this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
-      console.log(`[SignalR] Connection already exists in state: ${this.hubConnection.state}`);
-      return;
-    }
-
-    // 3. Ensure a token is provided.
-    if (!token) {
-      console.error('[SignalR] Connection attempt failed: Authentication token is missing.');
+      console.log(`[SignalR] Connection already exists. State: ${this.hubConnection.state}`);
       return;
     }
 
     console.log(`[SignalR] Attempting to connect to Hub: ${hubUrl}`);
 
+    const options: signalR.IHttpConnectionOptions = {
+      // Use the token factory for secure, up-to-date tokens.
+      accessTokenFactory: () => token,
+    };
+
     try {
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, {
-          // Provide the JWT token for backend authentication.
-          accessTokenFactory: () => token,
-        })
-        .withAutomaticReconnect() // Automatically tries to reconnect if the connection is lost.
-        .withServerTimeout(60000) // 60 seconds timeout.
-        .withKeepAliveInterval(30000) // 30 seconds keep-alive.
-        .configureLogging(signalR.LogLevel.Information) // Use 'Information' for production, 'Debug' for development.
+        .withUrl(hubUrl, options)
+        .withAutomaticReconnect([0, 2000, 10000, 30000]) // More robust reconnect strategy
+        .configureLogging(signalR.LogLevel.Information) // Use Information for production, Debug for development
         .build();
     } catch (error) {
       console.error('[SignalR] Failed to build connection:', error);
       return;
     }
 
-    // 4. Setup lifecycle event listeners for logging and diagnostics.
+    // 3. Register event handlers BEFORE calling start().
+    this.addLifecycleEventListeners();
+    this.addReceiveNotificationListener();
+
+    // 4. Start the connection.
+    this.hubConnection
+      .start()
+      .then(() => {
+        console.log('[SignalR] Connection started successfully!');
+        // 5. CRITICAL: Join the user-specific group for targeted notifications.
+        this.joinUserGroup();
+      })
+      .catch((err: any) => console.error('[SignalR] Error while starting connection: ', err));
+  }
+
+  /**
+   * Stops the SignalR connection.
+   */
+  public stopConnection(): void {
+    if (this.hubConnection) {
+      this.hubConnection.stop().then(() => console.log('[SignalR] Connection stopped manually.'));
+    }
+  }
+
+  /**
+   * Invokes the 'MarkAsRead' method on the backend hub for a single notification.
+   * @param notificationId The ID of the notification to mark as read.
+   */
+  public markAsRead(notificationId: number): Promise<void> {
+    if (!this.hubConnection || this.hubConnection.state !== signalR.HubConnectionState.Connected) {
+      return Promise.reject('SignalR connection is not established.');
+    }
+    // Method name must exactly match the C# Hub method.
+    return this.hubConnection.invoke('MarkAsRead', notificationId);
+  }
+
+  /**
+   * Invokes the 'MarkAllAsRead' method on the backend hub.
+   */
+  public markAllAsRead(): Promise<void> {
+    if (!this.hubConnection || this.hubConnection.state !== signalR.HubConnectionState.Connected) {
+      return Promise.reject('SignalR connection is not established.');
+    }
+    return this.hubConnection.invoke('MarkAllAsRead');
+  }
+
+  /**
+   * Sets up listeners for hub connection lifecycle events.
+   */
+  private addLifecycleEventListeners(): void {
+    if (!this.hubConnection) return;
+
     this.hubConnection.onreconnecting((error) => {
       console.warn(`[SignalR] Connection lost. Reconnecting...`, error);
     });
 
     this.hubConnection.onreconnected((connectionId) => {
       console.log(`[SignalR] Reconnected successfully. Connection ID: ${connectionId}`);
+      // After reconnecting, rejoin the group to ensure message delivery.
+      this.joinUserGroup();
     });
 
     this.hubConnection.onclose((error) => {
       console.error(`[SignalR] Connection closed.`, error);
     });
-
-    // 5. Register the event handler for receiving notifications from the backend.
-    this.addReceiveNotificationListener();
-
-    // 6. Start the connection.
-    this.hubConnection
-      .start()
-      .then(() => {
-        console.log('[SignalR] Connection started successfully!');
-      })
-      .catch((err: any) => console.error('[SignalR] Error while starting connection: ', err));
   }
 
   /**
-   * Listens for the 'ReceiveNotification' event from the backend hub.
+   * Sets up the listener for the 'ReceiveNotification' event from the backend.
    */
   private addReceiveNotificationListener(): void {
     if (!this.hubConnection) return;
 
     // 'ReceiveNotification' MUST exactly match the method name invoked by your .NET backend.
     this.hubConnection.on('ReceiveNotification', (payload: any) => {
-      // Run inside Angular's Zone so the UI updates in real-time without needing a manual user interaction.
+      // Run inside Angular's Zone so the UI updates in real-time.
       this.ngZone.run(() => {
         console.log('[SignalR] Notification received from backend: ', payload);
 
-        if (!payload || typeof payload !== 'object') {
-          console.warn('[SignalR] Received an invalid or empty notification payload.');
-          return;
-        }
+        // Flexible payload handling (case-insensitive properties).
+        const title = payload.title || payload.Title || 'Notification';
+        const message = payload.message || payload.Message || 'You have a new notification.';
+        const type = (payload.type || payload.Type || 'info').toLowerCase();
 
-        // Map the backend payload to the AppNotification interface.
-        // This handles both camelCase (from JSON serialization) and PascalCase (from C# object).
         const mappedNotif: AppNotification = {
-          id: payload.id || payload.Id || 0,
-          title: payload.title || payload.Title || 'Notification',
-          message: payload.message || payload.Message || '',
-          type: (payload.type || payload.Type || 'info').toLowerCase(),
-          notificationType: payload.notificationType || payload.NotificationType || 0,
-          relatedEntityType: payload.relatedEntityType || payload.RelatedEntityType || '',
-          relatedEntityId: payload.relatedEntityId || payload.RelatedEntityId || 0,
-          redirectionUrl: payload.redirectionUrl || payload.RedirectionUrl || '/',
-          createdAt: payload.createdAt || payload.CreatedAt || new Date().toISOString(),
+          title,
+          message,
+          type: (type === 'success' || type === 'warning' || type === 'error') ? type : 'info',
         };
 
-        // Push the new notification to any subscribed components (e.g., a notification list).
+        // Push the notification to any subscribed components (e.g., a notification bell).
         this.notificationSubject.next(mappedNotif);
 
-        // Instantly show a toast message when the backend pushes a notification.
+        // Instantly show a toast message.
         this._notificationService.createNotification(
           mappedNotif.type!,
           mappedNotif.title,
@@ -318,26 +337,14 @@ export class NotificationSignalrService {
   }
 
   /**
-   * Stops the SignalR connection. This should be called when the user logs out.
+   * Invokes the 'JoinUserGroup' method on the hub to subscribe to user-specific notifications.
    */
-  public stopConnection(): void {
-    if (this.hubConnection) {
-      this.hubConnection.stop().then(() => console.log('[SignalR] Connection stopped manually.'));
-    }
-  }
-
-  /**
-   * Invokes the 'SendTestNotification' method on the backend hub for testing purposes.
-   * This sends a notification to ALL connected clients.
-   */
-  public sendTestNotification(title: string, message: string, type: 'info' | 'success' | 'warning' | 'error'): void {
+  private joinUserGroup(): void {
     if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      console.log('[SignalR] Sending test notification to backend Hub to broadcast...');
       this.hubConnection
-        .invoke('SendTestNotification', title, message, type)
-        .catch((err: any) => console.error('[SignalR] Error sending test notification: ', err));
-    } else {
-      console.error('[SignalR] Cannot send test notification. Not connected.');
+        .invoke('JoinUserGroup')
+        .then(() => console.log('[SignalR] Successfully joined user-specific group.'))
+        .catch((err) => console.error('[SignalR] Error joining user group: ', err));
     }
   }
 }

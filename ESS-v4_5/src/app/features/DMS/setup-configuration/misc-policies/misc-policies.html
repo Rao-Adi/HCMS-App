@@ -34,8 +34,7 @@
             <div class="row row-space" *ngIf="selectedTab === 'TrainingPoliciy'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Document requiring Training before Authorization</h3>
-                  <br />
+                  <h3 class="PnlHeader">Document requiring Training before Authorization</h3> 
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                       <div class="d-flex">
@@ -57,8 +56,7 @@
                 <app-editable-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
-                  [gridId]="'TrainingPoliciyGrid'"
-                  [autoSizeColumns]="true"
+                  [gridId]="'TrainingPoliciyGrid'" 
                   [config]="gridConfig"
                   [isSelectionRequired]="true"
                   [rowData]="trainingPolicesData"
@@ -78,8 +76,7 @@
             <div class="row row-space" *ngIf="selectedTab === 'DocumentReview'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Document Review</h3>
-                  <br />
+                  <h3 class="PnlHeader">Document Review</h3> 
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                       <div class="d-flex">
@@ -94,8 +91,7 @@
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
                   [gridId]="'DocumentReviewPoliciyGrid'"
-                  [config]="documentReviewGridConfig"
-                  [autoSizeColumns]="true"
+                  [config]="documentReviewGridConfig" 
                   [isSelectionRequired]="true"
                   [rowData]="documentReviewRowData"
                   [pinnedTopRowData]="pinnedTopRowDataDocumentReview"
@@ -113,8 +109,7 @@
             <div class="row row-space" *ngIf="selectedTab === 'AuthorizationPolicy'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Authorization Policy</h3>
-                  <br />
+                  <h3 class="PnlHeader">Authorization Policy</h3> 
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                       <div class="d-flex">
@@ -129,8 +124,7 @@
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
                   [gridId]="'AuthorizationPolicyGrid'"
-                  [config]="authGridConfig"
-                  [autoSizeColumns]="true"
+                  [config]="authGridConfig" 
                   [isSelectionRequired]="true"
                   [rowData]="authorizationPolicyData"
                   [pinnedTopRowData]="pinnedTopRowDataAuthorization"

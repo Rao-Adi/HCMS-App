@@ -62,7 +62,7 @@ export class DocumentAuthorizationPostTraining {
   selectedbusinessDomain: string = '';
   selectedDocumentType: string = '';
   selectedAuthorizationStatus: string = '1'; // Default to '1' (SOP)
-
+  hasSelectedRows = false;
   loginEmpId: string = '';
 
   // Store page sizes for each grid separately
@@ -112,10 +112,10 @@ export class DocumentAuthorizationPostTraining {
   public noRowsOverlay: string = '';
 
   pendingAuthorizationColumnDefs: ColDef[] = [
-    { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
-    { field: 'documentName', headerName: 'Document Name', pinned: 'left' },
-    { field: 'version', headerName: 'Version', pinned: 'left' },
-    { field: 'trainingMode', headerName: 'Training Mode' },
+    { field: 'documentType', headerName: 'Document Type', pinned: 'left', minWidth: 100, flex: 1 },
+    { field: 'documentName', headerName: 'Document Name', pinned: 'left', flex: 1 },
+    { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60, flex: 1 },
+    { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
@@ -128,6 +128,8 @@ export class DocumentAuthorizationPostTraining {
           },
         },
       }),
+      minWidth: 150,
+      flex: 1,
     },
     {
       field: 'averageDocumentScore',
@@ -141,6 +143,8 @@ export class DocumentAuthorizationPostTraining {
           },
         },
       }),
+      minWidth: 180,
+      flex: 1,
     },
     {
       field: 'division',
@@ -155,10 +159,18 @@ export class DocumentAuthorizationPostTraining {
       headerName: 'Sub-Department',
     },
     { field: 'url', headerName: 'URL' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created  By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created  By',
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      cellClass: 'audit-cell',
+    },
 
     {
       field: 'approvalHistory',
@@ -541,5 +553,9 @@ export class DocumentAuthorizationPostTraining {
       sortModel: [], // or your current sort/filter model
       filterModel: {},
     });
+  }
+
+  onSelectionChange(selectedRows: any): void {
+    this.hasSelectedRows = selectedRows && selectedRows.length > 0;
   }
 }

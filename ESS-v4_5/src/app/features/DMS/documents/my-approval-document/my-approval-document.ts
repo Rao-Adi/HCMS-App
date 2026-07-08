@@ -100,7 +100,7 @@ export class MyApprovalDocument {
     editable: false,
   };
 
-  pageSize = 1;
+  selectedPageSize = 10;
   totalPendingDocuments = 0;
   totalApprovedDocuments = 0;
   totalDisApprovedDocuments = 0;
@@ -140,7 +140,7 @@ export class MyApprovalDocument {
     //   cellRenderer: (params: any) => {
     //     if (!params.data) return '';
     //     return `
-    //     <span 
+    //     <span
     //       style="color:#1976d2; cursor:pointer; text-decoration:underline"
     //       data-action="open"
     //     >
@@ -152,22 +152,35 @@ export class MyApprovalDocument {
     //     this.openObservationModal(event.data);
     //   },
     // },
-    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentType', headerName: 'Document Type', minWidth: 130, flex: 1 },
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
-    { field: 'documentId', headerName: 'Document ID' },
+    { field: 'documentId', headerName: 'Document ID', minWidth: 120, flex: 1 },
     { field: 'documentName', headerName: 'Document Name' },
-    { field: 'company', headerName: 'Company' },
+    { field: 'company', headerName: 'Company', minWidth: 100, flex: 1 },
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
     { field: 'proposedVersionNumber', headerName: 'Proposed Version Number' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'dateOfCreation', headerName: 'Date of Creation' },
+    { field: 'dateOfCreation', headerName: 'Date of Creation', cellClass: 'audit-cell', minWidth: 150,
+      flex: 1 },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestCreatedBy', headerName: 'Requested By' },
-    { field: 'requestCreatedOn', headerName: 'Requested On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Requested By', cellClass: 'audit-cell', minWidth: 150,
+      flex: 1 },
+    { field: 'requestCreatedOn', headerName: 'Requested On', cellClass: 'audit-cell', minWidth: 150,
+      flex: 1 },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created By',
+      cellClass: 'audit-cell',minWidth: 150,
+      flex: 1
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      cellClass: 'audit-cell',minWidth: 150,
+      flex: 1
+    },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -235,22 +248,26 @@ export class MyApprovalDocument {
   }
 
   getDocumentCounts() {
-    this._documentService.GetDocumentByStatus(this.getCountPayload('Pending')).subscribe({
+    this._documentService.GetMyDocumentCounts().subscribe({
       next: (response) => {
-        this.pendingDocumentCount = response?.Data?.TotalCount ?? 0;
-      },
-    });
+        if (response && response.Data) {
+          const myRequests = response.Data.MyRequests || {
+            Pending: 0,
+            Approved: 0,
+            RejectedOrReverted: 0,
+          };
+          const myInbox = response.Data.MyInbox || {
+            Pending: 0,
+            Approved: 0,
+            RejectedOrReverted: 0,
+          };
 
-    this._documentService.GetDocumentByStatus(this.getCountPayload('Approved')).subscribe({
-      next: (response) => {
-        this.approvedDocumentCount = response?.Data?.TotalCount ?? 0;
+          this.pendingDocumentCount = myInbox.pending ?? 0; //(myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
+          this.approvedDocumentCount = myInbox.approved ?? 0; //(myRequests.Approved ?? 0) + (myInbox.Approved ?? 0);
+          this.disapprovedDocumentCount = myInbox.rejectedorreverted ?? 0; //(myRequests.RejectedOrReverted ?? 0) + (myInbox.RejectedOrReverted ?? 0);
+        }
       },
-    });
-
-    this._documentService.GetDocumentByStatus(this.getCountPayload('Rejected')).subscribe({
-      next: (response) => {
-        this.disapprovedDocumentCount = response?.Data?.TotalCount ?? 0;
-      },
+      error: (err) => console.error('Failed to get request counts', err),
     });
   }
 
@@ -298,7 +315,7 @@ export class MyApprovalDocument {
       documentTypeCode: this.selectedDocumentType,
       RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
       pageNumber: this.currentGridQuery.pageNumber,
-      pageSize: this.currentGridQuery.pageSize,
+      pageSize: this.selectedPageSize || 10,
       sortModel: this.currentGridQuery.sortModel || [],
       filterModel: this.currentGridQuery.filterModel || {},
       searchTerm: this.currentGridQuery.searchTerm || '',
@@ -376,7 +393,9 @@ export class MyApprovalDocument {
               // ──────────────────────────────────────────────
               requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
               dateOfCreation: new CustomDateFormatPipe().transform(createdAtRaw), // ← see helper below
-              requestCreatedOn: new CustomDateFormatPipe().transform(get(['RequestCreatedAt', 'requestCreatedAt'])),
+              requestCreatedOn: new CustomDateFormatPipe().transform(
+                get(['RequestCreatedAt', 'requestCreatedAt']),
+              ),
               startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
@@ -403,7 +422,11 @@ export class MyApprovalDocument {
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
-        this._notificationToastService.createNotification('error', 'Error', 'Failed to fetch documents.');
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'Failed to fetch documents.',
+        );
       },
     });
   }
@@ -447,8 +470,8 @@ export class MyApprovalDocument {
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     if (event && event.pageSize) {
-      this.pageSize = event.pageSize;
-      this.currentGridQuery.pageSize = this.pageSize;
+      this.selectedPageSize = event.pageSize;
+      this.currentGridQuery.pageSize = this.selectedPageSize;
     }
   }
 
@@ -509,7 +532,11 @@ export class MyApprovalDocument {
 
   submitWorkflowAction(action: string, observation: string) {
     if (action !== 'Approve' && (!observation || observation.trim() === '')) {
-      this._notificationToastService.createNotification('error', 'Validation', 'Observation is required');
+      this._notificationToastService.createNotification(
+        'error',
+        'Validation',
+        'Observation is required',
+      );
       return;
     }
 
@@ -534,7 +561,11 @@ export class MyApprovalDocument {
       actionObservable.subscribe({
         next: (response: any) => {
           if (response?.Success) {
-            this._notificationToastService.createNotification('success', 'Workflow', response.Message);
+            this._notificationToastService.createNotification(
+              'success',
+              'Workflow',
+              response.Message,
+            );
             this.GetAllPendingDocuments();
             if (this.agGridWrapper) {
               this.agGridWrapper.refresh();
@@ -545,7 +576,7 @@ export class MyApprovalDocument {
           this._notificationToastService.createNotification(
             'error',
             'Workflow',
-            err?.error?.Message || err?.Message
+            err?.error?.Message || err?.Message,
           );
         },
       });
@@ -679,7 +710,11 @@ export class MyApprovalDocument {
                   res.Message || 'Draft not available.',
                 );
               } catch {
-                this._notificationToastService.createNotification('error', 'Draft', 'Failed to read response.');
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
               }
             });
             return;
@@ -726,12 +761,20 @@ export class MyApprovalDocument {
                 res.Message || 'Failed to download draft.',
               );
             } catch {
-              this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
             }
           });
         } else {
           console.error('Error downloading draft', err);
-          this._notificationToastService.createNotification('error', 'Draft', 'Failed to download draft.');
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
         }
       },
     });

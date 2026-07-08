@@ -194,10 +194,10 @@ export class ApprovalDocuments {
         this.openDistributionListModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' , cellClass: 'audit-cell'},
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', cellClass: 'audit-cell' },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
