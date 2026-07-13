@@ -180,7 +180,7 @@ export class ApprovalWorkflowPolicyManagement {
 
   onAuthorityTypeChange(value: number | null): void {
     this.emptyInnerFields();
-    this.selectedAuthorityType = value; 
+    this.selectedAuthorityType = value;
     if (value == 2) {
       this.getAllUsersList();
     }
@@ -338,14 +338,14 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedUser = '';
     this.radioValue = '';
     this.activeMode = null;
-    this.selectedWorkflowPolicy = null;
+    // this.selectedWorkflowPolicy = null;
 
     //Cabinet Fields
-    this.selectedDivisions = '';
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-    this.selectedBusinessDomain = '';
-    this.selectedDocumentType = '';
+    // this.selectedDivisions = '';
+    // this.selectedDepartment = '';
+    // this.selectedSubDepartment = '';
+    // this.selectedBusinessDomain = '';
+    // this.selectedDocumentType = '';
   }
 
   private getEmployeeCodes(): string[] {
@@ -432,6 +432,7 @@ export class ApprovalWorkflowPolicyManagement {
     if (value != null) {
       this.selectedWorkflowPolicy = value;
 
+      this.clearFieldsOnAuthorityTypeChange();
       // Auto-fill cabinet structure based on selected policy
       const policyDetails = this.workflowPoliciesData.find((p) => String(p.Id) === String(value));
       if (policyDetails) {
@@ -444,15 +445,19 @@ export class ApprovalWorkflowPolicyManagement {
 
       this.fetchApprovalSequence();
     } else {
-      this.selectedWorkflowPolicy = '';
-      this.selectedDocumentType = '';
-      this.selectedDivisions = '';
-      this.selectedDepartment = '';
-      this.selectedSubDepartment = '';
-      this.selectedBusinessDomain = '';
-      this.approvalSequenceData = [];
-      this.showExclusionTable = false;
+      this.clearFieldsOnAuthorityTypeChange();
     }
+  }
+
+  clearFieldsOnAuthorityTypeChange() {
+    this.selectedAuthorityType = null; 
+    this.selectedDocumentType = '';
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.approvalSequenceData = [];
+    this.showExclusionTable = false;
   }
 
   fetchApprovalSequence() {
@@ -592,7 +597,7 @@ export class ApprovalWorkflowPolicyManagement {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
-          NAME: "(" + d.Code + ") " +  d.Value
+          NAME: '(' + d.Code + ') ' + d.Value,
         }));
       } else {
         this.employees = [];
