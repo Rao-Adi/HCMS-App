@@ -73,10 +73,9 @@ export class PendingRequestForApproval {
     {
       field: 'requestId',
       headerName: 'RequestId',
-      minWidth: 100,
+      minWidth: 80,
       flex: 1,
     },
-
     {
       field: 'division',
       headerName: 'Division',

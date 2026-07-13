@@ -189,6 +189,10 @@ export class MyApprovalRequest {
       field: 'subdepartment',
       headerName: 'Sub-Department',
     },
+    {
+      field: 'executionStatus',
+      headerName: 'Execution Status',
+    },
     { field: 'dateOfCreation', headerName: 'Date Of Creation', minWidth: 150,
       flex: 1, cellClass: 'audit-cell', },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
@@ -421,6 +425,7 @@ export class MyApprovalRequest {
                 stepId: get(['StepId', 'stepId']),
                 stepOrder: get(['StepOrder', 'stepOrder']),
                 startedAt: get(['StartedAt', 'startedAt']),
+                executionStatus: get(['ExecutionStatus', 'executionStatus']),
                 proposedContent: get([
                   'ProposedContent',
                   'proposedContent',
