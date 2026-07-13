@@ -24,7 +24,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DivisionList implements ControlValueAccessor {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
-  @Input() placeholder = 'Select';
+  @Input() placeholder = '--Any--';
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;

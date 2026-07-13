@@ -180,7 +180,16 @@ export class ApprovalWorkflowPolicyManagement {
 
   onAuthorityTypeChange(value: number | null): void {
     this.emptyInnerFields();
-    this.selectedAuthorityType = value;
+    this.selectedAuthorityType = value; 
+    if (value == 2) {
+      this.getAllUsersList();
+    }
+    if (value == 3) {
+      this.getAllRoles();
+    }
+    if (value == 4) {
+      this.getAllDesignationList();
+    }
   }
 
   onWorkflowExcludeChange(value: number | null): void {
@@ -415,14 +424,8 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   onDocumentTypeChange(value: string): void {
-    if (value != null) {
-      this.selectedDocumentType = value;
-      this.fetchApprovalSequence();
-    } else {
-      this.selectedDocumentType = '';
-      this.approvalSequenceData = [];
-      this.showExclusionTable = false;
-    }
+    this.selectedDocumentType = value || '';
+    this.fetchApprovalSequence();
   }
 
   onWorkflowPolicyChange(value: string): void {
@@ -453,7 +456,7 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   fetchApprovalSequence() {
-    if (!this.selectedDocumentType) {
+    if (!this.selectedWorkflowPolicy) {
       this.approvalSequenceData = [];
       this.showExclusionTable = false;
       return;
@@ -589,7 +592,7 @@ export class ApprovalWorkflowPolicyManagement {
       if (res?.Data) {
         this.employees = (res.Data ?? []).map((d: any) => ({
           CODE: d.Code,
-          NAME: d.Value,
+          NAME: "(" + d.Code + ") " +  d.Value
         }));
       } else {
         this.employees = [];

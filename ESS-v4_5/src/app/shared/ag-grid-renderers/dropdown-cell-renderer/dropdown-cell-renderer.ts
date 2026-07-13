@@ -16,7 +16,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
       [nzShowSearch]="params?.showSearch"
       [nzFilterOption]="params?.customFilter"
       [nzDisabled]="params?.disabled"
-      nzPlaceHolder="-- Select --"
+      nzPlaceHolder="-- Any --"
       [(ngModel)]="selectedValue"
       [nzAllowClear]="true"
       (ngModelChange)="onSelectionChange($event)"
