@@ -661,21 +661,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         break;
       case 'switch':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
-            return {
-              component: column.customRenderer || SwitchRenderer,
-              params: {
-                value: params.value,
-                onValueChange: (value: any, data: any) => {
-                  // debugger;
-                  data[column.field] = value;
-                  this.emitCellValueChanged(column.field, value, data, params.rowIndex);
-                },
-                ...column.customRendererParams,
+          const isEditing = params.node.rowPinned === 'top' || this.editingRowId === params.node.id;
+          return {
+            component: column.customRenderer || SwitchRenderer,
+            params: {
+              value: params.value,
+              disabled: !isEditing,
+              onValueChange: (value: any, data: any) => {
+                // debugger;
+                data[column.field] = value;
+                this.emitCellValueChanged(column.field, value, data, params.rowIndex);
               },
-            };
-          }
-          return { component: HighlightCellRenderer };
+              ...column.customRendererParams,
+            },
+          };
         };
 
         colDef.valueFormatter = (params) => {

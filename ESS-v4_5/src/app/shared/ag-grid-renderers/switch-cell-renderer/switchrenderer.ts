@@ -13,14 +13,16 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
         [(ngModel)]="switchValue1"
         (ngModelChange)="onChange($event)" 
         [nzLoading]="loading"
+        [nzDisabled]="disabled"
       >
       </nz-switch>
     </div>
   `,
 })
-export class SwitchRenderer {
+export class SwitchRenderer implements ICellRendererAngularComp {
   params: any;
   currentValue = false;
+  disabled = false;
 
   activeMode: any;
   selectedTab: string = 'Upload';
@@ -31,11 +33,15 @@ export class SwitchRenderer {
   agInit(params: any): void {
     this.params = params;
     this.currentValue = !!params.value;
+    this.switchValue1 = this.currentValue;
+    this.disabled = params.disabled ?? false;
   }
 
   refresh(params: any): boolean {
     this.params = params;
     this.currentValue = !!params.value;
+    this.switchValue1 = this.currentValue;
+    this.disabled = params.disabled ?? false;
     return true;
   }
 
