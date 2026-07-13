@@ -221,10 +221,16 @@
                               </nz-select>
                             </div>
                           </div>
-                          <br />
-                          <div class="PnlHeading">
-                            <label> Next Review Date &nbsp;</label> <br />
-                            <label> <strong> {{ reviewYear }} </strong>Years from the date of approval </label>
+                          <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
+                            <div class="PnlHeading">
+                              <label>Next Review Date</label>
+                            </div>
+                            <div style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px;">
+                              <span style="background: rgba(24, 144, 255, 0.1); color: #1890ff; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; white-space: nowrap;">
+                                {{ reviewYear }} Years
+                              </span>
+                              <span style="color: #555; font-size: 13px; white-space: nowrap;">from the date of approval</span>
+                            </div>
                           </div>
                         </div> 
                         <div class="row row-space">
