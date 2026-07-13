@@ -88,6 +88,7 @@ export class CabinetHierarchyService {
       .GetAllCabietStructureTabs('', 'ASC', 'Id', true, 1, 10)
       .pipe(
         map((res) => res?.Data?.Items ?? []),
+        // map((items) => items.filter((item:any) => item.IsActive)),
         map((items) => this.buildCabinetHierarchy(items)),
         tap((levels) => {
           // Cache for synchronous access if needed

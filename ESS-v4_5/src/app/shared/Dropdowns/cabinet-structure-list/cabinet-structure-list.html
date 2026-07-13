@@ -1,5 +1,5 @@
 <div class="row">
-  <ng-container *ngIf="hierarchyLevels$ | async as levels">
+  <ng-container *ngIf="levels.length > 0">
     <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngFor="let level of levels; let idx = index">
       <!-- Dynamic Label -->
       <div class="PnlHeading">
@@ -65,6 +65,6 @@
   </ng-container>
 
   <!-- Optional: loading / empty state -->
-  <div class="col-12 text-center" *ngIf="!(hierarchyLevels$ | async)">Loading hierarchy...</div>
+  <div class="col-12 text-center" *ngIf="levels.length === 0">Loading hierarchy...</div>
 </div>
  

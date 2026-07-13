@@ -7,7 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
-import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice'; 
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
@@ -113,14 +113,14 @@ export class DocumentTypeComponent {
         required: false,
         minWidth: 200,
       },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
-        field: 'IsActive',
-        headerName: 'Enable/Disable',
-        type: 'switch',
-        required: false,
-        minWidth: 150,
-      },
-     {
         field: 'CreatedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
@@ -164,19 +164,20 @@ export class DocumentTypeComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.DOCUMENT_TYPES,
         getCount$: () => this._documentTypeService.getDocumentTypeCount(),
-        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 10000),
+        getData$: () =>
+          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Description: item.description || item.Description,
-          IsActive :item.isActive || item.IsActive || false,
-          IsDeleted :item.isDeleted || item.IsDeleted || false,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -203,13 +204,13 @@ export class DocumentTypeComponent {
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Description: item.description || item.Description,
-          IsActive :item.isActive || item.IsActive || false,
-          IsDeleted :item.isDeleted || item.IsDeleted || false,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),

@@ -35,9 +35,12 @@ export interface CabinetTabVM {
   level: number;
   title: string;
   createdBy: string | null;
+  createdByName: string | null;
   createdAt: string | null;
   lastModifiedBy: string | null;
+  lastModifiedByName: string | null;
   lastModifiedAt: string | null;
+  isActive: boolean;
 }
 
 export interface CabinetLevel {

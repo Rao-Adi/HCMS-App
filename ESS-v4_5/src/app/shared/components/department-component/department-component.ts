@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -25,6 +25,7 @@ export class DepartmentComponent {
   @Input() level!: number;
   @Input() levelTitles!: Record<number, string>;
 
+  @ViewChild(EditableAgGridWrapper) gridWrapper!: EditableAgGridWrapper;
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
@@ -305,6 +306,7 @@ export class DepartmentComponent {
           'Department updated successfully!',
         );
         this.loadDepartments();
+        this.gridWrapper.clearSelection();
       },
       error: (err) => {
         console.error('Create Document Attribute failed:', err);
