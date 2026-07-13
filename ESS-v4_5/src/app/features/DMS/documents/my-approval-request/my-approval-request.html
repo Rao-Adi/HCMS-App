@@ -128,13 +128,7 @@
                             <i class="bi bi-arrow-return-left"></i> Revert
                           </button>
 
-                          <button
-                            class="btn btn-success btn-sm"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Export"
-                            (click)="export()"
-                            [disabled]="hasSelectedRows === false"
-                          >
+                          <button class="btn btn-success btn-sm" title="Export" (click)="exportDocumentRequests()">
                             <i class="bi bi-file-earmark-excel"></i> Export
                           </button>
                         </div>
@@ -166,6 +160,11 @@
                     (serverQuery)="GetAllPendingDocuments($event)"
                     (cellClicked)="onCellClicked($event)"
                   >
+                    <div grid-actions class="grid-action-icons">
+                      <button class="btn btn-success btn-sm" title="Export" (click)="exportDocumentRequests()">
+                        <i class="bi bi-file-earmark-excel"></i> Export
+                      </button>
+                    </div>
                   </app-ag-grid-wrapper>
                 </div>
               </div>
@@ -192,6 +191,11 @@
                     (serverQuery)="GetAllPendingDocuments($event)"
                     (cellClicked)="onCellClicked($event)"
                   >
+                    <div grid-actions class="grid-action-icons">
+                      <button class="btn btn-success btn-sm" title="Export" (click)="exportDocumentRequests()">
+                        <i class="bi bi-file-earmark-excel"></i> Export
+                      </button>
+                    </div>
                   </app-ag-grid-wrapper>
                 </div>
               </div>
@@ -242,7 +246,7 @@
           </div>
         </div>
         <div class="row mt-10" *ngIf="observationData.length > 0">
-          <div class="col-lg-12 col-md-12 col-sm-12"> 
+          <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto">
               <div class="observation-container">
                 <div class="observation-title">
@@ -284,9 +288,7 @@
 
                   <!-- Body -->
 
-                  <div class="observation-body" [innerHTML]="item.observation">
-                    
-                  </div>
+                  <div class="observation-body" [innerHTML]="item.observation"></div>
                 </div>
               </div>
             </div>

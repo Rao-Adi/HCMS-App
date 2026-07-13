@@ -276,7 +276,7 @@ export class MiscPolicies {
         dropdownOptions: this.AuthorizationPolicyList,
         dropdownValueField: 'value',
         dropdownDisplayField: 'label',
-        required: false,
+        required: true,
       },
     ];
   }
@@ -467,6 +467,14 @@ export class MiscPolicies {
 
   onAuthPolicyRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
+    if (!rowData.authorizingAuthority) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Authorization Policy',
+        'Authorizing Authority is required!',
+      );
+      return;
+    }
     const payLoad = {
       documentTypeCode: rowData.documentTypeCode,
       authorizationRequired: rowData.authorizationRequired,
@@ -487,6 +495,14 @@ export class MiscPolicies {
 
   onAuthPolicyRowUpdated(event: { rowData: any; index: number }): void {
     const { rowData } = event;
+    if (!rowData.authorizingAuthority) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Authorization Policy',
+        'Authorizing Authority is required!',
+      );
+      return;
+    }
     const payLoad = {
       id: rowData.Id,
       documentTypeCode: rowData.documentTypeCode,

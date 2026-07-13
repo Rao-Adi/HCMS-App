@@ -74,6 +74,14 @@ export class DocumentRequestService {
     );
   }
 
+  exportMyPendingDocumentRequest(payload: any): Observable<Blob> {
+    return this.http.post(
+      `${this.apiUrl}/DMSDocumentRequest/export-my-pending-document-request`,
+      payload,
+      { responseType: 'blob' }
+    );
+  }
+
   getMyDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-draft-request`;
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });

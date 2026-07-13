@@ -707,7 +707,44 @@ export class MyApprovalRequest {
     }
   }
 
-  export() {}
+  exportDocumentRequests(): void {
+    debugger;
+    console.log('exportDocumentRequests called');
+    const payload = {
+      searchtext: '',
+      sortby: 'DESC',
+      sortcolumn: '',
+      isactive: true,
+      pagenumber: 1,
+      pagesize: 100000, // Export all records matching filters
+      divisioncode: this.selectedDivisions || '',
+      departmentcode: this.selectedDepartment || '',
+      subdepartmentcode: this.selectedSubDepartment || '',
+      businessdomaincode: this.selectedBusinessDomain || '',
+      documenttypecode: this.selectedDocumentType || '',
+      requeststatus: this.selectedTab,
+      empId: this.LoginEmpId || '',
+    };
+
+    this._documentRequestService.exportMyPendingDocumentRequest(payload).subscribe({
+      next: (response: any) => {
+        const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `My_Approval_Requests_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this._notificationToastService.createNotification('success', 'Export', 'Document request list exported successfully!');
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        this._notificationToastService.createNotification('error', 'Export', 'Failed to export document request list.');
+      }
+    });
+  }
 
   getAllUsersList = () => {
     this._userService.getUserList().subscribe((res) => {
