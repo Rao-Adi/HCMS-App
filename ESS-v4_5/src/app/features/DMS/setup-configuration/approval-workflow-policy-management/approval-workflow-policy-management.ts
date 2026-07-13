@@ -293,7 +293,7 @@ export class ApprovalWorkflowPolicyManagement {
         if (response?.Success) {
           this.showExclusionTable = true;
           this.approvalSequenceData = [...response.Data];
-
+          this.emptyInnerFields();
           this._notificationToastService.createNotification(
             'success',
             'Workflow',
@@ -315,7 +315,30 @@ export class ApprovalWorkflowPolicyManagement {
     // 1. Update the selected tab
     this.selectedPolicyId = policyId;
 
-    this.resetAllFields();
+    this.selectedWorkflowPolicy = null;
+    this.approvalSequenceData = [];
+    this.showExclusionTable = false;
+    this.selectedAuthorityType = null;
+    this.selectedWorkflowExclude = null;
+    this.approvalPolicy = null;
+    this.selectedEmployeeSingle = null;
+    this.selectedDesignationSingle = null;
+    this.selectedRoleSingle = null;
+    this.selectedDesignation = [];
+    this.selectedRole = [];
+    this.selectedEmployee = [];
+    this.selectedUser = '';
+    this.radioValue = '';
+    this.activeMode = null;
+
+    //Cabinet Fields
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.selectedDocumentType = '';
+
+    // this.resetAllFields();
     this.GetWorkflowPoliciesByEntity();
   }
 
