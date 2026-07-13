@@ -192,6 +192,52 @@ export class MyApprovalRequest {
     {
       field: 'executionStatus',
       headerName: 'Execution Status',
+      minWidth: 150,
+      cellRenderer: (params: any) => {
+        const val = params.value || '';
+        const displayVal = val.toLowerCase() === 'reworked' ? 'Revered' : val;
+        const status = displayVal.toLowerCase();
+        let color = '#6b7280'; // default gray
+        let bgColor = '#f3f4f6';
+        let borderColor = '#e5e7eb';
+
+        if (status === 'approved') {
+          color = '#10b981';
+          bgColor = '#ecfdf5';
+          borderColor = '#d1fae5';
+        } else if (status === 'rejected') {
+          color = '#ef4444';
+          bgColor = '#fef2f2';
+          borderColor = '#fee2e2';
+        } else if (status === 'running' || status === 'pending') {
+          color = '#f59e0b';
+          bgColor = '#fffbeb';
+          borderColor = '#fef3c7';
+        } else if (status === 'revered') {
+          color = '#6366f1';
+          bgColor = '#f5f3ff';
+          borderColor = '#ddd6fe';
+        }
+
+        return `
+          <span style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            color: ${color};
+            background-color: ${bgColor};
+            border: 1px solid ${borderColor};
+            border-radius: 9999px;
+            text-transform: capitalize;
+          ">
+            ${displayVal}
+          </span>
+        `;
+      }
     },
     { field: 'dateOfCreation', headerName: 'Date Of Creation', minWidth: 150,
       flex: 1, cellClass: 'audit-cell', },
