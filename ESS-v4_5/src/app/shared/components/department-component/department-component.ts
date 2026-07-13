@@ -161,24 +161,24 @@ export class DepartmentComponent {
         required: false,
         cellClass: 'audit-cell',
       },
-      {
-        field: 'LastModifiedByName',
-        headerName: 'Last Action Performed By',
-        type: 'readonly',
-        minWidth: 150,
-        pinned: 'left',
-        required: false,
-        cellClass: 'audit-cell',
-      },
-      {
-        field: 'LastModifiedAt',
-        headerName: 'Last Action Performed On',
-        type: 'readonly',
-        minWidth: 150,
-        pinned: 'left',
-        required: false,
-        cellClass: 'audit-cell',
-      },
+      // {
+      //   field: 'LastModifiedByName',
+      //   headerName: 'Last Action Performed By',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
+      // {
+      //   field: 'LastModifiedAt',
+      //   headerName: 'Last Action Performed On',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
     ];
   }
 
