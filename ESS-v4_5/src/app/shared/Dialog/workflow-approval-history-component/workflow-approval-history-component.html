@@ -4,7 +4,7 @@
       <tr>
         <th>Approval sequence</th>
         <th>Employee Approval Authority</th> 
-        <th>ReceivedOn</th>
+        <th>Received On</th>
         <th>Status updated on</th>
         <th>Status</th>
       </tr>
@@ -18,10 +18,10 @@
           {{ h.EmployeeName || '—' }}
         </td> 
         
-        <td>
+        <td class="audit-cell">
           {{ h.ReceivedOn }}
         </td>
-        <td>
+        <td class="audit-cell">
           {{ h.StatusUpdatedOn }}
         </td>
 

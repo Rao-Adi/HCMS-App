@@ -27,16 +27,19 @@ export class RevisionHistoryModal {
       field: 'revisedBy',
       headerName: 'Revised By',
       flex: 1,
+      cellClass: 'audit-cell'
     },
     {
       field: 'revisedOn',
       headerName: 'Revised On',
       flex: 1,
+      cellClass: 'audit-cell'
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       flex: 1,
+      cellClass: 'audit-cell'
     },
   ];
 
