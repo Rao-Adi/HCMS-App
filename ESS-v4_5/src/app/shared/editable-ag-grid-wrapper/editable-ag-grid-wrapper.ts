@@ -1031,11 +1031,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     if (this.pinnedTopRowData?.length > 0) {
       const emptyRow: any = {};
       this.config.columns.forEach((col) => {
-        if (col.type === 'dropdown' && col.dropdownOptions) {
-          emptyRow[col.field] = col.dropdownOptions[0]?.id || '';
-        } else {
-          emptyRow[col.field] = '';
-        }
+        emptyRow[col.field] = '';
       });
       this.pinnedTopRowData = [emptyRow];
       this.gridApi?.setGridOption('pinnedTopRowData', this.pinnedTopRowData);
