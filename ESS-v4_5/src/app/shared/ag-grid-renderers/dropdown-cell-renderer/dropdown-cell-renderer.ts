@@ -72,7 +72,14 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     // 🔥 FORCE type match (number ↔ number)
     if (rawValue !== null && rawValue !== undefined) {
       const valField = this.params.valueField || 'id';
-      const matched = this.options.find((o) => o[valField] == rawValue);
+      const dispField = this.params.displayField || 'text';
+      let matched = this.options.find((o) => o[valField] == rawValue);
+      if (!matched) {
+        matched = this.options.find((o) => o[dispField] == rawValue);
+        if (matched && params.data) {
+          params.data[field] = matched[valField];
+        }
+      }
       this.selectedValue = matched ? matched[valField] : null;
     } else {
       this.selectedValue = null;
@@ -104,7 +111,14 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
 
     if (rawValue !== null && rawValue !== undefined) {
       const valField = this.params.valueField || 'id';
-      const matched = this.options.find((o) => o[valField] == rawValue);
+      const dispField = this.params.displayField || 'text';
+      let matched = this.options.find((o) => o[valField] == rawValue);
+      if (!matched) {
+        matched = this.options.find((o) => o[dispField] == rawValue);
+        if (matched && params.data) {
+          params.data[field] = matched[valField];
+        }
+      }
       this.selectedValue = matched ? matched[valField] : null;
     } else {
       this.selectedValue = null;
