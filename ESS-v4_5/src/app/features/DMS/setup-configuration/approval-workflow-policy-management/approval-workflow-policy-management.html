@@ -1,40 +1,40 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom"> 
+      <div class="card-custom">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container d-flex justify-content-between align-items-center">
               <div>
-              <button
-                class="tab-button"
-                [ngClass]="{
-                  'active-tab': selectedPolicyId === PolicyId.RequestForDocumentCreation,
-                }"
-                (click)="selectTab(PolicyId.RequestForDocumentCreation)"
-              >
-                Request For Document Creation
-              </button>
+                <button
+                  class="tab-button"
+                  [ngClass]="{
+                    'active-tab': selectedPolicyId === PolicyId.RequestForDocumentCreation,
+                  }"
+                  (click)="selectTab(PolicyId.RequestForDocumentCreation)"
+                >
+                  Request For Document Creation
+                </button>
 
-              <button
-                class="tab-button"
-                [ngClass]="{ 'active-tab': selectedPolicyId === PolicyId.DocumentCreation }"
-                (click)="selectTab(PolicyId.DocumentCreation)"
-              >
-                Document Creation
-              </button>
+                <button
+                  class="tab-button"
+                  [ngClass]="{ 'active-tab': selectedPolicyId === PolicyId.DocumentCreation }"
+                  (click)="selectTab(PolicyId.DocumentCreation)"
+                >
+                  Document Creation
+                </button>
 
-              <button
-                class="tab-button"
-                [ngClass]="{
-                  'active-tab': selectedPolicyId === PolicyId.DocumentRevisionObsoletion,
-                }"
-                (click)="selectTab(PolicyId.DocumentRevisionObsoletion)"
-              >
-                Document Revision/Obsoletion
-              </button>
+                <button
+                  class="tab-button"
+                  [ngClass]="{
+                    'active-tab': selectedPolicyId === PolicyId.DocumentRevisionObsoletion,
+                  }"
+                  (click)="selectTab(PolicyId.DocumentRevisionObsoletion)"
+                >
+                  Document Revision/Obsoletion
+                </button>
 
-              <!-- <button
+                <!-- <button
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'RequestForDocumentCreation' }"
@@ -61,7 +61,11 @@
               </button> -->
               </div>
               <div>
-                <button class="btn btn-primary" style="margin-right: 15px;" (click)="openManagePolicyModal()">
+                <button
+                  class="btn btn-primary"
+                  style="margin-right: 15px"
+                  (click)="openManagePolicyModal()"
+                >
                   <i class="bi bi-gear me-1"></i> Manage Policy
                 </button>
               </div>
@@ -73,27 +77,27 @@
                   <h3 class="PnlHeader">
                     {{ 'labels.Cabinet' | safeTranslate }}
                   </h3>
-                  <div class="row"> 
+                  <div class="row">
                     <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                       <div class="PnlHeading">
                         <label>{{ 'labels.Workflow Policy' | safeTranslate }} </label>
                       </div>
                       <div>
                         <nz-select
-                        style="width: 250px"
-                        [(ngModel)]="selectedWorkflowPolicy"
-                        nzPlaceHolder="Select Workflow Policy"
-                        (ngModelChange)="onWorkflowPolicyChange($event)"
-                        nzAllowClear
-                        nzShowSearch
-                      >
-                        <nz-option
-                          *ngFor="let dep of workflowPolicies"
-                          [nzValue]="dep.CODE"
-                          [nzLabel]="dep.NAME"
+                          style="width: 250px"
+                          [(ngModel)]="selectedWorkflowPolicy"
+                          nzPlaceHolder="Select Workflow Policy"
+                          (ngModelChange)="onWorkflowPolicyChange($event)"
+                          nzAllowClear
+                          nzShowSearch
                         >
-                        </nz-option>
-                      </nz-select>
+                          <nz-option
+                            *ngFor="let dep of workflowPolicies"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
                       </div>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
@@ -224,7 +228,11 @@
                                   nzAllowClear
                                   nzShowSearch
                                 >
-                                  <nz-option *ngFor="let item of designations" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+                                  <nz-option
+                                    *ngFor="let item of designations"
+                                    [nzValue]="item.CODE"
+                                    [nzLabel]="item.NAME"
+                                  ></nz-option>
                                 </nz-select>
                               </div>
                             </div>
@@ -240,7 +248,11 @@
                                   nzAllowClear
                                   nzShowSearch
                                 >
-                                  <nz-option *ngFor="let item of userRoles" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
+                                  <nz-option
+                                    *ngFor="let item of userRoles"
+                                    [nzValue]="item.ID"
+                                    [nzLabel]="item.NAME"
+                                  ></nz-option>
                                 </nz-select>
                               </div>
                             </div>
@@ -256,7 +268,11 @@
                                   nzAllowClear
                                   nzShowSearch
                                 >
-                                  <nz-option *ngFor="let item of employees" [nzValue]="item.CODE" [nzLabel]="item.NAME"></nz-option>
+                                  <nz-option
+                                    *ngFor="let item of employees"
+                                    [nzValue]="item.CODE"
+                                    [nzLabel]="item.NAME"
+                                  ></nz-option>
                                 </nz-select>
                               </div>
                             </div>
@@ -337,7 +353,7 @@
                       <ng-container *ngSwitchCase="'5'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Division Head</span>
-                          <nz-select nzPlaceHolder="Select Division Head"></nz-select>
+                          <nz-select nzPlaceHolder="Select Division Head" nzShowSearch></nz-select>
                         </div>
                       </ng-container>
 
@@ -345,7 +361,10 @@
                       <ng-container *ngSwitchCase="'6'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Department Head</span>
-                          <nz-select nzPlaceHolder="Select Department Head"></nz-select>
+                          <nz-select
+                            nzPlaceHolder="Select Department Head"
+                            nzShowSearch
+                          ></nz-select>
                         </div>
                       </ng-container>
 
@@ -353,7 +372,10 @@
                       <ng-container *ngSwitchCase="'7'">
                         <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
                           <span class="d-flex">Sub-Department Head</span>
-                          <nz-select nzPlaceHolder="Select Sub-Department Head"></nz-select>
+                          <nz-select
+                            nzPlaceHolder="Select Sub-Department Head"
+                            nzShowSearch
+                          ></nz-select>
                         </div>
                       </ng-container>
                     </ng-container>
@@ -377,7 +399,12 @@
                     @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
                       <tr cdkDrag>
                         <td width="250px">
-                          <i cdkDragHandle class="bi bi-grip-vertical" style="cursor: grab; margin-right: 8px; color: #a1a1a1;" title="Drag to reorder"></i>
+                          <i
+                            cdkDragHandle
+                            class="bi bi-grip-vertical"
+                            style="cursor: grab; margin-right: 8px; color: #a1a1a1"
+                            title="Drag to reorder"
+                          ></i>
                           {{ i + 1 }}
                         </td>
                         <td>
@@ -406,7 +433,7 @@
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="status-box-leftColmd6-standard">
-                      <h3 class="PnlHeader">Other Policies</h3> 
+                      <h3 class="PnlHeader">Other Policies</h3>
                       <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                           <div class="d-flex">
@@ -447,7 +474,7 @@
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="status-box-leftColmd6-standard">
-                      <h3 class="PnlHeader">Approval Authorities for cross-functional users</h3> 
+                      <h3 class="PnlHeader">Approval Authorities for cross-functional users</h3>
                       <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                           <nz-switch

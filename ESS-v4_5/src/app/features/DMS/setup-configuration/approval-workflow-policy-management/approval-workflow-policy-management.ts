@@ -324,8 +324,8 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   emptyInnerFields() {
-    this.approvalSequenceData = [];
-    this.showExclusionTable = false;
+    // this.approvalSequenceData = [];
+    // this.showExclusionTable = false;
     this.selectedAuthorityType = null;
     this.selectedWorkflowExclude = null;
     this.approvalPolicy = null;
@@ -450,14 +450,14 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   clearFieldsOnAuthorityTypeChange() {
-    this.selectedAuthorityType = null; 
+    this.selectedAuthorityType = null;
     this.selectedDocumentType = '';
     this.selectedDivisions = '';
     this.selectedDepartment = '';
     this.selectedSubDepartment = '';
     this.selectedBusinessDomain = '';
     this.approvalSequenceData = [];
-    this.showExclusionTable = false;
+    // this.showExclusionTable = false;
   }
 
   fetchApprovalSequence() {
@@ -545,15 +545,6 @@ export class ApprovalWorkflowPolicyManagement {
         );
       },
     });
-  }
-
-  // Function to handle the change
-  onPolicyChange(value: string, step: any) {
-    if (value === 'A') {
-      step.CanEdit = false;
-    } else if (value === 'B') {
-      step.CanEdit = true;
-    }
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
