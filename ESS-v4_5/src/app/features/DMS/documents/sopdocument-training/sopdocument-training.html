@@ -35,15 +35,30 @@
                       <label>{{ 'labels.Document ype' | safeTranslate }} </label>
                     </div>
                     <div>
-                      <app-document-type-list
+                      <nz-select
+                        style="width: 200px"
+                        [nzPlaceHolder]="'Select Filter'"
+                        [(ngModel)]="selectedDocumentType"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of documentTypes"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                      <!-- <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
                         placeholder="Select Document Type"
                         [(ngModel)]="selectedDocumentType"
                         (valueChange)="onDocumentTypeChange($event)"
-                        width="250px"
+                        width="250px" 
+                        [allowClear]="false"
                       >
-                      </app-document-type-list>
+                      </app-document-type-list> -->
                     </div>
                   </div>
                   <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
@@ -53,8 +68,8 @@
                 </div>
               </div>
             </div>
-            <br>
-            <div class="row row-space" *ngIf="selectedTab === 'Classroom'">
+            <br />
+            <div class="row row-space" *ngIf="selectedTab === 'Classroom' && isGridVisible">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '450px' }"
@@ -81,7 +96,7 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Online'">
+            <div class="row row-space" *ngIf="selectedTab === 'Online' && isGridVisible">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <app-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '450px' }"

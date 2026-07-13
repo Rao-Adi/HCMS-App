@@ -22,6 +22,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
+import { DocumentTypeService } from '@app/shared/services/documentType.service';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -60,6 +61,7 @@ export class SOPDocumentTraining {
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
   selectedDocumentId: string | null = null;
+  isGridVisible = false;
 
   pageNumber = 1;
 
@@ -69,7 +71,7 @@ export class SOPDocumentTraining {
   onlineData: any[] = [];
   totalClassRoom = 0;
   totalOnline = 0;
-
+  documentTypes: any[] = [];
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
@@ -79,6 +81,7 @@ export class SOPDocumentTraining {
   constructor(
     private _documentTrainingService: DocumentTrainingService,
     private _documentService: DocumentService,
+    private _documentTypeService: DocumentTypeService,
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
@@ -89,11 +92,30 @@ export class SOPDocumentTraining {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-
-      // Set default document type to 'SOP' and fetch data
-      this.selectedDocumentType = 'SOP';
-      this.fetchDataForCurrentTab();
     });
+
+    // 1. First, load the document types list
+    this._documentTypeService
+      .GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000)
+      .subscribe((res) => {
+        const items = Array.isArray(res?.Data) ? res.Data : (res?.Data?.Items ?? []);
+        const sop = items.find((d: any) => (d.Code || d.code || '').toUpperCase() === 'DT-0001');
+ 
+        this.documentTypes = items.map((d: any) => ({
+          CODE: d.Code || d.code || d.CODE,
+          NAME: d.Name || d.name || d.NAME,
+        }));
+
+        // 2. Select SOP ("DT-0001") by default
+        if (sop) {
+          this.selectedDocumentType = sop.Code || sop.code || 'DT-0001';
+        } else {
+          this.selectedDocumentType = 'DT-0001';
+        }
+
+        // 3. Then, load the grid by rendering it
+        this.isGridVisible = true;
+      });
   }
 
   // Default Column Definitions: Apply configuration across all columns

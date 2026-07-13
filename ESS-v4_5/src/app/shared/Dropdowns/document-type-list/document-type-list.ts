@@ -36,6 +36,7 @@ export class DocumentTypeList implements ControlValueAccessor {
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
+  @Input() filterByCode?: string;
   @Output() valueChange = new EventEmitter<any>();
 
   DocTypeData: SelectList[] = [];
@@ -113,6 +114,11 @@ export class DocumentTypeList implements ControlValueAccessor {
           CODE: d.Code || d.code || d.CODE,
           NAME: d.Name || d.name || d.NAME,
         }));
+        if (this.filterByCode) {
+          this.DocTypeData = this.DocTypeData.filter(
+            (d) => (d.CODE ?? '').toUpperCase() === this.filterByCode!.toUpperCase()
+          );
+        }
         this.cdr.markForCheck();
       });
   };

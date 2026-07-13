@@ -159,7 +159,7 @@ export class MiscPolicies {
       },
       {
         field: 'traningRequired',
-        headerName: 'Traning Required',
+        headerName: 'Training Period',
         type: 'switch',
         required: false,
         minWidth: 150,

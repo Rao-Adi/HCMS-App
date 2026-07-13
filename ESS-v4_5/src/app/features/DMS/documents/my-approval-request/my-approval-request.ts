@@ -294,8 +294,7 @@ export class MyApprovalRequest {
   constructor(
     private _documentRequestService: DocumentRequestService,
     private modal: NzModalService,
-    private _notificationToastService: NotificationToastService,
-    private _userService: UserService,
+    private _notificationToastService: NotificationToastService, 
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
     private route: ActivatedRoute,
@@ -707,9 +706,7 @@ export class MyApprovalRequest {
     }
   }
 
-  exportDocumentRequests(): void {
-    debugger;
-    console.log('exportDocumentRequests called');
+  exportDocumentRequests(): void {  
     const payload = {
       searchtext: '',
       sortby: 'DESC',
@@ -745,31 +742,7 @@ export class MyApprovalRequest {
       }
     });
   }
-
-  getAllUsersList = () => {
-    this._userService.getUserList().subscribe((res) => {
-      if (res?.Data) {
-        this.employees = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Value,
-        }));
-        const currentUserCode = this._UtilitiesService.GetUserEmpId();
-        if (currentUserCode && this.employees.some((e) => e.CODE === currentUserCode)) {
-          this.selectedEmployee = currentUserCode;
-        } else if (this.employees.length > 0) {
-          this.selectedEmployee = this.employees[0].CODE;
-        }
-
-        if (this.selectedEmployee && this.agGridWrapper) {
-          this.agGridWrapper.refresh();
-        } else if (this.selectedEmployee) {
-          this.GetAllPendingDocuments();
-        }
-      } else {
-        this.employees = [];
-      }
-    });
-  };
+ 
 
   openObservationModal(rowData: any) {
     //console.log('Row clicked:', rowData);
