@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -297,12 +298,22 @@ export class MyApprovalRequest {
     private _userService: UserService,
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
     // 1. Fetch synchronous data BEFORE any UI component can trigger an API call
     this.hasSelectedRows = false;
     this.GetLoginEmpId();
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['tab']) {
+        this.selectedTab = params['tab'];
+        if (this.agGridWrapper) {
+          this.agGridWrapper.refresh();
+        }
+      }
+    });
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;

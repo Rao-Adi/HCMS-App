@@ -26,6 +26,8 @@ export class DashboardComponent implements OnInit {
   recentActivities: any[] = [];
   documentsApproachingReview: any[] = [];
   isLoading: boolean = true;
+  isApprover: boolean = false;
+  isInitiator: boolean = false;
 
   constructor(
     private _utilityService: UtilitiesService,
@@ -37,7 +39,16 @@ export class DashboardComponent implements OnInit {
     this.EmpName = this._utilityService.GetEmpName() || '';
     this.welcomeMessage = `Welcome back, ${this.EmpName}!`;
     this.GetLoginEmpId();
-    
+    this.checkUserRoles();
+  }
+
+  checkUserRoles(): void {
+    this._utilityService.CanView('myapprovalrequest').subscribe((res) => {
+      this.isApprover = res;
+    });
+    this._utilityService.CanView('requestdocumentcreation').subscribe((res) => {
+      this.isInitiator = res;
+    });
   }
 
   GetLoginEmpId() {
@@ -115,5 +126,30 @@ export class DashboardComponent implements OnInit {
 
   navigateTo(url: string, queryParams?: any): void {
     this.router.navigate([url], { queryParams: queryParams });
+  }
+
+  navigateToWidget(type: 'total-documents' | 'pending-approvals' | 'approved-requests' | 'rejected-requests' | 'approved-by-me' | 'rejected-by-me'): void {
+    if (this.isApprover) {
+      if (type === 'total-documents') {
+        this.navigateTo('/documents/my-approvals-documents');
+      } else if (type === 'pending-approvals') {
+        this.navigateTo('/documents/my-approvals-request');
+      } else if (type === 'approved-requests' || type === 'approved-by-me') {
+        this.navigateTo('/documents/my-approvals-request', { tab: 'Approved' });
+      } else if (type === 'rejected-requests' || type === 'rejected-by-me') {
+        this.navigateTo('/documents/my-approvals-request', { tab: 'Rejected' });
+      }
+    } else {
+      // Initiator redirection
+      if (type === 'total-documents') {
+        this.navigateTo('/reports/viewapproved');
+      } else if (type === 'pending-approvals') {
+        this.navigateTo('/documents/request-for-document-creation-update', { tab: 'MyRequestPendingApproval' });
+      } else if (type === 'approved-requests' || type === 'approved-by-me') {
+        this.navigateTo('/reports/viewapproved');
+      } else if (type === 'rejected-requests' || type === 'rejected-by-me') {
+        this.navigateTo('/documents/request-for-document-creation-update', { tab: 'DraftRequest' });
+      }
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core'; 
+import { Component, OnInit } from '@angular/core'; 
+import { ActivatedRoute } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -30,10 +31,16 @@ import { DraftRequestList } from './draft-request-list/draft-request-list';
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
 })
-export class DocumentRequestManagement {
+export class DocumentRequestManagement implements OnInit {
   selectedTab: string = 'NewRequest';
 
-  constructor() {}
+  constructor(private route: ActivatedRoute) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.route.queryParams.subscribe((params) => {
+      if (params['tab']) {
+        this.selectedTab = params['tab'];
+      }
+    });
+  }
 }
