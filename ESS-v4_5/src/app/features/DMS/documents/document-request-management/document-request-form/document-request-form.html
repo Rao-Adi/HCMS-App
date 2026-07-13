@@ -337,21 +337,42 @@
                       (change)="onDraftFileSelected($event)"
                       accept=".pdf,.doc,.docx"
                       style="width: 350px"
-                      [hidden]="draftFile"
+                      [hidden]="draftFile || draftFileUrl"
                     />
 
                     <!-- File Info and Actions -->
-                    <div *ngIf="draftFile" class="d-flex align-items-center gap-2 p-2 border rounded-2 bg-light shadow-sm">
-                      <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
-                      <span class="fw-medium text-truncate" style="max-width: 250px;" [title]="draftFile.name">
-                        {{ draftFile.name }}
-                      </span>
-                      <button class="btn btn-sm btn-outline-primary p-1" (click)="reviewDraftedFile()" title="Review File">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-danger p-1" (click)="removeDraftedFile()" title="Remove File">
-                        <i class="bi bi-trash"></i>
-                      </button>
+                    <div *ngIf="draftFile || draftFileUrl" class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm" style="min-width: 380px;">
+                      <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                        <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
+                        <div class="d-flex flex-column min-w-0">
+                          <span class="fw-semibold text-dark text-truncate" style="max-width: 240px;" [title]="getDraftFileName()">
+                            {{ getDraftFileName() }}
+                          </span>
+                          <span class="text-muted" style="font-size: 11px;">
+                            {{ draftFile ? 'Local Draft' : 'Submitted Document' }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                          (click)="draftFile ? reviewDraftedFile() : downloadDraft()"
+                          title="View / Review File"
+                          style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                        >
+                          <i class="bi bi-eye fs-6"></i>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                          (click)="removeDraftedFile()"
+                          title="Remove File"
+                          style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                        >
+                          <i class="bi bi-trash fs-6"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </ng-container>

@@ -1091,8 +1091,26 @@ export class DocumentRequestForm {
     }
   }
 
+  getDraftFileName(): string {
+    if (this.draftFile) {
+      return this.draftFile.name;
+    }
+    if (this.draftFileUrl) {
+      try {
+        const decoded = decodeURIComponent(this.draftFileUrl);
+        const parts = decoded.split('/');
+        return parts[parts.length - 1].split('?')[0];
+      } catch (e) {
+        const parts = this.draftFileUrl.split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return '';
+  }
+
   removeDraftedFile(): void {
     this.draftFile = null;
+    this.draftFileUrl = '';
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
