@@ -59,6 +59,19 @@ export class CabinetStructureList {
     );
   }
 
+  getColClass(): string {
+    const count = this.levels.length;
+    if (count <= 1) {
+      return 'col-lg-12 col-md-12 col-sm-12 mb-10';
+    } else if (count === 2) {
+      return 'col-lg-6 col-md-6 col-sm-6 mb-10';
+    } else if (count === 3) {
+      return 'col-lg-4 col-md-4 col-sm-4 mb-10';
+    } else {
+      return 'col-lg-3 col-md-3 col-sm-3 mb-10';
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if ('hierarchy' in changes) {
       this.applyHierarchy(changes['hierarchy'].currentValue as CabinetSelection[] | null);

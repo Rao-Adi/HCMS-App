@@ -1,6 +1,6 @@
 <div class="row">
   <ng-container *ngIf="levels.length > 0">
-    <div class="col-lg-3 col-md-3 col-sm-3 mb-10" *ngFor="let level of levels; let idx = index">
+    <div [ngClass]="getColClass()" *ngFor="let level of levels; let idx = index">
       <!-- Dynamic Label -->
       <div class="PnlHeading">
         <label>{{ level.title }}</label>
