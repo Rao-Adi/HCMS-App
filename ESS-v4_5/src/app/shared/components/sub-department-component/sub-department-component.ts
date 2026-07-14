@@ -157,13 +157,13 @@ export class SubDepartmentComponent {
         dropdownDisplayField: 'text',
         required: true,
       },
-      {
-        field: 'IsActive',
-        headerName: 'Enable/Disable',
-        type: 'switch',
-        required: false,
-        minWidth: 100,
-      },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 100,
+      // },
       {
         field: 'CreatedByName',
         headerName: 'Last Saved By',

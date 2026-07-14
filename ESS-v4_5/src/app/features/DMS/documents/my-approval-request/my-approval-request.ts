@@ -196,7 +196,7 @@ export class MyApprovalRequest {
       minWidth: 150,
       cellRenderer: (params: any) => {
         const val = params.value || '';
-        const displayVal = val.toLowerCase() === 'reworked' ? 'Revered' : val;
+        const displayVal = val.toLowerCase() === 'reworked' ? 'Reverted' : val;
         const status = displayVal.toLowerCase();
         let color = '#6b7280'; // default gray
         let bgColor = '#f3f4f6';

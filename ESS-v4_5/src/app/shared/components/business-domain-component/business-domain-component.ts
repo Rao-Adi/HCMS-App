@@ -125,13 +125,13 @@ export class BusinessDomainComponent {
         dropdownDisplayField: 'text',
         required: true,
       },
-      {
-        field: 'IsActive',
-        headerName: 'Enable/Disable',
-        type: 'switch',
-        required: false,
-        minWidth: 150,
-      },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
         field: 'CreatedByName',
         headerName: 'Last Saved By',

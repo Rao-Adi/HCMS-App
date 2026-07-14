@@ -112,13 +112,13 @@ export class DivisionComponent {
         required: true,
         minWidth: 200,
       },
-      {
-        field: 'IsActive',
-        headerName: 'Enable/Disable',
-        type: 'switch',
-        required: false,
-        minWidth: 150,
-      },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
         field: 'CreatedByName',
         headerName: 'Last Saved By',

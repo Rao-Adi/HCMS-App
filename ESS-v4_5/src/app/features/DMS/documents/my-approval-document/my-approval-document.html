@@ -110,8 +110,19 @@
                   approvedDocumentCount
                 }}</span>
               </button>
-
               <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
+                (click)="onTabChange('Rejected')"
+              >
+                Revert/Rejected<span
+                  *ngIf="disapprovedDocumentCount > 0"
+                  class="badge bg-danger ms-1"
+                  >{{ disapprovedDocumentCount }}</span
+                >
+              </button>
+              <!-- <button
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
@@ -121,7 +132,7 @@
                 <span *ngIf="disapprovedDocumentCount > 0" class="badge bg-danger ms-1">{{
                   disapprovedDocumentCount
                 }}</span>
-              </button>
+              </button> -->
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'Pending'">
@@ -134,7 +145,7 @@
                       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                         <app-ag-grid-wrapper
                           [gridStyle]="{ width: '100%', height: '450px' }"
-                          [columnToggles]="columnToggles" 
+                          [columnToggles]="columnToggles"
                           [columnDefs]="pendingDocumentsGridColumnDefs"
                           [defaultColDef]="defaultColDef"
                           [isSelectionRequired]="true"
@@ -237,7 +248,7 @@
                     [defaultColDef]="defaultColDef"
                     [isSelectionRequired]="false"
                     [showDisplayOption]="true"
-                    [rowData]="documentRequestsData" 
+                    [rowData]="documentRequestsData"
                     [pageSize]="selectedPageSize"
                     [pageSizeOptions]="[10, 20, 50, 100]"
                     [totalRows]="totalRows"
@@ -309,7 +320,7 @@
         </div>
 
         <div class="row mt-10" *ngIf="observationData.length > 0">
-          <div class="col-lg-12 col-md-12 col-sm-12"> 
+          <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto">
               <div class="observation-container">
                 <div class="observation-title">

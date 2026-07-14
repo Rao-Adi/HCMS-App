@@ -273,11 +273,11 @@
                         class="status-badge"
                         [ngClass]="{
                           'badge-rework': item.status == 'Rejected',
-                          'badge-rejected': item.status == 'Reworked' || item.status == 'Revered',
+                          'badge-rejected': item.status == 'Reworked' || item.status == 'Reverted',
                           'badge-approved': item.status == 'Approved',
                         }"
                       >
-                        {{ item.status === 'Reworked' ? 'Revered' : item.status }}
+                        {{ item.status === 'Reworked' ? 'Reverted' : item.status }}
                       </span>
 
                       <span class="date">
