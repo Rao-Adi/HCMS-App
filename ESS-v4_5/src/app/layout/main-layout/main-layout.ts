@@ -325,7 +325,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response && response.Data) {
           const count = response.Data.count ?? 0;
-          this.applyCountToMenu('my-approvals-request', count);
+          this.applyCountToMenu('request-for-document-creation-update', count);
         }
       },
       error: (err) => console.error('Failed to get request approval count', err)
@@ -335,8 +335,19 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this._documentService.GetMyDocumentCounts().subscribe({
       next: (response) => {
         if (response && response.Data && response.Data.MyInbox) {
-          const count = response.Data.MyInbox.pending ?? 0;
+          const count = response.Data.MyInbox.Pending ?? 0;
           this.applyCountToMenu('my-approvals-documents', count);
+        }
+      },
+      error: (err) => console.error('Failed to get document counts', err)
+    });
+
+    // Fetch Count 3: My Approvals - Request
+    this._documentRequestService.GetMyRequestCounts().subscribe({
+      next: (response) => {
+        if (response && response.Data && response.Data.MyInbox) { 
+          const count = response.Data.MyInbox.Pending ?? 0;
+          this.applyCountToMenu('my-approvals-request', count);
         }
       },
       error: (err) => console.error('Failed to get document counts', err)
@@ -351,10 +362,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         let matchesText = false;
         if (item.Text) {
           const textLower = item.Text.toLowerCase().trim();
-          if (navigateUrl === 'my-approvals-request') {
+          if (navigateUrl === 'request-for-document-creation-update') {
             matchesText = textLower.includes('request for document creation') || textLower.includes('my approvals - request for document creation');
           } else if (navigateUrl === 'my-approvals-documents') {
             matchesText = textLower === 'my approvals - documents' || textLower === 'documents' || textLower.includes('my approvals - documents');
+          } else if (navigateUrl === 'my-approvals-request') {
+            matchesText = textLower === 'my approvals - request' || textLower === 'request' || textLower.includes('my approvals - request');
           }
         }
 

@@ -273,7 +273,7 @@ export class CreateUpdateDocument {
     private _permissionService: PermissionService,
     private _trainingPolicyService: TrainingPolicyService,
     private _peoplePartnerService: PeoplePartnersService,
-    private _documentReviewPolicyService: DocumentReviewPolicyService
+    private _documentReviewPolicyService: DocumentReviewPolicyService,
   ) {}
 
   ngOnInit() {
@@ -499,7 +499,7 @@ export class CreateUpdateDocument {
           this._notificationToastService.createNotification(
             'warning',
             'Template Missing',
-            'Please first upload the template against this Document Type. Document request cannot be created.'
+            'Please first upload the template against this Document Type. Document request cannot be created.',
           );
           return;
         }
@@ -729,14 +729,14 @@ export class CreateUpdateDocument {
       traininguserids: this.trainingUsersData.map((user) => user.UserCode), // Included in Payload as requested
     };
 
-  // Append the new draft file if it exists
-  const formData = new FormData();
-  Object.keys(payLoad).forEach((key) => {
-    formData.append(key, (payLoad as any)[key]);
-  });
-  if (this.draftFile) {
-    formData.append('DraftFile', this.draftFile, this.draftFile.name);
-  }
+    // Append the new draft file if it exists
+    const formData = new FormData();
+    Object.keys(payLoad).forEach((key) => {
+      formData.append(key, (payLoad as any)[key]);
+    });
+    if (this.draftFile) {
+      formData.append('DraftFile', this.draftFile, this.draftFile.name);
+    }
 
     this._documentService.submitDocument(payLoad).subscribe({
       next: (response) => {
@@ -845,7 +845,11 @@ export class CreateUpdateDocument {
       .getDocumentReviewPolicyByDocumentTypeCode(DocTypeCode)
       .subscribe({
         next: (response) => {
-          this.reviewYear = response?.ReviewPeriodYears;
+          if (response?.Success || response?.Data) {
+            this.reviewYear = response?.Data.ReviewPeriodYears;
+          } else {
+            this.reviewYear = 0;
+          }
         },
         error: (err) => console.error(err),
       });
@@ -1304,7 +1308,7 @@ export class CreateUpdateDocument {
             return {
               ...u,
               CODE: code,
-              NAME: name,
+              NAME: '(' + code + ') ' + name,
             };
           });
         } else {
