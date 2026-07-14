@@ -7,6 +7,7 @@ import {
   HostListener,
   inject,
   Signal,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -27,6 +28,8 @@ import {
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { DocumentService } from '@app/shared/services/document.service';
 
 interface HeaderDetailsResponse {
   formName: string;
@@ -59,6 +62,7 @@ interface DisplayNotification extends AppNotification {
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   readonly dialog = inject(MatDialog);
+  @ViewChild(MenuComponent) menuComponent!: MenuComponent;
 
   // --- UI & State Properties ---
   formName: string = '';
@@ -137,6 +141,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private notificationSignalrService: NotificationSignalrService,
     private notificationHttpService: NotificationService,
+    private _documentRequestService: DocumentRequestService,
+    private _documentService: DocumentService,
   ) {}
 
   ngOnInit(): void {
@@ -265,6 +271,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   onActivate() {
+    this.updateNavigationCounts();
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
     const url = this.GetRouterUrl();
     const isDashboard = url.toLowerCase().includes('dashboard') || url === '/' || url === '';
@@ -296,6 +303,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   onMenuLoaded(items: MenuItem[]): void {
     this._menuItems = items;
+    this.updateNavigationCounts();
     const url = this.GetRouterUrl();
     if (url.toLowerCase().includes('dashboard') || url === '/') return;
 
@@ -307,6 +315,68 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.cdRef.detectChanges();
       this.logFormAccess(this.formName, this.currentFormId, url, 'Direct URL (Data Loaded)');
     }
+  }
+
+  updateNavigationCounts(): void {
+    if (!this._menuItems || this._menuItems.length === 0) return;
+
+    // Fetch Count 1: My Approvals - Request for Document Creation
+    this._documentRequestService.getMyDocumentRequestForApprovalCount().subscribe({
+      next: (response) => {
+        if (response && response.Data) {
+          const count = response.Data.count ?? 0;
+          this.applyCountToMenu('my-approvals-request', count);
+        }
+      },
+      error: (err) => console.error('Failed to get request approval count', err)
+    });
+
+    // Fetch Count 2: My Approvals - Documents
+    this._documentService.GetMyDocumentCounts().subscribe({
+      next: (response) => {
+        if (response && response.Data && response.Data.MyInbox) {
+          const count = response.Data.MyInbox.pending ?? 0;
+          this.applyCountToMenu('my-approvals-documents', count);
+        }
+      },
+      error: (err) => console.error('Failed to get document counts', err)
+    });
+  }
+
+  private applyCountToMenu(navigateUrl: string, count: number): void {
+    const updateCount = (menuList: MenuItem[]) => {
+      for (const item of menuList) {
+        const matchesUrl = !!(item.NavigateUrl && item.NavigateUrl.toLowerCase().includes(navigateUrl.toLowerCase()));
+        
+        let matchesText = false;
+        if (item.Text) {
+          const textLower = item.Text.toLowerCase().trim();
+          if (navigateUrl === 'my-approvals-request') {
+            matchesText = textLower.includes('request for document creation') || textLower.includes('my approvals - request for document creation');
+          } else if (navigateUrl === 'my-approvals-documents') {
+            matchesText = textLower === 'my approvals - documents' || textLower === 'documents' || textLower.includes('my approvals - documents');
+          }
+        }
+
+        if (matchesUrl || matchesText) {
+          item.count = count;
+          console.log(`[MainLayout] Matched menu: text="${item.Text}" url="${item.NavigateUrl}" -> assigned count=${count}`);
+        }
+
+        if (item.child && item.child.length > 0) {
+          updateCount(item.child);
+        }
+        if (item.subChild && item.subChild.length > 0) {
+          updateCount(item.subChild);
+        }
+      }
+    };
+    updateCount(this._menuItems);
+
+    if (this.menuComponent) {
+      this.menuComponent.RootItems = [...this._menuItems];
+    }
+    this.cdRef.detectChanges();
   }
 
   private findMenuItemByUrl(url: string): MenuItem | null {
