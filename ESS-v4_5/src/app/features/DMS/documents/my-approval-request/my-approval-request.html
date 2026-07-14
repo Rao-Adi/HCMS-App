@@ -98,7 +98,7 @@
                       >
                         <div grid-actions class="grid-action-icons">
                           <button
-                            class="btn btn-success btn-sm"
+                            class="btn btn-success btn-sm btn-action"
                             [class.disabled]="!hasSelectedRows"
                             title="Approve"
                             (click)="promptAction('APPROVED')"
@@ -108,7 +108,7 @@
                           </button>
 
                           <button
-                            class="btn btn-danger btn-sm"
+                            class="btn btn-danger btn-sm btn-action"
                             [class.disabled]="!hasSelectedRows"
                             title="Disapprove"
                             (click)="promptAction('REJECTED')"
@@ -118,7 +118,7 @@
                           </button>
 
                           <button
-                            class="btn btn-warning btn-sm"
+                            class="btn btn-warning btn-sm btn-action"
                             [class.disabled]="!hasSelectedRows"
                             title="REWORK"
                             (click)="promptAction('REWORKED')"
@@ -127,7 +127,7 @@
                             <i class="bi bi-arrow-return-left"></i> Revert
                           </button>
 
-                          <button class="btn btn-success btn-sm export-btn" title="Export" (click)="exportDocumentRequests()">
+                          <button class="btn btn-success btn-sm btn-action" title="Export" (click)="exportDocumentRequests()">
                             <i class="bi bi-file-earmark-excel"></i> Export
                           </button>
                         </div>
@@ -160,7 +160,7 @@
                     (cellClicked)="onCellClicked($event)"
                   >
                     <div grid-actions class="grid-action-icons">
-                      <button class="btn btn-success btn-sm export-btn" title="Export" (click)="exportDocumentRequests()">
+                      <button class="btn btn-success btn-sm btn-action" title="Export" (click)="exportDocumentRequests()">
                         <i class="bi bi-file-earmark-excel"></i> Export
                       </button>
                     </div>
@@ -191,7 +191,7 @@
                     (cellClicked)="onCellClicked($event)"
                   >
                     <div grid-actions class="grid-action-icons">
-                      <button class="btn btn-success btn-sm  export-btn" title="Export" (click)="exportDocumentRequests()">
+                      <button class="btn btn-success btn-sm  btn-action" title="Export" (click)="exportDocumentRequests()">
                         <i class="bi bi-file-earmark-excel"></i> Export
                       </button>
                     </div>

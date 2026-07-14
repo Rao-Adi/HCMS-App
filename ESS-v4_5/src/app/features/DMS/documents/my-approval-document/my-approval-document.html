@@ -162,7 +162,7 @@
                         >
                           <div grid-actions class="grid-action-icons">
                             <button
-                              class="btn btn-success btn-sm"
+                              class="btn btn-success btn-sm btn-action"
                               [class.disabled]="!hasSelectedRows"
                               title="Approve"
                               (click)="promptAction('Approve')"
@@ -172,7 +172,7 @@
                             </button>
 
                             <button
-                              class="btn btn-danger btn-sm"
+                              class="btn btn-danger btn-sm btn-action"
                               [class.disabled]="!hasSelectedRows"
                               title="Disapprove"
                               (click)="promptAction('Rejected')"
@@ -182,7 +182,7 @@
                             </button>
 
                             <button
-                              class="btn btn-warning btn-sm"
+                              class="btn btn-warning btn-sm btn-action"
                               [class.disabled]="!hasSelectedRows"
                               title="Revert"
                               (click)="promptAction('Rework')"
@@ -192,7 +192,7 @@
                             </button>
 
                             <button
-                              class="btn btn-success btn-sm"
+                              class="btn btn-success btn-sm btn-action"
                               [class.disabled]="!hasSelectedRows"
                               title="Export"
                               (click)="export()"

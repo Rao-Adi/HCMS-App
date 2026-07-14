@@ -286,6 +286,13 @@ export class DocumentAuthorizationPostTraining {
   }
 
   GetAllDocuments(query: any) {
+    var isAuthorized = false;
+    if (this.selectedTab == 'Pending Authorization') {
+      isAuthorized = false;
+    } else {
+      isAuthorized = true;
+    }
+
     const sort = query.sortModel?.[0];
     const payload = {
       divisionCode: this.selectedDivisions,
@@ -300,7 +307,8 @@ export class DocumentAuthorizationPostTraining {
       isActive: true,
       pageNumber: query?.pageNumber || 1,
       pageSize: query?.pageSize || this.pageSize,
-      IsAuthorized: this.selectedTab == 'Pending Authorization' ? false : true,
+      IsAuthorized: isAuthorized,
+      actionType: this.selectedTab
     };
 
     // Show loading overlay natively
@@ -415,7 +423,7 @@ export class DocumentAuthorizationPostTraining {
     } catch {
       return value;
     }
-  } 
+  }
 
   onAuthorizationStatusChange(statusId: string): void {
     this.selectedAuthorizationStatus = statusId;
@@ -456,9 +464,8 @@ export class DocumentAuthorizationPostTraining {
     });
   }
 
-  approve(actionType:string): void {
+  approve(actionType: string): void {
     if (!this.gridApi) return;
-    debugger;
 
     const selectedRows = this.gridApi.getSelectedRows();
     if (selectedRows.length === 0) {
@@ -474,14 +481,14 @@ export class DocumentAuthorizationPostTraining {
     const docId = documentToApprove.Id || documentToApprove.id || documentToApprove.documentId;
 
     this.modal.confirm({
-      nzTitle: '${actionType} Document',
+      nzTitle: `${actionType} Document`,
       nzContent: `Are you sure you want to ${actionType} the document: ${documentToApprove.documentName}?`,
       nzOnOk: () => {
         const payload = {
           documentId: docId,
           empId: this.loginEmpId,
-          actionType : actionType,
-          observation: 'Authorized via post-training screen', // TODO: Collect via a form/modal wrapper if required by BL-011
+          action: actionType,
+          observation: `${actionType} via post-training screen`, // TODO: Collect via a form/modal wrapper if required by BL-011
         };
 
         this._documentService.AuthorizeDocumentPostTraining(payload).subscribe({
@@ -490,7 +497,7 @@ export class DocumentAuthorizationPostTraining {
               this._notificationToastService.createNotification(
                 'success',
                 'Success',
-                'Document authorized successfully.',
+                `Document ${actionType} successfully.`,
               );
               this.GetAllDocuments({ pageNumber: 1, pageSize: this.pageSize });
             } else {
@@ -505,7 +512,7 @@ export class DocumentAuthorizationPostTraining {
             this._notificationToastService.createNotification(
               'error',
               'Error',
-              'Failed to authorize document.',
+              `Failed to ${actionType} document.`,
             ),
         });
       },

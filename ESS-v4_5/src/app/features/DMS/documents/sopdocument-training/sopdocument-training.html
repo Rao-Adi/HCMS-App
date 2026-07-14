@@ -28,7 +28,6 @@
                 <h3 class="PnlHeader">
                   {{ 'labels.Filter' | safeTranslate }}
                 </h3>
-                <br />
                 <div class="row">
                   <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                     <div class="PnlHeading">
@@ -88,8 +87,14 @@
                   (selectionChange)="onSelectionChange($event)"
                 >
                   <div grid-actions class="grid-action-icons">
-                    <button class="grid-icon-btn" title="Approve" (click)="approve()">
-                      <i class="bi bi-check2-square"></i>
+                    <button
+                      class="btn btn-success btn-sm btn-action"
+                      [class.disabled]="!hasSelectedRows"
+                      title="Approve"
+                      (click)="approve()"
+                      [disabled]="hasSelectedRows === false"
+                    >
+                      <i class="bi bi-check-circle"></i> Approve
                     </button>
                   </div>
                 </app-ag-grid-wrapper>

@@ -62,7 +62,7 @@ export class SOPDocumentTraining {
   selectedDocumentType?: string = '';
   selectedDocumentId: string | null = null;
   isGridVisible = false;
-
+  hasSelectedRows = false;
   pageNumber = 1;
 
   totalRows = 0;
@@ -100,7 +100,7 @@ export class SOPDocumentTraining {
       .subscribe((res) => {
         const items = Array.isArray(res?.Data) ? res.Data : (res?.Data?.Items ?? []);
         const sop = items.find((d: any) => (d.Code || d.code || '').toUpperCase() === 'DT-0001');
- 
+
         this.documentTypes = items.map((d: any) => ({
           CODE: d.Code || d.code || d.CODE,
           NAME: d.Name || d.name || d.NAME,
@@ -659,6 +659,7 @@ export class SOPDocumentTraining {
   }
 
   onSelectionChange(selectedRows: any[]): void {
+    this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     if (selectedRows && selectedRows.length > 0) {
       this.selectedDocumentId =
         selectedRows[0].documentId || selectedRows[0].DocumentId || selectedRows[0].Id;

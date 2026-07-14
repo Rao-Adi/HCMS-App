@@ -11,69 +11,6 @@
   gap: 12px;
 }
 
-/* ICON BUTTONS */
-.grid-action-icons {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-left: 0px;
-  /* 👈 spacing between buttons */
-}
-
-.grid-icon-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  /* softer corners */
-  border: 1px solid #e0e0e0;
-  background-color: #ffffff;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.1s ease;
-}
-
-.grid-icon-btn i {
-  font-size: 16px;
-  color: #0d6efd;
-  /* Bootstrap primary */
-}
-
-
-/* Hover like prototype */
-.grid-icon-btn:hover {
-  background-color: #f4f8ff;
-  border-color: #0d6efd;
-  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.15);
-  transform: translateY(-1px);
-}
-
-.grid-icon-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
-}
-
-.grid-icon-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.grid-icon-btn.disabled i {
-  color: #ccc;
-}
-
-.export-btn {
-  max-width: 100px;
-  color: #ffffff !important;
-}
 
 .observation-container {
   width: 100%;
