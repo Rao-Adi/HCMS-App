@@ -49,6 +49,16 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  getDraftDocumentCount(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-draft-documents-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getMyDocumentRequestForApprovalCount(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-document-requests-for-approval-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   getDocumentRequestById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-request-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
@@ -78,7 +88,7 @@ export class DocumentRequestService {
     return this.http.post(
       `${this.apiUrl}/DMSDocumentRequest/export-my-pending-document-request`,
       payload,
-      { responseType: 'blob' }
+      { responseType: 'blob' },
     );
   }
 

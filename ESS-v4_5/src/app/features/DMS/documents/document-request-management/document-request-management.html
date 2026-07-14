@@ -20,6 +20,9 @@
                 (click)="selectedTab = 'DraftRequest'"
               >
                 Draft Request
+                <span *ngIf="draftDocumentCounts > 0" class="badge bg-danger ms-1">{{
+                  draftDocumentCounts
+                }}</span>
               </button>
               <button
                 class="tab-button"
@@ -28,6 +31,10 @@
                 (click)="selectedTab = 'MyRequestPendingApproval'"
               >
                 My Requests Pending Approval
+                <span
+                  *ngIf="myDocumentRequestPendingForApprovalCount > 0"
+                  class="badge bg-danger ms-1"
+                  >{{ myDocumentRequestPendingForApprovalCount }}</span>
               </button>
             </div>
 
