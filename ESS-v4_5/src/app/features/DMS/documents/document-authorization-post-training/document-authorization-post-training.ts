@@ -275,14 +275,10 @@ export class DocumentAuthorizationPostTraining {
   }
 
   onDocumentTypeChange(value: string): void {
-    // this.loading = true;
     this.selectedDocumentType = value;
-    this.GetAllDocuments({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
-    });
+    if (this.gridApi) {
+      this.gridApi.refreshInfiniteCache();
+    }
   }
 
   GetAllDocuments(query: any) {
@@ -318,9 +314,10 @@ export class DocumentAuthorizationPostTraining {
 
     this._documentService.GetPendingAuthorizations(payload).subscribe({
       next: (res: any) => {
+        let items: any[] = [];
         if (res?.Success && res?.Data) {
           const data = res.Data;
-          const items = data.Items || (Array.isArray(data) ? data : []);
+          items = data.Items || (Array.isArray(data) ? data : []);
 
           if (items.length > 0) {
             this.totalRows = data.TotalCount ?? items.length;
@@ -378,9 +375,6 @@ export class DocumentAuthorizationPostTraining {
               templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
             }));
           } else {
-            if (this.gridApi) {
-              this.gridApi.showNoRowsOverlay();
-            }
             this.pendingAuthorizationData = [];
             this.totalRows = 0;
           }
@@ -390,6 +384,11 @@ export class DocumentAuthorizationPostTraining {
         }
         if (this.gridApi) {
           this.gridApi.hideOverlay();
+        }
+        if (items.length === 0) {
+          if (this.gridApi) {
+            this.gridApi.showNoRowsOverlay();
+          }
         }
       },
       error: (err) => {
@@ -429,13 +428,8 @@ export class DocumentAuthorizationPostTraining {
     this.selectedAuthorizationStatus = statusId;
     if (this.gridApi) {
       this.gridApi.setColumnsVisible(['trainingProof'], statusId === '1');
+      this.gridApi.refreshInfiniteCache();
     }
-    this.GetAllDocuments({
-      pageNumber: 1,
-      pageSize: this.pageSize,
-      sortModel: [],
-      filterModel: {},
-    });
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -499,7 +493,9 @@ export class DocumentAuthorizationPostTraining {
                 'Success',
                 `Document ${actionType} successfully.`,
               );
-              this.GetAllDocuments({ pageNumber: 1, pageSize: this.pageSize });
+              if (this.gridApi) {
+                this.gridApi.refreshInfiniteCache();
+              }
             } else {
               this._notificationToastService.createNotification(
                 'error',
@@ -566,12 +562,9 @@ export class DocumentAuthorizationPostTraining {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
 
-    this.GetAllDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
+    if (this.gridApi) {
+      this.gridApi.refreshInfiniteCache();
+    }
   }
 
   onSelectionChange(selectedRows: any): void {
