@@ -226,20 +226,10 @@ export class DocumentAttributes {
       next: (res: ApiResponse<any>) => {
         if (res.Success) {
           this._notificationToastService.createNotification('success', 'Document template', res.Message);
+          this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
         } else {
           this._notificationToastService.createNotification('warning', 'Document template', res.Message);
         }
-
-        const rowWithId = {
-          ...event.rowData,
-          id: this.generateId(),
-          ControlLabel: event.rowData.ControlLabel,
-          ControlTypeId: event.rowData.ControlTypeId,
-          ListValue: event.rowData.ListValue,
-          isMandatory: true,
-        };
-
-        this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
       },
       error: () => {
         this._notificationToastService.createNotification(
@@ -264,7 +254,7 @@ export class DocumentAttributes {
       id: event.rowData.Id,
       documentTypeCode: this.selectedDocumentType,
       controlLabel: event.rowData.ControlLabel,
-      ControlTypeId: event.rowData.ControlTypeIdId,
+      ControlTypeId: event.rowData.ControlTypeId,
       listValues: event.rowData.ListValue,
       isMandatory: true,
       IsActive: true,
@@ -276,31 +266,20 @@ export class DocumentAttributes {
         'Document template',
         'Document template updated successfully!',
       );
+      this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
     });
-
-    const rowWithId = {
-      ...event.rowData,
-      id: this.generateId(),
-      ControlLabel: event.rowData.ControlLabel,
-      ControlTypeId: event.rowData.ControlTypeId,
-      ListValue: event.rowData.ListValue,
-      isMandatory: true,
-    };
-
-    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
   }
 
   onRowDeleted(index: number): void {
     const row = this.documentAttributeData[index];
 
-    //console.log('🗑️ Row Deleted:', row);
-
-    this._documentAttribute.delete(row.Code).subscribe(() => {
+    this._documentAttribute.delete(row.Id).subscribe(() => {
       this._notificationToastService.createNotification(
         'sucess',
         'Document Attribute',
         'Document Attribute deleted successfully!',
       );
+      this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
     });
   }
 
