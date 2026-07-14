@@ -28,7 +28,6 @@
                 <h3 class="PnlHeader">
                   {{ 'labels.Cabinet' | safeTranslate }}
                 </h3>
-                <br />
                 <div class="row">
                   <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
                     <app-cabinet-structure-list 
@@ -64,7 +63,6 @@
                 <h3 class="PnlHeader">
                   {{ 'labels.Documents' | safeTranslate }}
                 </h3>
-                <br />
                 <div class="row">
                   <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                     <div class="PnlHeading">
@@ -111,13 +109,13 @@
                    (selectionChange)="onSelectionChange($event)"
                 >
                   <div grid-actions class="grid-action-icons">
-                    <button class="btn btn-success btn-sm" title="Approve" (click)="approve()"
+                    <button class="btn btn-success btn-sm" title="Approve" (click)="approve('Approve')"
                     [class.disabled]="!hasSelectedRows"
                     [disabled]="hasSelectedRows === false">
                       <i class="bi bi-check2-square"></i>  Approve
                     </button>
 
-                    <button class="btn btn-danger btn-sm" title="Disapprove" (click)="approve()"
+                    <button class="btn btn-danger btn-sm" title="Disapprove" (click)="approve('Disapprove')"
                     [class.disabled]="!hasSelectedRows"
                     [disabled]="hasSelectedRows === false">
                       <i class="bi bi-x-square"></i>  Disapprove

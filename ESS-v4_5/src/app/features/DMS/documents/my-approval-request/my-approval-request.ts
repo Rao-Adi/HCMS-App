@@ -104,6 +104,7 @@ export class MyApprovalRequest {
   selectedEmployee?: string = '';
   observationData: any[] = [];
   observation: string = '';
+  documentColumnDefsWithoutStatus: ColDef[] = [];
 
   documentColumnDefs = [
     {
@@ -302,6 +303,9 @@ export class MyApprovalRequest {
 
   ngOnInit() {
     // 1. Fetch synchronous data BEFORE any UI component can trigger an API call
+    this.documentColumnDefsWithoutStatus = this.documentColumnDefs.filter(
+      (col) => col.field !== 'executionStatus'
+    );
     this.hasSelectedRows = false;
     this.GetLoginEmpId();
 

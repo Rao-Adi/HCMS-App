@@ -3749,7 +3749,7 @@ ul li.active > a {
 
 .btn-link {
   font-weight: 600 !important;
-  color: #F4F7F7 !important;
+  color: #000 !important;
   cursor: pointer;
   border-radius: 0;
   font-size: 0.7500rem;
@@ -3777,6 +3777,7 @@ ul li.active > a {
     background-color: transparent;
     -webkit-box-shadow: none;
     box-shadow: none;
+    color: #000;
   }
 
     .btn-link,
@@ -3784,6 +3785,7 @@ ul li.active > a {
     .btn-link:focus,
     .btn-link:active {
       border-color: transparent;
+      color: #000;
     }
 
       .btn-link:hover,
@@ -3791,6 +3793,7 @@ ul li.active > a {
         color: #2a6496;
         text-decoration: underline;
         background-color: transparent;
+        color: #000;
       }
 
       .btn-link[disabled]:hover,

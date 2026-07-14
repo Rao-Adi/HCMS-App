@@ -116,7 +116,7 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Revert/Rejected<span
+                Reverted/Rejected<span
                   *ngIf="disapprovedDocumentCount > 0"
                   class="badge bg-danger ms-1"
                   >{{ disapprovedDocumentCount }}</span

@@ -5,8 +5,7 @@
         <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
           <h3 class="PnlHeader">
             {{ 'labels.Filters' | safeTranslate }}
-          </h3>
-          <br />
+          </h3> 
           <div class="row">
             <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
               <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
@@ -65,7 +64,7 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Revert/Rejected<span
+                Reverted/Rejected<span
                   *ngIf="disapprovedRequestCount > 0"
                   class="badge bg-danger ms-1"
                   >{{ disapprovedRequestCount }}</span
@@ -83,7 +82,7 @@
                       <app-ag-grid-wrapper
                         [gridStyle]="{ width: '100%', height: '450px' }"
                         [columnToggles]="columnToggles"
-                        [columnDefs]="documentColumnDefs"
+                        [columnDefs]="documentColumnDefsWithoutStatus"
                         [defaultColDef]="defaultColDef"
                         [isSelectionRequired]="true"
                         [showDisplayOption]="true"
@@ -128,7 +127,7 @@
                             <i class="bi bi-arrow-return-left"></i> Revert
                           </button>
 
-                          <button class="btn btn-success btn-sm" title="Export" (click)="exportDocumentRequests()">
+                          <button class="btn btn-success btn-sm export-btn" title="Export" (click)="exportDocumentRequests()">
                             <i class="bi bi-file-earmark-excel"></i> Export
                           </button>
                         </div>
@@ -147,7 +146,7 @@
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
-                    [columnDefs]="documentColumnDefs"
+                    [columnDefs]="documentColumnDefsWithoutStatus"
                     [defaultColDef]="defaultColDef"
                     [isSelectionRequired]="false"
                     [showDisplayOption]="true"
@@ -161,7 +160,7 @@
                     (cellClicked)="onCellClicked($event)"
                   >
                     <div grid-actions class="grid-action-icons">
-                      <button class="btn btn-success btn-sm" title="Export" (click)="exportDocumentRequests()">
+                      <button class="btn btn-success btn-sm export-btn" title="Export" (click)="exportDocumentRequests()">
                         <i class="bi bi-file-earmark-excel"></i> Export
                       </button>
                     </div>
@@ -192,7 +191,7 @@
                     (cellClicked)="onCellClicked($event)"
                   >
                     <div grid-actions class="grid-action-icons">
-                      <button class="btn btn-success btn-sm" title="Export" (click)="exportDocumentRequests()">
+                      <button class="btn btn-success btn-sm  export-btn" title="Export" (click)="exportDocumentRequests()">
                         <i class="bi bi-file-earmark-excel"></i> Export
                       </button>
                     </div>

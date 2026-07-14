@@ -277,6 +277,12 @@ export class DocumentAuthorizationPostTraining {
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
     this.selectedDocumentType = value;
+    this.GetAllDocuments({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
   }
 
   GetAllDocuments(query: any) {
@@ -409,15 +415,19 @@ export class DocumentAuthorizationPostTraining {
     } catch {
       return value;
     }
-  }
-
-  GetAllUploadedDocuments(query: any) {}
+  } 
 
   onAuthorizationStatusChange(statusId: string): void {
     this.selectedAuthorizationStatus = statusId;
     if (this.gridApi) {
       this.gridApi.setColumnsVisible(['trainingProof'], statusId === '1');
     }
+    this.GetAllDocuments({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -446,8 +456,9 @@ export class DocumentAuthorizationPostTraining {
     });
   }
 
-  approve(): void {
+  approve(actionType:string): void {
     if (!this.gridApi) return;
+    debugger;
 
     const selectedRows = this.gridApi.getSelectedRows();
     if (selectedRows.length === 0) {
@@ -463,12 +474,13 @@ export class DocumentAuthorizationPostTraining {
     const docId = documentToApprove.Id || documentToApprove.id || documentToApprove.documentId;
 
     this.modal.confirm({
-      nzTitle: 'Approve Document',
-      nzContent: `Are you sure you want to authorize the document: ${documentToApprove.documentName}?`,
+      nzTitle: '${actionType} Document',
+      nzContent: `Are you sure you want to ${actionType} the document: ${documentToApprove.documentName}?`,
       nzOnOk: () => {
         const payload = {
           documentId: docId,
           empId: this.loginEmpId,
+          actionType : actionType,
           observation: 'Authorized via post-training screen', // TODO: Collect via a form/modal wrapper if required by BL-011
         };
 

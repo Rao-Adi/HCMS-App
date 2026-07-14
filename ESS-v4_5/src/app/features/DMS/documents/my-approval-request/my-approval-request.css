@@ -16,7 +16,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-left: 35px;
+  padding-left: 0px;
   /* 👈 spacing between buttons */
 }
 
@@ -70,6 +70,10 @@
   color: #ccc;
 }
 
+.export-btn {
+  max-width: 100px;
+  color: #ffffff !important;
+}
 
 .observation-container {
   width: 100%;
