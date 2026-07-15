@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
-import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
+import { map, Observable, ReplaySubject, Subject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentRequest } from '../interfaces/interfaces';
 import { AppConfigService } from '@app/core/services/app-config';
 
@@ -10,6 +10,7 @@ import { AppConfigService } from '@app/core/services/app-config';
 })
 export class DocumentRequestService {
   private _cabietStructureConfig = new ReplaySubject<DocumentRequest[]>(1);
+  public refreshCounts$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,

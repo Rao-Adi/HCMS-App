@@ -659,6 +659,7 @@ export class DocumentRequestForm {
           //clear all fields
           this.emptyFields();
           this.requestCreated.emit();
+          this._doumentRequestService.refreshCounts$.next();
 
           this._notificationToasService.createNotification(
             'success',
@@ -816,6 +817,7 @@ export class DocumentRequestForm {
           //clear all fields
           this.emptyFields();
           this.requestCreated.emit();
+          this._doumentRequestService.refreshCounts$.next();
           this._notificationToasService.createNotification(
             'success',
             'User',

@@ -55,7 +55,7 @@ interface DisplayNotification extends AppNotification {
     RouterModule,
     MenuComponent,
     SpinnerComponent,
-    SkeletonComponent
+    SkeletonComponent,
   ],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css'],
@@ -66,7 +66,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   // --- UI & State Properties ---
   formName: string = '';
-  currentFormId: string = ''; 
+  currentFormId: string = '';
   formdescription: string = '';
   showdesc: boolean = false;
   showfavourite: boolean = false;
@@ -82,10 +82,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   EmpName: string = 'Employee Name';
   EmployeePic: string = '/assets/images/pro.png';
   strBreadCrumb: string = 'Home / Dashboard';
-  
+
   @HostBinding('class.sidebar-open')
   isSidebarOpen: boolean = false;
-  
+
   haveDashboardRights: boolean = true;
   onlineEvent$: Observable<Event> | undefined;
   offlineEvent$: Observable<Event> | undefined;
@@ -94,7 +94,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   connectionStatus: string = 'online';
   showStatusMessage: boolean = false;
   isSidebarHovering = false;
-  
+
   // --- Notification Properties ---
   notifications: DisplayNotification[] = [];
   unreadNotificationCount: number = 0;
@@ -105,13 +105,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   activeNotificationTab: 'unread' | 'read' = 'unread';
 
   get filteredNotifications(): DisplayNotification[] {
-
     return this.notifications.filter((n) =>
-
       this.activeNotificationTab === 'unread' ? !n.isRead : n.isRead,
-
     );
-
   }
 
   // --- Menu Context Properties ---
@@ -129,8 +125,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // Safely remove any trailing slashes to prevent malformed URLs downstream
     return this._config.baseUrl.replace(/\/$/, '');
   }
-
-  
 
   constructor(
     private _utilityService: UtilitiesService,
@@ -154,7 +148,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.onlineEvent$ = fromEvent(window, 'online');
       this.offlineEvent$ = fromEvent(window, 'offline');
       this.subscriptions.push(this.onlineEvent$.subscribe(() => this.updateConnectionStatus(true)));
-      this.subscriptions.push(this.offlineEvent$.subscribe(() => this.updateConnectionStatus(false)));
+      this.subscriptions.push(
+        this.offlineEvent$.subscribe(() => this.updateConnectionStatus(false)),
+      );
       this.updateConnectionStatus(navigator.onLine);
     }
 
@@ -168,8 +164,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     let token = '';
     if (typeof window !== 'undefined' && localStorage) {
       // Check multiple common keys in case the token is stored under a different name
-      token = localStorage.getItem('token') || localStorage.getItem('Token') || localStorage.getItem('access_token') || '';
-      
+      token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('Token') ||
+        localStorage.getItem('access_token') ||
+        '';
+
       // Prevent "Bearer Bearer eyJ..." errors:
       // SignalR's accessTokenFactory automatically prepends "Bearer " in the header.
       // If the stored token already contains "Bearer ", we must strip it.
@@ -183,13 +183,20 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.notificationSignalrService.notification$.subscribe((notification: AppNotification) => {
-        this.notifications.unshift({ 
-          ...notification, 
+        this.notifications.unshift({
+          ...notification,
           isRead: false,
-          relatedEntityType: (notification as any).RelatedEntityType || (notification as any).relatedEntityType 
+          relatedEntityType:
+            (notification as any).RelatedEntityType || (notification as any).relatedEntityType,
         });
         this.unreadNotificationCount++;
         this.cdRef.detectChanges();
+      }),
+    );
+
+    this.subscriptions.push(
+      this._documentRequestService.refreshCounts$.subscribe(() => {
+        this.updateNavigationCounts();
       }),
     );
 
@@ -220,14 +227,17 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       UserId: '',
       UserEmpId: 0,
       EntTerminal: '',
-      EntTerminalIP: ''
+      EntTerminalIP: '',
     };
 
-    console.log(`%c [ACCESS EVENT] Source: ${source} | Form: ${formName}`, 'color: #007bff; font-weight: bold;');
-    
+    console.log(
+      `%c [ACCESS EVENT] Source: ${source} | Form: ${formName}`,
+      'color: #007bff; font-weight: bold;',
+    );
+
     this._dataService.post('Security/SaveApplicationAccessLog', payload).subscribe({
       next: () => {},
-      error: (err) => console.error('Logging failed:', err)
+      error: (err) => console.error('Logging failed:', err),
     });
   }
 
@@ -324,56 +334,68 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this._documentRequestService.getMyDocumentRequestForApprovalCount().subscribe({
       next: (response) => {
         if (response && response.Data) {
-          const count = response.Data.count ?? 0;
+          const count = (response.Data.count || response.Data.Count) ?? 0;
           this.applyCountToMenu('request-for-document-creation-update', count);
         }
       },
-      error: (err) => console.error('Failed to get request approval count', err)
+      error: (err) => console.error('Failed to get request approval count', err),
     });
 
     // Fetch Count 2: My Approvals - Documents
     this._documentService.GetMyDocumentCounts().subscribe({
       next: (response) => {
         if (response && response.Data && response.Data.MyInbox) {
-          const count = response.Data.MyInbox.Pending ?? 0;
+          const count = (response.Data.MyInbox.pending || response.Data.MyInbox.Pending) ?? 0;
           this.applyCountToMenu('my-approvals-documents', count);
         }
       },
-      error: (err) => console.error('Failed to get document counts', err)
+      error: (err) => console.error('Failed to get document counts', err),
     });
 
     // Fetch Count 3: My Approvals - Request
     this._documentRequestService.GetMyRequestCounts().subscribe({
       next: (response) => {
-        if (response && response.Data && response.Data.MyInbox) { 
-          const count = response.Data.MyInbox.Pending ?? 0;
+        if (response && response.Data && response.Data.MyInbox) {
+          const count = (response.Data.MyInbox.pending || response.Data.MyInbox.Pending) ?? 0;
           this.applyCountToMenu('my-approvals-request', count);
         }
       },
-      error: (err) => console.error('Failed to get document counts', err)
+      error: (err) => console.error('Failed to get document counts', err),
     });
   }
 
   private applyCountToMenu(navigateUrl: string, count: number): void {
     const updateCount = (menuList: MenuItem[]) => {
       for (const item of menuList) {
-        const matchesUrl = !!(item.NavigateUrl && item.NavigateUrl.toLowerCase().includes(navigateUrl.toLowerCase()));
-        
+        const matchesUrl = !!(
+          item.NavigateUrl && item.NavigateUrl.toLowerCase().includes(navigateUrl.toLowerCase())
+        );
+
         let matchesText = false;
         if (item.Text) {
           const textLower = item.Text.toLowerCase().trim();
           if (navigateUrl === 'request-for-document-creation-update') {
-            matchesText = textLower.includes('request for document creation') || textLower.includes('my approvals - request for document creation');
+            matchesText =
+              textLower.includes('request for document creation') ||
+              textLower.includes('my approvals - request for document creation');
           } else if (navigateUrl === 'my-approvals-documents') {
-            matchesText = textLower === 'my approvals - documents' || textLower === 'documents' || textLower.includes('my approvals - documents');
+            matchesText =
+              textLower === 'my approvals - documents' ||
+              textLower === 'documents' ||
+              textLower.includes('my approvals - documents');
           } else if (navigateUrl === 'my-approvals-request') {
-            matchesText = textLower === 'my approvals - request' || textLower === 'request' || textLower.includes('my approvals - request');
+            matchesText =
+              textLower === 'my approvals - request' ||
+              textLower === 'request' ||
+              textLower.includes('my approvals - request');
           }
         }
 
         if (matchesUrl || matchesText) {
           item.count = count;
-          console.log(`[MainLayout] Matched menu: text="${item.Text}" url="${item.NavigateUrl}" -> assigned count=${count}`);
+          console.log(
+            `[MainLayout] Matched menu: text="${item.Text}" url="${item.NavigateUrl}" -> assigned count=${count}`,
+          );
         }
 
         if (item.child && item.child.length > 0) {
@@ -441,13 +463,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           return;
         }
         const reader = new FileReader();
-        reader.onload = () => { this.EmployeePic = reader.result as string; };
+        reader.onload = () => {
+          this.EmployeePic = reader.result as string;
+        };
         reader.readAsDataURL(blob);
       },
       error: (error) => {
         console.error('Failed to load image from API:', error);
         this.EmployeePic = './assets/images/pro.png';
-      }
+      },
     });
   }
 
@@ -467,7 +491,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.updateFavouriteStatus(formData.formId);
     this.strBreadCrumb = this.generateBreadcrumb(this.router.url, formData.formName);
     this._pendingFormId = formData.formId;
-    
+
     if (typeof window !== 'undefined' && window.innerWidth <= 992) {
       this.closeSidebar();
     }
@@ -480,7 +504,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       const pathParts = segments.map(
         (s) => s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' '),
       );
-      if (currentFormName && pathParts.length > 0 && currentFormName.toLowerCase() !== 'dashboard') {
+      if (
+        currentFormName &&
+        pathParts.length > 0 &&
+        currentFormName.toLowerCase() !== 'dashboard'
+      ) {
         pathParts[pathParts.length - 1] = currentFormName;
       }
       breadcrumb += ' / ' + pathParts.join(' / ');
@@ -519,8 +547,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  openDashboard(): void { this.router.navigate(['/dashboard']); }
-  openReportDialog(): void { alert('Report Problem functionality not implemented yet.'); }
+  openDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+  openReportDialog(): void {
+    alert('Report Problem functionality not implemented yet.');
+  }
 
   toggleNotifications(event: Event): void {
     event.stopPropagation();
@@ -548,7 +580,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       localStorage.clear();
     }
     if (typeof document !== 'undefined') {
-      document.cookie = encodeURIComponent('login') + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie =
+        encodeURIComponent('login') + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     }
     this.router.navigate(['/security']);
   }
@@ -568,7 +601,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             id: n.id || n.Id,
             title: n.title || n.Title,
             message: n.message || n.Message,
-            type: n.type || n.Type || (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
+            type:
+              n.type ||
+              n.Type ||
+              (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
             isRead: n.IsRead !== undefined ? n.IsRead : n.isRead !== undefined ? n.isRead : false,
             createdAt: n.createdAt || n.CreatedAt,
             relatedEntityType: n.RelatedEntityType || n.relatedEntityType,
@@ -582,7 +618,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         }
         this.cdRef.detectChanges();
       },
-      error: (err: any) => console.error('Failed to fetch notifications', err?.error?.Message || err?.Message),
+      error: (err: any) =>
+        console.error('Failed to fetch notifications', err?.error?.Message || err?.Message),
     });
   }
 
@@ -593,7 +630,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.cdRef.detectChanges();
       if (notification.id) this.notificationHttpService.markAsRead(notification.id).subscribe();
     }
-    
+
     if (notification.relatedEntityType === 'Request') {
       this.router.navigate(['/documents/my-approvals-request']);
     } else {
@@ -611,19 +648,27 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   getNotificationIcon(type?: string): string {
     switch (type?.toLowerCase()) {
-      case 'success': return 'bi-check-circle-fill';
-      case 'warning': return 'bi-exclamation-triangle-fill';
-      case 'error': return 'bi-x-circle-fill';
-      default: return 'bi-bell-fill';
+      case 'success':
+        return 'bi-check-circle-fill';
+      case 'warning':
+        return 'bi-exclamation-triangle-fill';
+      case 'error':
+        return 'bi-x-circle-fill';
+      default:
+        return 'bi-bell-fill';
     }
   }
 
   getNotificationColor(type?: string): string {
     switch (type?.toLowerCase()) {
-      case 'success': return 'text-success';
-      case 'warning': return 'text-warning';
-      case 'error': return 'text-danger';
-      default: return 'text-primary';
+      case 'success':
+        return 'text-success';
+      case 'warning':
+        return 'text-warning';
+      case 'error':
+        return 'text-danger';
+      default:
+        return 'text-primary';
     }
   }
 
@@ -632,7 +677,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       width: '480px',
       maxWidth: '90vw',
       panelClass: 'custom-dialog-container',
-      autoFocus: false
+      autoFocus: false,
     });
   }
 }
