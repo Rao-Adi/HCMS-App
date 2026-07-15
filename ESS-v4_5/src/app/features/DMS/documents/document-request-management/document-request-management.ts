@@ -74,4 +74,9 @@ export class DocumentRequestManagement implements OnInit {
       error: (err) => console.error('Failed to get request counts', err),
     });
   }
+
+  onRequestCreated(): void {
+    this.getDocumentRequestCounts();
+    this.getMyDocumentRequestForApprovalCount();
+  }
 }

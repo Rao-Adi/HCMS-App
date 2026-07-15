@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -54,6 +54,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DocumentRequestForm {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() draftData: any;
+  @Output() requestCreated = new EventEmitter<void>();
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   // --- PERMISSION FLAGS ---
@@ -657,6 +658,7 @@ export class DocumentRequestForm {
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
+          this.requestCreated.emit();
 
           this._notificationToasService.createNotification(
             'success',
@@ -813,6 +815,7 @@ export class DocumentRequestForm {
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
+          this.requestCreated.emit();
           this._notificationToasService.createNotification(
             'success',
             'User',

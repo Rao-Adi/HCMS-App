@@ -74,6 +74,11 @@ export class ViewDocumentPendingApproval {
   pageSize = 10;
   documentRequestsData: any[] = [];
   totalRows = 0;
+  gridApi: any;
+
+  onGridReady(event: any): void {
+    this.gridApi = event.api;
+  }
 
   loading = false;
   searchChange$ = new BehaviorSubject('');
@@ -312,14 +317,29 @@ export class ViewDocumentPendingApproval {
               approvalHistory: true, // Used to render the link in the cell
             };
           });
+
+          if (this.gridApi) {
+            this.gridApi.hideOverlay();
+            if (this.documentRequestsData.length === 0) {
+              this.gridApi.showNoRowsOverlay();
+            }
+          }
         } else {
           this.documentRequestsData = [];
           this.totalRows = 0;
+          if (this.gridApi) {
+            this.gridApi.hideOverlay();
+            this.gridApi.showNoRowsOverlay();
+          }
         }
       },
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
+        if (this.gridApi) {
+          this.gridApi.hideOverlay();
+          this.gridApi.showNoRowsOverlay();
+        }
         this._notificationToastService.createNotification(
           'error',
           'Error',
@@ -336,43 +356,27 @@ export class ViewDocumentPendingApproval {
     this.documentId = row?.RequestId || row?.Id || row?.id;
     this.currentDocumentName = row?.documentName || '';
   }
-
-  onDivisionChange(value: string): void {
-    this.selectedDivisions = value;
-    this.selectedDepartment = '';
-    this.selectedSubDepartment = '';
-  }
-  onDepartmentsChange(value: string): void {
-    this.selectedDepartment = value;
-    this.selectedSubDepartment = '';
-  }
+ 
 
   onDocumentTypeChange(value: string): void {
-    // this.loading = true;
     this.selectedDocumentType = value;
+    if (this.gridApi) {
+      this.gridApi.refreshInfiniteCache();
+    } else {
+      this.GetAllPendingDocuments();
+    }
   }
-  GetAllDocuments(query: any) {}
-
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
 
-    switch (gridId) {
-      case 'documentGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDocuments({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
-        break;
-      default:
-        break;
+    if (gridId === 'documentGridPending') {
+      this.pageSize = pageSize;
+      if (this.gridApi) {
+        this.gridApi.refreshInfiniteCache();
+      } else {
+        this.GetAllPendingDocuments();
+      }
     }
   }
 
@@ -381,6 +385,11 @@ export class ViewDocumentPendingApproval {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    if (this.gridApi) {
+      this.gridApi.refreshInfiniteCache();
+    } else {
+      this.GetAllPendingDocuments();
+    }
   }
 
   openWorkflowDeatilsModal(rowData: any) {

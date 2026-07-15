@@ -39,7 +39,7 @@
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'NewRequest'">
-              <app-document-request-form [mode]="'create'"> </app-document-request-form>
+              <app-document-request-form [mode]="'create'" (requestCreated)="onRequestCreated()"> </app-document-request-form>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'DraftRequest'">

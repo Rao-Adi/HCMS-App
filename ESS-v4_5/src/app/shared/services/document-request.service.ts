@@ -59,6 +59,11 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetRequestCreatedByUserListAsync(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-request-created-by-user-list`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   getDocumentRequestById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-request-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });

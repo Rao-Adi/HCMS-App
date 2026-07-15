@@ -15,6 +15,7 @@ import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/docum
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { DocumentService } from '@app/shared/services/document.service';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
@@ -24,7 +25,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { AppConfigService } from '@app/core/services/app-config';
 import { RevisionHistoryModal } from '../../documents/revision-history-modal/revision-history-modal';
-
 
 @Component({
   selector: 'app-approval-documents',
@@ -115,11 +115,11 @@ export class ApprovalDocuments {
 
   selectedUserDistributions: any[] = [];
 
-  requestCreators: SelectList[] = [
-    { CODE: '1', NAME: 'Ali' },
-    { CODE: '2', NAME: 'Ahmed' },
-    { CODE: '3', NAME: 'Naveed' },
-  ];
+  requestCreators: SelectList[] = [];
+
+  public noRowsOverlay: string = '';
+
+  selectedRequestCreator: number | null = null;
 
   authorityTypes: SelectList[] = [
     { CODE: '1', NAME: 'Reporting to Levels' },
@@ -196,8 +196,16 @@ export class ApprovalDocuments {
     },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' , cellClass: 'audit-cell'},
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', cellClass: 'audit-cell' },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created By',
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      cellClass: 'audit-cell',
+    },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -243,6 +251,7 @@ export class ApprovalDocuments {
   constructor(
     private _permissionService: PermissionService,
     private _documentService: DocumentService,
+    private _documentRequestService: DocumentRequestService,
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
     private sanitizer: DomSanitizer,
@@ -256,14 +265,11 @@ export class ApprovalDocuments {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
     });
+    this.getAllDesignationList();
   }
 
-  public noRowsOverlay: string = '';
-
-  selectedAuthorityType: number | null = null;
-
-  onAuthorityTypeChange(value: any): void {
-    this.selectedAuthorityType = value;
+  onRequestCreatorChange(value: any): void {
+    this.selectedRequestCreator = value;
     this.onFilterChange();
   }
 
@@ -293,7 +299,7 @@ export class ApprovalDocuments {
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
       documentTypeCode: this.selectedDocumentType,
-      requestCreatedBy: this.selectedAuthorityType,
+      requestCreatedBy: this.selectedRequestCreator,
       approvedFromDate: this.approvedFromDate ? this.approvedFromDate.toISOString() : null,
       approvedToDate: this.approvedToDate ? this.approvedToDate.toISOString() : null,
       requestCreatedFromDate: this.requestCreatedFromDate
@@ -343,8 +349,8 @@ export class ApprovalDocuments {
                 // ──────────────────────────────────────────────
                 // Identification & Request
                 // ──────────────────────────────────────────────
-              Id: get(['Id', 'id']),
-              id: get(['Id', 'id']),
+                Id: get(['Id', 'id']),
+                id: get(['Id', 'id']),
                 ExecutionId: get(['ExecutionId', 'executionId']),
                 RequestId: get(['requestid', 'Requestid']),
                 documentId: get(['Id', 'id']), // often same as Id
@@ -411,7 +417,7 @@ export class ApprovalDocuments {
                 requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
                 dateOfApproval: '', // ← not present
                 approvalHistory: true, // Used to render the link in the cell
-              revisionHistory: true,
+                revisionHistory: true,
                 distributionList: true,
                 userDistributions: get(
                   ['UserDistributions', 'userdistributions', 'userDistributions'],
@@ -429,7 +435,7 @@ export class ApprovalDocuments {
         }
 
         // Force AG grid updates bypass
-        if (this.gridApi) { 
+        if (this.gridApi) {
           if (this.documentRequestsData.length === 0) {
             this.gridApi.showNoRowsOverlay();
           } else {
@@ -441,7 +447,7 @@ export class ApprovalDocuments {
       error: (err) => {
         this.documentRequestsData = [];
         this.totalRows = 0;
-        if (this.gridApi) { 
+        if (this.gridApi) {
           this.gridApi.showNoRowsOverlay();
         }
         this.cdr.detectChanges();
@@ -715,4 +721,18 @@ export class ApprovalDocuments {
       },
     });
   }
+
+  getAllDesignationList = () => {
+    this._documentRequestService.GetRequestCreatedByUserListAsync().subscribe((res) => {
+      if (res?.Data) {
+        this.requestCreators = (res.Data ?? []).map((d: any) => ({
+          CODE: d.Id || d.Code || d.code,
+          NAME: d.Value || d.value,
+        }));
+      } else {
+        this.requestCreators = [];
+      }
+      //this.cdr.detectChanges(); // force update
+    });
+  };
 }

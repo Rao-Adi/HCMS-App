@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -85,6 +85,7 @@ interface RequestType {
   ],
 })
 export class CreateUpdateDocument {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
@@ -743,7 +744,7 @@ export class CreateUpdateDocument {
         if (response?.Success) {
           this._notificationToastService.createNotification(
             'success',
-            'Document',
+            'Document Create',
             response.Message,
           );
           this.emptyFields();
@@ -755,11 +756,17 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => {
-        this._notificationToastService.createNotification(
-          'error',
-          'Error',
-          'Failed to approve document.',
-        );
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
+        this._notificationToastService.createNotification('error', 'Document Create/Update', message);
       },
     });
   }
@@ -770,6 +777,39 @@ export class CreateUpdateDocument {
       this.draftFile = input.files[0];
     } else {
       this.draftFile = null;
+    }
+  }
+
+  reviewDraftedFile(): void {
+    if (this.draftFile) {
+      const fileURL = URL.createObjectURL(this.draftFile);
+      window.open(fileURL, '_blank');
+      setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+    }
+  }
+
+  getDraftFileName(): string {
+    if (this.draftFile) {
+      return this.draftFile.name;
+    }
+    if (this.draftFileUrl) {
+      try {
+        const decoded = decodeURIComponent(this.draftFileUrl);
+        const parts = decoded.split('/');
+        return parts[parts.length - 1].split('?')[0];
+      } catch (e) {
+        const parts = this.draftFileUrl.split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return '';
+  }
+
+  removeDraftedFile(): void {
+    this.draftFile = null;
+    this.draftFileUrl = '';
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
     }
   }
 
