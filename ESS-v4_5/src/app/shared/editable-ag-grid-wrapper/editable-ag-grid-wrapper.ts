@@ -8,6 +8,7 @@ import {
   ViewChild,
   OnInit,
   signal,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -144,7 +145,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
   @Input() isSelectionRequired: boolean = true;
   @Input() showSearchBar: Boolean = true;
-  @Input() autoSizeColumns: boolean = false;
+  @Input() autoSizeColumns: boolean = true;
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -210,7 +211,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
   gridContext: any;
 
-  constructor() {
+  constructor(private el: ElementRef) {
     this.defaultColDef = {
       sortable: this.config.enableSorting,
       filter: this.config.enableFiltering,
@@ -243,6 +244,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       this.isUpdatingRowData = true;
       setTimeout(() => {
         this.isUpdatingRowData = false;
+        if (this.autoSizeColumns && this.gridApi) {
+          this.autoSizeGridColumns();
+        }
       }, 50);
     }
   }
@@ -862,10 +866,45 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.gridApi.addEventListener('paginationChanged', this.onPaginationChanged.bind(this));
 
     if (this.autoSizeColumns) {
-      this.gridApi.autoSizeAllColumns();
+      this.autoSizeGridColumns();
     }
 
     this.gridReady.emit(this.gridApi);
+  }
+
+  autoSizeGridColumns(): void {
+    if (!this.gridApi) return;
+    const columns = this.gridApi.getColumns();
+    if (!columns || columns.length === 0) return;
+
+    const allColumnIds = columns.map((col: any) => col.getId());
+    this.gridApi.autoSizeColumns(allColumnIds);
+
+    // Calculate total actual width of all columns after auto-sizing
+    let totalColumnWidth = 0;
+    columns.forEach((col: any) => {
+      totalColumnWidth += col.getActualWidth();
+    });
+
+    // Get the grid container element width
+    const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
+    const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
+
+    if (totalColumnWidth < gridWidth) {
+      this.gridApi.sizeColumnsToFit();
+    }
+  }
+
+  onFirstDataRendered(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
+  }
+
+  onRowDataUpdated(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
   }
 
   private onSortOrFilterChanged() {

@@ -37,6 +37,8 @@
   (selectionChanged)="onSelectionChanged($event)"
   (filterChanged)="refreshGrid()"
   (onCellValueChanged)="onCellValueChanged($event)"
+  (firstDataRendered)="onFirstDataRendered($event)"
+  (rowDataUpdated)="onRowDataUpdated($event)"
 >
 </ag-grid-angular>
 

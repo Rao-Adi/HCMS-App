@@ -6,10 +6,12 @@ import {
   input,
   Input,
   OnInit,
+  OnChanges,
   Output,
   signal,
   SimpleChanges,
   NgZone,
+  ElementRef,
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -52,8 +54,9 @@ interface ColumnToggle {
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
 })
-export class AgGridWrapper implements OnInit {
+export class AgGridWrapper implements OnInit, OnChanges {
   @Input() columnDefs: ColDef[] = [];
+  @Input() autoSizeColumns: boolean = true;
   @Input() rowData: any[] = [];
   @Input() pageSize = 10;
   @Input() defaultColDef!: ColDef;
@@ -117,6 +120,7 @@ export class AgGridWrapper implements OnInit {
   constructor(
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
+    private el: ElementRef,
   ) {}
 
   ngOnInit(): void {
@@ -173,6 +177,11 @@ export class AgGridWrapper implements OnInit {
         this.getRowsParams = null; // Consume it so we don't double call
       }
     }
+    if (changes['rowData'] && this.autoSizeColumns && this.gridApi) {
+      setTimeout(() => {
+        this.autoSizeGridColumns();
+      }, 50);
+    }
   }
 
   onGridReady(event: GridReadyEvent) {
@@ -209,6 +218,41 @@ export class AgGridWrapper implements OnInit {
     setTimeout(() => {
       this.isGridInitialized = true;
     });
+  }
+
+  autoSizeGridColumns(): void {
+    if (!this.gridApi) return;
+    const columns = this.gridApi.getColumns();
+    if (!columns || columns.length === 0) return;
+
+    const allColumnIds = columns.map((col: any) => col.getId());
+    this.gridApi.autoSizeColumns(allColumnIds);
+
+    // Calculate total actual width of all columns after auto-sizing
+    let totalColumnWidth = 0;
+    columns.forEach((col: any) => {
+      totalColumnWidth += col.getActualWidth();
+    });
+
+    // Get the grid container element width
+    const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
+    const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
+
+    if (totalColumnWidth < gridWidth) {
+      this.gridApi.sizeColumnsToFit();
+    }
+  }
+
+  onFirstDataRendered(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
+  }
+
+  onRowDataUpdated(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
   }
 
   onSelectionChanged() {

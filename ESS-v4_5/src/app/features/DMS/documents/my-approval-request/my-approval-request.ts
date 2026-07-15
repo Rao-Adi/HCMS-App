@@ -109,14 +109,12 @@ export class MyApprovalRequest {
   documentColumnDefs = [
     {
       field: 'documentType',
-      headerName: 'Document Type',
-      minWidth: 150,
+      headerName: 'Document Type', 
       flex: 1
     },
     {
       field: 'documentRequestId',
-      headerName: 'Request ID',
-      minWidth: 150,
+      headerName: 'Request ID', 
       flex: 1
     },
     {
@@ -175,8 +173,7 @@ export class MyApprovalRequest {
     // },
     {
       field: 'proposedVersionNumber',
-      headerName: 'Proposed Version Number',
-      minWidth: 150,
+      headerName: 'Proposed Version Number',  
       flex: 1
     },
     {
@@ -193,8 +190,7 @@ export class MyApprovalRequest {
     },
     {
       field: 'executionStatus',
-      headerName: 'Execution Status',
-      minWidth: 150,
+      headerName: 'Execution Status', 
       cellRenderer: (params: any) => {
         const val = params.value || '';
         const displayVal = val.toLowerCase() === 'reworked' ? 'Reverted' : val;
@@ -241,16 +237,16 @@ export class MyApprovalRequest {
         `;
       }
     },
-    { field: 'dateOfCreation', headerName: 'Date Of Creation', minWidth: 150,
+    { field: 'dateOfCreation', headerName: 'Date Of Creation',
       flex: 1, cellClass: 'audit-cell', },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150,
+    { field: 'requestCreatedBy', headerName: 'Request Created By', 
       flex: 1, cellClass: 'audit-cell', },
-    { field: 'requestCreatedOn', headerName: 'Request Created On',minWidth: 150,
+    { field: 'requestCreatedOn', headerName: 'Request Created On',
       flex: 1, cellClass: 'audit-cell', },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By',minWidth: 180,
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By',
       flex: 1, cellClass: 'audit-cell', },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On',minWidth: 180,
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On',
       flex: 1, cellClass: 'audit-cell', },
     {
       field: 'approvalHistory',
