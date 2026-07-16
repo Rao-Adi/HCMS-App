@@ -1,156 +1,161 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
+      
       <!-- Parent Box containing Tabs and Nested Filters -->
-      <div class="main-content d-flex flex-column min-vw-0">
-        <!-- Tabs at the top -->
-        <div class="custom-tab-container" style="margin-top: 0">
-          <button
-            class="tab-button"
-            tabindex="0"
-            [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
-            (click)="onTabChange('Pending')"
-          >
-            Pending
-            <span *ngIf="pendingRequestCount > 0" class="badge bg-danger ms-1">{{
-              pendingRequestCount
-            }}</span>
-          </button>
-          <button
-            class="tab-button"
-            tabindex="0"
-            [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
-            (click)="onTabChange('Approved')"
-          >
-            Approved
-            <span *ngIf="approvedRequestCount > 0" class="badge bg-danger ms-1">{{
-              approvedRequestCount
-            }}</span>
-          </button>
-          <button
-            class="tab-button"
-            tabindex="0"
-            [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
-            (click)="onTabChange('Rejected')"
-          >
-            Reverted/Rejected<span
-              *ngIf="disapprovedRequestCount > 0"
-              class="badge bg-danger ms-1"
-              >{{ disapprovedRequestCount }}</span
-            >
-          </button>
-        </div>
-
-        <!-- Filters Nested inside the Parent Box -->
-        <div class="Master-box mt-4" style="margin-left: 0; margin-right: 0">
-          <h3 class="PnlHeader" style="margin-top: 0">
-            {{ 'labels.Filters' | safeTranslate }}
-          </h3>
-          <div class="row">
-            <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-              <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
-              </app-cabinet-structure-list>
-            </div>
-
-            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-              <div class="PnlHeading">
-                <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-              </div>
-              <div>
-                <app-document-type-list
-                  valueKey="CODE"
-                  labelKey="NAME"
-                  placeholder="Select Document Type"
-                  [(ngModel)]="selectedDocumentType"
-                  (valueChange)="onDocumentTypeChange($event)"
-                  width="250px"
-                >
-                </app-document-type-list>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Details Card (Grid details below parent box) -->
       <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
-            <div class="row row-space" *ngIf="selectedTab === 'Pending'">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Documents</h3>
-                  <br />
-                  <div class="row">
-                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <app-ag-grid-wrapper
-                        [gridStyle]="{ width: '100%', height: '450px' }"
-                        [columnToggles]="columnToggles"
-                        [columnDefs]="documentColumnDefsWithoutStatus"
-                        [defaultColDef]="defaultColDef"
-                        [isSelectionRequired]="true"
-                        [showDisplayOption]="true"
-                        [autoSizeColumns]="true"
-                        [rowData]="documentRequestsData"
-                        [pageSize]="selectedPageSize"
-                        [pageSizeOptions]="[10, 20, 50, 100]"
-                        [totalRows]="totalRows"
-                        gridId="documentGridPending"
-                        (pageSizeChange)="onPageSizeChanged($event)"
-                        (selectionChange)="onSelectionChange($event)"
-                        (serverQuery)="GetAllPendingDocuments($event)"
-                        (cellClicked)="onCellClicked($event)"
-                      >
-                        <div grid-actions class="grid-action-icons">
-                          <button
-                            class="btn btn-success btn-sm btn-action"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Approve"
-                            (click)="promptAction('APPROVED')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-check-circle"></i> Approve
-                          </button>
+            
+            <!-- Tabs at the top -->
+            <div class="custom-tab-container" style="margin-top: 0">
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
+                (click)="onTabChange('Pending')"
+              >
+                Pending
+                <span *ngIf="pendingRequestCount > 0" class="badge bg-danger ms-1">{{
+                  pendingRequestCount
+                }}</span>
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
+                (click)="onTabChange('Approved')"
+              >
+                Approved
+                <span *ngIf="approvedRequestCount > 0" class="badge bg-danger ms-1">{{
+                  approvedRequestCount
+                }}</span>
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
+                (click)="onTabChange('Rejected')"
+              >
+                Reverted/Rejected<span
+                  *ngIf="disapprovedRequestCount > 0"
+                  class="badge bg-danger ms-1"
+                  >{{ disapprovedRequestCount }}</span
+                >
+              </button>
+            </div>
 
-                          <button
-                            class="btn btn-danger btn-sm btn-action"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Disapprove"
-                            (click)="promptAction('REJECTED')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-x-circle"></i> Reject
-                          </button>
+            <!-- Filters Nested inside the Parent Box -->
+            <div class="Master-box mt-4" style="margin-left: 0; margin-right: 0">
+              <h3 class="PnlHeader" style="margin-top: 0">
+                {{ 'labels.Filters' | safeTranslate }}
+              </h3>
+              <div class="row">
+                <div class="col-lg-9 col-md-8 col-sm-12 mb-3">
+                  <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                  </app-cabinet-structure-list>
+                </div>
 
-                          <button
-                            class="btn btn-warning btn-sm btn-action"
-                            [class.disabled]="!hasSelectedRows"
-                            title="REWORK"
-                            (click)="promptAction('REWORKED')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-arrow-return-left"></i> Revert
-                          </button>
-
-                          <button
-                            class="btn btn-success btn-sm btn-action"
-                            title="Export"
-                            (click)="exportDocumentRequests()"
-                          >
-                            <i class="bi bi-file-earmark-excel"></i> Export
-                          </button>
-                        </div>
-                      </app-ag-grid-wrapper>
-                    </div>
+                <div class="col-lg-3 col-md-4 col-sm-12 mb-3">
+                  <div class="PnlHeading">
+                    <label class="ctrllbl">{{ 'labels.Document Type' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <app-document-type-list
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="Select Document Type"
+                      [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
+                      width="100%"
+                    >
+                    </app-document-type-list>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Approved'">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Documents</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details Card (Grid details below parent box) -->
+      <div class="status-box-leftColmd6-standard mb-4">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            
+            <!-- Pending Tab Grid -->
+            <div *ngIf="selectedTab === 'Pending'">
+              <h3 class="PnlHeader">Pending Approval Details</h3>
+              <div class="row mt-3">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '450px' }"
+                    [columnToggles]="columnToggles"
+                    [columnDefs]="documentColumnDefsWithoutStatus"
+                    [defaultColDef]="defaultColDef"
+                    [isSelectionRequired]="true"
+                    [showDisplayOption]="true"
+                    [autoSizeColumns]="true"
+                    [rowData]="documentRequestsData"
+                    [pageSize]="selectedPageSize"
+                    [pageSizeOptions]="[10, 20, 50, 100]"
+                    [totalRows]="totalRows"
+                    gridId="documentGridPending"
+                    (pageSizeChange)="onPageSizeChanged($event)"
+                    (selectionChange)="onSelectionChange($event)"
+                    (serverQuery)="GetAllPendingDocuments($event)"
+                    (cellClicked)="onCellClicked($event)"
+                  >
+                    <div grid-actions class="grid-action-icons">
+                      <button
+                        class="btn btn-success btn-sm btn-action"
+                        [class.disabled]="!hasSelectedRows"
+                        title="Approve"
+                        (click)="promptAction('APPROVED')"
+                        [disabled]="hasSelectedRows === false"
+                      >
+                        <i class="bi bi-check-circle"></i> Approve
+                      </button>
+
+                      <button
+                        class="btn btn-danger btn-sm btn-action"
+                        [class.disabled]="!hasSelectedRows"
+                        title="Disapprove"
+                        (click)="promptAction('REJECTED')"
+                        [disabled]="hasSelectedRows === false"
+                      >
+                        <i class="bi bi-x-circle"></i> Reject
+                      </button>
+
+                      <button
+                        class="btn btn-warning btn-sm btn-action"
+                        [class.disabled]="!hasSelectedRows"
+                        title="REWORK"
+                        (click)="promptAction('REWORKED')"
+                        [disabled]="hasSelectedRows === false"
+                      >
+                        <i class="bi bi-arrow-return-left"></i> Revert
+                      </button>
+
+                      <button
+                        class="btn btn-success btn-sm btn-action"
+                        title="Export"
+                        (click)="exportDocumentRequests()"
+                      >
+                        <i class="bi bi-file-earmark-excel"></i> Export
+                      </button>
+                    </div>
+                  </app-ag-grid-wrapper>
+                </div>
+              </div>
+            </div>
+
+            <!-- Approved Tab Grid -->
+            <div *ngIf="selectedTab === 'Approved'">
+              <h3 class="PnlHeader">Approved Details</h3>
+              <div class="row mt-3">
+                <div class="col-lg-12 col-md-12 col-sm-12">
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -182,10 +187,11 @@
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Rejected'">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Documents</h3>
+            <!-- Reverted/Rejected Tab Grid -->
+            <div *ngIf="selectedTab === 'Rejected'">
+              <h3 class="PnlHeader">Reverted / Rejected Details</h3>
+              <div class="row mt-3">
+                <div class="col-lg-12 col-md-12 col-sm-12">
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -216,72 +222,67 @@
                 </div>
               </div>
             </div>
+
           </div>
         </div>
-        <br />
-        <div class="row mt-10" *ngIf="requestId && (templateHtml || draftFileUrl)">
+      </div>
+
+      <!-- Document Content Card -->
+      <div class="status-box-leftColmd6-standard mb-4" *ngIf="requestId && (templateHtml || draftFileUrl)">
+        <h3 class="PnlHeader" style="margin-top: 0">Document Content</h3>
+        <div class="row mt-3">
           <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="status-box-leftColmd6-standard">
-              <h3 class="PnlHeader">Document Content</h3>
-              <!-- HTML Template Editor -->
-              <ng-container *ngIf="!draftFileUrl">
-                <app-dmsrich-text-edit
-                  [editorStyle]="{ width: '100%', height: '350px' }"
-                  [contentHtml]="templateHtml"
-                  (contentHtmlChange)="templateHtml = $event"
-                ></app-dmsrich-text-edit>
-              </ng-container>
+            <!-- HTML Template Editor -->
+            <ng-container *ngIf="!draftFileUrl">
+              <app-dmsrich-text-edit
+                [editorStyle]="{ width: '100%', height: '350px' }"
+                [contentHtml]="templateHtml"
+                (contentHtmlChange)="templateHtml = $event"
+              ></app-dmsrich-text-edit>
+            </ng-container>
 
-              <!-- Word/PDF File Download -->
-              <ng-container *ngIf="draftFileUrl">
-                <div
-                  class="alert alert-info d-flex align-items-center mb-4"
-                  style="font-size: 14px"
-                >
-                  <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
-                  <div>
-                    <strong>Instructions:</strong> Please download and review the drafted document
-                    attached to this request.
+            <!-- Word/PDF File Download -->
+            <ng-container *ngIf="draftFileUrl">
+              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+                <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                <div>
+                  <strong>Instructions:</strong> Please download and review the drafted document attached to this request.
+                </div>
+              </div>
+
+              <div class="row mt-4 btn-stick">
+                <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
+                  <div class="col-sm-2">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-outline-secondary btn-lg shadow-sm"
+                      (click)="downloadDraft()"
+                    >
+                      <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                      Download Drafted Document
+                    </button>
                   </div>
                 </div>
-
-                <div class="row mt-4 btn-stick">
-                  <div
-                    class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
-                  >
-                    <div class="col-sm-2">
-                      <button
-                        type="button"
-                        tabindex="0"
-                        class="btn btn-outline-secondary btn-lg shadow-sm"
-                        (click)="downloadDraft()"
-                      >
-                        <i class="bi bi-file-earmark-arrow-down me-1"></i>
-                        Download Drafted Document
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </ng-container>
-            </div>
+              </div>
+            </ng-container>
           </div>
         </div>
-        <div class="row mt-10" *ngIf="observationData.length > 0">
+      </div>
+
+      <!-- Historical Observation logs Card -->
+      <div class="status-box-leftColmd6-standard mb-4" *ngIf="observationData.length > 0">
+        <h3 class="PnlHeader" style="margin-top: 0">Observations Workflow Status & History Tracking Registry</h3>
+        <div class="row mt-3">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto">
               <div class="observation-container">
-                <div class="observation-title">
-                  OBSERVATIONS WORKFLOW STATUS & HISTORY TRACKING REGISTRY
-                </div>
-
                 <div class="observation-card" *ngFor="let item of observationData; let i = index">
                   <!-- Header -->
                   <div class="observation-header">
                     <div class="left-section">
                       <strong>[Observation {{ i + 1 }}]</strong>
-
                       <span class="separator">|</span>
-
                       <span>
                         Logged By:
                         <strong>{{ item.loggedBy }}</strong>
@@ -300,7 +301,6 @@
                       >
                         {{ item.status === 'Reworked' ? 'Reverted' : item.status }}
                       </span>
-
                       <span class="date">
                         {{ item.date | date: 'MMM dd, yyyy HH:mm:ss' }}
                       </span>
@@ -308,7 +308,6 @@
                   </div>
 
                   <!-- Body -->
-
                   <div class="observation-body" [innerHTML]="item.observation"></div>
                 </div>
               </div>
@@ -316,6 +315,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>

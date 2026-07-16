@@ -132,6 +132,16 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  exportDocuments(payload: any): Observable<Blob> {
+    return this.http.post(
+      `${this.apiUrl}/DMSDocument/export-my-documents`,
+      payload,
+      { responseType: 'blob' },
+    );
+  }
+
+  
+
   AuthorizeDocumentPostTraining(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/authorize-document-post-training`,

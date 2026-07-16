@@ -49,7 +49,7 @@
         <div *ngIf="showDocumentDiv">
           <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-              <div class="card-custom">
+              <div class="status-box-leftColmd6-standard">
                 <div class="row mb-4">
                   <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                     <span class="d-flex">Filter</span>
@@ -98,7 +98,7 @@
         <div *ngIf="showDocumentCreationDiv && (!showDocumentDiv || selectedDocumentRow)">
           
           <!-- Document Profile & Cabinet Section -->
-          <div class="card-custom mb-4 mt-4">
+          <div class="status-box-leftColmd6-standard mb-4 mt-4">
             <h3 class="PnlHeader" style="margin-top: 0;">Document Profile & Cabinet</h3>
             <div class="row mb-4">
               <div class="col-sm-3 col-md-3 col-lg-3 mb-10">
@@ -262,7 +262,7 @@
           </div>
 
           <!-- Document Users Section -->
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <h3 class="PnlHeader" style="margin-top: 0;">Document Users</h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
@@ -276,7 +276,7 @@
           </div>
 
           <!-- Distribution List Section -->
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <h3 class="PnlHeader" style="margin-top: 0;">Distribution List</h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
@@ -291,7 +291,7 @@
           </div>
 
           <!-- Document Content Section -->
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <h3 class="PnlHeader" style="margin-top: 0;">Document Content (Optional)</h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
@@ -418,7 +418,7 @@
           <!-- Workflow Authorities Section -->
           <div
             *ngIf="showExclusionTable && approvalSequenceData && approvalSequenceData.length > 0"
-            class="card-custom mb-4"
+            class="status-box-leftColmd6-standard mb-4"
           >
             <h3 class="PnlHeader" style="margin-top: 0;">
               {{ 'labels.Workflow Authorities' | safeTranslate }}

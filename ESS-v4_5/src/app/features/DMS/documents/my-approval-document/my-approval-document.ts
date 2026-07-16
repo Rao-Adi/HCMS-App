@@ -582,8 +582,63 @@ export class MyApprovalDocument {
       });
     }
   }
+ 
+  
+  exportDocuments(query?: any) {
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
 
-  export() {}
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      divisionCode: this.selectedDivisions,
+      departmentCode: this.selectedDepartment,
+      subDepartmentCode: this.selectedSubDepartment,
+      businessDomainCode: this.selectedBusinessDomain,
+      documentTypeCode: this.selectedDocumentType,
+      RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: 1000000,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      // Map to satisfy backend validation
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
+      empid: this.loginEmpId,
+    };
+
+    this._documentService.exportDocuments(payload).subscribe({
+      next: (response: any) => {
+        const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Documents_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this._notificationToastService.createNotification('success', 'Export', 'Document list exported successfully!');
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        this._notificationToastService.createNotification('error', 'Export', 'Failed to export document list.');
+      }
+    });
+  }
+ 
+  
 
   GetDocumentAttributeByDocumentId = (documentId: any) => {
     this._documentAttribute.getDocumentAttributeByDocumentId(documentId).subscribe((res) => {

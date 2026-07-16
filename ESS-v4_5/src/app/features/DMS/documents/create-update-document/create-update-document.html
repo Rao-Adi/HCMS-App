@@ -42,7 +42,7 @@
       </div>
 
       <!-- Cabinet Filters Card -->
-      <div class="card-custom mb-4">
+      <div class="status-box-leftColmd6-standard mb-4">
         <h3 class="PnlHeader" style="margin-top: 0">Cabinet Filters</h3>
         <div class="row">
           <div class="col-lg-9 col-md-8 col-sm-12 mb-10">
@@ -74,7 +74,7 @@
       </div>
 
       <!-- Trainers Card -->
-      <div class="card-custom mb-4" *ngIf="trainingRequired">
+      <div class="status-box-leftColmd6-standard mb-4" *ngIf="trainingRequired">
         <h3 class="PnlHeader" style="margin-top: 0">Trainers (Document Training)</h3>
         <div class="row">
           <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
@@ -173,7 +173,7 @@
         <!-- CASE 1: Creation (DRT-0001) -->
         <ng-container *ngSwitchCase="'DRT-0001'">
           <!-- Request Profile & Attributes Card -->
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <h3 class="PnlHeader" style="margin-top: 0">Request & Document Attributes</h3>
 
             <div class="row mb-4">
@@ -237,7 +237,7 @@
               </div>
             </div>
           </div>
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <div class="row mt-4">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <h4
@@ -428,7 +428,7 @@
           <!-- Workflow Authorities Card -->
           <div
             *ngIf="showExclusionTable && approvalSequenceData && approvalSequenceData.length > 0"
-            class="card-custom mb-4"
+            class="status-box-leftColmd6-standard mb-4"
           >
             <h3 class="PnlHeader" style="margin-top: 0">
               {{ 'labels.Workflow Authorities' | safeTranslate }}
@@ -486,7 +486,7 @@
 
         <!-- CASE 2: Revision (DRT-0002) -->
         <ng-container *ngSwitchCase="'DRT-0002'">
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <h3 class="PnlHeader" style="margin-top: 0">
               {{ 'labels.Documents' | safeTranslate }}
             </h3>
@@ -515,7 +515,7 @@
 
         <!-- CASE 3: Obsoletion (DRT-0003) -->
         <ng-container *ngSwitchCase="'DRT-0003'">
-          <div class="card-custom mb-4">
+          <div class="status-box-leftColmd6-standard mb-4">
             <h3 class="PnlHeader" style="margin-top: 0">
               {{ 'labels.Documents' | safeTranslate }}
             </h3>
@@ -543,7 +543,7 @@
         </ng-container>
 
         <!-- Revision Document Content -->
-        <div class="card-custom mb-4" *ngIf="showDocumentContent"> 
+        <div class="status-box-leftColmd6-standard mb-4" *ngIf="showDocumentContent"> 
           <h3 class="PnlHeader" style="margin-top: 0">
               {{ 'labels.Document Content' | safeTranslate }}
             </h3>
