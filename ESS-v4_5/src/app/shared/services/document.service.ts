@@ -207,7 +207,7 @@ export class DocumentService {
     // e.g. public async Task<IActionResult> ImportMetadata(IFormFile csvFile)
     formData.append('csvFile', csvFile, csvFile.name);
 
-    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/BulkImportMetadata`, formData);
+    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/bulk-import-metadata`, formData);
   }
 
   /**
@@ -226,6 +226,14 @@ export class DocumentService {
       formData.append('files', file, file.name);
     });
 
-    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/BulkUploadFiles`, formData);
+    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/bulk-upload-files`, formData);
+  }
+
+  DownloadBulkMetadataTemplate(): Observable<any> {
+    const uri = `${this.apiUrl}/DMSDocument/download-bulk-upload-template`;
+    return this.http.get(uri, {
+      observe: 'response',
+      responseType: 'blob',
+    });
   }
 }

@@ -282,6 +282,97 @@ export class DocumentTemplate {
     });
   }
 
+  downloadTemplateFile(): void {
+    if (!this.selectedDocumentType) {
+      this._notificationToastService.createNotification('warning', 'Document Type', 'Please select a Document Type first');
+      return;
+    }
+
+    if (this.selectedFile) {
+      const url = window.URL.createObjectURL(this.selectedFile);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = this.selectedFile.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      return;
+    }
+
+    if (!this.existingFileName) {
+      this._notificationToastService.createNotification('warning', 'Template', 'No template file exists to download');
+      return;
+    }
+
+    this.documentTemplateService.DownloadTemplateByDocumentTypeCode(this.selectedDocumentType).subscribe({
+      next: (response: any) => {
+        const blob = response.body;
+        if (!blob) {
+          this._notificationToastService.createNotification('error', 'Download', 'Failed to download template: Empty response');
+          return;
+        }
+
+        let filename = this.existingFileName;
+        const contentDisposition = response.headers?.get('content-disposition') || response.headers?.get('Content-Disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Error downloading template:', err);
+        this._notificationToastService.createNotification('error', 'Download', 'Failed to download template from server');
+      }
+    });
+  }
+
+  viewTemplateFile(): void {
+    if (!this.selectedDocumentType) {
+      this._notificationToastService.createNotification('warning', 'Document Type', 'Please select a Document Type first');
+      return;
+    }
+
+    if (this.selectedFile) {
+      const url = window.URL.createObjectURL(this.selectedFile);
+      window.open(url, '_blank');
+      return;
+    }
+
+    if (!this.existingFileName) {
+      this._notificationToastService.createNotification('warning', 'Template', 'No template file exists to view');
+      return;
+    }
+
+    this.documentTemplateService.DownloadTemplateByDocumentTypeCode(this.selectedDocumentType).subscribe({
+      next: (response: any) => {
+        const blob = response.body;
+        if (!blob) {
+          this._notificationToastService.createNotification('error', 'View Template', 'Failed to view template: Empty response');
+          return;
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      },
+      error: (err) => {
+        console.error('Error loading template file:', err);
+        this._notificationToastService.createNotification('error', 'View Template', 'Failed to retrieve template file from server');
+      }
+    });
+  }
+
   onHierarchyChange(values: CabinetSelection[]) {
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;

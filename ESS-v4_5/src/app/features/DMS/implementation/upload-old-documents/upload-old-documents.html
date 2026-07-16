@@ -83,7 +83,7 @@
                             tabindex="0"
                             class="btn btn-primary px-4 py-2 shadow-sm rounded-pill fw-semibold"
                             (click)="submitBulkUpload()"
-                            [disabled]="!excelFile || bulkDocuments.length === 0 || isUploading"
+                            [disabled]="!excelFile || isUploading"
                           >
                             <span *ngIf="!isUploading"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Submit Upload</span>
                             <span *ngIf="isUploading"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...</span>
@@ -119,7 +119,7 @@
                             tabindex="0"
                             class="btn btn-primary px-4 py-2 shadow-sm rounded-pill fw-semibold"
                             (click)="submitBulkUpload()"
-                            [disabled]="!excelFile || bulkDocuments.length === 0 || isUploading"
+                            [disabled]="bulkDocuments.length === 0 || isUploading"
                           >
                             <span *ngIf="!isUploading"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Submit Upload</span>
                             <span *ngIf="isUploading"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...</span>

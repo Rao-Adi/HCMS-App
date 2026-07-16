@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'; 
+import { Component } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
@@ -6,7 +6,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentService } from '@app/shared/services/document.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
@@ -32,7 +32,7 @@ export class UploadedDocuments {
   pageSize = 10;
   divisionPageSize = 10;
   employeePageSize = 10;
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   dropdownDataSources: Record<number, any[]> = {};
   cabinetHierarchy: CabinetLevel[] = [];
@@ -66,13 +66,6 @@ export class UploadedDocuments {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-
-      this.GetAllUploadedDocuments({
-        pageNumber: 1,
-        pageSize: this.selectedPageSize,
-        sortModel: [], // or your current sort/filter model
-        filterModel: {},
-      });
     });
   }
 
@@ -156,35 +149,41 @@ export class UploadedDocuments {
       )
       .subscribe((res) => {
         const items = res?.Data?.Items;
-        console.log(items);
-        if (Array.isArray(items)) {
-          this.uploadedDocumentsData = items.map((item: any) => ({
-            Id: item.Id,
-            documentTypeId: item.DocumentTypeCode,
-            documentTypeName: item.DocumentTypeCode,
-            version: item.Version,
-            divisionName: item.Division,
-            divisionId: item.DivisionCode,
-            documentId: item.DocumentNumber,
-            documentName: item.DocumentName,
-            DocumentCode: item.DocumentCode,
-            departmentName: item.Department,
-            departmentId: item.DepartmentCode,
-            subDepartmentName: item.SubDepartment,
-            subDepartmentId: item.SubDepartmentCode,
-            businessDomainName: item.BusinessDomain,
-            businessDomainId: item.BusinessDomainCode,
-            EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
-            EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
-            DocumentURL: item.DocumentURL,
-            nextReviewDate: item.NextReviewDate,
-            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
-            CreatedBy: item.CreatedBy,
-            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
-            LastModifiedBy: item.LastModifiedBy,
-          }));
+        if (res?.Success && res.Data?.Items) {
+          if (Array.isArray(items)) {
+            this.uploadedDocumentsData = items.map((item: any) => ({
+              Id: item.Id,
+              documentTypeId: item.DocumentTypeCode,
+              documentTypeName: item.DocumentTypeCode,
+              version: item.Version || item.version || '',
+              divisionName: item.Division,
+              divisionId: item.DivisionCode,
+              documentId: item.DocumentNumber,
+              documentName: item.Title || item.DocumentName,
+              DocumentCode: item.DocumentCode,
+              departmentName: item.Department,
+              departmentId: item.DepartmentCode,
+              subDepartmentName: item.SubDepartment,
+              subDepartmentId: item.SubDepartmentCode,
+              businessDomainName: item.BusinessDomain,
+              businessDomainId: item.BusinessDomainCode,
+              EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
+              EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
+              DocumentURL: item.DocumentURL,
+              nextReviewDate: item.NextReviewDate,
+              CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
+              CreatedBy: item.CreatedBy,
+              LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
+              LastModifiedBy: item.LastModifiedBy,
+            }));
+            this.totalUplodedDocument = res?.Data?.TotalCount ?? items.length;
+          } else {
+            this.uploadedDocumentsData = [];
+            this.totalUplodedDocument = 0;
+          }
         } else {
           this.uploadedDocumentsData = [];
+          this.totalUplodedDocument = 0;
         }
       });
   }
@@ -192,7 +191,7 @@ export class UploadedDocuments {
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
 
-    this.divisionPageSize = pageSize;
+    this.selectedPageSize = pageSize;
     this.GetAllUploadedDocuments({
       pageNumber: 1,
       pageSize: this.selectedPageSize,
