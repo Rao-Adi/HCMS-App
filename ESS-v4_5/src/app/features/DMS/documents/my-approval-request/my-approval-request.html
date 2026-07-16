@@ -2,89 +2,80 @@
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
       <!-- Parent Box containing Tabs and Nested Filters -->
-      <div class="card-custom mb-4">
-        <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0">
-            
-            <!-- Tabs at the top -->
-            <div class="custom-tab-container" style="margin-top: 0;">
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
-                (click)="onTabChange('Pending')"
-              >
-                Pending
-                <span *ngIf="pendingRequestCount > 0" class="badge bg-danger ms-1">{{
-                  pendingRequestCount
-                }}</span>
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
-                (click)="onTabChange('Approved')"
-              >
-                Approved
-                <span *ngIf="approvedRequestCount > 0" class="badge bg-danger ms-1">{{
-                  approvedRequestCount
-                }}</span>
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
-                (click)="onTabChange('Rejected')"
-              >
-                Reverted/Rejected<span
-                  *ngIf="disapprovedRequestCount > 0"
-                  class="badge bg-danger ms-1"
-                  >{{ disapprovedRequestCount }}</span
-                >
-              </button>
+      <div class="main-content d-flex flex-column min-vw-0">
+        <!-- Tabs at the top -->
+        <div class="custom-tab-container" style="margin-top: 0">
+          <button
+            class="tab-button"
+            tabindex="0"
+            [ngClass]="{ 'active-tab': selectedTab === 'Pending' }"
+            (click)="onTabChange('Pending')"
+          >
+            Pending
+            <span *ngIf="pendingRequestCount > 0" class="badge bg-danger ms-1">{{
+              pendingRequestCount
+            }}</span>
+          </button>
+          <button
+            class="tab-button"
+            tabindex="0"
+            [ngClass]="{ 'active-tab': selectedTab === 'Approved' }"
+            (click)="onTabChange('Approved')"
+          >
+            Approved
+            <span *ngIf="approvedRequestCount > 0" class="badge bg-danger ms-1">{{
+              approvedRequestCount
+            }}</span>
+          </button>
+          <button
+            class="tab-button"
+            tabindex="0"
+            [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
+            (click)="onTabChange('Rejected')"
+          >
+            Reverted/Rejected<span
+              *ngIf="disapprovedRequestCount > 0"
+              class="badge bg-danger ms-1"
+              >{{ disapprovedRequestCount }}</span
+            >
+          </button>
+        </div>
+
+        <!-- Filters Nested inside the Parent Box -->
+        <div class="Master-box mt-4" style="margin-left: 0; margin-right: 0">
+          <h3 class="PnlHeader" style="margin-top: 0">
+            {{ 'labels.Filters' | safeTranslate }}
+          </h3>
+          <div class="row">
+            <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+              <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+              </app-cabinet-structure-list>
             </div>
 
-            <!-- Filters Nested inside the Parent Box -->
-            <div class="Master-box mt-4" style="margin-left: 0; margin-right: 0;">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <h3 class="PnlHeader" style="margin-top: 0;">
-                  {{ 'labels.Filters' | safeTranslate }}
-                </h3> 
-                <div class="row">
-                  <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                    <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
-                    </app-cabinet-structure-list>
-                  </div>
-
-                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-                    </div>
-                    <div>
-                      <app-document-type-list
-                        valueKey="CODE"
-                        labelKey="NAME"
-                        placeholder="Select Document Type"
-                        [(ngModel)]="selectedDocumentType"
-                        (valueChange)="onDocumentTypeChange($event)"
-                        width="250px"
-                      >
-                      </app-document-type-list>
-                    </div>
-                  </div>
-                </div>
+            <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+              <div class="PnlHeading">
+                <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+              </div>
+              <div>
+                <app-document-type-list
+                  valueKey="CODE"
+                  labelKey="NAME"
+                  placeholder="Select Document Type"
+                  [(ngModel)]="selectedDocumentType"
+                  (valueChange)="onDocumentTypeChange($event)"
+                  width="250px"
+                >
+                </app-document-type-list>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
       <!-- Details Card (Grid details below parent box) -->
-      <div class="card-custom">
+      <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
-
             <div class="row row-space" *ngIf="selectedTab === 'Pending'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
@@ -141,7 +132,11 @@
                             <i class="bi bi-arrow-return-left"></i> Revert
                           </button>
 
-                          <button class="btn btn-success btn-sm btn-action" title="Export" (click)="exportDocumentRequests()">
+                          <button
+                            class="btn btn-success btn-sm btn-action"
+                            title="Export"
+                            (click)="exportDocumentRequests()"
+                          >
                             <i class="bi bi-file-earmark-excel"></i> Export
                           </button>
                         </div>
@@ -156,7 +151,6 @@
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
-                  <br />
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -175,7 +169,11 @@
                     (cellClicked)="onCellClicked($event)"
                   >
                     <div grid-actions class="grid-action-icons">
-                      <button class="btn btn-success btn-sm btn-action" title="Export" (click)="exportDocumentRequests()">
+                      <button
+                        class="btn btn-success btn-sm btn-action"
+                        title="Export"
+                        (click)="exportDocumentRequests()"
+                      >
                         <i class="bi bi-file-earmark-excel"></i> Export
                       </button>
                     </div>
@@ -188,7 +186,6 @@
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Documents</h3>
-                  <br />
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '450px' }"
                     [columnToggles]="columnToggles"
@@ -207,7 +204,11 @@
                     (cellClicked)="onCellClicked($event)"
                   >
                     <div grid-actions class="grid-action-icons">
-                      <button class="btn btn-success btn-sm  btn-action" title="Export" (click)="exportDocumentRequests()">
+                      <button
+                        class="btn btn-success btn-sm btn-action"
+                        title="Export"
+                        (click)="exportDocumentRequests()"
+                      >
                         <i class="bi bi-file-earmark-excel"></i> Export
                       </button>
                     </div>
@@ -220,44 +221,49 @@
         <br />
         <div class="row mt-10" *ngIf="requestId && (templateHtml || draftFileUrl)">
           <div class="col-lg-12 col-md-12 col-sm-12">
-            <h3 class="PnlHeader">Document Content</h3>
-            <!-- HTML Template Editor -->
-            <ng-container *ngIf="!draftFileUrl">
-              <app-dmsrich-text-edit
-                [editorStyle]="{ width: '100%', height: '350px' }"
-                [contentHtml]="templateHtml"
-                (contentHtmlChange)="templateHtml = $event"
-              ></app-dmsrich-text-edit>
-            </ng-container>
+            <div class="status-box-leftColmd6-standard">
+              <h3 class="PnlHeader">Document Content</h3>
+              <!-- HTML Template Editor -->
+              <ng-container *ngIf="!draftFileUrl">
+                <app-dmsrich-text-edit
+                  [editorStyle]="{ width: '100%', height: '350px' }"
+                  [contentHtml]="templateHtml"
+                  (contentHtmlChange)="templateHtml = $event"
+                ></app-dmsrich-text-edit>
+              </ng-container>
 
-            <!-- Word/PDF File Download -->
-            <ng-container *ngIf="draftFileUrl">
-              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
-                <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
-                <div>
-                  <strong>Instructions:</strong> Please download and review the drafted document
-                  attached to this request.
-                </div>
-              </div>
-
-              <div class="row mt-4 btn-stick">
+              <!-- Word/PDF File Download -->
+              <ng-container *ngIf="draftFileUrl">
                 <div
-                  class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                  class="alert alert-info d-flex align-items-center mb-4"
+                  style="font-size: 14px"
                 >
-                  <div class="col-sm-2">
-                    <button
-                      type="button"
-                      tabindex="0"
-                      class="btn btn-outline-secondary btn-lg shadow-sm"
-                      (click)="downloadDraft()"
-                    >
-                      <i class="bi bi-file-earmark-arrow-down me-1"></i>
-                      Download Drafted Document
-                    </button>
+                  <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                  <div>
+                    <strong>Instructions:</strong> Please download and review the drafted document
+                    attached to this request.
                   </div>
                 </div>
-              </div>
-            </ng-container>
+
+                <div class="row mt-4 btn-stick">
+                  <div
+                    class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                  >
+                    <div class="col-sm-2">
+                      <button
+                        type="button"
+                        tabindex="0"
+                        class="btn btn-outline-secondary btn-lg shadow-sm"
+                        (click)="downloadDraft()"
+                      >
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i>
+                        Download Drafted Document
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
           </div>
         </div>
         <div class="row mt-10" *ngIf="observationData.length > 0">

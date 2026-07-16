@@ -1,47 +1,46 @@
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="Master-box mb-4">
-        <div class="row">
-          <div class="col-lg-4 col-md-4 col-sm-4">
-            <div class="PnlHeading">
-              <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-            </div>
-            <div class="form-group mb-0">
-              <div>
-                <app-document-type-list
-                  valueKey="CODE"
-                  labelKey="NAME"
-                  placeholder="Select Document Type"
-                  [(ngModel)]="selectedDocumentType"
-                  (valueChange)="onDocumentTypeChange($event)"
-                  width="250px"
-                >
-                </app-document-type-list>
-              </div>
+  <div class="card-custom">
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12">
+        <div class="Master-box mb-4">
+          <div class="PnlHeading">
+            <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+          </div>
+          <div class="form-group mb-0">
+            <div>
+              <app-document-type-list
+                valueKey="CODE"
+                labelKey="NAME"
+                placeholder="Select Document Type"
+                [(ngModel)]="selectedDocumentType"
+                (valueChange)="onDocumentTypeChange($event)"
+                width="250px"
+              >
+              </app-document-type-list>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="card-custom mb-4">
-        <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0">
-            <div class="row">
-              <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-cabinet-structure-list
-                  [divisionCode]="selectedDivisions"
-                  [departmentCode]="selectedDepartment"
-                  [subDepartmentCode]="selectedSubDepartment"
-                  [businessDomainCode]="selectedbusinessDomain"
-                  (hierarchyChange)="onHierarchyChange($event)"
-                >
-                </app-cabinet-structure-list>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12">
+        <div class="status-box-leftColmd6-standard mb-4"> 
+            <div class="main-content d-flex flex-column min-vw-0">
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                  <app-cabinet-structure-list
+                    [divisionCode]="selectedDivisions"
+                    [departmentCode]="selectedDepartment"
+                    [subDepartmentCode]="selectedSubDepartment"
+                    [businessDomainCode]="selectedbusinessDomain"
+                    (hierarchyChange)="onHierarchyChange($event)"
+                  >
+                  </app-cabinet-structure-list>
+                </div>
               </div>
-            </div>
-            <br />
-            <div class="row">
-              <!-- <div class="col-lg-3 col-md-3 col-sm-3">
+              <br />
+              <div class="row">
+                <!-- <div class="col-lg-3 col-md-3 col-sm-3">
                 <div class="PnlHeading">
                   <label>{{ 'labels.Template Name' | safeTranslate }} </label>
                 </div>
@@ -53,126 +52,139 @@
                   style="width: 250px"
                 />
               </div> -->
-              <div class="col-lg-3 col-md-3 col-sm-3">
-                <div class="PnlHeading">
-                  <label>{{ 'labels.Template Type' | safeTranslate }} </label>
-                </div>
-                <nz-select
-                  style="width: 250px"
-                  [(ngModel)]="selectedTemplateType"
-                  nzPlaceHolder="Select Template Type"
-                  nzAllowClear
-                  nzShowSearch
-                >
-                  <nz-option
-                    *ngFor="let dep of templateTypes"
-                    [nzValue]="dep.id"
-                    [nzLabel]="dep.text"
+                <div class="col-lg-3 col-md-3 col-sm-3">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Template Type' | safeTranslate }} </label>
+                  </div>
+                  <nz-select
+                    style="width: 250px"
+                    [(ngModel)]="selectedTemplateType"
+                    nzPlaceHolder="Select Template Type"
+                    nzAllowClear
+                    nzShowSearch
                   >
-                  </nz-option>
-                </nz-select>
-              </div>
-              <div class="col-lg-3 col-md-3 col-sm-3">
-                <div class="PnlHeading">
-                  <label>{{ 'labels.Default Template' | safeTranslate }} </label>
+                    <nz-option
+                      *ngFor="let dep of templateTypes"
+                      [nzValue]="dep.id"
+                      [nzLabel]="dep.text"
+                    >
+                    </nz-option>
+                  </nz-select>
                 </div>
-                <label nz-checkbox [(ngModel)]="isDefaultTemplate"></label>
-              </div>
-            </div>
-            <br />
-            <div class="row">
-              <!-- Show Rich Text Editor only for HTML template type (id: '3') -->
-              <ng-container *ngIf="selectedTemplateType === '3'">
-                <div class="col-lg-12 col-md-12 col-sm-12 mb-10 mt-3">
+                <div class="col-lg-3 col-md-3 col-sm-3">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.Template' | safeTranslate }} </label>
+                    <label>{{ 'labels.Default Template' | safeTranslate }} </label>
                   </div>
-                  <div class="editor-wrapper mb-4">
-                    <app-dmsrich-text-edit
-                      [editorStyle]="{ width: '100%', height: '350px' }"
-                      [contentHtml]="templateHtml"
-                      (contentHtmlChange)="templateHtml = $event"
-                    ></app-dmsrich-text-edit>
-                  </div>
+                  <label nz-checkbox [(ngModel)]="isDefaultTemplate"></label>
                 </div>
-              </ng-container>
-
-              <!-- Show File Upload for Word / PDF template types (id: '1' or '2') -->
-              <ng-container *ngIf="selectedTemplateType === '1' || selectedTemplateType === '2'">
-                <div class="col-lg-12 col-md-12 col-sm-12 mb-10 mt-3">
-                  <div class="PnlHeading">
-                    <label>Choose File (DOCX/PDF)</label>
+              </div>
+              <br />
+              <div class="row">
+                <!-- Show Rich Text Editor only for HTML template type (id: '3') -->
+                <ng-container *ngIf="selectedTemplateType === '3'">
+                  <div class="col-lg-12 col-md-12 col-sm-12 mb-10 mt-3">
+                    <div class="PnlHeading">
+                      <label>{{ 'labels.Template' | safeTranslate }} </label>
+                    </div>
+                    <div class="editor-wrapper mb-4">
+                      <app-dmsrich-text-edit
+                        [editorStyle]="{ width: '100%', height: '350px' }"
+                        [contentHtml]="templateHtml"
+                        (contentHtmlChange)="templateHtml = $event"
+                      ></app-dmsrich-text-edit>
+                    </div>
                   </div>
-                  <input
-                    type="file"
-                    class="form-control input-sm"
-                    (change)="onFileSelected($event)"
-                    accept=".pdf,.doc,.docx"
-                    style="width: 350px"
-                  />
+                </ng-container>
 
-                  <div *ngIf="existingFileName || selectedFile" class="mt-3">
-                    <div class="d-flex align-items-center gap-3 p-3 border rounded-3 bg-light shadow-sm" style="max-width: 480px;">
-                      <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
-                        <i class="bi bi-file-earmark-text-fill fs-3 text-primary"></i>
-                        <div class="d-flex flex-column min-w-0">
-                          <span class="fw-semibold text-dark text-truncate" style="max-width: 320px;" [title]="selectedFile ? selectedFile.name : existingFileName">
-                            {{ selectedFile ? selectedFile.name : existingFileName }}
-                          </span>
-                          <span class="text-muted small">
-                            {{ selectedFile ? 'Selected File (Not Saved)' : 'Current Server Template' }}
-                          </span>
+                <!-- Show File Upload for Word / PDF template types (id: '1' or '2') -->
+                <ng-container *ngIf="selectedTemplateType === '1' || selectedTemplateType === '2'">
+                  <div class="col-lg-12 col-md-12 col-sm-12 mb-10 mt-3">
+                    <div class="PnlHeading">
+                      <label>Choose File (DOCX/PDF)</label>
+                    </div>
+                    <input
+                      type="file"
+                      class="form-control input-sm"
+                      (change)="onFileSelected($event)"
+                      accept=".pdf,.doc,.docx"
+                      style="width: 350px"
+                    />
+
+                    <div *ngIf="existingFileName || selectedFile" class="mt-3">
+                      <div
+                        class="d-flex align-items-center gap-3 p-3 border rounded-3 bg-light shadow-sm"
+                        style="max-width: 480px"
+                      >
+                        <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                          <i class="bi bi-file-earmark-text-fill fs-3 text-primary"></i>
+                          <div class="d-flex flex-column min-w-0">
+                            <span
+                              class="fw-semibold text-dark text-truncate"
+                              style="max-width: 320px"
+                              [title]="selectedFile ? selectedFile.name : existingFileName"
+                            >
+                              {{ selectedFile ? selectedFile.name : existingFileName }}
+                            </span>
+                            <span class="text-muted small">
+                              {{
+                                selectedFile
+                                  ? 'Selected File (Not Saved)'
+                                  : 'Current Server Template'
+                              }}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <div class="d-flex gap-2">
-                        <!-- View Button: Show if PDF template type (id: '1') or if local file is pdf -->
-                        <button
-                          *ngIf="selectedTemplateType === '1' || (selectedFile && selectedFile.type === 'application/pdf')"
-                          type="button"
-                          class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
-                          (click)="viewTemplateFile()"
-                          title="View PDF"
-                          style="width: 36px; height: 36px; padding: 0; border-radius: 8px;"
-                        >
-                          <i class="bi bi-eye fs-5"></i>
-                        </button>
+                        <div class="d-flex gap-2">
+                          <!-- View Button: Show if PDF template type (id: '1') or if local file is pdf -->
+                          <button
+                            *ngIf="
+                              selectedTemplateType === '1' ||
+                              (selectedFile && selectedFile.type === 'application/pdf')
+                            "
+                            type="button"
+                            class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                            (click)="viewTemplateFile()"
+                            title="View PDF"
+                            style="width: 36px; height: 36px; padding: 0; border-radius: 8px"
+                          >
+                            <i class="bi bi-eye fs-5"></i>
+                          </button>
 
-                        <!-- Download Button: Show for Word (id: '2') or PDF (id: '1') -->
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
-                          (click)="downloadTemplateFile()"
-                          title="Download File"
-                          style="width: 36px; height: 36px; padding: 0; border-radius: 8px;"
-                        >
-                          <i class="bi bi-download fs-5"></i>
-                        </button>
+                          <!-- Download Button: Show for Word (id: '2') or PDF (id: '1') -->
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
+                            (click)="downloadTemplateFile()"
+                            title="Download File"
+                            style="width: 36px; height: 36px; padding: 0; border-radius: 8px"
+                          >
+                            <i class="bi bi-download fs-5"></i>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </ng-container>
-            </div>
-
-             
-            <div class="row mt-4 btn-stick">
-              <div
-                class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
-              >
-                <div class="col-sm-1">
-                  <button
-                    type="button"
-                    tabindex="0"
-                    class="btn btn-sm btn-outline-secondary shadow-sm"
-                    (click)="saveTemplate($event)"
-                  >
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    Save
-                  </button>
-                </div> 
+                </ng-container>
               </div>
-            </div>
-          </div>
+
+              <div class="row mt-4 btn-stick">
+                <div
+                  class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                >
+                  <div class="col-sm-1">
+                    <button
+                      type="button"
+                      tabindex="0"
+                      class="btn btn-sm btn-outline-secondary shadow-sm"
+                      (click)="saveTemplate($event)"
+                    >
+                      <i class="bi bi-file-earmark-text me-2"></i>
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div> 
         </div>
       </div>
     </div>

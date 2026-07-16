@@ -7070,6 +7070,8 @@ html.ant-scrolling-effect {
 }
 
 .Master-box { 
+  /* margin-left: -12px;
+    margin-right: -15px; */
   padding: 1.25rem 1.5rem !important;
   box-sizing: border-box;
   background-color: #ffffff !important;

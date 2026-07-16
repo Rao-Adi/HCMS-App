@@ -480,7 +480,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedSubDepartment = '';
     this.selectedBusinessDomain = '';
     this.approvalSequenceData = [];
-    // this.showExclusionTable = false;
+    this.showExclusionTable = false;
   }
 
   fetchApprovalSequence() {

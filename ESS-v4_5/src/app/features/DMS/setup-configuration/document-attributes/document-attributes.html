@@ -1,54 +1,47 @@
 <div class="container-fluid">
   <div class="card-custom">
     <div class="row">
-      <div class="col-lg-12 col-md-12 col-sm-12">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="Master-box mb-4">
-          <div class="row">
-            <div class="col-lg-4 col-md-4 col-sm-4">
-              <div class="PnlHeading">
-                <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-              </div>
-              <div>
-                <app-document-type-list
-                  valueKey="CODE"
-                  labelKey="NAME"
-                  placeholder="Select Document Type"
-                  [(ngModel)]="selectedDocumentType"
-                  (valueChange)="onDocumentTypeChange($event)"
-                  width="250px"
-                >
-                </app-document-type-list>
-              </div>
-            </div>
+          <div class="PnlHeading">
+            <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+          </div>
+          <div>
+            <app-document-type-list
+              valueKey="CODE"
+              labelKey="NAME"
+              placeholder="Select Document Type"
+              [(ngModel)]="selectedDocumentType"
+              (valueChange)="onDocumentTypeChange($event)"
+              width="250px"
+            >
+            </app-document-type-list>
           </div>
         </div>
-
-        <div class="card-custom">
-          <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="main-content d-flex flex-column min-vw-0">
-              <div class="row row-space">
-                <div class="col-lg-12 col-md-12 col-sm-12">
-                  <app-editable-ag-grid-wrapper
-                    [gridStyle]="{ width: '100%', height: '500px' }"
-                    class="ag-theme-alpine"
-                    [gridId]="'employee-planning-grid'"
-                    [autoSizeColumns]="true"
-                    [config]="gridConfig"
-                    [rowData]="documentAttributeData"
-                    [pinnedTopRowData]="pinnedTopRowDataPlanning"
-                    [isSelectionRequired]="true"
-                    (rowAdded)="onRowAdded($event)"
-                    (rowUpdated)="onRowUpdated($event)"
-                    (rowDeleted)="onRowDeleted($event)"
-                    (selectionChanged)="onSelectionChanged($event)"
-                    (gridReady)="onGridReady($event)"
-                    (actionClicked)="handleGridAction($event)"
-                    (onCellValueChanged)="onCellValueChanged($event)"
-                  >
-                  </app-editable-ag-grid-wrapper>
-                </div>
-              </div>
-            </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="status-box-leftColmd6-standard">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <app-editable-ag-grid-wrapper
+              [gridStyle]="{ width: '100%', height: '500px' }"
+              class="ag-theme-alpine"
+              [gridId]="'employee-planning-grid'"
+              [autoSizeColumns]="true"
+              [config]="gridConfig"
+              [rowData]="documentAttributeData"
+              [pinnedTopRowData]="pinnedTopRowDataPlanning"
+              [isSelectionRequired]="true"
+              (rowAdded)="onRowAdded($event)"
+              (rowUpdated)="onRowUpdated($event)"
+              (rowDeleted)="onRowDeleted($event)"
+              (selectionChanged)="onSelectionChanged($event)"
+              (gridReady)="onGridReady($event)"
+              (actionClicked)="handleGridAction($event)"
+              (onCellValueChanged)="onCellValueChanged($event)"
+            >
+            </app-editable-ag-grid-wrapper>
           </div>
         </div>
       </div>

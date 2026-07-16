@@ -116,307 +116,337 @@
       </div>
 
       <!-- Steps Grid & Form Card -->
-      <div class="row">
+      <div class="row mt-4">
         <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0">
-            <div class="row row-space">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Approval Authorities</h3>
-                  <div class="row row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <!-- Authority Type -->
-                    <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Authority Type*' | safeTranslate }}</label>
-                      </div>
+          <div class="status-box-leftColmd6-standard">
+            <h3 class="PnlHeader" style="margin-top: 0">Approval Authorities</h3>
+
+            <div class="row mb-4">
+              <!-- Authority Type -->
+              <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="PnlHeading">
+                  <label class="ctrllbl">{{ 'labels.Authority Type*' | safeTranslate }}</label>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                  <nz-select
+                    style="width: 100%"
+                    [(ngModel)]="selectedAuthorityType"
+                    nzPlaceHolder="Select Authority Type"
+                    (ngModelChange)="onAuthorityTypeChange($event)"
+                    nzAllowClear
+                    nzShowSearch
+                  >
+                    <nz-option
+                      *ngFor="let dep of authorityTypes"
+                      [nzValue]="dep.CODE"
+                      [nzLabel]="dep.NAME"
+                    >
+                    </nz-option>
+                  </nz-select>
+                  <button
+                    class="grid-icon-btn flex-shrink-0"
+                    [class.disabled]="!this.canAdd"
+                    title="Add Authority"
+                    (click)="addExclusion()"
+                    [disabled]="!this.canAdd"
+                  >
+                    <i class="bi bi-plus-square"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <!-- Dynamic Columns -->
+              <ng-container [ngSwitch]="selectedAuthorityType">
+                <!-- CASE 1: 3 Columns -->
+                <ng-container *ngSwitchCase="'1'">
+                  <div class="col-lg-4 col-md-4 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Maximum 'Direct Reporting to' Levels</label>
+                    </div>
+                    <div class="mt-2">
+                      <input
+                        maxlength="10"
+                        appDecimalInput
+                        name="TotalClaim"
+                        type="text"
+                        class="form-control input-sm w-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-lg-4 col-md-4 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Workflow Should Exclude These</label>
+                    </div>
+                    <div class="mt-2">
                       <nz-select
-                        style="width: 250px"
-                        [(ngModel)]="selectedAuthorityType"
-                        nzPlaceHolder="Select Authority Type"
-                        (ngModelChange)="onAuthorityTypeChange($event)"
+                        style="width: 100%"
+                        [(ngModel)]="selectedWorkflowExclude"
+                        nzPlaceHolder="Select Exclusion"
+                        (ngModelChange)="onWorkflowExcludeChange($event)"
                         nzAllowClear
                         nzShowSearch
                       >
                         <nz-option
-                          *ngFor="let dep of authorityTypes"
+                          *ngFor="let dep of workflowExclude"
                           [nzValue]="dep.CODE"
                           [nzLabel]="dep.NAME"
                         >
                         </nz-option>
                       </nz-select>
-                      <button
-                        class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
-                        [class.disabled]="!this.canAdd"
-                        title="Approve"
-                        (click)="addExclusion()"
-                        [disabled]="!this.canAdd"
-                      >
-                        <i class="bi bi-plus-square"></i>
-                      </button>
-                      <!-- <button
-                        aria-label="Collapse Menu"
-                        title="Collapse Menu"
-                        (click)="addExclusion()"
-                        class="sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
-                      >
-                        <i class="bi bi-plus-circle"></i>
-                      </button> -->
                     </div>
                   </div>
-                  <div class="row row-space">
-                    <!-- Dynamic Columns -->
-                    <ng-container [ngSwitch]="selectedAuthorityType">
-                      <!-- CASE 1: 3 Columns -->
-                      <ng-container *ngSwitchCase="'1'">
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                          <span class="d-flex">Maximum 'Direct Reporting to' Levels</span>
-                          <input
-                            maxlength="10"
-                            appDecimalInput
-                            name="TotalClaim"
-                            type="text"
-                            style="width: 350px !important"
-                            [ngClass]="{
-                              'form-control': true,
-                              'input-sm': true,
-                            }"
-                          />
-                        </div>
 
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                          <span class="d-flex">Workflow Should Exclude These</span>
+                  <div class="col-lg-4 col-md-4 col-sm-12 mb-3" *ngIf="selectedWorkflowExclude">
+                    <div [ngSwitch]="selectedWorkflowExclude">
+                      <div *ngSwitchCase="'1'">
+                        <div class="PnlHeading">
+                          <label class="ctrllbl">Designation</label>
+                        </div>
+                        <div class="mt-2">
                           <nz-select
-                            style="width: 350px"
-                            [(ngModel)]="selectedWorkflowExclude"
-                            nzPlaceHolder="Select Exclusion"
-                            (ngModelChange)="onWorkflowExcludeChange($event)"
-                            nzAllowClear
-                            nzShowSearch
-                          >
-                            <nz-option
-                              *ngFor="let dep of workflowExclude"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
-                          </nz-select>
-                        </div>
-
-                        <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                          <div [ngSwitch]="selectedWorkflowExclude">
-                            <div *ngSwitchCase="'1'">
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <span class="d-flex">Designation</span>
-                                <nz-select
-                                  style="width: 350px"
-                                  nzMode="multiple"
-                                  [nzMaxTagCount]="3"
-                                  nzPlaceHolder="Select Designation"
-                                  [(ngModel)]="selectedDesignation"
-                                  nzAllowClear
-                                  nzShowSearch
-                                >
-                                  <nz-option
-                                    *ngFor="let item of designations"
-                                    [nzValue]="item.CODE"
-                                    [nzLabel]="item.NAME"
-                                  ></nz-option>
-                                </nz-select>
-                              </div>
-                            </div>
-                            <div *ngSwitchCase="'2'">
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <span class="d-flex">Role</span>
-                                <nz-select
-                                  style="width: 350px"
-                                  nzMode="multiple"
-                                  [nzMaxTagCount]="3"
-                                  nzPlaceHolder="Select Role"
-                                  [(ngModel)]="selectedRole"
-                                  nzAllowClear
-                                  nzShowSearch
-                                >
-                                  <nz-option
-                                    *ngFor="let item of userRoles"
-                                    [nzValue]="item.ID"
-                                    [nzLabel]="item.NAME"
-                                  ></nz-option>
-                                </nz-select>
-                              </div>
-                            </div>
-                            <div *ngSwitchCase="'3'">
-                              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                                <span class="d-flex">Employee</span>
-                                <nz-select
-                                  style="width: 350px"
-                                  nzMode="multiple"
-                                  [nzMaxTagCount]="3"
-                                  nzPlaceHolder="Select Employee"
-                                  [(ngModel)]="selectedEmployee"
-                                  nzAllowClear
-                                  nzShowSearch
-                                >
-                                  <nz-option
-                                    *ngFor="let item of employees"
-                                    [nzValue]="item.CODE"
-                                    [nzLabel]="item.NAME"
-                                  ></nz-option>
-                                </nz-select>
-                              </div>
-                            </div>
-                            <div *ngSwitchDefault>
-                              <small class="text-muted"></small>
-                            </div>
-                          </div>
-                        </div>
-                      </ng-container>
-
-                      <!-- CASE 2: 1 Column -->
-                      <ng-container *ngSwitchCase="'2'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                          <span class="d-flex">Employee</span>
-                          <nz-select
-                            style="width: 350px"
-                            [(ngModel)]="selectedEmployeeSingle"
-                            nzPlaceHolder="Select Employee"
-                            (ngModelChange)="onEmployeeChange($event)"
-                            nzAllowClear
-                            nzShowSearch
-                          >
-                            <nz-option
-                              *ngFor="let dep of employees"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
-                          </nz-select>
-                        </div>
-                      </ng-container>
-
-                      <!-- CASE 3 -->
-                      <ng-container *ngSwitchCase="'3'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                          <span class="d-flex">Role</span>
-                          <nz-select
-                            style="width: 350px"
-                            [(ngModel)]="selectedRoleSingle"
-                            nzPlaceHolder="Select Role"
-                            (ngModelChange)="onRoleChange($event)"
-                            nzAllowClear
-                            nzShowSearch
-                          >
-                            <nz-option
-                              *ngFor="let dep of userRoles"
-                              [nzValue]="dep.ID"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
-                          </nz-select>
-                        </div>
-                      </ng-container>
-
-                      <!-- CASE 4 -->
-                      <ng-container *ngSwitchCase="'4'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                          <span class="d-flex">Designation</span>
-                          <nz-select
-                            style="width: 350px"
-                            [(ngModel)]="selectedDesignationSingle"
+                            style="width: 100%"
+                            nzMode="multiple"
+                            [nzMaxTagCount]="3"
                             nzPlaceHolder="Select Designation"
-                            (ngModelChange)="onDesignationChange($event)"
+                            [(ngModel)]="selectedDesignation"
                             nzAllowClear
                             nzShowSearch
                           >
                             <nz-option
-                              *ngFor="let dep of designations"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
+                              *ngFor="let item of designations"
+                              [nzValue]="item.CODE"
+                              [nzLabel]="item.NAME"
+                            ></nz-option>
                           </nz-select>
                         </div>
-                      </ng-container>
-
-                      <!-- CASE 5 -->
-                      <ng-container *ngSwitchCase="'5'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                          <span class="d-flex">Division Head</span>
-                          <nz-select nzPlaceHolder="Select Division Head" nzShowSearch></nz-select>
+                      </div>
+                      <div *ngSwitchCase="'2'">
+                        <div class="PnlHeading">
+                          <label class="ctrllbl">Role</label>
                         </div>
-                      </ng-container>
-
-                      <!-- CASE 6 -->
-                      <ng-container *ngSwitchCase="'6'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                          <span class="d-flex">Department Head</span>
+                        <div class="mt-2">
                           <nz-select
-                            nzPlaceHolder="Select Department Head"
+                            style="width: 100%"
+                            nzMode="multiple"
+                            [nzMaxTagCount]="3"
+                            nzPlaceHolder="Select Role"
+                            [(ngModel)]="selectedRole"
+                            nzAllowClear
                             nzShowSearch
-                          ></nz-select>
+                          >
+                            <nz-option
+                              *ngFor="let item of userRoles"
+                              [nzValue]="item.ID"
+                              [nzLabel]="item.NAME"
+                            ></nz-option>
+                          </nz-select>
                         </div>
-                      </ng-container>
-
-                      <!-- CASE 7 -->
-                      <ng-container *ngSwitchCase="'7'">
-                        <div class="col-lg-4 col-md-4 col-sm-6 mb-10">
-                          <span class="d-flex">Sub-Department Head</span>
+                      </div>
+                      <div *ngSwitchCase="'3'">
+                        <div class="PnlHeading">
+                          <label class="ctrllbl">Employee</label>
+                        </div>
+                        <div class="mt-2">
                           <nz-select
-                            nzPlaceHolder="Select Sub-Department Head"
+                            style="width: 100%"
+                            nzMode="multiple"
+                            [nzMaxTagCount]="3"
+                            nzPlaceHolder="Select Employee"
+                            [(ngModel)]="selectedEmployee"
+                            nzAllowClear
                             nzShowSearch
-                          ></nz-select>
+                          >
+                            <nz-option
+                              *ngFor="let item of employees"
+                              [nzValue]="item.CODE"
+                              [nzLabel]="item.NAME"
+                            ></nz-option>
+                          </nz-select>
                         </div>
-                      </ng-container>
-                    </ng-container>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </ng-container>
 
-              <div *ngIf="showExclusionTable" class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4">
-                <div class="status-box-leftColmd6-standard">
-                  <table
-                    class="table"
-                    *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
-                  >
-                    <thead>
-                      <th>Approval Sequence</th>
-                      <th>Details</th>
-                      <th>Action</th>
-                    </thead>
-                    <tbody cdkDropList (cdkDropListDropped)="drop($event)">
-                      @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
-                        <tr cdkDrag>
-                          <td width="250px">
-                            <i
-                              cdkDragHandle
-                              class="bi bi-grip-vertical"
-                              style="cursor: grab; margin-right: 8px; color: #a1a1a1"
-                              title="Drag to reorder"
-                            ></i>
-                            {{ i + 1 }}
-                          </td>
-                          <td>
-                            {{ item.EmployeeName }}<br />
-                            <strong>Role:</strong> {{ item.UserRole }}<br />
-                            <strong>Designation:</strong> {{ item.Designation }}
-                          </td>
-                          <td>
-                            <button
-                              class="btn btn-sm btn-outline-danger"
-                              (click)="removeSequenceItem(i)"
-                              title="Remove from sequence"
-                            >
-                              <i class="bi bi-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                <!-- CASE 2: Single Employee -->
+                <ng-container *ngSwitchCase="'2'">
+                  <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Employee</label>
+                    </div>
+                    <div class="mt-2">
+                      <nz-select
+                        style="width: 100%"
+                        [(ngModel)]="selectedEmployeeSingle"
+                        nzPlaceHolder="Select Employee"
+                        (ngModelChange)="onEmployeeChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of employees"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CASE 3: Single Role -->
+                <ng-container *ngSwitchCase="'3'">
+                  <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Role</label>
+                    </div>
+                    <div class="mt-2">
+                      <nz-select
+                        style="width: 100%"
+                        [(ngModel)]="selectedRoleSingle"
+                        nzPlaceHolder="Select Role"
+                        (ngModelChange)="onRoleChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of userRoles"
+                          [nzValue]="dep.ID"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CASE 4: Single Designation -->
+                <ng-container *ngSwitchCase="'4'">
+                  <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Designation</label>
+                    </div>
+                    <div class="mt-2">
+                      <nz-select
+                        style="width: 100%"
+                        [(ngModel)]="selectedDesignationSingle"
+                        nzPlaceHolder="Select Designation"
+                        (ngModelChange)="onDesignationChange($event)"
+                        nzAllowClear
+                        nzShowSearch
+                      >
+                        <nz-option
+                          *ngFor="let dep of designations"
+                          [nzValue]="dep.CODE"
+                          [nzLabel]="dep.NAME"
+                        >
+                        </nz-option>
+                      </nz-select>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CASE 5: Division Head -->
+                <ng-container *ngSwitchCase="'5'">
+                  <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Division Head</label>
+                    </div>
+                    <div class="mt-2">
+                      <nz-select
+                        style="width: 100%"
+                        nzPlaceHolder="Select Division Head"
+                        nzShowSearch
+                      ></nz-select>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CASE 6: Department Head -->
+                <ng-container *ngSwitchCase="'6'">
+                  <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Department Head</label>
+                    </div>
+                    <div class="mt-2">
+                      <nz-select
+                        style="width: 100%"
+                        nzPlaceHolder="Select Department Head"
+                        nzShowSearch
+                      ></nz-select>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CASE 7: Sub-Department Head -->
+                <ng-container *ngSwitchCase="'7'">
+                  <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="PnlHeading">
+                      <label class="ctrllbl">Sub-Department Head</label>
+                    </div>
+                    <div class="mt-2">
+                      <nz-select
+                        style="width: 100%"
+                        nzPlaceHolder="Select Sub-Department Head"
+                        nzShowSearch
+                      ></nz-select>
+                    </div>
+                  </div>
+                </ng-container>
+              </ng-container>
             </div>
+          </div>
+        </div>
 
-            <!-- <div class="row row-space">
+        <div
+          *ngIf="showExclusionTable"
+          class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
+        >
+          <div class="status-box-leftColmd6-standard">
+            <table class="table" *ngIf="approvalSequenceData && approvalSequenceData.length > 0">
+              <thead>
+                <th>Approval Sequence</th>
+                <th>Details</th>
+                <th>Action</th>
+              </thead>
+              <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
+                  <tr cdkDrag>
+                    <td width="250px">
+                      <i
+                        cdkDragHandle
+                        class="bi bi-grip-vertical"
+                        style="cursor: grab; margin-right: 8px; color: #a1a1a1"
+                        title="Drag to reorder"
+                      ></i>
+                      {{ i + 1 }}
+                    </td>
+                    <td>
+                      {{ item.EmployeeName }}<br />
+                      <strong>Role:</strong> {{ item.UserRole }}<br />
+                      <strong>Designation:</strong> {{ item.Designation }}
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="removeSequenceItem(i)"
+                        title="Remove from sequence"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- <div class="row row-space">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -447,7 +477,7 @@
               </div>
             </div> -->
 
-            <!-- <div class="row row-space" *ngIf="selectedPolicyId === PolicyId.DocumentCreation">
+      <!-- <div class="row row-space" *ngIf="selectedPolicyId === PolicyId.DocumentCreation">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -475,9 +505,6 @@
                 </div>
               </div>
             </div> -->
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
