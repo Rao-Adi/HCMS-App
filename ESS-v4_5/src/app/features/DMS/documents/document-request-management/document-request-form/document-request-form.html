@@ -1,7 +1,7 @@
 <div class="row row-space">
   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    <div class="status-box-leftColmd6-standard">
-      <h3 class="PnlHeader">Document Justification</h3> 
+    <div class="master-filter-card mb-4">
+      <h3 class="PnlHeader">Document Justification</h3>
       <div class="row">
         <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
           <div class="PnlHeading">
@@ -42,35 +42,36 @@
           </div>
         </div>
       </div>
-
-      <div class="mt-4">
-        <!-- Dynamic Columns -->
-        <ng-container [ngSwitch]="selectedDocumentRequestType">
-          <div *ngIf="showDocumentDiv">
-            <div class="row">
-              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                <span class="d-flex">Filter</span>
-                <nz-select
-                  style="width: 200px"
-                  [nzPlaceHolder]="'Select Filter'"
-                  nzAllowClear
-                  nzShowSearch
-                >
-                  <nz-option *ngFor="let dep of filters" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
-                  </nz-option>
-                </nz-select>
-              </div>
-            </div>
-            <br />
-            <br />
-            <div class="row">
-              <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                <div class="PnlHeading">
-                  <h3 class="PnlHeader">Documents</h3>
+    </div>
+    <div class="mt-4">
+      <!-- Dynamic Columns -->
+      <ng-container [ngSwitch]="selectedDocumentRequestType">
+        <div *ngIf="showDocumentDiv">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+              <div class="card-custom">
+                <div class="row mb-4">
+                  <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
+                    <span class="d-flex">Filter</span>
+                    <nz-select
+                      style="width: 200px"
+                      [nzPlaceHolder]="'Select Filter'"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let dep of filters"
+                        [nzValue]="dep.CODE"
+                        [nzLabel]="dep.NAME"
+                      >
+                      </nz-option>
+                    </nz-select>
+                  </div>
                 </div>
+
                 <div class="mt-4">
                   <app-ag-grid-wrapper
-                    [gridStyle]="{ width: '100%', height: '450px' }"
+                    [gridStyle]="{ width: '100%', height: '350px' }"
                     [columnToggles]="columnToggles"
                     [columnDefs]="documentColumnDefs"
                     [defaultColDef]="defaultColDef"
@@ -92,11 +93,18 @@
               </div>
             </div>
           </div>
-          <!-- CASE 1: 3 Columns -->
-          <div *ngIf="showDocumentCreationDiv && (!showDocumentDiv || selectedDocumentRow)">
-            <div class="row">
-              <div class="col-sm-3 col-md-3 col-lg-3 mb-10 mt-4">
-                <span class="d-flex">Document Name</span>
+        </div>
+        <!-- CASE 1: 3 Columns -->
+        <div *ngIf="showDocumentCreationDiv && (!showDocumentDiv || selectedDocumentRow)">
+          
+          <!-- Document Profile & Cabinet Section -->
+          <div class="card-custom mb-4 mt-4">
+            <h3 class="PnlHeader" style="margin-top: 0;">Document Profile & Cabinet</h3>
+            <div class="row mb-4">
+              <div class="col-sm-3 col-md-3 col-lg-3 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Document Name' | safeTranslate }} </label>
+                </div>
                 <input
                   maxlength="200"
                   appDecimalInput
@@ -111,151 +119,152 @@
                   }"
                 />
               </div>
-              <div class="col-lg-9 col-md-9 col-sm-6 mb-10 mt-4">
-                <span class="d-flex">Justification</span>
-                <textarea rows="4" nz-input [(ngModel)]="inputJustificationValue"></textarea>
+              <div class="col-lg-9 col-md-9 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Justification' | safeTranslate }} </label>
+                </div>
+                <textarea rows="3" nz-input [(ngModel)]="inputJustificationValue"></textarea>
               </div>
             </div>
-            <br />
-            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-              <h3 class="PnlHeader">Cabinet</h3> 
-              <div class="row" *ngIf="!showDocumentDiv">
-                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-                  </div>
-                  <div>
-                    <app-document-type-list
-                      valueKey="CODE"
-                      labelKey="NAME"
-                      placeholder="Select Document Type"
-                      [(ngModel)]="selectedDocumentType"
-                      (valueChange)="onDocumentTypeChange($event)"
-                      width="250px"
-                    >
-                    </app-document-type-list>
-                  </div>
-                </div>
 
-                <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                  <app-cabinet-structure-list 
-                    [divisionCode]="selectedDivisions"
-                    [departmentCode]="selectedDepartment"
-                    [subDepartmentCode]="selectedSubDepartment"
-                    [businessDomainCode]="selectedBusinessDomain"
-                    (hierarchyChange)="onHierarchyChange($event)"
+            <div class="row" *ngIf="!showDocumentDiv">
+              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                </div>
+                <div>
+                  <app-document-type-list
+                    valueKey="CODE"
+                    labelKey="NAME"
+                    placeholder="Select Document Type"
+                    [(ngModel)]="selectedDocumentType"
+                    (valueChange)="onDocumentTypeChange($event)"
+                    width="250px"
                   >
-                  </app-cabinet-structure-list>
+                  </app-document-type-list>
                 </div>
               </div>
 
-              <div class="row" *ngIf="showDocumentDiv">
-                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-                  </div>
-                  <div>
-                    <input
-                      maxlength="200"
-                      appDecimalInput
-                      [(ngModel)]="displayDocumentType"
-                      [disabled]="true"
-                      name="Document Type"
-                      type="text"
-                      style="width: 250px !important"
-                      [ngClass]="{
-                        'form-control': true,
-                        'input-sm': true,
-                      }"
-                    />
-                  </div>
-                </div>
-                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Division' | safeTranslate }} </label>
-                  </div>
-                  <div>
-                    <input
-                      maxlength="200"
-                      appDecimalInput
-                      [(ngModel)]="displayDivision"
-                      [disabled]="true"
-                      name="Division"
-                      type="text"
-                      style="width: 250px !important"
-                      [ngClass]="{
-                        'form-control': true,
-                        'input-sm': true,
-                      }"
-                    />
-                  </div>
-                </div>
-                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Department' | safeTranslate }} </label>
-                  </div>
-                  <div>
-                    <input
-                      maxlength="200"
-                      appDecimalInput
-                      [(ngModel)]="displayDepartment"
-                      [disabled]="true"
-                      name="Department"
-                      type="text"
-                      style="width: 250px !important"
-                      [ngClass]="{
-                        'form-control': true,
-                        'input-sm': true,
-                      }"
-                    />
-                  </div>
-                </div>
-                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Sub-Department' | safeTranslate }} </label>
-                  </div>
-                  <div>
-                    <input
-                      maxlength="200"
-                      appDecimalInput
-                      [(ngModel)]="displaySubDepartment"
-                      [disabled]="true"
-                      name="Sub-Department"
-                      type="text"
-                      style="width: 250px !important"
-                      [ngClass]="{
-                        'form-control': true,
-                        'input-sm': true,
-                      }"
-                    />
-                  </div>
-                </div>
-                <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Business Domain' | safeTranslate }} </label>
-                  </div>
-                  <div>
-                    <input
-                      maxlength="200"
-                      appDecimalInput
-                      [(ngModel)]="displayBusinessDomain"
-                      [disabled]="true"
-                      name="Business Domain"
-                      type="text"
-                      style="width: 250px !important"
-                      [ngClass]="{
-                        'form-control': true,
-                        'input-sm': true,
-                      }"
-                    />
-                  </div>
-                </div>
+              <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                <app-cabinet-structure-list
+                  [divisionCode]="selectedDivisions"
+                  [departmentCode]="selectedDepartment"
+                  [subDepartmentCode]="selectedSubDepartment"
+                  [businessDomainCode]="selectedBusinessDomain"
+                  (hierarchyChange)="onHierarchyChange($event)"
+                >
+                </app-cabinet-structure-list>
               </div>
             </div>
 
-            <br />
-            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-              <h3 class="PnlHeader">Document Users</h3> 
+            <div class="row" *ngIf="showDocumentDiv">
+              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                </div>
+                <div>
+                  <input
+                    maxlength="200"
+                    appDecimalInput
+                    [(ngModel)]="displayDocumentType"
+                    [disabled]="true"
+                    name="Document Type"
+                    type="text"
+                    style="width: 250px !important"
+                    [ngClass]="{
+                      'form-control': true,
+                      'input-sm': true,
+                    }"
+                  />
+                </div>
+              </div>
+              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Division' | safeTranslate }} </label>
+                </div>
+                <div>
+                  <input
+                    maxlength="200"
+                    appDecimalInput
+                    [(ngModel)]="displayDivision"
+                    [disabled]="true"
+                    name="Division"
+                    type="text"
+                    style="width: 250px !important"
+                    [ngClass]="{
+                      'form-control': true,
+                      'input-sm': true,
+                    }"
+                  />
+                </div>
+              </div>
+              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Department' | safeTranslate }} </label>
+                </div>
+                <div>
+                  <input
+                    maxlength="200"
+                    appDecimalInput
+                    [(ngModel)]="displayDepartment"
+                    [disabled]="true"
+                    name="Department"
+                    type="text"
+                    style="width: 250px !important"
+                    [ngClass]="{
+                      'form-control': true,
+                      'input-sm': true,
+                    }"
+                  />
+                </div>
+              </div>
+              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Sub-Department' | safeTranslate }} </label>
+                </div>
+                <div>
+                  <input
+                    maxlength="200"
+                    appDecimalInput
+                    [(ngModel)]="displaySubDepartment"
+                    [disabled]="true"
+                    name="Sub-Department"
+                    type="text"
+                    style="width: 250px !important"
+                    [ngClass]="{
+                      'form-control': true,
+                      'input-sm': true,
+                    }"
+                  />
+                </div>
+              </div>
+              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+                <div class="PnlHeading">
+                  <label>{{ 'labels.Business Domain' | safeTranslate }} </label>
+                </div>
+                <div>
+                  <input
+                    maxlength="200"
+                    appDecimalInput
+                    [(ngModel)]="displayBusinessDomain"
+                    [disabled]="true"
+                    name="Business Domain"
+                    type="text"
+                    style="width: 250px !important"
+                    [ngClass]="{
+                      'form-control': true,
+                      'input-sm': true,
+                    }"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Users Section -->
+          <div class="card-custom mb-4">
+            <h3 class="PnlHeader" style="margin-top: 0;">Document Users</h3>
+            <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-drusers-component
                   [selectedUsers]="distributionUserList"
@@ -263,12 +272,13 @@
                   (usersChanged)="distributionUserList = $event"
                 ></app-drusers-component>
               </div>
-            </div> 
-            <br />
-            <hr />
+            </div>
+          </div>
 
-            <div class="row-space">
-              <h3 class="PnlHeader">Distribution List</h3> 
+          <!-- Distribution List Section -->
+          <div class="card-custom mb-4">
+            <h3 class="PnlHeader" style="margin-top: 0;">Distribution List</h3>
+            <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-drdistribution-list
                   [DocumentTypeCode]="selectedDocumentType"
@@ -278,32 +288,47 @@
                 </app-drdistribution-list>
               </div>
             </div>
-            <br /> 
-            <hr />
-            <div class="row mb-4">
-              <div class="col-lg-12 col-md-12 col-sm-12">
-                <h3 class="PnlHeader">Document Content (Optional)</h3> 
+          </div>
 
+          <!-- Document Content Section -->
+          <div class="card-custom mb-4">
+            <h3 class="PnlHeader" style="margin-top: 0;">Document Content (Optional)</h3>
+            <div class="row">
+              <div class="col-lg-12 col-md-12 col-sm-12">
                 <!-- HTML Template Editor -->
-              <ng-container *ngIf="selectedTemplateType === '3' || (!selectedTemplateType && !draftFileUrl)">
+                <ng-container
+                  *ngIf="selectedTemplateType === '3' || (!selectedTemplateType && !draftFileUrl)"
+                >
                   <app-dmsrich-text-edit
-                    [editorStyle]="{ width: '100%', height: '350px' }"
+                    [editorStyle]="{ width: '100%', height: '300px' }"
                     [contentHtml]="templateHtml"
                     (contentHtmlChange)="templateHtml = $event"
                   ></app-dmsrich-text-edit>
                 </ng-container>
 
                 <!-- Word/PDF File Upload/Download -->
-              <ng-container *ngIf="selectedTemplateType === '1' || selectedTemplateType === '2' || (!selectedTemplateType && draftFileUrl)">
+                <ng-container
+                  *ngIf="
+                    selectedTemplateType === '1' ||
+                    selectedTemplateType === '2' ||
+                    (!selectedTemplateType && draftFileUrl)
+                  "
+                >
                   <div
                     class="alert alert-info d-flex align-items-center mb-4"
                     style="font-size: 14px"
                   >
                     <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                     <div>
-                      <strong>Instructions:</strong> 
-                      <span *ngIf="!showDocumentDiv">Download the standard template, fill in the required details offline, and upload your finalized draft below.</span>
-                      <span *ngIf="showDocumentDiv">Download the existing document below, update it offline, and upload the finalized revision.</span>
+                      <strong>Instructions:</strong>
+                      <span *ngIf="!showDocumentDiv"
+                        >Download the standard template, fill in the required details offline, and
+                        upload your finalized draft below.</span
+                      >
+                      <span *ngIf="showDocumentDiv"
+                        >Download the existing document below, update it offline, and upload the
+                        finalized revision.</span
+                      >
                     </div>
                   </div>
 
@@ -329,6 +354,7 @@
                   <div class="PnlHeading">
                     <label>Upload Drafted Document (DOCX/PDF)</label>
                   </div>
+                  
                   <!-- File Input -->
                   <div class="d-flex align-items-center gap-3 mt-2">
                     <input
@@ -342,14 +368,22 @@
                     />
 
                     <!-- File Info and Actions -->
-                    <div *ngIf="draftFile || draftFileUrl" class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm" style="min-width: 380px;">
+                    <div
+                      *ngIf="draftFile || draftFileUrl"
+                      class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm"
+                      style="min-width: 380px"
+                    >
                       <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
                         <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
                         <div class="d-flex flex-column min-w-0">
-                          <span class="fw-semibold text-dark text-truncate" style="max-width: 240px;" [title]="getDraftFileName()">
+                          <span
+                            class="fw-semibold text-dark text-truncate"
+                            style="max-width: 240px"
+                            [title]="getDraftFileName()"
+                          >
                             {{ getDraftFileName() }}
                           </span>
-                          <span class="text-muted" style="font-size: 11px;">
+                          <span class="text-muted" style="font-size: 11px">
                             {{ draftFile ? 'Local Draft' : 'Submitted Document' }}
                           </span>
                         </div>
@@ -360,7 +394,7 @@
                           class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                           (click)="draftFile ? reviewDraftedFile() : downloadDraft()"
                           title="View / Review File"
-                          style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                          style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                         >
                           <i class="bi bi-eye fs-6"></i>
                         </button>
@@ -369,7 +403,7 @@
                           class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                           (click)="removeDraftedFile()"
                           title="Remove File"
-                          style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                          style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                         >
                           <i class="bi bi-trash fs-6"></i>
                         </button>
@@ -379,76 +413,77 @@
                 </ng-container>
               </div>
             </div>
-            <br /> 
-            <hr />
-            <div class="row mt-4">
+          </div>
+
+          <!-- Workflow Authorities Section -->
+          <div
+            *ngIf="showExclusionTable && approvalSequenceData && approvalSequenceData.length > 0"
+            class="card-custom mb-4"
+          >
+            <h3 class="PnlHeader" style="margin-top: 0;">
+              {{ 'labels.Workflow Authorities' | safeTranslate }}
+            </h3>
+            <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <div
-                  *ngIf="showExclusionTable"
-                  class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
-                >
-                  <h3 class="PnlHeader">
-                    {{ 'labels.Workflow Authorities' | safeTranslate }}
-                  </h3>
-                  <br />
-                  <table
-                    class="table"
-                    *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
-                  >
-                    <thead>
-                      <th>Approval Sequence</th>
-                      <th>Employee Code</th>
-                      <th>Employee Name</th>
-                      <th>Designation</th>
-                    </thead>
-                    <tbody>
-                      @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
-                        <tr>
-                          <td>{{ item.StepOrder }}</td>
-                          <td>{{ item.EmployeeCode }}</td>
-                          <td>{{ item.EmployeeName }}</td>
-                          <td>{{ item.Designation }}</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
+                <table class="table mb-0">
+                  <thead>
+                    <th>Approval Sequence</th>
+                    <th>Employee Code</th>
+                    <th>Employee Name</th>
+                    <th>Designation</th>
+                  </thead>
+                  <tbody>
+                    @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
+                      <tr>
+                        <td>{{ item.StepOrder }}</td>
+                        <td>{{ item.EmployeeCode }}</td>
+                        <td>{{ item.EmployeeName }}</td>
+                        <td>{{ item.Designation }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- DEFAULT CASE: No Columns -->
-        </ng-container>
-      </div>
+        <!-- DEFAULT CASE: No Columns -->
+      </ng-container>
     </div>
   </div>
+</div>
 
-  <div class="row mt-4 btn-stick" *ngIf="selectedDocumentRequestType">
-    <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
-      <div class="col-sm-1" *ngIf="(this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001')">
-        <button
-          type="button"
-          tabindex="0"
-          [disabled]="!selectedDocumentType || !selectedTemplateType"
-          class="btn btn-sm btn-outline-secondary shadow-sm"
-          (click)="DraftDocumentRequests()"
-        >
-          <i class="bi bi-file-earmark-text me-2"></i>
-          Draft
-        </button>
-      </div>
-      <div class="col-sm-1">
-        <button
-          type="button"
-          tabindex="0"
-          [disabled]="!selectedDocumentType || !selectedTemplateType"
-          class="btn btn-sm btn-primary shadow-sm"
-          (click)="SubmitDocumentRequests()"
-        >
-          <i class="bi bi-send me-2"></i>
-          Submit
-        </button>
-      </div>
+<div class="row mt-4 btn-stick" *ngIf="selectedDocumentRequestType">
+  <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
+    <div
+      class="col-sm-1"
+      *ngIf="
+        this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001'
+      "
+    >
+      <button
+        type="button"
+        tabindex="0"
+        [disabled]="!selectedDocumentType || !selectedTemplateType"
+        class="btn btn-sm btn-outline-secondary shadow-sm"
+        (click)="DraftDocumentRequests()"
+      >
+        <i class="bi bi-file-earmark-text me-2"></i>
+        Draft
+      </button>
+    </div>
+    <div class="col-sm-1">
+      <button
+        type="button"
+        tabindex="0"
+        [disabled]="!selectedDocumentType || !selectedTemplateType"
+        class="btn btn-sm btn-primary shadow-sm"
+        (click)="SubmitDocumentRequests()"
+      >
+        <i class="bi bi-send me-2"></i>
+        Submit
+      </button>
     </div>
   </div>
 </div>

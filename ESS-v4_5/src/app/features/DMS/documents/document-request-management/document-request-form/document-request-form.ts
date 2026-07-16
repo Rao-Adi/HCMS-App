@@ -166,9 +166,17 @@ export class DocumentRequestForm {
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' , cellClass: 'audit-cell'},
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created  By', cellClass: 'audit-cell' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' , cellClass: 'audit-cell'},
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created  By',
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      cellClass: 'audit-cell',
+    },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -371,7 +379,7 @@ export class DocumentRequestForm {
           this._notificationToasService.createNotification(
             'warning',
             'Template Missing',
-            'Please first upload the template against this Document Type. Document request cannot be created.'
+            'Please first upload the template against this Document Type. Document request cannot be created.',
           );
           return;
         }
@@ -550,7 +558,7 @@ export class DocumentRequestForm {
       );
       return;
     }
-     if (!this.inputJustificationValue) {
+    if (!this.inputJustificationValue) {
       this._notificationToasService.createNotification(
         'warning',
         'Validation',
@@ -562,7 +570,7 @@ export class DocumentRequestForm {
       this._notificationToasService.createNotification(
         'warning',
         'Template Missing',
-        'Please first upload the template against this Document Type.'
+        'Please first upload the template against this Document Type.',
       );
       return;
     }
@@ -708,7 +716,7 @@ export class DocumentRequestForm {
       this._notificationToasService.createNotification(
         'warning',
         'Template Missing',
-        'Please first upload the template against this Document Type.'
+        'Please first upload the template against this Document Type.',
       );
       return;
     }
@@ -826,7 +834,11 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to submit document.');
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to submit document.',
+        );
       },
     });
   }

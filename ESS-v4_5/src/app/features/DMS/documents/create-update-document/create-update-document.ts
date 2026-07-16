@@ -163,7 +163,7 @@ export class CreateUpdateDocument {
 
   trainers: SelectList[] = [];
 
-  users: SelectList[] = [];
+  users: any[] = [];
 
   requestTypes: any[] = [];
   requestIds: any[] = [];
@@ -514,6 +514,7 @@ export class CreateUpdateDocument {
       },
     });
   }
+
   CheckTrainingPolicy(value: string) {
     this._trainingPolicyService.GetTrainingPolicyByDocumentType(value).subscribe((res) => {
       if (res && res.Data) {
@@ -582,8 +583,7 @@ export class CreateUpdateDocument {
     // this.loading = true;
     this.selectedTrainingMode = value;
   }
-
-  GetAllDistribution(query: any) {}
+ 
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -702,12 +702,12 @@ export class CreateUpdateDocument {
     this.showTrainingUserTable = true;
 
     const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
-
+    
     this.selectedUser.forEach((userCode) => {
       const user = this.users.find((u) => u.CODE === userCode);
       this.trainingUsersData.push({
         TrainingMode: mode?.NAME,
-        TrainerName: this.selectedRole, // valueKey="NAME" bounds the actual role name
+        TrainerName: user?.role,// valueKey="NAME" bounds the actual role name
         UserName: user?.NAME,
         TrainerCode: this.selectedRole,
         UserCode: user?.CODE,

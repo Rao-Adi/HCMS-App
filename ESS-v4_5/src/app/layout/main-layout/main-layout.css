@@ -151,6 +151,7 @@
   transition: padding-left var(--sidebar-transition-speed) ease;
   position: relative;
   z-index: 1;
+  background-color: #fbfbfb !important;
 }
 
 .layout-wrapper:not(.sidebar-open) .main-content {

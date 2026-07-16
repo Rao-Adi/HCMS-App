@@ -1,10 +1,15 @@
-<div class="container-fluid">
+<div class="card-custom">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom">
+      <!-- Parent Box containing Tabs and Nested Filters -->
+      <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
-            <div class="custom-tab-container d-flex justify-content-between align-items-center">
+            <!-- Tabs at the top -->
+            <div
+              class="custom-tab-container d-flex justify-content-between align-items-center"
+              style="margin-top: 0px"
+            >
               <div>
                 <button
                   class="tab-button"
@@ -33,37 +38,11 @@
                 >
                   Document Revision/Obsoletion
                 </button>
-
-                <!-- <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'RequestForDocumentCreation' }"
-                (click)="selectedTab = 'RequestForDocumentCreation'"
-              >
-                Request For Document Creation
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'DocumentCreation' }"
-                (click)="selectedTab = 'DocumentCreation'"
-              >
-                Document Creation
-              </button>
-
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === ' DocumentRevisionObsoletion' }"
-                (click)="selectedTab = 'DocumentRevisionObsoletion'"
-              >
-                Document Revision/Obsoletion
-              </button> -->
               </div>
               <div>
                 <button
                   class="btn btn-primary"
-                  style="margin-right: 15px"
+                  style="margin-right: 15px; margin-bottom: 10px"
                   (click)="openManagePolicyModal()"
                 >
                   <i class="bi bi-gear me-1"></i> Manage Policy
@@ -71,67 +50,76 @@
               </div>
             </div>
 
-            <div class="row row-space">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">
-                    {{ 'labels.Cabinet' | safeTranslate }}
-                  </h3>
-                  <div class="row">
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Workflow Policy' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <nz-select
-                          style="width: 250px"
-                          [(ngModel)]="selectedWorkflowPolicy"
-                          nzPlaceHolder="Select Workflow Policy"
-                          (ngModelChange)="onWorkflowPolicyChange($event)"
-                          nzAllowClear
-                          nzShowSearch
-                        >
-                          <nz-option
-                            *ngFor="let dep of workflowPolicies"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
-                      </div>
-                    </div>
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <app-document-type-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="--any--"
-                          [(ngModel)]="selectedDocumentType"
-                          (valueChange)="onDocumentTypeChange($event)"
-                          width="250px"
-                        >
-                        </app-document-type-list>
-                      </div>
-                    </div>
+            <!-- Filters Nested inside the Parent Box -->
+            <div class="master-filter-card mt-4" style="margin-left: 0; margin-right: 0">
+              <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Workflow Policy' | safeTranslate }} </label>
                   </div>
-                  <div class="row">
-                    <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
-                      <app-cabinet-structure-list
-                        [divisionCode]="selectedDivisions"
-                        [departmentCode]="selectedDepartment"
-                        [subDepartmentCode]="selectedSubDepartment"
-                        [businessDomainCode]="selectedBusinessDomain"
-                        (hierarchyChange)="onHierarchyChange($event)"
+                  <div>
+                    <nz-select
+                      style="width: 250px"
+                      [(ngModel)]="selectedWorkflowPolicy"
+                      nzPlaceHolder="Select Workflow Policy"
+                      (ngModelChange)="onWorkflowPolicyChange($event)"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let dep of workflowPolicies"
+                        [nzValue]="dep.CODE"
+                        [nzLabel]="dep.NAME"
                       >
-                      </app-cabinet-structure-list>
-                    </div>
+                      </nz-option>
+                    </nz-select>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <app-document-type-list
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="--any--"
+                      [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
+                      width="250px"
+                    >
+                    </app-document-type-list>
                   </div>
                 </div>
               </div>
+            </div>
 
+            <div class="status-box-leftColmd6-standard">
+              <h3 class="PnlHeader" style="margin-top: 0">
+                {{ 'labels.Cabinet' | safeTranslate }}
+              </h3>
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
+                  <app-cabinet-structure-list
+                    [divisionCode]="selectedDivisions"
+                    [departmentCode]="selectedDepartment"
+                    [subDepartmentCode]="selectedSubDepartment"
+                    [businessDomainCode]="selectedBusinessDomain"
+                    (hierarchyChange)="onHierarchyChange($event)"
+                  >
+                  </app-cabinet-structure-list>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps Grid & Form Card -->
+      <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+          <div class="main-content d-flex flex-column min-vw-0">
+            <div class="row row-space">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Approval Authorities</h3>
@@ -382,53 +370,53 @@
                   </div>
                 </div>
               </div>
-              <div
-                *ngIf="showExclusionTable"
-                class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4"
-              >
-                <table
-                  class="table"
-                  *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
-                >
-                  <thead>
-                    <th>Approval Sequence</th>
-                    <th>Details</th>
-                    <th>Action</th>
-                  </thead>
-                  <tbody cdkDropList (cdkDropListDropped)="drop($event)">
-                    @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
-                      <tr cdkDrag>
-                        <td width="250px">
-                          <i
-                            cdkDragHandle
-                            class="bi bi-grip-vertical"
-                            style="cursor: grab; margin-right: 8px; color: #a1a1a1"
-                            title="Drag to reorder"
-                          ></i>
-                          {{ i + 1 }}
-                        </td>
-                        <td>
-                          {{ item.EmployeeName }}<br />
-                          <strong>Role:</strong> {{ item.UserRole }}<br />
-                          <strong>Designation:</strong> {{ item.Designation }}
-                        </td>
-                        <td>
-                          <button
-                            class="btn btn-sm btn-outline-danger"
-                            (click)="removeSequenceItem(i)"
-                            title="Remove from sequence"
-                          >
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+
+              <div *ngIf="showExclusionTable" class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4">
+                <div class="status-box-leftColmd6-standard">
+                  <table
+                    class="table"
+                    *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
+                  >
+                    <thead>
+                      <th>Approval Sequence</th>
+                      <th>Details</th>
+                      <th>Action</th>
+                    </thead>
+                    <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                      @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
+                        <tr cdkDrag>
+                          <td width="250px">
+                            <i
+                              cdkDragHandle
+                              class="bi bi-grip-vertical"
+                              style="cursor: grab; margin-right: 8px; color: #a1a1a1"
+                              title="Drag to reorder"
+                            ></i>
+                            {{ i + 1 }}
+                          </td>
+                          <td>
+                            {{ item.EmployeeName }}<br />
+                            <strong>Role:</strong> {{ item.UserRole }}<br />
+                            <strong>Designation:</strong> {{ item.Designation }}
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-sm btn-outline-danger"
+                              (click)="removeSequenceItem(i)"
+                              title="Remove from sequence"
+                            >
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div class="row row-space">
+            <!-- <div class="row row-space">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -449,17 +437,7 @@
                               <label nz-radio nzValue="CAN_EDIT">
                                 Approval Authorities can even edit the documents before approval
                               </label>
-                            </nz-radio-group>
-                            <!-- <nz-radio-group [(ngModel)]="radioValue" class="display-flex-direction">
-                              <label nz-radio nzValue="A"
-                                >Approval Authorities can only give their observations, but not edit
-                                the document</label
-                              >
-                              <label nz-radio nzValue="B"
-                                >Approval Authorities can even edit the documents before
-                                approval</label
-                              >
-                            </nz-radio-group> -->
+                            </nz-radio-group> 
                           </div>
                         </div>
                       </div>
@@ -467,9 +445,9 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
 
-            <div class="row row-space" *ngIf="selectedPolicyId === PolicyId.DocumentCreation">
+            <!-- <div class="row row-space" *ngIf="selectedPolicyId === PolicyId.DocumentCreation">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="main-content d-flex flex-column min-vw-0">
                   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -496,7 +474,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
