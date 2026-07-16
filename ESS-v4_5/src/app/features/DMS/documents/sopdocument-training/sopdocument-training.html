@@ -2,53 +2,52 @@
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="card-custom">
-        <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0">
-            <div class="custom-tab-container">
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Classroom' }"
-                (click)="selectedTab = 'Classroom'"
-              >
-                Class Room
-              </button>
-              <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Online' }"
-                (click)="selectedTab = 'Online'"
-              >
-                Online
-              </button>
-            </div>
+        <div class="main-content d-flex flex-column min-vw-0">
+          <div class="custom-tab-container">
+            <button
+              class="tab-button"
+              tabindex="0"
+              [ngClass]="{ 'active-tab': selectedTab === 'Classroom' }"
+              (click)="selectedTab = 'Classroom'"
+            >
+              Class Room
+            </button>
+            <button
+              class="tab-button"
+              tabindex="0"
+              [ngClass]="{ 'active-tab': selectedTab === 'Online' }"
+              (click)="selectedTab = 'Online'"
+            >
+              Online
+            </button>
+          </div>
 
-            <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-              <div class="status-box-leftColmd6-standard">
-                <h3 class="PnlHeader">
-                  {{ 'labels.Filter' | safeTranslate }}
-                </h3>
-                <div class="row">
-                  <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                    <div class="PnlHeading">
-                      <label>{{ 'labels.Document ype' | safeTranslate }} </label>
-                    </div>
-                    <div>
-                      <nz-select
-                        style="width: 200px"
-                        [nzPlaceHolder]="'Select Filter'"
-                        [(ngModel)]="selectedDocumentType"
-                        nzAllowClear
-                        nzShowSearch
+          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="Master-box mb-4">
+              <h3 class="PnlHeader">
+                {{ 'labels.Filter' | safeTranslate }}
+              </h3>
+              <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Document ype' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <nz-select
+                      style="width: 200px"
+                      [nzPlaceHolder]="'Select Filter'"
+                      [(ngModel)]="selectedDocumentType"
+                      nzAllowClear
+                      nzShowSearch
+                    >
+                      <nz-option
+                        *ngFor="let dep of documentTypes"
+                        [nzValue]="dep.CODE"
+                        [nzLabel]="dep.NAME"
                       >
-                        <nz-option
-                          *ngFor="let dep of documentTypes"
-                          [nzValue]="dep.CODE"
-                          [nzLabel]="dep.NAME"
-                        >
-                        </nz-option>
-                      </nz-select>
-                      <!-- <app-document-type-list
+                      </nz-option>
+                    </nz-select>
+                    <!-- <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
                         placeholder="Select Document Type"
@@ -58,68 +57,66 @@
                         [allowClear]="false"
                       >
                       </app-document-type-list> -->
-                    </div>
                   </div>
-                  <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                    <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
-                    </app-cabinet-structure-list>
-                  </div>
+                </div>
+                <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                  <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                  </app-cabinet-structure-list>
                 </div>
               </div>
             </div>
-            <br />
-            <div class="row row-space" *ngIf="selectedTab === 'Classroom' && isGridVisible">
-              <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '450px' }"
-                  [columnToggles]="columnToggles"
-                  [columnDefs]="classRoomColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [isSelectionRequired]="true"
-                  [showDisplayOption]="true"
-                  [autoSizeColumns]="true"
-                  [rowData]="classRoomData"
-                  [pageSize]="pageSize"
-                  [totalRows]="totalClassRoom"
-                  [pageSize]="selectedPageSize"
-                  gridId="documentGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)"
-                  (serverQuery)="GetAllClassRooms($event)"
-                  (selectionChange)="onSelectionChange($event)"
-                >
-                  <div grid-actions class="grid-action-icons">
-                    <button
-                      class="btn btn-success btn-sm btn-action"
-                      [class.disabled]="!hasSelectedRows"
-                      title="Approve"
-                      (click)="approve()"
-                      [disabled]="hasSelectedRows === false"
-                    >
-                      <i class="bi bi-check-circle"></i> Approve
-                    </button>
-                  </div>
-                </app-ag-grid-wrapper>
-              </div>
+          </div>
+          <div class="row row-space" *ngIf="selectedTab === 'Classroom' && isGridVisible">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <app-ag-grid-wrapper
+                [gridStyle]="{ width: '100%', height: '450px' }"
+                [columnToggles]="columnToggles"
+                [columnDefs]="classRoomColumnDefs"
+                [defaultColDef]="defaultColDef"
+                [isSelectionRequired]="true"
+                [showDisplayOption]="true"
+                [autoSizeColumns]="true"
+                [rowData]="classRoomData"
+                [pageSize]="pageSize"
+                [totalRows]="totalClassRoom"
+                [pageSize]="selectedPageSize"
+                gridId="documentGrid"
+                (pageSizeChange)="onPageSizeChanged($event)"
+                (serverQuery)="GetAllClassRooms($event)"
+                (selectionChange)="onSelectionChange($event)"
+              >
+                <div grid-actions class="grid-action-icons">
+                  <button
+                    class="btn btn-success btn-sm btn-action"
+                    [class.disabled]="!hasSelectedRows"
+                    title="Approve"
+                    (click)="approve()"
+                    [disabled]="hasSelectedRows === false"
+                  >
+                    <i class="bi bi-check-circle"></i> Approve
+                  </button>
+                </div>
+              </app-ag-grid-wrapper>
             </div>
+          </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Online' && isGridVisible">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '450px' }"
-                  [columnDefs]="classRoomColumnDefs"
-                  [defaultColDef]="defaultColDef"
-                  [rowData]="onlineData"
-                  [pageSize]="selectedPageSize"
-                  [isSelectionRequired]="false"
-                  [showDisplayOption]="false"
-                  [autoSizeColumns]="true"
-                  gridId="onlineGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)"
-                  [totalRows]="totalOnline"
-                  (serverQuery)="GetAllOnline($event)"
-                >
-                </app-ag-grid-wrapper>
-              </div>
+          <div class="row row-space" *ngIf="selectedTab === 'Online' && isGridVisible">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              <app-ag-grid-wrapper
+                [gridStyle]="{ width: '100%', height: '450px' }"
+                [columnDefs]="classRoomColumnDefs"
+                [defaultColDef]="defaultColDef"
+                [rowData]="onlineData"
+                [pageSize]="selectedPageSize"
+                [isSelectionRequired]="false"
+                [showDisplayOption]="false"
+                [autoSizeColumns]="true"
+                gridId="onlineGrid"
+                (pageSizeChange)="onPageSizeChanged($event)"
+                [totalRows]="totalOnline"
+                (serverQuery)="GetAllOnline($event)"
+              >
+              </app-ag-grid-wrapper>
             </div>
           </div>
         </div>

@@ -1,9 +1,8 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      
       <!-- Master Filter Card: Activity & Document Type -->
-      <div class="master-filter-card mb-4">
+      <div class="Master-box mb-4">
         <div class="row">
           <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
             <div class="PnlHeading">
@@ -18,11 +17,7 @@
                 nzAllowClear
                 nzShowSearch
               >
-                <nz-option
-                  *ngFor="let dep of requestTypes"
-                  [nzValue]="dep.id"
-                  [nzLabel]="dep.text"
-                >
+                <nz-option *ngFor="let dep of requestTypes" [nzValue]="dep.id" [nzLabel]="dep.text">
                 </nz-option>
               </nz-select>
             </div>
@@ -48,7 +43,7 @@
 
       <!-- Cabinet Filters Card -->
       <div class="card-custom mb-4">
-        <h3 class="PnlHeader" style="margin-top: 0;">Cabinet Filters</h3>
+        <h3 class="PnlHeader" style="margin-top: 0">Cabinet Filters</h3>
         <div class="row">
           <div class="col-lg-9 col-md-8 col-sm-12 mb-10">
             <app-cabinet-structure-list
@@ -80,7 +75,7 @@
 
       <!-- Trainers Card -->
       <div class="card-custom mb-4" *ngIf="trainingRequired">
-        <h3 class="PnlHeader" style="margin-top: 0;">Trainers (Document Training)</h3>
+        <h3 class="PnlHeader" style="margin-top: 0">Trainers (Document Training)</h3>
         <div class="row">
           <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
             <div class="PnlHeading">
@@ -136,11 +131,7 @@
                 nzMode="multiple"
                 [nzMaxTagCount]="3"
               >
-                <nz-option
-                  *ngFor="let dep of users"
-                  [nzValue]="dep.CODE"
-                  [nzLabel]="dep.NAME"
-                >
+                <nz-option *ngFor="let dep of users" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
                 </nz-option>
               </nz-select>
               <button
@@ -156,10 +147,7 @@
         <div *ngIf="showTrainingUserTable" class="row mt-4">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="table-responsive">
-              <table
-                class="table mb-0"
-                *ngIf="trainingUsersData && trainingUsersData.length > 0"
-              >
+              <table class="table mb-0" *ngIf="trainingUsersData && trainingUsersData.length > 0">
                 <thead>
                   <th>Training Mode</th>
                   <th>Trainer</th>
@@ -182,14 +170,12 @@
 
       <!-- Dynamic Sections -->
       <ng-container [ngSwitch]="selectedRequestType">
-        
         <!-- CASE 1: Creation (DRT-0001) -->
         <ng-container *ngSwitchCase="'DRT-0001'">
-          
           <!-- Request Profile & Attributes Card -->
           <div class="card-custom mb-4">
-            <h3 class="PnlHeader" style="margin-top: 0;">Request & Document Attributes</h3>
-            
+            <h3 class="PnlHeader" style="margin-top: 0">Request & Document Attributes</h3>
+
             <div class="row mb-4">
               <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                 <div class="PnlHeading">
@@ -217,11 +203,23 @@
                 <div class="PnlHeading">
                   <label>Next Review Date</label>
                 </div>
-                <div style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px;">
-                  <span style="background: rgba(24, 144, 255, 0.1); color: #1890ff; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; white-space: nowrap;">
+                <div style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px">
+                  <span
+                    style="
+                      background: rgba(24, 144, 255, 0.1);
+                      color: #1890ff;
+                      padding: 4px 12px;
+                      border-radius: 4px;
+                      font-weight: 600;
+                      font-size: 13px;
+                      white-space: nowrap;
+                    "
+                  >
                     {{ reviewYear }} Years
                   </span>
-                  <span style="color: #555; font-size: 13px; white-space: nowrap;">from the date of approval</span>
+                  <span style="color: #555; font-size: 13px; white-space: nowrap"
+                    >from the date of approval</span
+                  >
                 </div>
               </div>
             </div>
@@ -238,23 +236,39 @@
                 </app-dynamic-form-by-document-attribute>
               </div>
             </div>
-
+          </div>
+          <div class="card-custom mb-4">
             <div class="row mt-4">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <h4 class="PnlHeading" style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Document Content</h4>
-                
+                <h4
+                  class="PnlHeading"
+                  style="font-size: 14px; font-weight: 600; margin-bottom: 12px"
+                >
+                  Document Content
+                </h4>
+
                 <!-- Case 1: Word/PDF Template -->
                 <ng-container *ngIf="selectedTemplateType === '1' || selectedTemplateType === '2'">
-                  <div *ngIf="!draftFile && !draftFileUrl" class="alert alert-warning d-flex align-items-center mb-4" style="font-size: 14px">
+                  <div
+                    *ngIf="!draftFile && !draftFileUrl"
+                    class="alert alert-warning d-flex align-items-center mb-4"
+                    style="font-size: 14px"
+                  >
                     <i class="bi bi-exclamation-triangle-fill me-2 fs-5 text-warning"></i>
                     <div>
-                      <strong>Action Required:</strong> A document file was not attached during the request phase. Please upload the document to proceed.
+                      <strong>Action Required:</strong> A document file was not attached during the
+                      request phase. Please upload the document to proceed.
                     </div>
                   </div>
-                  <div *ngIf="draftFile || draftFileUrl" class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+                  <div
+                    *ngIf="draftFile || draftFileUrl"
+                    class="alert alert-info d-flex align-items-center mb-4"
+                    style="font-size: 14px"
+                  >
                     <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                     <div>
-                      <strong>Instructions:</strong> Please review the drafted document below. You can view it, download/replace it, or proceed.
+                      <strong>Instructions:</strong> Please review the drafted document below. You
+                      can view it, download/replace it, or proceed.
                     </div>
                   </div>
 
@@ -272,14 +286,22 @@
                       />
 
                       <!-- File Info and Actions -->
-                      <div *ngIf="draftFile || draftFileUrl" class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm" style="min-width: 380px;">
+                      <div
+                        *ngIf="draftFile || draftFileUrl"
+                        class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm"
+                        style="min-width: 380px"
+                      >
                         <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
                           <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
                           <div class="d-flex flex-column min-w-0">
-                            <span class="fw-semibold text-dark text-truncate" style="max-width: 240px;" [title]="getDraftFileName()">
+                            <span
+                              class="fw-semibold text-dark text-truncate"
+                              style="max-width: 240px"
+                              [title]="getDraftFileName()"
+                            >
                               {{ getDraftFileName() }}
                             </span>
-                            <span class="text-muted" style="font-size: 11px;">
+                            <span class="text-muted" style="font-size: 11px">
                               {{ draftFile ? 'Local Draft' : 'Submitted Document' }}
                             </span>
                           </div>
@@ -290,7 +312,7 @@
                             class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                             (click)="draftFile ? reviewDraftedFile() : downloadDraft()"
                             title="View / Review File"
-                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                           >
                             <i class="bi bi-eye fs-6"></i>
                           </button>
@@ -299,7 +321,7 @@
                             class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                             (click)="removeDraftedFile()"
                             title="Remove File"
-                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                           >
                             <i class="bi bi-trash fs-6"></i>
                           </button>
@@ -311,18 +333,31 @@
 
                 <!-- Case 2: HTML Template -->
                 <ng-container *ngIf="selectedTemplateType === '3'">
-                  <app-dmsrich-text-edit [editorStyle]="{ width: '100%', height: '350px' }" [contentHtml]="templateHtml" (contentHtmlChange)="templateHtml = $event"></app-dmsrich-text-edit>
+                  <app-dmsrich-text-edit
+                    [editorStyle]="{ width: '100%', height: '350px' }"
+                    [contentHtml]="templateHtml"
+                    (contentHtmlChange)="templateHtml = $event"
+                  ></app-dmsrich-text-edit>
                 </ng-container>
 
                 <!-- Case 3: No Template Defined (Fallback) -->
                 <ng-container *ngIf="!selectedTemplateType">
-                  <div *ngIf="!draftFile && !draftFileUrl" class="alert alert-warning d-flex align-items-center mb-4" style="font-size: 14px">
+                  <div
+                    *ngIf="!draftFile && !draftFileUrl"
+                    class="alert alert-warning d-flex align-items-center mb-4"
+                    style="font-size: 14px"
+                  >
                     <i class="bi bi-exclamation-triangle-fill me-2 fs-5 text-warning"></i>
                     <div>
-                      <strong>Action Required:</strong> A document file was not attached during the request phase. Please upload the document to proceed.
+                      <strong>Action Required:</strong> A document file was not attached during the
+                      request phase. Please upload the document to proceed.
                     </div>
                   </div>
-                  <div *ngIf="draftFile || draftFileUrl" class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+                  <div
+                    *ngIf="draftFile || draftFileUrl"
+                    class="alert alert-info d-flex align-items-center mb-4"
+                    style="font-size: 14px"
+                  >
                     <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                     <div>
                       <strong>Instructions:</strong> Please review the drafted document below.
@@ -343,14 +378,22 @@
                       />
 
                       <!-- File Info and Actions -->
-                      <div *ngIf="draftFile || draftFileUrl" class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm" style="min-width: 380px;">
+                      <div
+                        *ngIf="draftFile || draftFileUrl"
+                        class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm"
+                        style="min-width: 380px"
+                      >
                         <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
                           <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
                           <div class="d-flex flex-column min-w-0">
-                            <span class="fw-semibold text-dark text-truncate" style="max-width: 240px;" [title]="getDraftFileName()">
+                            <span
+                              class="fw-semibold text-dark text-truncate"
+                              style="max-width: 240px"
+                              [title]="getDraftFileName()"
+                            >
                               {{ getDraftFileName() }}
                             </span>
-                            <span class="text-muted" style="font-size: 11px;">
+                            <span class="text-muted" style="font-size: 11px">
                               {{ draftFile ? 'Local Draft' : 'Submitted Document' }}
                             </span>
                           </div>
@@ -361,7 +404,7 @@
                             class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
                             (click)="draftFile ? reviewDraftedFile() : downloadDraft()"
                             title="View / Review File"
-                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                           >
                             <i class="bi bi-eye fs-6"></i>
                           </button>
@@ -370,7 +413,7 @@
                             class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                             (click)="removeDraftedFile()"
                             title="Remove File"
-                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px;"
+                            style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                           >
                             <i class="bi bi-trash fs-6"></i>
                           </button>
@@ -382,10 +425,14 @@
               </div>
             </div>
           </div>
-
           <!-- Workflow Authorities Card -->
-          <div *ngIf="showExclusionTable && approvalSequenceData && approvalSequenceData.length > 0" class="card-custom mb-4">
-            <h3 class="PnlHeader" style="margin-top: 0;">{{ 'labels.Workflow Authorities' | safeTranslate }}</h3>
+          <div
+            *ngIf="showExclusionTable && approvalSequenceData && approvalSequenceData.length > 0"
+            class="card-custom mb-4"
+          >
+            <h3 class="PnlHeader" style="margin-top: 0">
+              {{ 'labels.Workflow Authorities' | safeTranslate }}
+            </h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <div class="table-responsive">
@@ -397,7 +444,11 @@
                       <th>Designation</th>
                     </thead>
                     <tbody>
-                      @for (item of approvalSequenceData | keyvalue; track item.key; let i = $index) {
+                      @for (
+                        item of approvalSequenceData | keyvalue;
+                        track item.key;
+                        let i = $index
+                      ) {
                         <tr>
                           <td>{{ item.value.StepOrder }}</td>
                           <td>{{ item.value.EmployeeCode }}</td>
@@ -414,7 +465,9 @@
 
           <!-- Submit Button stick -->
           <div class="row mt-4 btn-stick">
-            <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
+            <div
+              class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+            >
               <div class="col-sm-1">
                 <button
                   type="button"
@@ -434,7 +487,9 @@
         <!-- CASE 2: Revision (DRT-0002) -->
         <ng-container *ngSwitchCase="'DRT-0002'">
           <div class="card-custom mb-4">
-            <h3 class="PnlHeader" style="margin-top: 0;">{{ 'labels.Documents' | safeTranslate }}</h3>
+            <h3 class="PnlHeader" style="margin-top: 0">
+              {{ 'labels.Documents' | safeTranslate }}
+            </h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-ag-grid-wrapper
@@ -449,7 +504,7 @@
                   [totalRows]="totalDocuments"
                   [pageSize]="selectedPageSize"
                   gridId="document2Grid"
-                  (pageSizeChange)="onPageSizeChanged($event)" 
+                  (pageSizeChange)="onPageSizeChanged($event)"
                   (cellClicked)="onCellClicked($event)"
                 >
                 </app-ag-grid-wrapper>
@@ -461,7 +516,9 @@
         <!-- CASE 3: Obsoletion (DRT-0003) -->
         <ng-container *ngSwitchCase="'DRT-0003'">
           <div class="card-custom mb-4">
-            <h3 class="PnlHeader" style="margin-top: 0;">{{ 'labels.Documents' | safeTranslate }}</h3>
+            <h3 class="PnlHeader" style="margin-top: 0">
+              {{ 'labels.Documents' | safeTranslate }}
+            </h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <app-ag-grid-wrapper
@@ -476,7 +533,7 @@
                   [totalRows]="totalDocuments"
                   [pageSize]="selectedPageSize"
                   gridId="documentGrid"
-                  (pageSizeChange)="onPageSizeChanged($event)" 
+                  (pageSizeChange)="onPageSizeChanged($event)"
                   (cellClicked)="onCellClicked($event)"
                 >
                 </app-ag-grid-wrapper>
@@ -486,8 +543,10 @@
         </ng-container>
 
         <!-- Revision Document Content -->
-        <div class="card-custom mb-4" *ngIf="showDocumentContent">
-          <h3 class="PnlHeader" style="margin-top: 0;">Document Content</h3>
+        <div class="card-custom mb-4" *ngIf="showDocumentContent"> 
+          <h3 class="PnlHeader" style="margin-top: 0">
+              {{ 'labels.Document Content' | safeTranslate }}
+            </h3>
           <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12">
               <div *ngIf="draftFileUrl; else revisionRichTextEditor" class="mb-4">
@@ -505,7 +564,6 @@
             </div>
           </div>
         </div>
-
       </ng-container>
     </div>
   </div>

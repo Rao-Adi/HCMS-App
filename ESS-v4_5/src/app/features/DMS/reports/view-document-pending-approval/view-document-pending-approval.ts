@@ -439,13 +439,12 @@ export class ViewDocumentPendingApproval {
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,
       nzFooter: null,
-      nzWidth: '80%',
-      nzStyle: { top: '20px' },
+      nzWidth: '50%',
+      nzStyle: { top: '20%' },
     });
   }
 
-  downloadDraft(): void {
-    debugger;
+  downloadDraft(): void { 
     const idToDownload = this.documentId;
     this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
       next: (response: any) => {

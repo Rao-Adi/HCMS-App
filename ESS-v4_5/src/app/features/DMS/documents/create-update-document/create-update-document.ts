@@ -522,17 +522,7 @@ export class CreateUpdateDocument {
 
         // 1. Assign the TrainingRequired value safely
         this.trainingRequired = !!data.TrainingRequired;
-
-        // 2. Handle object mapping safely (if attributes expects an array)
-        this.attributes = [
-          {
-            ...data,
-            ControlType: data.ControlType?.toLowerCase() as ControlTypes,
-            options: data.ListValues ? data.ListValues.split(',').map((v: string) => v.trim()) : [],
-          },
-        ];
       } else {
-        this.attributes = [];
         this.trainingRequired = false;
       }
     });

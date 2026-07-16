@@ -5038,7 +5038,7 @@ tree-node:last-child > .tree-node > .tree-children::after {
   background-color: rgb(255 255 255);
 }
 
-.Master-box {
+/* .Master-box {
   border: 1px solid #e0e0e0;
   border-left: 4px solid #6366f1;
   padding: 1.2500rem;
@@ -5047,7 +5047,7 @@ tree-node:last-child > .tree-node > .tree-children::after {
   display: flex;
   flex-direction: column;
   background-color: rgb(255 255 255);
-}
+} */
 
 .status-popUpbox-standard {
   /*box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.1);*/
@@ -7069,9 +7069,7 @@ html.ant-scrolling-effect {
   color: #ffffff !important;
 }
 
-.master-filter-card {
-  margin-left: -12px;
-  margin-right: -15px;
+.Master-box { 
   padding: 1.25rem 1.5rem !important;
   box-sizing: border-box;
   background-color: #ffffff !important;

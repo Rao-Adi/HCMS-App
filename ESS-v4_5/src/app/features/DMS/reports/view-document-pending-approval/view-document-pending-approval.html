@@ -1,8 +1,7 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="">
-        <!-- <div class="clearfix">
+      <!-- <div class="clearfix">
           <div class="pull-left">
             <h3 class="mt-0">View Documents (Pending Approval)</h3>
             <small class="text-muted">View Documents (Pending Approval)</small>
@@ -10,66 +9,65 @@
         </div>
         <br />
         <hr /> -->
-        <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0">
-            <div class="row row-space">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">
-                    {{ 'labels.Cabinet' | safeTranslate }}
-                  </h3>
-                  <div class="row">
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <app-document-type-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select Document Type"
-                          [(ngModel)]="selectedDocumentType"
-                          (valueChange)="onDocumentTypeChange($event)"
-                          width="250px"
-                        >
-                        </app-document-type-list>
-                      </div>
-                    </div>
-                    <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
-                      </app-cabinet-structure-list>
-                    </div>
+      <div class="main-content d-flex flex-column min-vw-0">
+        <div class="row row-space">
+          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="status-box-leftColmd6-standard">
+              <h3 class="PnlHeader">
+                {{ 'labels.Cabinet' | safeTranslate }}
+              </h3>
+              <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                  <div class="PnlHeading">
+                    <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                  </div>
+                  <div>
+                    <app-document-type-list
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="Select Document Type"
+                      [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
+                      width="250px"
+                    >
+                    </app-document-type-list>
                   </div>
                 </div>
+                <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                  <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+                  </app-cabinet-structure-list>
+                </div>
               </div>
+            </div>
+          </div>
 
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <div class="row">
-                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <div class="PnlHeading">
-                        <h3 class="PnlHeader">Documents</h3>
-                      </div>
-                      <div class="col-lg-12 col-md-12 col-sm-12">
-                        <app-ag-grid-wrapper
-                          [gridStyle]="{ width: '100%', height: '450px' }"
-                          [columnToggles]="columnToggles"
-                          [columnDefs]="documentsColumnDefs"
-                          [defaultColDef]="defaultColDef"
-                          [isSelectionRequired]="false"
-                          [showDisplayOption]="true"
-                          [autoSizeColumns]="true"
-                          [rowData]="documentRequestsData"
-                          [pageSize]="pageSize"
-                          [pageSizeOptions]="[10, 20, 50, 100]"
-                          [totalRows]="totalRows"
-                          gridId="documentGridPending"
-                          (gridReady)="onGridReady($event)"
-                          (pageSizeChange)="onPageSizeChanged($event)"
-                          (serverQuery)="GetAllPendingDocuments($event)"
-                          (cellClicked)="onCellClicked($event)"
-                        >
-                          <!-- <div grid-actions class="grid-action-icons">
+          <div class="row-space">
+            <div class="status-box-leftColmd6-standard">
+              <div class="row">
+                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <div class="PnlHeading">
+                    <h3 class="PnlHeader">Documents</h3>
+                  </div>
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <app-ag-grid-wrapper
+                      [gridStyle]="{ width: '100%', height: '450px' }"
+                      [columnToggles]="columnToggles"
+                      [columnDefs]="documentsColumnDefs"
+                      [defaultColDef]="defaultColDef"
+                      [isSelectionRequired]="false"
+                      [showDisplayOption]="true"
+                      [autoSizeColumns]="true"
+                      [rowData]="documentRequestsData"
+                      [pageSize]="pageSize"
+                      [pageSizeOptions]="[10, 20, 50, 100]"
+                      [totalRows]="totalRows"
+                      gridId="documentGridPending"
+                      (gridReady)="onGridReady($event)"
+                      (pageSizeChange)="onPageSizeChanged($event)"
+                      (serverQuery)="GetAllPendingDocuments($event)"
+                      (cellClicked)="onCellClicked($event)"
+                    >
+                      <!-- <div grid-actions class="grid-action-icons">
                             <button
                               class="grid-icon-btn"
                               [class.disabled]="!hasSelectedRows"
@@ -110,9 +108,7 @@
                               <i class="bi bi-filetype-xls"></i>
                             </button>
                           </div> -->
-                        </app-ag-grid-wrapper>
-                      </div>
-                    </div>
+                    </app-ag-grid-wrapper>
                   </div>
                 </div>
               </div>
@@ -149,7 +145,7 @@
         </div>
         <div class="d-flex justify-content-center mt-4 mb-4">
           <button nz-button nzType="primary" (click)="downloadDraft()">
-            <span nz-icon nzType="download"></span> Download Word Document
+            <span nz-icon nzType="download"></span> Download Document
           </button>
         </div>
       </ng-container>

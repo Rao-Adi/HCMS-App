@@ -60,16 +60,19 @@ export class DynamicFormByDocumentAttribute {
   }
 
   ngOnChanges(changes: SimpleChanges): void { 
-    // const attributesExist = this.attributes?.length;
-    // const valuesExist = this.attributeValues?.length;
-
     const attributesChanged = changes['attributes'];
     const valuesChanged = changes['attributeValues'];
+    const docTypeChanged = changes['documentTypeCode'];
 
-    // 1️⃣ If attributes changed → rebuild form
-    if (attributesChanged && this.attributes?.length) {
+    // If documentTypeCode changed, fetch the document template
+    if (docTypeChanged && this.documentTypeCode) {
+      this.GetDocumentTemplate();
+    }
+
+    // If attributes changed → rebuild the dynamic form
+    if (attributesChanged) {
       this.prepareAttributes();
-      this.buildDynamicForm(this.attributes);
+      this.buildDynamicForm(this.attributes || []);
 
       // Patch immediately if in view mode
       if (this.mode === 'view' && this.attributeValues?.length) {
@@ -77,7 +80,7 @@ export class DynamicFormByDocumentAttribute {
       }
     }
 
-    // 2️⃣ If only values changed → patch existing form
+    // If only values changed → patch existing form
     if (valuesChanged && this.mode === 'view' && this.form && this.attributeValues?.length) {
       this.patchValues();
     }
