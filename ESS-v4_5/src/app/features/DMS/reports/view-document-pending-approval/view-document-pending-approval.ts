@@ -88,6 +88,7 @@ export class ViewDocumentPendingApproval {
 
   documentsColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentNumber', headerName: 'Document Number' },
     {
       field: 'documentName',
       headerName: 'Document Name',
@@ -111,7 +112,23 @@ export class ViewDocumentPendingApproval {
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'url', headerName: 'URL' },
+    // { field: 'url', headerName: 'URL' ,
+    //   editable: false,
+    //   cellRenderer: (params: any) => {
+    //     if (!params.data) return '';
+    //     return `
+    //       <span 
+    //         style="color:#1976d2; cursor:pointer; text-decoration:underline"
+    //         data-action="open"
+    //       >
+    //             ${params.value || 'View'}
+    //       </span>
+    //     `;
+    //   },
+    //   onCellClicked: (event: any) => {
+    //     this.openDocumentModal(event.data);
+    //   },
+    // },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
     { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', cellClass: 'audit-cell' },
@@ -265,11 +282,10 @@ export class ViewDocumentPendingApproval {
               documentType: get(['DocumentType', 'documenttype']),
               documentTypeCode: get(['DocumentTypeCode', 'documenttypecode']),
               documentName: get(['Title', 'title', 'documentname']),
+              documentNumber: get(['DocumentNumber', 'documentnumber']),
               version: get(['Version', 'version', 'proposedVersionNumber']),
-              company: get(['Company', 'company'], ''),
-              proposedDocumentNumber: get(['DocumentNumber', 'documentnumber']),
-              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
-
+              company: get(['Company', 'company'], ''), 
+              
               // ──────────────────────────────────────────────
               // Organizational context
               // ──────────────────────────────────────────────

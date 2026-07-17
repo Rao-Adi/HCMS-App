@@ -118,7 +118,7 @@ export class DraftRequestList {
     },
     {
       field: 'requestNumber',
-      headerName: 'RequestNumber',
+      headerName: 'Request Number',
     },
 
     {
@@ -155,11 +155,11 @@ export class DraftRequestList {
         this.openObservationModal(event.data);
       },
     },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
+    { field: 'submittedby', headerName: 'Submitted By', hide: true },
   ];
 
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestNumber', label: 'Request ID', visible: true },
+    { field: 'requestNumber', label: 'Request Number', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
