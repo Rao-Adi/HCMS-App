@@ -48,7 +48,7 @@ export class UploadedDocuments {
     { field: 'documentId', headerName: 'Document ID', flex: 1 },
     { field: 'documentName', headerName: 'Document Name', flex: 1 },
     { field: 'version', headerName: 'Version Number', flex: 1 },
-    { field: 'documentTypeId', headerName: 'Document Type', flex: 1 },
+    { field: 'documentType', headerName: 'Document Type', flex: 1 },
     { field: 'divisionName', headerName: 'Division', flex: 1 },
     { field: 'departmentName', headerName: 'Department', flex: 1 },
     { field: 'subDepartmentName', headerName: 'Sub-Department', flex: 1 },
@@ -96,7 +96,7 @@ export class UploadedDocuments {
         required: true,
       },
       {
-        field: 'documentTypeId',
+        field: 'documentType',
         headerName: 'Document Type',
         type: 'dropdown',
         //dropdownOptions: this.documentTypes,
@@ -153,8 +153,8 @@ export class UploadedDocuments {
           if (Array.isArray(items)) {
             this.uploadedDocumentsData = items.map((item: any) => ({
               Id: item.Id,
-              documentTypeId: item.DocumentTypeCode,
-              documentTypeName: item.DocumentTypeCode,
+              documentType: item.DocumentType,
+              documentTypeName: item.DocumentType,
               version: item.Version || item.version || '',
               divisionName: item.Division,
               divisionId: item.DivisionCode,

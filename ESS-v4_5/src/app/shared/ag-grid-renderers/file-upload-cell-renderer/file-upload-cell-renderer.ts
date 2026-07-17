@@ -11,16 +11,72 @@ import { NzMessageService } from 'ng-zorro-antd/message';
   standalone: true,
   imports: [CommonModule, NzUploadModule, NzButtonModule, NzIconModule],
   template: `
-    <div *ngIf="isEditing" style="width: 100%;">
+    <div class="file-uploader-cell d-flex align-items-center justify-content-between w-100" style="padding: 2px 4px;">
+      <!-- Hidden file input -->
       <input
+        #fileInput
         type="file"
         [accept]="params?.accept || '*'"
         (change)="onFileSelected($event)"
-        style="width: 100%; padding: 6px; border: 1px solid #d9d9d9; border-radius: 4px;"
+        style="display: none;"
       />
-      <div *ngIf="fileInfo" style="margin-top: 8px; font-size: 12px; color: #52c41a;">
-        ✓ {{ fileInfo.name }}
-      </div>
+
+      <!-- When editing (or on top pinned row) -->
+      <ng-container *ngIf="isEditing">
+        <!-- Not uploaded yet -->
+        <button
+          *ngIf="!fileInfo"
+          type="button"
+          class="btn btn-xs btn-outline-secondary d-flex align-items-center gap-1"
+          (click)="fileInput.click()"
+          style="font-size: 11px; padding: 2px 8px; border-radius: 4px; line-height: 1.5;"
+        >
+          <i class="bi bi-upload text-primary"></i>
+          <span>Choose File</span>
+        </button>
+
+        <!-- File uploaded / Selected -->
+        <div *ngIf="fileInfo" class="d-flex align-items-center justify-content-between w-100 gap-1">
+          <a
+            href="javascript:void(0)"
+            (click)="previewFile()"
+            class="text-truncate text-success d-inline-block"
+            [title]="fileInfo.name"
+            style="font-size: 12px; max-width: 80%; text-decoration: none;"
+          >
+            <i class="bi bi-file-earmark-check-fill me-1"></i>
+            {{ fileInfo.name }}
+          </a>
+          <button
+            type="button"
+            class="btn btn-xs btn-link text-danger p-0"
+            (click)="removeFile()"
+            title="Remove file"
+            style="font-size: 12px; line-height: 1;"
+          >
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- When viewing (not editing) -->
+      <ng-container *ngIf="!isEditing">
+        <div *ngIf="fileInfo" class="d-flex align-items-center gap-1">
+          <a
+            href="javascript:void(0)"
+            (click)="previewFile()"
+            class="text-truncate text-primary d-inline-block"
+            [title]="fileInfo.name"
+            style="font-size: 12px; max-width: 150px; text-decoration: none;"
+          >
+            <i class="bi bi-file-earmark-text-fill me-1 text-info"></i>
+            {{ fileInfo.name }}
+          </a>
+        </div>
+        <span *ngIf="!fileInfo" class="text-muted" style="font-size: 11px; font-style: italic;">
+          No File
+        </span>
+      </ng-container>
     </div>
   `,
 })

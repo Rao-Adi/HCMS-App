@@ -161,7 +161,7 @@
               <ng-container [ngSwitch]="selectedAuthorityType">
                 <!-- CASE 1: 3 Columns -->
                 <ng-container *ngSwitchCase="'1'">
-                  <div class="col-lg-4 col-md-4 col-sm-12 mb-3">
+                  <div class="col-lg-4 col-md-4 col-sm-4 mb-3">
                     <div class="PnlHeading">
                       <label class="ctrllbl">Maximum 'Direct Reporting to' Levels</label>
                     </div>
@@ -176,13 +176,13 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-4 col-md-4 col-sm-12 mb-3">
+                  <div class="col-lg-4 col-md-4 col-sm-4 mb-3">
                     <div class="PnlHeading">
                       <label class="ctrllbl">Workflow Should Exclude These</label>
                     </div>
                     <div class="mt-2">
                       <nz-select
-                        style="width: 100%"
+                        style="width: 50%"
                         [(ngModel)]="selectedWorkflowExclude"
                         nzPlaceHolder="Select Exclusion"
                         (ngModelChange)="onWorkflowExcludeChange($event)"
@@ -199,7 +199,7 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-4 col-md-4 col-sm-12 mb-3" *ngIf="selectedWorkflowExclude">
+                  <div class="col-lg-4 col-md-4 col-sm-4 mb-3" *ngIf="selectedWorkflowExclude">
                     <div [ngSwitch]="selectedWorkflowExclude">
                       <div *ngSwitchCase="'1'">
                         <div class="PnlHeading">
@@ -207,7 +207,7 @@
                         </div>
                         <div class="mt-2">
                           <nz-select
-                            style="width: 100%"
+                            style="width: 50%"
                             nzMode="multiple"
                             [nzMaxTagCount]="3"
                             nzPlaceHolder="Select Designation"
@@ -229,7 +229,7 @@
                         </div>
                         <div class="mt-2">
                           <nz-select
-                            style="width: 100%"
+                            style="width: 50%"
                             nzMode="multiple"
                             [nzMaxTagCount]="3"
                             nzPlaceHolder="Select Role"
@@ -251,7 +251,7 @@
                         </div>
                         <div class="mt-2">
                           <nz-select
-                            style="width: 100%"
+                            style="width: 50%"
                             nzMode="multiple"
                             [nzMaxTagCount]="3"
                             nzPlaceHolder="Select Employee"
