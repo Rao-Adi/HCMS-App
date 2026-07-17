@@ -184,7 +184,6 @@ export class DraftRequestList {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       // this.getAllUsersList();
-      this.GetAllDraftDocuments();
     });
   }
 

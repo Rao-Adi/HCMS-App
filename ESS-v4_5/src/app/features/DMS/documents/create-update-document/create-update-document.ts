@@ -319,6 +319,11 @@ export class CreateUpdateDocument {
         return true;
       }
 
+      // Doucment should be mandatory if DocumentRequest has not any submitted document.
+      if (!this.draftFileUrl && !this.draftFile) {
+        return true;
+      }
+
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return true;

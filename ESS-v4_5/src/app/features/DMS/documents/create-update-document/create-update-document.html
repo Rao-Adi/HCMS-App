@@ -273,7 +273,10 @@
                   </div>
 
                   <div class="mt-3">
-                    <label class="PnlHeading">Document File (DOCX/PDF)</label>
+                    <label class="PnlHeading">
+                      Document File (DOCX/PDF)
+                      <span *ngIf="!draftFileUrl" class="text-danger">*</span>
+                    </label>
                     <div class="d-flex align-items-center gap-3 mt-2">
                       <input
                         #fileInput
@@ -365,7 +368,10 @@
                   </div>
 
                   <div class="mt-3">
-                    <label class="PnlHeading">Document File (DOCX/PDF)</label>
+                    <label class="PnlHeading">
+                      Document File (DOCX/PDF)
+                      <span *ngIf="!draftFileUrl" class="text-danger">*</span>
+                    </label>
                     <div class="d-flex align-items-center gap-3 mt-2">
                       <input
                         #fileInput
