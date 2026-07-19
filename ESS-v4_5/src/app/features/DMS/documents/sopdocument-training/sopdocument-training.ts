@@ -273,19 +273,12 @@ export class SOPDocumentTraining {
   }
 
   onDocumentTypeChange(value: any): void {
-    // this.loading = true;
     this.selectedDocumentType = value;
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     } else {
       this.fetchDataForCurrentTab();
     }
-    this.GetAllClassRooms({
-          pageNumber: 1,
-          pageSize: this.selectedPageSize,
-          sortModel: [], // or your current sort/filter model
-          filterModel: {},
-        });
   }
 
   GetAllClassRooms(query: any = {}) {
@@ -603,7 +596,7 @@ export class SOPDocumentTraining {
   }
 
   fetchDataForCurrentTab() {
-    if (this.selectedTab === 'Class Room') {
+    if (this.selectedTab === 'Classroom' || this.selectedTab === 'Class Room') {
       this.GetAllClassRooms({});
     } else if (this.selectedTab === 'Online') {
       this.GetAllOnline({});

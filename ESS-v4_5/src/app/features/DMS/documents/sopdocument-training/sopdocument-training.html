@@ -33,7 +33,7 @@
                     <label>{{ 'labels.Document ype' | safeTranslate }} </label>
                   </div>
                   <div>
-                    <nz-select
+                    <!-- <nz-select
                       style="width: 200px"
                       [nzPlaceHolder]="'Select Filter'"
                       [(ngModel)]="selectedDocumentType"
@@ -47,8 +47,8 @@
                         [nzLabel]="dep.NAME"
                       >
                       </nz-option>
-                    </nz-select>
-                    <!-- <app-document-type-list
+                    </nz-select> -->
+                    <app-document-type-list
                         valueKey="CODE"
                         labelKey="NAME"
                         placeholder="Select Document Type"
@@ -57,7 +57,7 @@
                         width="250px" 
                         [allowClear]="false"
                       >
-                      </app-document-type-list> -->
+                      </app-document-type-list>
                   </div>
                 </div>
                 <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
