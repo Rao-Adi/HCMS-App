@@ -184,6 +184,7 @@ export interface AppNotification {
 export class NotificationSignalrService {
   private hubConnection: signalR.HubConnection | undefined;
   private notificationSubject = new Subject<AppNotification>();
+  private loginId: string = '';
 
   /**
    * Observable for components to subscribe to for real-time notification updates.
@@ -202,7 +203,10 @@ export class NotificationSignalrService {
    * @param hubUrl The full URL of the SignalR hub.
    * @param token The JWT authentication token.
    */
-  public startConnection(hubUrl: string, token: string = ''): void {
+  public startConnection(hubUrl: string, token: string = '', loginId: string = ''): void {
+    const cleanLoginId = (loginId || '').trim();
+    this.loginId = cleanLoginId && cleanLoginId !== 'null' && cleanLoginId !== 'undefined' ? cleanLoginId : '';
+
     // 1. Production safety: Prevent running SignalR during Angular SSR.
     if (!isPlatformBrowser(this.platformId)) {
       console.log('[SignalR] Skipping connection attempt on the server (SSR).');
@@ -215,7 +219,14 @@ export class NotificationSignalrService {
       return;
     }
 
-    console.log(`[SignalR] Attempting to connect to Hub: ${hubUrl}`);
+    // Append login query parameter for Option B fallback
+    let finalHubUrl = hubUrl;
+    if (this.loginId) {
+      const separator = hubUrl.includes('?') ? '&' : '?';
+      finalHubUrl = `${hubUrl}${separator}login=${encodeURIComponent(this.loginId)}`;
+    }
+
+    console.log(`[SignalR] Attempting to connect to Hub: ${finalHubUrl}`);
 
     const options: signalR.IHttpConnectionOptions = {
       // Use the token factory for secure, up-to-date tokens.
@@ -224,7 +235,7 @@ export class NotificationSignalrService {
 
     try {
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, options)
+        .withUrl(finalHubUrl, options)
         .withAutomaticReconnect([0, 2000, 10000, 30000]) // More robust reconnect strategy
         .configureLogging(signalR.LogLevel.Information) // Use Information for production, Debug for development
         .build();
@@ -242,8 +253,12 @@ export class NotificationSignalrService {
       .start()
       .then(() => {
         console.log('[SignalR] Connection started successfully!');
-        // 5. CRITICAL: Join the user-specific group for targeted notifications.
-        this.joinUserGroup();
+        // 5. CRITICAL: Register client for targeted notifications.
+        if (this.loginId) {
+          this.registerClient(this.loginId);
+        } else {
+          this.joinUserGroup();
+        }
       })
       .catch((err: any) => console.error('[SignalR] Error while starting connection: ', err));
   }
@@ -291,8 +306,12 @@ export class NotificationSignalrService {
 
     this.hubConnection.onreconnected((connectionId) => {
       console.log(`[SignalR] Reconnected successfully. Connection ID: ${connectionId}`);
-      // After reconnecting, rejoin the group to ensure message delivery.
-      this.joinUserGroup();
+      // After reconnecting, rejoin/re-register to ensure message delivery.
+      if (this.loginId) {
+        this.registerClient(this.loginId);
+      } else {
+        this.joinUserGroup();
+      }
     });
 
     this.hubConnection.onclose((error) => {
@@ -345,6 +364,18 @@ export class NotificationSignalrService {
         .invoke('JoinUserGroup')
         .then(() => console.log('[SignalR] Successfully joined user-specific group.'))
         .catch((err) => console.error('[SignalR] Error joining user group: ', err));
+    }
+  }
+
+  /**
+   * Invokes the 'RegisterClient' method on the hub to register with user-specific login identifier.
+   */
+  private registerClient(loginId: string): void {
+    if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
+      this.hubConnection
+        .invoke('RegisterClient', loginId)
+        .then(() => console.log(`[SignalR] Successfully registered client with loginId: ${loginId}`))
+        .catch((err) => console.error('[SignalR] Error registering client: ', err));
     }
   }
 }

@@ -748,6 +748,9 @@ export class CreateUpdateDocument {
           if (this.dynamicForm) {
             this.dynamicForm.reset();
           }
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       },
       error: (err) => {

@@ -76,7 +76,7 @@ export class SOPDocumentTraining {
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   constructor(
     private _documentTrainingService: DocumentTrainingService,
@@ -272,7 +272,7 @@ export class SOPDocumentTraining {
     this.selectedSubDepartment = '';
   }
 
-  onDocumentTypeChange(value: string): void {
+  onDocumentTypeChange(value: any): void {
     // this.loading = true;
     this.selectedDocumentType = value;
     if (this.agGridWrapper) {
@@ -280,6 +280,12 @@ export class SOPDocumentTraining {
     } else {
       this.fetchDataForCurrentTab();
     }
+    this.GetAllClassRooms({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
   }
 
   GetAllClassRooms(query: any = {}) {

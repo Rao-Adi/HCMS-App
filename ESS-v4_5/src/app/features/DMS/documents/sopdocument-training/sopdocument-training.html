@@ -37,6 +37,7 @@
                       style="width: 200px"
                       [nzPlaceHolder]="'Select Filter'"
                       [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
                       nzAllowClear
                       nzShowSearch
                     >

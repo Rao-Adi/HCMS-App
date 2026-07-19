@@ -94,12 +94,12 @@ export class UploadDocuments {
         this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
       });
 
-      this.GetAllUploadedDocuments({
-        pageNumber: 1,
-        pageSize: this.selectedPageSize,
-        sortModel: [], // or your current sort/filter model
-        filterModel: {},
-      });
+      // this.GetAllUploadedDocuments({
+      //   pageNumber: 1,
+      //   pageSize: this.selectedPageSize,
+      //   sortModel: [], // or your current sort/filter model
+      //   filterModel: {},
+      // });
     });
   }
 
@@ -213,7 +213,7 @@ export class UploadDocuments {
             divisionName: item.Division,
             level1Id: item.DivisionCode,
             documentNumber: item.DocumentNumber,
-            documentName: item.DocumentName,
+            documentName: item.Title,
             DocumentCode: item.DocumentCode,
             level2Id: item.Department,
             departmentId: item.DepartmentCode,

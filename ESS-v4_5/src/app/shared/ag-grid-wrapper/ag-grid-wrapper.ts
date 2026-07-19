@@ -31,7 +31,8 @@ import {
 import { GridConfig } from '../editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { FormsModule } from '@angular/forms';
-import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
+import { SettingOutline } from '@ant-design/icons-angular/icons';
 
 interface ColumnToggle {
   field: string;
@@ -121,7 +122,11 @@ export class AgGridWrapper implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private el: ElementRef,
-  ) {}
+    private iconService: NzIconService,
+  ) {
+    this.iconService.addIcon(SettingOutline);
+    this.iconService.addIcon({ ...SettingOutline, name: 'setting-o' });
+  }
 
   ngOnInit(): void {
     this.isServerSide = this.serverQuery.observed;

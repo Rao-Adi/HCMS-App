@@ -179,7 +179,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
 
     console.log(`[SignalR Init] Connecting to: ${hubUrl} | Token Present: ${!!token}`);
-    this.notificationSignalrService.startConnection(hubUrl, token);
+    this.notificationSignalrService.startConnection(hubUrl, token, this.LoginEmpId);
 
     this.subscriptions.push(
       this.notificationSignalrService.notification$.subscribe((notification: AppNotification) => {
@@ -209,7 +209,30 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   GetLoginEmpId() {
-    this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
+    // 1. Read the unique session key from the 'login' cookie
+    let sessionKey = '';
+    if (typeof document !== 'undefined') {
+      const nameEQ = 'login=';
+      const ca = document.cookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) {
+          sessionKey = decodeURIComponent(c.substring(nameEQ.length, c.length));
+          break;
+        }
+      }
+    }
+
+    const cleanSessionKey = sessionKey && sessionKey !== 'null' && sessionKey !== 'undefined' ? sessionKey.trim() : '';
+    const userid = localStorage.getItem('HRISUserid');
+    const empid = localStorage.getItem('HRISEmpId');
+    
+    // Sanitize to avoid literal strings 'null' or 'undefined'
+    const cleanUserid = userid && userid !== 'null' && userid !== 'undefined' ? userid.trim() : '';
+    const cleanEmpid = empid && empid !== 'null' && empid !== 'undefined' ? empid.trim() : '';
+
+    this.LoginEmpId = cleanSessionKey || cleanUserid || cleanEmpid;
   }
 
   GetRouterUrl(): string {

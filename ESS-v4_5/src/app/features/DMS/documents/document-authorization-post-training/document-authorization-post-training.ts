@@ -533,7 +533,7 @@ export class DocumentAuthorizationPostTraining {
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: row.id,
-        entityType: 'Request',
+        entityType: 'Document',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,

@@ -831,6 +831,9 @@ export class DocumentRequestForm {
             'User',
             'Document submitted successfully!',
           );
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       },
       error: (err) => {

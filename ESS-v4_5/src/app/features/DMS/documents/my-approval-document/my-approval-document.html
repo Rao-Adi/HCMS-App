@@ -234,7 +234,7 @@
             </app-dynamic-form-by-document-attribute>
           </div>
         </div>
-        <div class="row mb-4" *ngIf="documentId">
+        <div class="row mb-4" *ngIf="documentId && (templateHtml || draftFileUrl)">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="status-box-leftColmd6-standard">
               <h3 class="PnlHeader">Document Content</h3>
