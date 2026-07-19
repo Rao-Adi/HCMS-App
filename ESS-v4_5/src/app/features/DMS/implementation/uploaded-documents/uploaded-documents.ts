@@ -170,7 +170,7 @@ export class UploadedDocuments {
               EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
               EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
               DocumentURL: item.DocumentURL,
-              nextReviewDate: item.NextReviewDate,
+              nextReviewDate: new CustomDateFormatPipe().transform(item.NextReviewDate),
               CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
               CreatedBy: item.CreatedBy,
               LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),

@@ -45,7 +45,7 @@ export class CustomDateFormatPipe implements PipeTransform {
         const minutes = timeComponents[1];
         const seconds = timeComponents[2] || '00';
 
-        return `${month} ${day},${year} ${hours}:${minutes}:${seconds}`;
+        return `${month} ${day}, ${year} ${hours}:${minutes}:${seconds}`;
       }
     }
 
