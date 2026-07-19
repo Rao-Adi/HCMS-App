@@ -144,6 +144,33 @@ export class AgGridWrapper implements OnInit, OnChanges {
     // ✅ Append parent columns AS-IS
     cols.push(...this.columnDefs);
 
+    // ✅ Apply audit styling to all audit trail columns (header + cell)
+    cols.forEach((col: ColDef) => {
+      const isAuditCell =
+        (typeof col.cellClass === 'string' && col.cellClass.includes('audit-cell')) ||
+        (Array.isArray(col.cellClass) && col.cellClass.includes('audit-cell')) ||
+        (col.headerName && /last saved|created|modified|requested|audit/i.test(col.headerName)) ||
+        (col.field && /created|modified|saved|requested|audit/i.test(col.field));
+
+      if (isAuditCell) {
+        if (typeof col.headerClass === 'string') {
+          if (!col.headerClass.includes('audit-cell')) {
+            col.headerClass = `${col.headerClass} audit-cell`;
+          }
+        } else if (!col.headerClass) {
+          col.headerClass = 'audit-cell';
+        }
+
+        if (typeof col.cellClass === 'string') {
+          if (!col.cellClass.includes('audit-cell')) {
+            col.cellClass = `${col.cellClass} audit-cell`;
+          }
+        } else if (!col.cellClass) {
+          col.cellClass = 'audit-cell';
+        }
+      }
+    });
+
     this.finalColumnDefs = cols;
   }
 

@@ -7081,3 +7081,16 @@ html.ant-scrolling-effect {
   margin-bottom: 1.25rem !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
 }
+
+/* Global style for AG-Grid audit trail cells & column headings */
+.audit-cell,
+.audit-header,
+.ag-header-cell.audit-cell,
+.ag-header-cell.audit-header,
+.ag-header-cell.audit-cell .ag-header-cell-text,
+.ag-header-cell.audit-header .ag-header-cell-text,
+.ag-header-cell.audit-cell .ag-header-cell-label,
+.ag-header-cell.audit-header .ag-header-cell-label {
+  color: #888888 !important; /* light grey color */
+  font-style: italic !important;
+}
