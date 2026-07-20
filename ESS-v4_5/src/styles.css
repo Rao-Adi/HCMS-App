@@ -7090,7 +7090,15 @@ html.ant-scrolling-effect {
 .ag-header-cell.audit-cell .ag-header-cell-text,
 .ag-header-cell.audit-header .ag-header-cell-text,
 .ag-header-cell.audit-cell .ag-header-cell-label,
-.ag-header-cell.audit-header .ag-header-cell-label {
+.ag-header-cell.audit-header .ag-header-cell-label,
+.ag-theme-alpine .ag-header-cell.audit-cell .ag-header-cell-text,
+.ag-theme-alpine .ag-header-cell.audit-header .ag-header-cell-text,
+.ag-theme-alpine .ag-header-cell.audit-cell .ag-header-cell-label,
+.ag-theme-alpine .ag-header-cell.audit-header .ag-header-cell-label,
+.ag-header-cell.audit-cell *,
+.ag-header-cell.audit-header *,
+.ag-cell.audit-cell,
+.ag-cell.audit-cell * {
   color: #888888 !important; /* light grey color */
   font-style: italic !important;
 }
