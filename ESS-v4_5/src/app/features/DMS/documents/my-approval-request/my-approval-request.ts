@@ -165,6 +165,25 @@ export class MyApprovalRequest {
     {
       field: 'justification',
       headerName: 'Justification',
+      editable: false,
+      cellRenderer: (params: any) => {
+        const val = params.value || (params.data && params.data.justification) || '';
+        if (!val) return '<span>-</span>';
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-justification"
+          >
+            Justification
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        const val = event.value || (event.data && event.data.justification);
+        if (val) {
+          this.openJustificationModal(val);
+        }
+      },
     },
     // {
     //   field: 'proposedDocumentNumber',
@@ -450,7 +469,7 @@ export class MyApprovalRequest {
                 documentType: get(['DocumentType', 'documentType']),
                 documentName: get(['DocumentName', 'documentName', 'Title', 'title']),
                 observation: '',
-                justification: get(['Justification', 'justification']),
+                justification: get(['Justification', 'justification', 'Reason', 'reason'], ''),
                 proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
                 proposedVersionNumber: get(
                   ['ProposedVersionNumber', 'proposedVersionNumber', 'RowVersion', 'rowVersion'],
@@ -571,7 +590,7 @@ export class MyApprovalRequest {
     this.currentDocumentName = row?.documentName || '';
     this.selectedDocumentTypeCode = row?.documentTypeCode || '';
     this.stepId = row?.stepId || 0;
-    this.loadObservations(row.id);
+    this.loadObservations(row?.id);
     this.selectedRow = row;
   }
 
@@ -591,6 +610,24 @@ export class MyApprovalRequest {
 
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
+    });
+  }
+
+  openJustificationModal(justificationText: string): void {
+    const text = justificationText || 'No justification provided.';
+    const modalRef = this.modal.create({
+      nzTitle: 'Justification',
+      nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
+      nzClosable: true,
+      nzMaskClosable: true,
+      nzFooter: [
+        {
+          label: 'Close',
+          type: 'primary',
+          onClick: () => modalRef.destroy(),
+        },
+      ],
+      nzWidth: 600,
     });
   }
 
