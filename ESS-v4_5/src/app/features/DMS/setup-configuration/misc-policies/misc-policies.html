@@ -1,7 +1,7 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom"> 
+      <div class="card-custom">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
@@ -34,18 +34,14 @@
             <div class="row row-space" *ngIf="selectedTab === 'TrainingPoliciy'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Document requiring Training before Authorization</h3> 
+                  <h3 class="PnlHeader">Document requiring Training before Authorization</h3>
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                       <div class="d-flex">
                         <label
-                          >Approval Authorities can only give their observations, but not edit the
-                          document</label
-                        >
-
-                        <label
-                          >Users will be required to go through training if any document is
-                          created/updated w.r.t following Document Types</label
+                          >Configure the document types that require mandatory user training and
+                          define the minimum passing score required for certification before users
+                          are authorized to access or acknowledge the document.</label
                         >
                       </div>
                     </div>
@@ -56,7 +52,7 @@
                 <app-editable-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
-                  [gridId]="'TrainingPoliciyGrid'" 
+                  [gridId]="'TrainingPoliciyGrid'"
                   [config]="gridConfig"
                   [isSelectionRequired]="true"
                   [autoSizeColumns]="true"
@@ -77,11 +73,15 @@
             <div class="row row-space" *ngIf="selectedTab === 'DocumentReview'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Document Review</h3> 
+                  <h3 class="PnlHeader">Document Review</h3>
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                       <div class="d-flex">
-                        <label>This configuration establishes the review period for documents.</label>
+                        <label
+                          >Configure the review period for each document type. The default review
+                          period can be overridden by the user during document creation, subject to
+                          applicable business requirements.</label
+                        >
                       </div>
                     </div>
                   </div>
@@ -92,7 +92,7 @@
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
                   [gridId]="'DocumentReviewPoliciyGrid'"
-                  [config]="documentReviewGridConfig" 
+                  [config]="documentReviewGridConfig"
                   [isSelectionRequired]="true"
                   [autoSizeColumns]="true"
                   [rowData]="documentReviewRowData"
@@ -111,11 +111,15 @@
             <div class="row row-space" *ngIf="selectedTab === 'AuthorizationPolicy'">
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">Authorization Policy</h3> 
+                  <h3 class="PnlHeader">Authorization Policy</h3>
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                       <div class="d-flex">
-                        <label>This configuration establishes the required authorization rules and identifies the specific approver responsible for each active document type.</label>
+                        <label
+                          >Configure the document types that require authorization and assign the
+                          designated authorizer(s) responsible for approving each document type
+                          before it becomes effective.</label
+                        >
                       </div>
                     </div>
                   </div>
@@ -126,7 +130,7 @@
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
                   [gridId]="'AuthorizationPolicyGrid'"
-                  [config]="authGridConfig" 
+                  [config]="authGridConfig"
                   [isSelectionRequired]="true"
                   [autoSizeColumns]="true"
                   [rowData]="authorizationPolicyData"
@@ -140,7 +144,7 @@
                 >
                 </app-editable-ag-grid-wrapper>
               </div>
-            </div>            
+            </div>
           </div>
         </div>
       </div>

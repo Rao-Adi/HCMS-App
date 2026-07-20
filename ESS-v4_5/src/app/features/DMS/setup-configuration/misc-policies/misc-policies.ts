@@ -61,7 +61,17 @@ export class MiscPolicies {
       documentTypeCode: '',
       authorizationRequired: false,
       authorizingAuthority: '',
+      createdByName: '',
+      requestCreatedOn: '',
     },
+  ];
+
+  documentsColumnDefs = [
+    { field: 'documentTypeCode', headerName: 'Document Type' },
+    { field: 'authorizationRequired', headerName: 'Authorization Required' },
+    { field: 'authorizingAuthority', headerName: 'Authorizing Authority' },
+    { field: 'createdByName', headerName: 'Request Created By', cellClass: 'audit-cell' },
+    { field: 'createdAt', headerName: 'Request Created On', cellClass: 'audit-cell' },
   ];
 
   AuthorizationPolicyList: any[] = [];
@@ -85,6 +95,8 @@ export class MiscPolicies {
       documentTypeCode: '',
       traningRequired: false,
       minimumscoreforpassing: 0,
+      createdByName: '',
+      requestCreatedOn: '',
     },
   ];
 
@@ -163,15 +175,29 @@ export class MiscPolicies {
         type: 'switch',
         required: false,
         minWidth: 150,
-        pinned: 'left',
       },
       {
         field: 'minimumscoreforpassing',
         headerName: 'Minimum Score for Passing',
         type: 'number',
         minWidth: 150,
-        pinned: 'left',
         required: false,
+      },
+      {
+        field: 'createdByName',
+        headerName: 'Last Saved By',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Last Saved On',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
       },
     ];
   }
@@ -219,6 +245,22 @@ export class MiscPolicies {
         headerName: 'Review After (in years)',
         type: 'number',
         required: false,
+      },
+      {
+        field: 'createdByName',
+        headerName: 'Last Saved By',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Last Saved On',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
       },
     ];
   }
@@ -278,6 +320,22 @@ export class MiscPolicies {
         dropdownDisplayField: 'label',
         required: true,
       },
+      {
+        field: 'createdByName',
+        headerName: 'Last Saved By',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Last Saved On',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
     ];
   }
 
@@ -307,15 +365,45 @@ export class MiscPolicies {
       .subscribe((res) => {
         const items = res?.Data?.Items || res?.Items;
         if (items) {
-          this.documentReviewRowData = items.map((item: any) => ({
-            Id: item.id || item.Id,
-            documentType: item.documentTypeCode || item.DocumentTypeCode, 
-            reviewAfter: item.reviewPeriodYears || item.ReviewPeriodYears,
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          }));
+          this.documentReviewRowData = items.map((item: any) => {
+            const authorName =
+              item.createdByName ||
+              item.CreatedByName ||
+              item.createdbyname ||
+              item.createdBy ||
+              item.CreatedBy ||
+              item.createdByEmpCode ||
+              '';
+            const authorDate = new CustomDateFormatPipe().transform(
+              item.createdAt ||
+                item.CreatedAt ||
+                item.createdOn ||
+                item.CreatedOn ||
+                item.createdat ||
+                '',
+            );
+
+            return {
+              Id: item.id || item.Id,
+              documentType: item.documentTypeCode || item.DocumentTypeCode,
+              reviewAfter: item.reviewPeriodYears || item.ReviewPeriodYears,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              createdByName: authorName,
+              CreatedByName: authorName,
+              createdBy: authorName,
+              CreatedBy: authorName,
+              createdAt: authorDate,
+              CreatedAt: authorDate,
+              createdOn: authorDate,
+              CreatedOn: authorDate,
+              LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+              LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                item.lastModifiedAt || item.LastModifiedAt || '',
+              ),
+            };
+          });
         } else {
           this.documentReviewRowData = [];
         }
@@ -339,16 +427,46 @@ export class MiscPolicies {
       .subscribe((res) => {
         const items = res?.Data?.Items || res?.Items;
         if (items) {
-          this.trainingPolicesData = items.map((item: any) => ({
-            Id: item.id || item.Id,
-            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
-            traningRequired: item.trainingRequired || item.TrainingRequired,
-            minimumscoreforpassing: item.minimumScore || item.MinimumScore,
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          }));
+          this.trainingPolicesData = items.map((item: any) => {
+            const authorName =
+              item.createdByName ||
+              item.CreatedByName ||
+              item.createdbyname ||
+              item.createdBy ||
+              item.CreatedBy ||
+              item.createdByEmpCode ||
+              '';
+            const authorDate = new CustomDateFormatPipe().transform(
+              item.createdAt ||
+                item.CreatedAt ||
+                item.createdOn ||
+                item.CreatedOn ||
+                item.createdat ||
+                '',
+            );
+
+            return {
+              Id: item.id || item.Id,
+              documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
+              traningRequired: item.trainingRequired || item.TrainingRequired,
+              minimumscoreforpassing: item.minimumScore || item.MinimumScore,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              createdByName: authorName,
+              CreatedByName: authorName,
+              createdBy: authorName,
+              CreatedBy: authorName,
+              createdAt: authorDate,
+              CreatedAt: authorDate,
+              createdOn: authorDate,
+              CreatedOn: authorDate,
+              LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+              LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                item.lastModifiedAt || item.LastModifiedAt || '',
+              ),
+            };
+          });
         } else {
           this.trainingPolicesData = [];
         }
@@ -372,16 +490,48 @@ export class MiscPolicies {
       .subscribe((res) => {
         const items = res?.Data?.Items || res?.Items;
         if (items) {
-          this.authorizationPolicyData = items.map((item: any) => ({
-            Id: item.id || item.Id,
-            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
-            authorizationRequired: item.authorizationRequired || item.AuthorizationRequired,
-            authorizingAuthority: item.authorizingUser || item.AuthorizingUser,
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          }));
+          this.authorizationPolicyData = items.map((item: any) => {
+            const authorName =
+              item.createdByName ||
+              item.CreatedByName ||
+              item.createdbyname ||
+              item.createdBy ||
+              item.CreatedBy ||
+              item.createdByEmpCode ||
+              item.requestCreatedBy ||
+              '';
+            const authorDate = new CustomDateFormatPipe().transform(
+              item.createdAt ||
+                item.CreatedAt ||
+                item.createdOn ||
+                item.CreatedOn ||
+                item.createdat ||
+                item.requestCreatedOn ||
+                '',
+            );
+
+            return {
+              Id: item.id || item.Id,
+              documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
+              authorizationRequired: item.authorizationRequired || item.AuthorizationRequired,
+              authorizingAuthority: item.authorizingUser || item.AuthorizingUser,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              createdByName: authorName,
+              CreatedByName: authorName,
+              createdBy: authorName,
+              CreatedBy: authorName,
+              createdAt: authorDate,
+              CreatedAt: authorDate,
+              createdOn: authorDate,
+              CreatedOn: authorDate,
+              LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+              LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                item.lastModifiedAt || item.LastModifiedAt || '',
+              ),
+            };
+          });
         } else {
           this.authorizationPolicyData = [];
         }
@@ -399,16 +549,8 @@ export class MiscPolicies {
         this.documentTypesList = [];
       }
 
-      // ✅ build grid AFTER dropdown data is ready
-      this.buildTrainingPolicyGrid();
-      this.buildDocumentReviewGrid();
-      this.buildAuthorizationPolicyGrid();
-      // if (this.selectedTab === 'DocumentReview') {
-      //   this.documentReviewGridConfig = {
-      //     ...this.documentReviewGridConfig,
-      //     columns: this.getDocumentReviewColumns(),
-      //   };
-      // }
+      // ✅ Load only the current active tab on initial load
+      this.onTabChange(this.selectedTab);
     });
   };
 
@@ -424,7 +566,7 @@ export class MiscPolicies {
       }
 
       // ✅ Update grid columns after dropdown data is ready
-      if (this.selectedTab !== 'TrainingPoliciy' && this.selectedTab !== 'DocumentReview') {
+      if (this.selectedTab === 'AuthorizationPolicy') {
         this.authGridConfig = {
           ...this.authGridConfig,
           columns: this.getAuthorizationPolicyColumns(),
@@ -434,13 +576,11 @@ export class MiscPolicies {
   };
 
   onGridReady(gridApi: any): void {
-    //console.log('Grid ready:', gridApi);
     // Store grid API if needed for external operations
   }
 
   onTrainingPoliciyRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-    // Add logic to generate IDs, validate, etc.
     const payLoad = {
       documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
@@ -453,16 +593,13 @@ export class MiscPolicies {
         'Training Policy',
         'Training policy added successfully!',
       );
+      this.GetAllTrainingPolicy({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
-    const rowWithId = {
-      ...rowData,
-      id: this.generateId(),
-      documentType: rowData.documentType,
-      traningRequired: rowData.traningRequired,
-      minimumscoreforpassing: rowData.minimumscoreforpassing,
-    };
-
-    this.trainingPolicesData = [rowWithId, ...this.trainingPolicesData];
   }
 
   onAuthPolicyRowAdded(event: { rowData: any }): void {
@@ -487,10 +624,13 @@ export class MiscPolicies {
         'Authorization Policy',
         'Authorization policy added successfully!',
       );
+      this.GetDocumentTrainingAuthorization({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
-
-    const rowWithId = { ...rowData, id: this.generateId() };
-    this.authorizationPolicyData = [rowWithId, ...this.authorizationPolicyData];
   }
 
   onAuthPolicyRowUpdated(event: { rowData: any; index: number }): void {
@@ -516,10 +656,13 @@ export class MiscPolicies {
         'Authorization Policy',
         'Authorization policy updated successfully!',
       );
+      this.GetDocumentTrainingAuthorization({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
-
-    this.authorizationPolicyData[event.index] = { ...event.rowData };
-    this.authorizationPolicyData = [...this.authorizationPolicyData];
   }
 
   onAuthPolicyRowDeleted(rowIndex: number): void {
@@ -531,10 +674,14 @@ export class MiscPolicies {
           'Authorization Policy',
           'Authorization policy deleted successfully!',
         );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
       });
     }
-    this.authorizationPolicyData.splice(rowIndex, 1);
-    this.authorizationPolicyData = [...this.authorizationPolicyData];
   }
 
   onDocReviewRowAdded(event: { rowData: any }): void {
@@ -550,10 +697,13 @@ export class MiscPolicies {
         'Document Review',
         'Document review policy added successfully!',
       );
+      this.GetAllDocumentReviewPolicies({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
-
-    const rowWithId = { ...rowData, id: this.generateId() };
-    this.documentReviewRowData = [rowWithId, ...this.documentReviewRowData];
   }
 
   onDocReviewRowUpdated(event: { rowData: any; index: number }): void {
@@ -570,10 +720,13 @@ export class MiscPolicies {
         'Document Review',
         'Document review policy updated successfully!',
       );
+      this.GetAllDocumentReviewPolicies({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
-
-    this.documentReviewRowData[event.index] = { ...event.rowData };
-    this.documentReviewRowData = [...this.documentReviewRowData];
   }
 
   onDocReviewRowDeleted(rowIndex: number): void {
@@ -585,14 +738,17 @@ export class MiscPolicies {
           'Document Review',
           'Document review policy deleted successfully!',
         );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
       });
     }
-    this.documentReviewRowData.splice(rowIndex, 1);
-    this.documentReviewRowData = [...this.documentReviewRowData];
   }
 
   onTrainingPoliciyRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
     const { rowData } = event;
     const payLoad = {
       id: rowData.Id,
@@ -607,14 +763,16 @@ export class MiscPolicies {
         'Training Policy',
         'Training policy updated successfully!',
       );
+      this.GetAllTrainingPolicy({
+        pageNumber: 1,
+        pageSize: this.pageSize,
+        sortModel: [],
+        filterModel: {},
+      });
     });
-
-    this.trainingPolicesData[event.index] = { ...event.rowData };
-    this.trainingPolicesData = [...this.trainingPolicesData]; // Trigger change detection
   }
 
   onTrainingPoliciyRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
     const row = this.trainingPolicesData[rowIndex];
     if (row && row.Id) {
       this._trainingPolicyService.delete(row.Id).subscribe(() => {
@@ -623,10 +781,14 @@ export class MiscPolicies {
           'Training Policy',
           'Training policy deleted successfully!',
         );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
       });
     }
-    this.trainingPolicesData.splice(rowIndex, 1);
-    this.trainingPolicesData = [...this.trainingPolicesData];
   }
 
   onCellValueChanged(event: any): void {
@@ -688,4 +850,6 @@ class DocumentAttributeColumns {
   documentTypeCode: string = '';
   traningRequired: boolean = false;
   minimumscoreforpassing: number = 0;
+  createdByName: string = '';
+  requestCreatedOn: string = '';
 }

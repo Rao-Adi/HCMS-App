@@ -369,6 +369,14 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   private createColumnDef(column: GridColumn): ColDef {
+    const isAuditField =
+      (typeof column.cellClass === 'string' && column.cellClass.includes('audit-cell')) ||
+      (Array.isArray(column.cellClass) && column.cellClass.includes('audit-cell')) ||
+      (column.headerName && /last saved|created|modified|requested|audit/i.test(column.headerName)) ||
+      (column.field && /created|modified|saved|requested|audit/i.test(column.field));
+
+    const isColumnEditable = column.editable !== false && !isAuditField;
+
     const colDef: ColDef = {
       field: column.field,
       headerName: column.headerName,
@@ -378,7 +386,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       //pinned: column.pinned,
       sortable: column.sortable ?? this.config.enableSorting,
       filter: column.filter ?? this.config.enableFiltering,
-      editable: column.editable ?? false,
+      editable: isColumnEditable,
       cellClass: column.cellClass,
     };
 
@@ -389,7 +397,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         const isCascade = !!column.dependsOn;
 
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             const rendererComponent = isCascade
               ? CascadeDropdownCellRenderer
               : DropdownCellRenderer;
@@ -397,17 +405,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
             return {
               component: column.customRenderer || rendererComponent,
               params: {
-                // 🔥 ALWAYS pass options (for root dropdown)
-                //options: column.dropdownOptions || [],
-
                 options: column.dropdownOptions || [],
                 value: params.data?.[column.field], // ← ID (1)
                 valueField: column.dropdownValueField, // 'id'
                 displayField: column.dropdownDisplayField, // 'text'
-
-                // 🔥 ALWAYS read value from rowData
-                //value: params.data?.[column.field],
-                //value: params.data?.[column.dropdownValueField || column.field],
 
                 disabled: params.data?.disabled,
                 placeholder: column.placeholder || '--any--',
@@ -430,7 +431,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 context: this.getContextData(),
 
                 onValueChange: (value: any, data: any) => {
-                  //debugger;
                   // 1️⃣ Set value
                   data[column.field] = value;
 
@@ -445,7 +445,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
                   // 4️⃣ Pinned row handling
                   if (params.node.rowPinned === 'top') {
-                    // this.pinnedTopRowData[0][column.field] = value;
                     this.pinnedTopRowData = [{ ...data }];
                     this.gridApi.setGridOption('pinnedTopRowData', this.pinnedTopRowData);
                   }
@@ -481,18 +480,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
           const match = options.find((opt) => opt.id == params.value);
 
           return match ? match.text : params.value;
-          // if (column.dropdownDisplayField && params.data) {
-          //   return params.data[column.dropdownDisplayField];
-          // }
-          // return this.getOptionText(
-          //   column,
-          //   params.data?.[column.dropdownValueField || column.field]
-          // );
         };
         break;
       case 'number':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || InputCellRenderer,
               params: {
@@ -522,7 +514,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'text':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || TextCellRenderer,
               params: {
@@ -543,7 +535,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'date':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || DatePickerCellRenderer,
               params: {
@@ -596,7 +588,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'file':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || FileUploadCellRenderer,
               params: {
@@ -606,26 +598,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 multiple: column.multiple || false,
                 maxSize: column.maxSize || 5, // MB
                 onValueChange: (value: any, data: any) => {
-                  // data[column.field] = value;
-                  // this.emitCellValueChanged(column.field, value, data, params.rowIndex);
-
                   if (!(value instanceof File)) {
                     console.error('Expected File, got:', value);
                     return;
                   }
 
-                  // DO NOT spread or clone
                   (params.node as any).__uploadedFile = value;
                   data[column.field] = value; // optional, for display
                 },
                 onFilePreview: (fileInfo: any) => {
-                  // Emit custom event for file preview
                   this.cellValueChanged.emit({
                     field: column.field,
                     value: fileInfo,
                     rowData: params.data,
                     rowIndex: params.rowIndex,
-                    //type: 'file-preview',
                   });
                 },
                 ...column.customRendererParams,
@@ -650,7 +636,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'checkbox':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || Checkboxrenderer,
               params: {
@@ -692,14 +678,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         break;
       case 'switch':
         colDef.cellRendererSelector = (params: any) => {
-          const isEditing = params.node.rowPinned === 'top' || this.editingRowId === params.node.id;
+          const isEditing = isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id);
           return {
             component: column.customRenderer || SwitchRenderer,
             params: {
               value: params.value,
               disabled: !isEditing,
               onValueChange: (value: any, data: any) => {
-                // debugger;
                 data[column.field] = value;
                 this.emitCellValueChanged(column.field, value, data, params.rowIndex);
               },
