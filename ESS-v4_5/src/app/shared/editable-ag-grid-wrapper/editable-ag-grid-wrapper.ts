@@ -220,6 +220,14 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       minWidth: 100,
       wrapHeaderText: true,
       autoHeaderHeight: true,
+      suppressKeyboardEvent: (params: any) => {
+        const event = params.event;
+        const key = event.key;
+        if (key === 'Backspace' || key === 'Delete') {
+          return true; // Suppress AG Grid keyboard clearing
+        }
+        return false;
+      },
       cellRenderer: (p: ICellRendererParams) => this.highlightByFilter(p),
       cellStyle: { display: 'flex', alignItems: 'center' },
     };

@@ -145,7 +145,7 @@ export class DepartmentComponent {
       //   minWidth: 150,
       // },
       {
-        field: 'CreatedByName',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -154,7 +154,7 @@ export class DepartmentComponent {
         cellClass: 'audit-cell',
       },
       {
-        field: 'CreatedAt',
+        field: 'LastModifiedAt',
         headerName: 'Last Saved On',
         type: 'readonly',
         minWidth: 150,
@@ -289,7 +289,7 @@ export class DepartmentComponent {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-
+    
     const payLoad = {
       Name: rowData.Name,
       DivisionCode: rowData.Division,
@@ -328,10 +328,11 @@ export class DepartmentComponent {
 
   onRowUpdated(event: { rowData: any }): void {
     //console.log('✏️ Row Updated:', event.rowData);
+    debugger;
     const payLoad = { 
       Code: event.rowData.Code,
       Name: event.rowData.Name,
-      DivisionCode: event.rowData.DivisionCode,
+      DivisionCode: event.rowData.Division,
       IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };

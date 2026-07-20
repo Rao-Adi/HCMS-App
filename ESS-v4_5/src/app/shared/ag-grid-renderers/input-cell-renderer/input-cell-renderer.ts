@@ -17,6 +17,9 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
         nz-input
         [(ngModel)]="displayValue"
         (ngModelChange)="onValueChange($event)"
+        (keydown)="$event.stopPropagation()"
+        (keyup)="$event.stopPropagation()"
+        (keypress)="$event.stopPropagation()"
         style="text-align: left;"
       />
     </nz-input-group>

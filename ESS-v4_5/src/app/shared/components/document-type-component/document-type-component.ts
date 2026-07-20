@@ -121,7 +121,7 @@ export class DocumentTypeComponent {
       //   minWidth: 150,
       // },
       {
-        field: 'CreatedByName',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -130,7 +130,7 @@ export class DocumentTypeComponent {
         cellClass: 'audit-cell',
       },
       {
-        field: 'CreatedAt',
+        field: 'LastModifiedAt',
         headerName: 'Last Saved On',
         type: 'readonly',
         minWidth: 150,

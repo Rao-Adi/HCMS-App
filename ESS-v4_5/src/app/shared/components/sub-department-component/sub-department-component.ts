@@ -165,7 +165,7 @@ export class SubDepartmentComponent {
       //   minWidth: 100,
       // },
       {
-        field: 'CreatedByName',
+        field: 'LastModifiedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
@@ -174,7 +174,7 @@ export class SubDepartmentComponent {
         cellClass: 'audit-cell',
       },
       {
-        field: 'CreatedAt',
+        field: 'LastModifiedAt',
         headerName: 'Last Saved On',
         type: 'readonly',
         minWidth: 150,

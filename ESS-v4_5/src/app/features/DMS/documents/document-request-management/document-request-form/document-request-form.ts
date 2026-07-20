@@ -958,7 +958,7 @@ export class DocumentRequestForm {
               item.CreatedAt || item.createdat || '',
             ),
             requestCreatedBy: item.CreatedByName || item.createdByName,
-            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            // previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
             previousVersionCreatedOn: new CustomDateFormatPipe().transform(
               item.draftContentLastModifiedAt ||
                 item.DraftContentLastModifiedAt ||

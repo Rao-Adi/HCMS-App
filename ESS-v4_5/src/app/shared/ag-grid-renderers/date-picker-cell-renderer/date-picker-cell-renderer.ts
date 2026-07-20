@@ -16,7 +16,10 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
       style="width: 100%;"
       [nzDisabled]="disabled"
       [nzFormat]="'dd/MMM/yyyy'"
-      (ngModelChange)="onDateChange($event)">
+      (ngModelChange)="onDateChange($event)"
+      (keydown)="$event.stopPropagation()"
+      (keyup)="$event.stopPropagation()"
+      (keypress)="$event.stopPropagation()">
     </nz-date-picker>
   `,
   styles: [`
