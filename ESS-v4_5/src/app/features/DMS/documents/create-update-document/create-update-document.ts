@@ -149,6 +149,12 @@ export class CreateUpdateDocument {
   totalDistribution = 0;
   totalDocuments = 0;
 
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 10; // default value
+
   public noRowsOverlay: string = '';
 
   attributes: DocumentAttribute[] = [];
@@ -163,9 +169,7 @@ export class CreateUpdateDocument {
   ];
 
   trainers: SelectList[] = [];
-
   users: any[] = [];
-
   requestTypes: any[] = [];
   requestIds: any[] = [];
   // Map to store the display values
@@ -176,9 +180,10 @@ export class CreateUpdateDocument {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
+    { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-
+    { field: 'businessDomain', headerName: 'Business Domain' },
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
     { field: 'requestCreatedOn', headerName: 'Request Created On' },
     { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
@@ -225,8 +230,10 @@ export class CreateUpdateDocument {
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
+    { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
+    { field: 'businessDomain', headerName: 'Business Domain' },
 
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
     { field: 'requestCreatedOn', headerName: 'Request Created On' },
@@ -369,11 +376,11 @@ export class CreateUpdateDocument {
   }
 
   onCellClicked(event: any): void {
-    this.templateHtml = event.data?.proposedContent || '';
-    this.draftFileUrl = event.data?.draftFileUrl || '';
-    this.requestId = event.data?.requestId || event.data?.Id || event.data?.id || 0;
-    this.documentName = event.data?.documentName || '';
-    this.showDocumentContent = true;
+    // this.templateHtml = event.data?.proposedContent || '';
+    // this.draftFileUrl = event.data?.draftFileUrl || '';
+    // this.requestId = event.data?.requestId || event.data?.Id || event.data?.id || 0;
+    // this.documentName = event.data?.documentName || '';
+    // this.showDocumentContent = true;
   }
 
   loadRequestSpecificData(code: string) {
@@ -441,7 +448,7 @@ export class CreateUpdateDocument {
     if (value) {
       this.CheckTrainingPolicy(value);
       this.GetDocumentAttributes(value);
-      this.GetAllApprovedRequests(); 
+      this.GetAllApprovedRequests();
       this.loadWorkflowAuthorities(this.selectedDocumentType);
       this.GetDocumentReviewPolicy();
       this.GetTemplate(this.selectedDocumentType);
@@ -532,7 +539,10 @@ export class CreateUpdateDocument {
           response.Data?.templateFileUrl ||
           '';
 
-        if (!this.draftFileUrl && (this.selectedTemplateType === '1' || this.selectedTemplateType === '2')) {
+        if (
+          !this.draftFileUrl &&
+          (this.selectedTemplateType === '1' || this.selectedTemplateType === '2')
+        ) {
           this.draftFileUrl = this.templateFileUrl;
         }
       },
@@ -612,13 +622,6 @@ export class CreateUpdateDocument {
     // this.loading = true;
     this.selectedTrainingMode = value;
   }
- 
-
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 10; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
@@ -731,12 +734,12 @@ export class CreateUpdateDocument {
     this.showTrainingUserTable = true;
 
     const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
-    
+
     this.selectedUser.forEach((userCode) => {
       const user = this.users.find((u) => u.CODE === userCode);
       this.trainingUsersData.push({
         TrainingMode: mode?.NAME,
-        TrainerName: user?.role,// valueKey="NAME" bounds the actual role name
+        TrainerName: user?.role, // valueKey="NAME" bounds the actual role name
         UserName: user?.NAME,
         TrainerCode: this.selectedRole,
         UserCode: user?.CODE,
@@ -798,7 +801,11 @@ export class CreateUpdateDocument {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Create/Update', message);
+        this._notificationToastService.createNotification(
+          'error',
+          'Document Create/Update',
+          message,
+        );
       },
     });
   }
@@ -896,7 +903,6 @@ export class CreateUpdateDocument {
 
     return result;
   }
- 
 
   GetDocumentReviewPolicy() {
     const DocTypeCode = this.selectedDocumentType;
@@ -989,6 +995,7 @@ export class CreateUpdateDocument {
             stepId: item.StepId || item.stepId,
             stepOrder: item.StepOrder || item.stepOrder,
             startedAt: item.StartedAt || item.startedAt,
+            version: item.Version,
             division: item.Division,
             documentId: item.DocumentNumber,
             documentName: item.DocumentName,
@@ -997,24 +1004,24 @@ export class CreateUpdateDocument {
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
             justification: item.Justification,
-            businessdomainId: item.BusinessDomainCode,
+            businessdomain: item.BusinessDomain,
+            businessDomainCode: item.BusinessDomainCode,
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
-            sumbittedby: item.CreatedBy,
+            requestCreatedBy: item.LastModifiedByName,
             status: item.IsReworked ? 'Reworked' : 'Draft',
-            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
             requestCreatedOn: new CustomDateFormatPipe().transform(
+              item.CreatedAt || item.CreatedAt || '',
+            ),
+            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
               item.createdAt || item.CreatedAt || '',
             ),
-            previousVersionCreatedOn:
-              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
+            // previousVersionCreatedOn:
+            //   item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
             proposedVersionNumber: item.RowVersion || item.rowVersion,
             templateType: item.TemplateType || item.templateType,
             templateFileUrl:
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              '',
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
             draftFileUrl:
               item.DraftFileUrl ||
               item.draftfileurl ||
@@ -1065,13 +1072,12 @@ export class CreateUpdateDocument {
       sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
     }
 
-    
     const payLoad = {
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType, 
+      documentTypeCode: this.selectedDocumentType,
       RequestStatus: 'Approved',
 
       pageNumber: this.currentGridQuery.pageNumber,
@@ -1090,7 +1096,7 @@ export class CreateUpdateDocument {
       next: (response) => {
         if (response?.Success) {
           this.totalRows = response.Data.TotalCount;
-          this.documentRevisionData = response.Data.map((item: any) => {
+          this.DocumentObseletionData = response.Data.map((item: any) => {
             // Helper to get value with case-insensitive fallback
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
@@ -1132,9 +1138,9 @@ export class CreateUpdateDocument {
               department: get(['Department']),
               departmentId: get(['DepartmentCode', 'departmentCode']),
               subDepartment: get(['SubDepartment', 'SubDepartment']),
-              businessdomain: get(['BusinessDomain', 'businessDomain']),
-              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
-              version: get(['ProposedVersionNumber', 'proposedVersionNumber']),
+              businessDomain: get(['BusinessDomain', 'businessDomain']),
+              businessDomainCode: get(['BusinessDomainCode', 'businessDomainCode']),
+              version: get(['Version', 'version']),
               // ──────────────────────────────────────────────
               // Content / Justification
               // ──────────────────────────────────────────────
@@ -1145,7 +1151,7 @@ export class CreateUpdateDocument {
               // ──────────────────────────────────────────────
               // Audit / History fields
               // ──────────────────────────────────────────────
-              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              requestCreatedBy: get(['LastModifiedByName', 'lastModifiedByName'], ''),
               dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
               requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
               startedAt: this.formatDate(startedAtRaw),
