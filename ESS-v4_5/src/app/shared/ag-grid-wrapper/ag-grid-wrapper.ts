@@ -260,19 +260,24 @@ export class AgGridWrapper implements OnInit, OnChanges {
     const allColumnIds = columns.map((col: any) => col.getId());
     this.gridApi.autoSizeColumns(allColumnIds);
 
-    // Calculate total actual width of all columns after auto-sizing
-    let totalColumnWidth = 0;
-    columns.forEach((col: any) => {
-      totalColumnWidth += col.getActualWidth();
-    });
+    // Delay calculation to let AG Grid calculate and apply auto-sized column widths first
+    setTimeout(() => {
+      if (!this.gridApi) return;
+      const cols = this.gridApi.getColumns();
+      if (!cols || cols.length === 0) return;
 
-    // Get the grid container element width
-    const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
-    const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
+      let totalColumnWidth = 0;
+      cols.forEach((col: any) => {
+        totalColumnWidth += col.getActualWidth();
+      });
 
-    if (totalColumnWidth < gridWidth) {
-      this.gridApi.sizeColumnsToFit();
-    }
+      const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
+      const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
+
+      if (totalColumnWidth < gridWidth) {
+        this.gridApi.sizeColumnsToFit();
+      }
+    }, 150);
   }
 
   onFirstDataRendered(event: any): void {

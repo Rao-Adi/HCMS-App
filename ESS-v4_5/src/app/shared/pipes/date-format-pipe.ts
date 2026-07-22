@@ -5,16 +5,14 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class CustomDateFormatPipe implements PipeTransform {
   transform(value: Date | string | number | null | undefined): string | null {
- 
     if (!value) return null;
 
     const date = new Date(value);
     if (isNaN(date.getTime())) return null;
 
-    const day = date.getDate().toString().padStart(2, '0'); // Add leading zero if needed
+    const day = date.getDate().toString().padStart(2, '0');
     const year = date.getFullYear();
 
-    // Short month names
     const months = [
       'Jan',
       'Feb',
@@ -31,25 +29,18 @@ export class CustomDateFormatPipe implements PipeTransform {
     ];
     const month = months[date.getMonth()];
 
-    // Check if the original value has time component
+    // Check if the original value contains a time component (has a colon ':')
     const originalValue = value.toString();
+    const hasTime = originalValue.includes(':');
 
-    // Check if the string contains time (has space and colon for time)
-    if (typeof value === 'string' && originalValue.includes(' ') && originalValue.includes(':')) {
-      // Extract time from the original string to preserve exact time
-      const timePart = originalValue.split(' ')[1] || '';
-      const timeComponents = timePart.split(':');
+    if (hasTime) {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
 
-      if (timeComponents.length >= 2) {
-        const hours = timeComponents[0];
-        const minutes = timeComponents[1];
-        const seconds = timeComponents[2] || '00';
-
-        return `${month} ${day}, ${year} ${hours}:${minutes}:${seconds}`;
-      }
+      return `${month} ${day}, ${year} ${hours}:${minutes}:${seconds}`;
     }
 
-    // If no time component or not a string with time format, return date only
-    return `${month} ${day},${year}`;
+    return `${month} ${day}, ${year}`;
   }
 }
