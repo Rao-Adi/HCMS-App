@@ -379,4 +379,32 @@ export class DocumentTemplate {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
   }
+
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
+  }
 }

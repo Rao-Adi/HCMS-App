@@ -1,5 +1,5 @@
 <div class="container-fluid">
-  <div class="card-custom">
+  <div class="">
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12">
         <div class="Master-box mb-4">
@@ -116,7 +116,7 @@
                       style="max-width: 480px"
                     >
                       <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
-                        <i class="bi bi-file-earmark-text-fill fs-3 text-primary"></i>
+                        <i [class]="'bi fs-3 ' + getFileIconClass(selectedFile ? selectedFile.name : existingFileName)"></i>
                         <div class="d-flex flex-column min-w-0">
                           <span
                             class="fw-semibold text-dark text-truncate"
@@ -173,7 +173,7 @@
                   <button
                     type="button"
                     tabindex="0"
-                    class="btn btn-sm btn-outline-secondary shadow-sm"
+                    class="btn btn-sm btn-primary shadow-sm"
                     (click)="saveTemplate($event)"
                   >
                     <i class="bi bi-file-earmark-text me-2"></i>

@@ -313,7 +313,15 @@ export class DocumentRequestForm {
 
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
-    if (value != null) {
+    this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.draftFile = null;
+    this.templateFileUrl = '';
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+
+    if (value != null && value !== '') {
       this.selectedDocumentType = value;
 
       //Get Template
@@ -371,9 +379,10 @@ export class DocumentRequestForm {
   GetTemplate(value: string, isRevision: boolean = false) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response: any) => {
-        if (!response?.Data) {
+        if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
           this.selectedTemplateType = '';
           this.templateFileUrl = '';
+          this.draftFileUrl = '';
           if (!isRevision) {
             this.templateHtml = '';
           }
@@ -388,14 +397,29 @@ export class DocumentRequestForm {
         this.selectedTemplateType =
           response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
         this.templateFileUrl =
-          response.Data?.TemplateFileURL || response.Data?.templateFileUrl || '';
+          response.Data?.TemplateFileUrl ||
+          response.Data?.TemplateFileURL ||
+          response.Data?.templateFileUrl ||
+          '';
 
         if (!isRevision) {
           this.templateHtml =
             response.Data?.TemplateContent || response.Data?.templateContent || '';
         }
+
+        if (!this.draftFileUrl && (this.selectedTemplateType === '1' || this.selectedTemplateType === '2')) {
+          this.draftFileUrl = this.templateFileUrl;
+        }
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        this.selectedTemplateType = '';
+        this.templateFileUrl = '';
+        this.draftFileUrl = '';
+        if (!isRevision) {
+          this.templateHtml = '';
+        }
+        console.error(err);
+      },
     });
 
     if (value === 'Select') {
@@ -470,7 +494,8 @@ export class DocumentRequestForm {
             const url =
               typeof response?.Data === 'string'
                 ? response.Data
-                : response?.Data?.TemplateFileURL ||
+                : response?.Data?.TemplateFileUrl ||
+                  response?.Data?.TemplateFileURL ||
                   response?.Data?.templateFileUrl ||
                   this.templateFileUrl;
             if (url) {
@@ -877,6 +902,34 @@ export class DocumentRequestForm {
     this.showDocumentCreationDiv = false;
   }
 
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
+  }
+
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
   }
@@ -975,10 +1028,18 @@ export class DocumentRequestForm {
             url: item.DocumentURL || item.documenturl,
             proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
             templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            templateFileUrl:
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
+              '',
             draftFileUrl:
               item.DraftFileUrl ||
+              item.draftfileurl ||
               item.draftFileUrl ||
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
               (String(item.TemplateType || item.templateType) === '1' ||
               String(item.TemplateType || item.templateType) === '2'
                 ? item.ProposedContent || item.proposedcontent

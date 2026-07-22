@@ -372,7 +372,11 @@ export class DocumentAuthorizationPostTraining {
               url: item.DocumentURL || item.documenturl,
               proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
               templateType: item.TemplateType || item.templateType,
-              templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+              templateFileUrl:
+                item.TemplateFileUrl ||
+                item.TemplateFileURL ||
+                item.templateFileUrl ||
+                '',
             }));
           } else {
             this.pendingAuthorizationData = [];

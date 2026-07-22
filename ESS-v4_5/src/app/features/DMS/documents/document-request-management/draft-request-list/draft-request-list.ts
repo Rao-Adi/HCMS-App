@@ -274,10 +274,18 @@ export class DraftRequestList {
               item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
             proposedVersionNumber: item.RowVersion || item.rowVersion,
             templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            templateFileUrl:
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
+              '',
             draftFileUrl:
               item.DraftFileUrl ||
+              item.draftfileurl ||
               item.draftFileUrl ||
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
               (String(item.TemplateType || item.templateType) === '1' ||
               String(item.TemplateType || item.templateType) === '2'
                 ? item.ProposedContent
@@ -448,7 +456,8 @@ export class DraftRequestList {
           const url =
             typeof response?.Data === 'string'
               ? response.Data
-              : response?.Data?.TemplateFileURL ||
+              : response?.Data?.TemplateFileUrl ||
+                response?.Data?.TemplateFileURL ||
                 response?.Data?.templateFileUrl ||
                 this.templateFileUrl;
           if (url) {

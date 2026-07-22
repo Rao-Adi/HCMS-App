@@ -110,6 +110,7 @@ export class CreateUpdateDocument {
   selectedRequestId: string = '';
   templateHtml: string = '';
   draftFileUrl: string = '';
+  templateFileUrl: string = '';
   trainingRequired: boolean = false;
   showDocumentContent: boolean = false;
   documentId: string = '';
@@ -427,16 +428,27 @@ export class CreateUpdateDocument {
 
   onDocumentTypeChange(value: string): void {
     this.selectedDocumentType = value;
+    this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.draftFile = null;
+    this.templateFileUrl = '';
+    this.selectedRequestId = '';
+    this.showDocumentContent = false;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
 
-    this.CheckTrainingPolicy(value);
-    //Get the Document Type's template
-    this.GetDocumentAttributes(value);
-
-    this.GetAllApprovedRequests();
-    this.GetDocumentTemplate();
-    this.loadWorkflowAuthorities(this.selectedDocumentType);
-    this.GetDocumentReviewPolicy();
-    this.GetTemplate(this.selectedDocumentType);
+    if (value) {
+      this.CheckTrainingPolicy(value);
+      this.GetDocumentAttributes(value);
+      this.GetAllApprovedRequests();
+      this.GetDocumentTemplate();
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+      this.GetDocumentReviewPolicy();
+      this.GetTemplate(this.selectedDocumentType);
+    } else {
+      this.emptyFields();
+    }
     // const payLoad = {
     //   EntityType: 'Document',
     //   documentTypeCode: this.selectedDocumentType,
@@ -500,8 +512,11 @@ export class CreateUpdateDocument {
   GetTemplate(value: string) {
     this.documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response: any) => {
-        if (!response?.Data) {
+        if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
           this.selectedTemplateType = '';
+          this.templateFileUrl = '';
+          this.templateHtml = '';
+          this.draftFileUrl = '';
           this._notificationToastService.createNotification(
             'warning',
             'Template Missing',
@@ -512,9 +527,21 @@ export class CreateUpdateDocument {
 
         this.selectedTemplateType =
           response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.templateFileUrl =
+          response.Data?.TemplateFileUrl ||
+          response.Data?.TemplateFileURL ||
+          response.Data?.templateFileUrl ||
+          '';
+
+        if (!this.draftFileUrl && (this.selectedTemplateType === '1' || this.selectedTemplateType === '2')) {
+          this.draftFileUrl = this.templateFileUrl;
+        }
       },
       error: (err) => {
         this.selectedTemplateType = '';
+        this.templateFileUrl = '';
+        this.templateHtml = '';
+        this.draftFileUrl = '';
         console.error(err);
       },
     });
@@ -564,7 +591,15 @@ export class CreateUpdateDocument {
         if (!res?.Data) return;
         this.documentId = res.Data[0].documentid;
         this.templateHtml = res.Data[0].content || '';
-        this.draftFileUrl = res.Data[0].draftfileurl || res.Data[0].draftFileUrl || '';
+        this.draftFileUrl =
+          res.Data[0].draftfileurl ||
+          res.Data[0].draftFileUrl ||
+          res.Data[0].TemplateFileUrl ||
+          res.Data[0].templateFileUrl ||
+          res.Data[0].TemplateFileURL ||
+          res.Data[0].templatefileurl ||
+          this.templateFileUrl ||
+          '';
         this.documentName = res.Data[0].title || '';
       } else {
         this.templateHtml = '';
@@ -989,10 +1024,18 @@ export class CreateUpdateDocument {
               item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
             proposedVersionNumber: item.RowVersion || item.rowVersion,
             templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            templateFileUrl:
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
+              '',
             draftFileUrl:
               item.DraftFileUrl ||
+              item.draftfileurl ||
               item.draftFileUrl ||
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
               (String(item.TemplateType || item.templateType) === '1' ||
               String(item.TemplateType || item.templateType) === '2'
                 ? item.ProposedContent
@@ -1168,6 +1211,7 @@ export class CreateUpdateDocument {
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
     this.draftFileUrl = '';
+    this.templateFileUrl = '';
     this.documentName = '';
     this.requestId = 0;
     this.draftFile = null;
@@ -1177,6 +1221,34 @@ export class CreateUpdateDocument {
     this.selectedTrainingMode = '';
     this.selectedRole = '';
     this.selectedUser = [];
+  }
+
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
   }
 
   downloadDraft(): void {
