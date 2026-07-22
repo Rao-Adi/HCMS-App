@@ -92,6 +92,25 @@ export class MyPendingRequestForApproval {
     {
       field: 'justification',
       headerName: 'Justification',
+      editable: false,
+      cellRenderer: (params: any) => {
+        const val = params.value || (params.data && params.data.justification) || '';
+        if (!val) return '<span>-</span>';
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-justification"
+          >
+            Justification
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        const val = event.value || (event.data && event.data.justification);
+        if (val) {
+          this.openJustificationModal(val);
+        }
+      },
     },
     {
       field: 'proposedDocumentNumber',
@@ -241,4 +260,22 @@ export class MyPendingRequestForApproval {
   approve() {}
   disapprove() {}
   revert() {}
+
+  openJustificationModal(justificationText: string): void {
+    const text = justificationText || 'No justification provided.';
+    const modalRef = this.modal.create({
+      nzTitle: 'Justification',
+      nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
+      nzClosable: true,
+      nzMaskClosable: true,
+      nzFooter: [
+        {
+          label: 'Close',
+          type: 'primary',
+          onClick: () => modalRef.destroy(),
+        },
+      ],
+      nzWidth: 600,
+    });
+  }
 }
