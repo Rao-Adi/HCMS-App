@@ -4,10 +4,11 @@ import { UploadDocuments } from '../upload-documents/upload-documents';
 import { UploadedDocuments } from '../uploaded-documents/uploaded-documents';
 import { DocumentService } from '../../../../shared/services/document.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-upload-old-documents',
-  imports: [CommonModule, UploadDocuments, UploadedDocuments],
+  imports: [CommonModule, UploadDocuments, UploadedDocuments, NzModalModule],
   templateUrl: './upload-old-documents.html',
   styleUrl: './upload-old-documents.css',
 })
@@ -24,8 +25,10 @@ export class UploadOldDocuments {
   @ViewChild('excelFileInput') excelFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('documentsInput') documentsInput!: ElementRef<HTMLInputElement>;
 
-  constructor(private documentService: DocumentService,
-    private _notificationToastService: NotificationToastService
+  constructor(
+    private documentService: DocumentService,
+    private _notificationToastService: NotificationToastService,
+    private modalService: NzModalService
   ) {}
 
   downloadTemplate() {
@@ -105,12 +108,11 @@ export class UploadOldDocuments {
     if (this.excelFile && this.bulkDocuments.length > 0) {
       // Both selected: Upload Metadata First, then Files
       this.documentService.bulkImportDocumentMetadata(this.excelFile).subscribe({
-        next: (metadataResponse) => {
+        next: (metadataResponse: any) => {
           console.log('Metadata imported successfully:', metadataResponse);
+
           this.documentService.bulkUploadDocumentFiles(this.bulkDocuments).subscribe({
             next: (filesResponse) => {
-              // console.log('Files uploaded successfully:', filesResponse);
-              // alert('Bulk upload completed successfully!');
               this._notificationToastService.createNotification(
                 'success',
                 'Success',
@@ -134,18 +136,22 @@ export class UploadOldDocuments {
         },
         error: (err) => {
           console.error('Error importing metadata:', err);
-          this._notificationToastService.createNotification(
-            'error',
-            'Error',
-            'Failed to import Excel metadata. Please check the file and try again.'
-          );
+          if (err?.error?.Data && Array.isArray(err.error.Data) && err.error.Data.length > 0) {
+            this.showSkippedRowsModal(err.error.Data);
+          } else {
+            this._notificationToastService.createNotification(
+              'error',
+              'Error',
+              'Failed to import Excel metadata. Please check the file and try again.'
+            );
+          }
           this.isUploading = false;
         }
       });
     } else if (this.excelFile) {
       // Only Excel template selected: Upload Metadata Only
       this.documentService.bulkImportDocumentMetadata(this.excelFile).subscribe({
-        next: (metadataResponse) => {
+        next: (metadataResponse: any) => {
           console.log('Metadata imported successfully:', metadataResponse);
           this._notificationToastService.createNotification(
             'success',
@@ -157,11 +163,15 @@ export class UploadOldDocuments {
         },
         error: (err) => {
           console.error('Error importing metadata:', err);
-          this._notificationToastService.createNotification(
-            'error',
-            'Error',
-            'Failed to import Excel metadata. Please check the file and try again.'
-          );
+          if (err?.error?.Data && Array.isArray(err.error.Data) && err.error.Data.length > 0) {
+            this.showSkippedRowsModal(err.error.Data);
+          } else {
+            this._notificationToastService.createNotification(
+              'error',
+              'Error',
+              'Failed to import Excel metadata. Please check the file and try again.'
+            );
+          }
           this.isUploading = false;
         }
       });
@@ -188,6 +198,28 @@ export class UploadOldDocuments {
         }
       });
     }
+  }
+
+  showSkippedRowsModal(skippedRows: string[]) {
+    const listHtml = skippedRows
+      .map((row) => `<li style="margin-bottom: 6px; font-weight: 500; color: #d9534f;">${row}</li>`)
+      .join('');
+
+    this.modalService.warning({
+      nzTitle: 'Bulk Import Notice - Skipped Rows',
+      nzContent: `
+        <div style="font-size: 14px; line-height: 1.5;">
+          <p>The import process completed, but the following rows were skipped because the referenced document type or attributes were not found:</p>
+          <ul style="max-height: 250px; overflow-y: auto; padding-left: 20px; margin-top: 10px; margin-bottom: 10px; border: 1px solid #f2dede; background-color: #fdf7f7; border-radius: 4px; padding: 12px 12px 12px 28px;">
+            ${listHtml}
+          </ul>
+          <p style="font-weight: 600; color: #555;">Please review these rows in your Excel file, make sure the values match the system values, and upload again.</p>
+        </div>
+      `,
+      nzOkText: 'OK',
+      nzMaskClosable: true,
+      nzWidth: 520,
+    });
   }
 }
  
