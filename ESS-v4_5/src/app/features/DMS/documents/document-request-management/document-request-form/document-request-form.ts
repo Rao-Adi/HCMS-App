@@ -56,6 +56,7 @@ export class DocumentRequestForm {
   @Input() draftData: any;
   @Output() requestCreated = new EventEmitter<void>();
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  isSubmitting = false;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -562,7 +563,7 @@ export class DocumentRequestForm {
       this._notificationToasService.createNotification(
         'warning',
         'Validation',
-        'Please enter a Justification.',
+        'Please enter Justification.',
       );
       return;
     }
@@ -661,8 +662,10 @@ export class DocumentRequestForm {
       formData.append('DraftFile', this.draftFile);
     }
 
+    this.isSubmitting = true;
     this._doumentRequestService.CreateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
+        this.isSubmitting = false;
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
@@ -677,6 +680,7 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
+        this.isSubmitting = false;
         this._notificationToasService.createNotification(
           'error',
           'Error',
@@ -711,6 +715,22 @@ export class DocumentRequestForm {
       );
       return;
     }
+    if (!this.selectedDocumentType) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Document Type.',
+      );
+      return;
+    }
+    if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Justification.',
+      );
+      return;
+    }
 
     if (!this.selectedTemplateType) {
       this._notificationToasService.createNotification(
@@ -731,26 +751,6 @@ export class DocumentRequestForm {
         );
         return;
       }
-
-      // Mandatory Justification
-      if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
-        this._notificationToasService.createNotification(
-          'warning',
-          'Validation',
-          'Justification is mandatory for a document revision.',
-        );
-        return;
-      }
-
-      // Special Requirement: Document Content must be altered
-      // if (this.templateHtml === this.originalContentHtml) {
-      //   this._notificationToasService.createNotification(
-      //     'warning',
-      //     'Validation',
-      //     'Document Content must be altered from the original version before submission.',
-      //   );
-      //   return;
-      // }
     }
 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
@@ -819,8 +819,10 @@ export class DocumentRequestForm {
       formData.append('DraftFile', this.draftFile);
     }
 
+    this.isSubmitting = true;
     this._doumentRequestService.CreateAndSubmitDraftDocumentRequest(formData).subscribe({
       next: (response) => {
+        this.isSubmitting = false;
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
@@ -829,7 +831,7 @@ export class DocumentRequestForm {
           this._notificationToasService.createNotification(
             'success',
             'User',
-            'Document submitted successfully!',
+            'Document Request submitted successfully!',
           );
           setTimeout(() => {
             window.location.reload();
@@ -837,6 +839,7 @@ export class DocumentRequestForm {
         }
       },
       error: (err) => {
+        this.isSubmitting = false;
         this._notificationToasService.createNotification(
           'error',
           'Error',

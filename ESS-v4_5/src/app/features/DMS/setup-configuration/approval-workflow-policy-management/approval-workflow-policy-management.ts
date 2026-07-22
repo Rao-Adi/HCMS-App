@@ -268,6 +268,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
     const payLoad = {
+      WorkflowPolicyId : this.selectedWorkflowPolicy,
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
@@ -491,6 +492,7 @@ export class ApprovalWorkflowPolicyManagement {
     }
 
     const payLoad = {
+      WorkflowPolicyId: this.selectedWorkflowPolicy,
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'
