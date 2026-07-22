@@ -216,7 +216,7 @@ export class CreateUpdateDocument {
       `;
       },
       onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
+        this.openRevisionHistoryModal(event.data);
       },
     },
   ];
@@ -441,8 +441,7 @@ export class CreateUpdateDocument {
     if (value) {
       this.CheckTrainingPolicy(value);
       this.GetDocumentAttributes(value);
-      this.GetAllApprovedRequests();
-      this.GetDocumentTemplate();
+      this.GetAllApprovedRequests(); 
       this.loadWorkflowAuthorities(this.selectedDocumentType);
       this.GetDocumentReviewPolicy();
       this.GetTemplate(this.selectedDocumentType);
@@ -619,7 +618,7 @@ export class CreateUpdateDocument {
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
@@ -897,20 +896,7 @@ export class CreateUpdateDocument {
 
     return result;
   }
-
-  GetDocumentTemplate() {
-    this.documentTemplateService
-      .getTemplateByDocumentTypeCode(this.selectedDocumentType)
-      .subscribe({
-        next: (response) => {
-          this.templateHtml = response.Data.TemplateContent;
-          // Promise.resolve().then(() => {
-          //   this.templateHtml = response.Data.TemplateContent;
-          // });
-        },
-        error: (err) => console.error(err),
-      });
-  }
+ 
 
   GetDocumentReviewPolicy() {
     const DocTypeCode = this.selectedDocumentType;
@@ -1071,24 +1057,32 @@ export class CreateUpdateDocument {
   }
 
   GetAllApprovedDocuments(query: any) {
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    
     const payLoad = {
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType,
-      employeeCode: 'EMP-0001',
+      documentTypeCode: this.selectedDocumentType, 
       RequestStatus: 'Approved',
 
-      // pageNumber: this.currentGridQuery.pageNumber,
-      // pageSize: this.currentGridQuery.pageSize,
-      // sortModel: this.currentGridQuery.sortModel || [],
-      // filterModel: this.currentGridQuery.filterModel || {},
-      // searchTerm: this.currentGridQuery.searchTerm || '',
-      // // Map to satisfy backend validation
-      // sortBy: sortBy,
-      // sortColumn: sortColumn,
-      // searchText: this.currentGridQuery.searchTerm || '',
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize || this.selectedPageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      // Map to satisfy backend validation
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
       empid: this.loginEmpId,
     };
 

@@ -561,6 +561,7 @@ export class MyApprovalRequest {
 
   // Handle selection changes
   onSelectionChange(selectedRows: any): void {
+    debugger;
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     const row = selectedRows[0];
     if (row) {

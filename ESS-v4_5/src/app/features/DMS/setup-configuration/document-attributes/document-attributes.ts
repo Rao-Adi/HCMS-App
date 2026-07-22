@@ -225,10 +225,11 @@ export class DocumentAttributes {
     this._documentAttribute.create(payLoad).subscribe({
       next: (res: ApiResponse<any>) => {
         if (res.Success) {
-          this._notificationToastService.createNotification('success', 'Document template', res.Message);
+          debugger;
+          this._notificationToastService.createNotification('success', 'Document attribute', res.Message);
           this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
         } else {
-          this._notificationToastService.createNotification('warning', 'Document template', res.Message);
+          this._notificationToastService.createNotification('warning', 'Document attribute', res.Message);
         }
       },
       error: () => {
@@ -259,14 +260,24 @@ export class DocumentAttributes {
       isMandatory: true,
       IsActive: true,
       IsDeleted: false,
-    };
-    this._documentAttribute.update(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'sucess',
-        'Document template',
-        'Document template updated successfully!',
-      );
-      this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
+    }; 
+    this._documentAttribute.update(payLoad).subscribe({
+      next: (res: ApiResponse<any>) => {
+        if (res.Success) {
+          debugger;
+          this._notificationToastService.createNotification('success', 'Document attribute', res.Message);
+          this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
+        } else {
+          this._notificationToastService.createNotification('warning', 'Document attribute', res.Message);
+        }
+      },
+      error: () => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Document Attribute',
+          'Server error. Please try again.',
+        );
+      },
     });
   }
 

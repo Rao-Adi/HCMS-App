@@ -358,13 +358,13 @@ export class DocumentAuthorizationPostTraining {
                 item.CreatedAt || item.createdat || '',
               ),
               requestCreatedBy: item.createdbyname || item.createdByName,
-              previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
-              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                item.draftContentLastModifiedAt ||
-                  item.DraftContentLastModifiedAt ||
-                  item.lastmodifiedat ||
-                  '',
-              ),
+              previousVersionCreatedBy: '', //item.LastModifiedByName || item.lastmodifiedbyname,
+              previousVersionCreatedOn: '', //new CustomDateFormatPipe().transform(
+              //   item.draftContentLastModifiedAt ||
+              //     item.DraftContentLastModifiedAt ||
+              //     item.lastmodifiedat ||
+              //     '',
+              // ),
               version: item.Version || item.version || item.RowVersion || item.rowVersion,
               nextReviewDate: new CustomDateFormatPipe().transform(
                 item.NextReviewDate || item.nextreviewdate || '',
