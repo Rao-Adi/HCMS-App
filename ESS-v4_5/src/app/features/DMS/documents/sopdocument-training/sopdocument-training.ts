@@ -373,10 +373,7 @@ export class SOPDocumentTraining {
             proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
             templateType: item.TemplateType || item.templateType,
             templateFileUrl:
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              '',
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
           }));
         } else {
           this.classRoomData = [];
@@ -431,7 +428,7 @@ export class SOPDocumentTraining {
             ...item,
             Id: item.id || item.Id,
             requestId: item.requestId || item.RequestId,
-            trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+            trainingMode: 'Online',
             averageDocumentScore: item.averagescore || item.averagescore || 0,
             userAssigned: item.totalassigned || item.totalassigned,
             companyId: item.companyId || item.CompanyId,
@@ -477,10 +474,7 @@ export class SOPDocumentTraining {
             proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
             templateType: item.TemplateType || item.templateType,
             templateFileUrl:
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              '',
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
           }));
         } else {
           this.onlineData = [];
@@ -491,8 +485,8 @@ export class SOPDocumentTraining {
 
   viewAssessmentDetails(data: any) {
     const docId = data.documentId || data.DocumentId || data.Id;
-
-    this._documentTrainingService.GetTrainingAssessmentDetails(docId).subscribe((res) => {
+    const trainingMode = this.selectedTab === 'Classroom' ? '1' : '2';
+    this._documentTrainingService.GetTrainingAssessmentDetails(docId,trainingMode).subscribe((res) => {
       if (res?.Success) {
         let usersHtml = '';
         if (res.Data?.Users && Array.isArray(res.Data.Users) && res.Data.Users.length > 0) {
@@ -643,10 +637,11 @@ export class SOPDocumentTraining {
   openTrainingProofModal(row: any): void {
     // TODO: Implement logic to open training proof file/report
     this.modal.create({
-      nzTitle: 'Average Document Score',
+      nzTitle: 'User Assigned',
       nzContent: AverageDocumentScoreModal,
       nzData: {
         data: row, // 👈 this is what we’ll read inside modal
+        trainingMode: this.selectedTab === 'Classroom' ? '1' : '2',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
@@ -659,6 +654,7 @@ export class SOPDocumentTraining {
       nzContent: AverageDocumentScoreModal,
       nzData: {
         data: row, // 👈 this is what we’ll read inside modal
+        trainingMode: this.selectedTab === 'Classroom' ? '1' : '2',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,

@@ -6,28 +6,37 @@
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
               <button
-                class="tab-button"
+                class="tab-button d-inline-flex align-items-center gap-2"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Pending Authorization' }"
                 (click)="onTabChange('Pending Authorization')" 
               >
                 Pending Authorization
+                <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">
+                  {{ pendingCount }}
+                </span>
               </button>
               <button
-                class="tab-button"
+                class="tab-button d-inline-flex align-items-center gap-2"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Authorized' }"
                 (click)="onTabChange('Authorized')"
               >
                 Authorized
+                <span class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">
+                  {{ authorizedCount }}
+                </span>
               </button>
               <button
-                class="tab-button"
+                class="tab-button d-inline-flex align-items-center gap-2"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
                 Rejected
+                <span class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">
+                  {{ rejectedCount }}
+                </span>
               </button>
             </div>
 

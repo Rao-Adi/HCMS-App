@@ -103,6 +103,15 @@ export class DocumentService {
     );
   }
 
+  GetPendingAuthorizationCount(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-pending-authorizations-counts`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+  
+
   GetDocumentsPendingTrainingAcknowledgmentAsync(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-documents-pending-training`,

@@ -50,6 +50,10 @@ export class DocumentAuthorizationPostTraining {
   gridApi!: GridApi;
   selectedTab: string = 'Pending Authorization';
 
+  pendingCount = 0;
+  authorizedCount = 0;
+  rejectedCount = 0;
+
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
@@ -282,6 +286,8 @@ export class DocumentAuthorizationPostTraining {
   }
 
   GetAllDocuments(query: any) {
+    this.getDocumentRequestCounts();
+
     var isAuthorized = false;
     if (this.selectedTab == 'Pending Authorization') {
       isAuthorized = false;
@@ -304,7 +310,7 @@ export class DocumentAuthorizationPostTraining {
       pageNumber: query?.pageNumber || 1,
       pageSize: query?.pageSize || this.pageSize,
       IsAuthorized: isAuthorized,
-      actionType: this.selectedTab
+      actionType: this.selectedTab,
     };
 
     // Show loading overlay natively
@@ -373,10 +379,7 @@ export class DocumentAuthorizationPostTraining {
               proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
               templateType: item.TemplateType || item.templateType,
               templateFileUrl:
-                item.TemplateFileUrl ||
-                item.TemplateFileURL ||
-                item.templateFileUrl ||
-                '',
+                item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
             }));
           } else {
             this.pendingAuthorizationData = [];
@@ -452,7 +455,7 @@ export class DocumentAuthorizationPostTraining {
   openTrainingProofModal(row: any): void {
     // TODO: Implement logic to open training proof file/report
     this.modal.create({
-      nzTitle: 'Average Document Score',
+      nzTitle: 'User Assigned',
       nzContent: AverageDocumentScoreModal,
       nzData: {
         data: row, // 👈 this is what we’ll read inside modal
@@ -573,5 +576,29 @@ export class DocumentAuthorizationPostTraining {
 
   onSelectionChange(selectedRows: any): void {
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
+  }
+
+  getDocumentRequestCounts() {
+    const payload = {
+      divisionCode: this.selectedDivisions || null,
+      departmentCode: this.selectedDepartment || null,
+      subDepartmentCode: this.selectedSubDepartment || null,
+      businessDomainCode: this.selectedbusinessDomain || null,
+      documentTypeCode: this.selectedDocumentType || null,
+      documentcategoryfilter: Number(this.selectedAuthorizationStatus) || 1,
+      searchText: '',
+      isActive: true,
+    };
+
+    this._documentService.GetPendingAuthorizationCount(payload).subscribe({
+      next: (res: any) => {
+        if (res && res.Success && res.Data) {
+          this.pendingCount = res.Data.PendingCount ?? 0;
+          this.authorizedCount = res.Data.AuthorizedCount ?? 0;
+          this.rejectedCount = res.Data.RejectedCount ?? 0;
+        }
+      },
+      error: (err) => console.error('Failed to load authorization counts', err),
+    });
   }
 }

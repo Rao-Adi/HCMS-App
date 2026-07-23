@@ -41,7 +41,7 @@
                 (click)="onTabChange('Pending')"
               >
                 Pending
-                <span *ngIf="pendingDocumentCount > 0" class="badge bg-danger ms-1">{{
+                <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   pendingDocumentCount
                 }}</span>
               </button>
@@ -52,7 +52,7 @@
                 (click)="onTabChange('Approved')"
               >
                 Approved
-                <span *ngIf="approvedDocumentCount > 0" class="badge bg-danger ms-1">{{
+                <span class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   approvedDocumentCount
                 }}</span>
               </button>
@@ -62,9 +62,8 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Reverted/Rejected<span
-                  *ngIf="disapprovedDocumentCount > 0"
-                  class="badge bg-danger ms-1"
+                Reverted/Rejected<span 
+                  class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
                   >{{ disapprovedDocumentCount }}</span
                 >
               </button>

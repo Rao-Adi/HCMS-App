@@ -16,7 +16,7 @@
                 (click)="onTabChange('Pending')"
               >
                 Pending
-                <span *ngIf="pendingRequestCount > 0" class="badge bg-danger ms-1">{{
+                <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   pendingRequestCount
                 }}</span>
               </button>
@@ -27,7 +27,7 @@
                 (click)="onTabChange('Approved')"
               >
                 Approved
-                <span *ngIf="approvedRequestCount > 0" class="badge bg-danger ms-1">{{
+                <span  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   approvedRequestCount
                 }}</span>
               </button>
@@ -37,9 +37,8 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Reverted/Rejected<span
-                  *ngIf="disapprovedRequestCount > 0"
-                  class="badge bg-danger ms-1"
+                Reverted/Rejected<span 
+                  class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
                   >{{ disapprovedRequestCount }}</span
                 >
               </button>

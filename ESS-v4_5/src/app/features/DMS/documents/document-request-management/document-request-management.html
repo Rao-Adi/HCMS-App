@@ -20,7 +20,7 @@
                 (click)="selectedTab = 'DraftRequest'"
               >
                 Draft Request
-                <span *ngIf="draftDocumentCounts > 0" class="badge bg-danger ms-1">{{
+                <span *ngIf="draftDocumentCounts > 0" class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   draftDocumentCounts
                 }}</span>
               </button>
@@ -33,7 +33,7 @@
                 My Requests Pending Approval
                 <span
                   *ngIf="myDocumentRequestPendingForApprovalCount > 0"
-                  class="badge bg-danger ms-1"
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
                   >{{ myDocumentRequestPendingForApprovalCount }}</span>
               </button>
             </div>

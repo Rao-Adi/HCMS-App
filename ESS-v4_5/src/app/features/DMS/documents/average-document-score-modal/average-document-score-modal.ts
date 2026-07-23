@@ -48,7 +48,9 @@ export class AverageDocumentScoreModal {
     const docId = this.modalData?.data?.documentId || this.modalData?.data?.Id || this.modalData?.data?.id;
     if (!docId) return;
 
-    this._documentTrainingService.GetTrainingAssessmentDetails(docId).subscribe({
+    const trainingMode = this.modalData?.trainingMode || '1';
+
+    this._documentTrainingService.GetTrainingAssessmentDetails(docId,trainingMode).subscribe({
       next: (res) => {
         if (res?.Success) {
           const users = res.Data?.UserScores || res.Data?.Users || (Array.isArray(res.Data) ? res.Data : []);

@@ -46,18 +46,9 @@ export class ResponsibilityTransferWorkflow {
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];
-  selectedUser?: string;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedDocumentType?: string = '';
-  selectedDesignation?: string = '';
-  selectedRole?: string = '';
-  radioValue = '';
+  optionList: string[] = [];  
   // single state
-  activeMode: 'manual' | 'integration' | null = null;
-
+ 
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
@@ -153,13 +144,23 @@ export class ResponsibilityTransferWorkflow {
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
       divisionCode: rowData.divisionCode,
-      ApproverEmpCode : rowData.approvalAuthority,
+      ApproverEmpCode: rowData.approvalAuthority,
       approvalroleid: rowData.approvalAuthority,
       approvaluserid: rowData.approvalAuthority,
     };
 
+    const selectedOption = this.approvalAuthority.find(
+      (opt) => opt.id === rowData.approvalAuthority
+    );
+    let displayName = rowData.approvalAuthority;
+    if (selectedOption) {
+      const parts = selectedOption.text.split('-');
+      displayName = parts.length > 1 ? parts.slice(1).join('-') : selectedOption.text;
+    }
+
     const rowWithId = {
       ...rowData,
+      approvalAuthority: displayName,
       id: this.generateId(),
     };
 
@@ -172,6 +173,7 @@ export class ResponsibilityTransferWorkflow {
           'Success',
           'Record added successfully!',
         );
+        this.GetAllResponsibilityTransferWorkflows();
       },
       error: (err) => {
         this._notificationToastService.createNotification(
@@ -180,13 +182,13 @@ export class ResponsibilityTransferWorkflow {
           err?.error?.Message || err?.Message || 'Failed to add record.',
         );
         // Revert: Remove the optimistically added record from the grid
-        this.manualUserData = this.manualUserData.filter(row => row.id !== rowWithId.id);
-      }
+        this.manualUserData = this.manualUserData.filter((row) => row.id !== rowWithId.id);
+      },
     });
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
+    //console.log('Row updated:', event);
     // Update display names
     // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
     // event.rowData.departmentName = this.getDisplayName(

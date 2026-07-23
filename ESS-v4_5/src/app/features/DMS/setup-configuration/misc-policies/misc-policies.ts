@@ -586,19 +586,47 @@ export class MiscPolicies {
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
-
-    this._trainingPolicyService.create(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Training Policy',
-        'Training policy added successfully!',
-      );
-      this.GetAllTrainingPolicy({
-        pageNumber: 1,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
+    this._trainingPolicyService.create(payLoad).subscribe({
+      next: (res: any) => {
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Training Policy',
+            res.Message || res.message || 'Failed to add training policy.'
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Training Policy',
+          'Training policy added successfully!',
+        );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Training Policy',
+          'Failed to add training policy.'
+        );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
     });
   }
 
@@ -618,18 +646,47 @@ export class MiscPolicies {
       authorizingUserId: rowData.authorizingAuthority,
     };
 
-    this._documentTrainingAuthorizationService.create(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Authorization Policy',
-        'Authorization policy added successfully!',
-      );
-      this.GetDocumentTrainingAuthorization({
-        pageNumber: 1,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
+    this._documentTrainingAuthorizationService.create(payLoad).subscribe({
+      next: (res: any) => {
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Authorization Policy',
+            res.Message || res.message || 'Failed to add authorization policy.'
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Authorization Policy',
+          'Authorization policy added successfully!',
+        );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Authorization Policy',
+          'Failed to add authorization policy.'
+        );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
     });
   }
 
@@ -650,29 +707,26 @@ export class MiscPolicies {
       authorizingUserId: rowData.authorizingAuthority,
     };
 
-    this._documentTrainingAuthorizationService.update(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Authorization Policy',
-        'Authorization policy updated successfully!',
-      );
-      this.GetDocumentTrainingAuthorization({
-        pageNumber: 1,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
-    });
-  }
-
-  onAuthPolicyRowDeleted(rowIndex: number): void {
-    const row = this.authorizationPolicyData[rowIndex];
-    if (row && row.Id) {
-      this._documentTrainingAuthorizationService.delete(row.Id).subscribe(() => {
+    this._documentTrainingAuthorizationService.update(payLoad).subscribe({
+      next: (res: any) => {
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Authorization Policy',
+            res.Message || res.message || 'Failed to update authorization policy.'
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
         this._notificationToastService.createNotification(
           'success',
           'Authorization Policy',
-          'Authorization policy deleted successfully!',
+          'Authorization policy updated successfully!',
         );
         this.GetDocumentTrainingAuthorization({
           pageNumber: 1,
@@ -680,6 +734,67 @@ export class MiscPolicies {
           sortModel: [],
           filterModel: {},
         });
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Authorization Policy',
+          'Failed to update authorization policy.'
+        );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
+  }
+
+  onAuthPolicyRowDeleted(rowIndex: number): void {
+    const row = this.authorizationPolicyData[rowIndex];
+    if (row && row.Id) {
+      this._documentTrainingAuthorizationService.delete(row.Id).subscribe({
+        next: (res: any) => {
+          if (res && (res.Success === false || res.success === false)) {
+            this._notificationToastService.createNotification(
+              'error',
+              'Authorization Policy',
+              res.Message || res.message || 'Failed to delete authorization policy.'
+            );
+            this.GetDocumentTrainingAuthorization({
+              pageNumber: 1,
+              pageSize: this.pageSize,
+              sortModel: [],
+              filterModel: {},
+            });
+            return;
+          }
+          this._notificationToastService.createNotification(
+            'success',
+            'Authorization Policy',
+            'Authorization policy deleted successfully!',
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        },
+        error: (err: any) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Authorization Policy',
+            'Failed to delete authorization policy.'
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        }
       });
     }
   }
@@ -691,18 +806,47 @@ export class MiscPolicies {
       reviewPeriodYears: rowData.reviewAfter,
     };
 
-    this._documentReviewPolicyService.create(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Document Review',
-        'Document review policy added successfully!',
-      );
-      this.GetAllDocumentReviewPolicies({
-        pageNumber: 1,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
+    this._documentReviewPolicyService.create(payLoad).subscribe({
+      next: (res: any) => {
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Document Review',
+            res.Message || res.message || 'Failed to add document review policy.'
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Document Review',
+          'Document review policy added successfully!',
+        );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Document Review',
+          'Failed to add document review policy.'
+        );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
     });
   }
 
@@ -714,29 +858,26 @@ export class MiscPolicies {
       reviewPeriodYears: rowData.reviewAfter,
     };
 
-    this._documentReviewPolicyService.update(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Document Review',
-        'Document review policy updated successfully!',
-      );
-      this.GetAllDocumentReviewPolicies({
-        pageNumber: 1,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
-    });
-  }
-
-  onDocReviewRowDeleted(rowIndex: number): void {
-    const row = this.documentReviewRowData[rowIndex];
-    if (row && row.Id) {
-      this._documentReviewPolicyService.delete(row.Id).subscribe(() => {
+    this._documentReviewPolicyService.update(payLoad).subscribe({
+      next: (res: any) => {
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Document Review',
+            res.Message || res.message || 'Failed to update document review policy.'
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
         this._notificationToastService.createNotification(
           'success',
           'Document Review',
-          'Document review policy deleted successfully!',
+          'Document review policy updated successfully!',
         );
         this.GetAllDocumentReviewPolicies({
           pageNumber: 1,
@@ -744,6 +885,67 @@ export class MiscPolicies {
           sortModel: [],
           filterModel: {},
         });
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Document Review',
+          'Failed to update document review policy.'
+        );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
+  }
+
+  onDocReviewRowDeleted(rowIndex: number): void {
+    const row = this.documentReviewRowData[rowIndex];
+    if (row && row.Id) {
+      this._documentReviewPolicyService.delete(row.Id).subscribe({
+        next: (res: any) => {
+          if (res && (res.Success === false || res.success === false)) {
+            this._notificationToastService.createNotification(
+              'error',
+              'Document Review',
+              res.Message || res.message || 'Failed to delete document review policy.'
+            );
+            this.GetAllDocumentReviewPolicies({
+              pageNumber: 1,
+              pageSize: this.pageSize,
+              sortModel: [],
+              filterModel: {},
+            });
+            return;
+          }
+          this._notificationToastService.createNotification(
+            'success',
+            'Document Review',
+            'Document review policy deleted successfully!',
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        },
+        error: (err: any) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Document Review',
+            'Failed to delete document review policy.'
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        }
       });
     }
   }
@@ -757,29 +959,26 @@ export class MiscPolicies {
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
 
-    this._trainingPolicyService.update(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Training Policy',
-        'Training policy updated successfully!',
-      );
-      this.GetAllTrainingPolicy({
-        pageNumber: 1,
-        pageSize: this.pageSize,
-        sortModel: [],
-        filterModel: {},
-      });
-    });
-  }
-
-  onTrainingPoliciyRowDeleted(rowIndex: number): void {
-    const row = this.trainingPolicesData[rowIndex];
-    if (row && row.Id) {
-      this._trainingPolicyService.delete(row.Id).subscribe(() => {
+    this._trainingPolicyService.update(payLoad).subscribe({
+      next: (res: any) => {
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Training Policy',
+            res.Message || res.message || 'Failed to update training policy.'
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
         this._notificationToastService.createNotification(
           'success',
           'Training Policy',
-          'Training policy deleted successfully!',
+          'Training policy updated successfully!',
         );
         this.GetAllTrainingPolicy({
           pageNumber: 1,
@@ -787,6 +986,67 @@ export class MiscPolicies {
           sortModel: [],
           filterModel: {},
         });
+      },
+      error: (err: any) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Training Policy',
+          'Failed to update training policy.'
+        );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
+  }
+
+  onTrainingPoliciyRowDeleted(rowIndex: number): void {
+    const row = this.trainingPolicesData[rowIndex];
+    if (row && row.Id) {
+      this._trainingPolicyService.delete(row.Id).subscribe({
+        next: (res: any) => {
+          if (res && (res.Success === false || res.success === false)) {
+            this._notificationToastService.createNotification(
+              'error',
+              'Training Policy',
+              res.Message || res.message || 'Failed to delete training policy.'
+            );
+            this.GetAllTrainingPolicy({
+              pageNumber: 1,
+              pageSize: this.pageSize,
+              sortModel: [],
+              filterModel: {},
+            });
+            return;
+          }
+          this._notificationToastService.createNotification(
+            'success',
+            'Training Policy',
+            'Training policy deleted successfully!',
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        },
+        error: (err: any) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Training Policy',
+            'Failed to delete training policy.'
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        }
       });
     }
   }

@@ -49,8 +49,11 @@ export class DocumentTrainingService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  GetTrainingAssessmentDetails(documentId: string): Observable<ApiResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}`;
+  GetTrainingAssessmentDetails(
+    documentId: string,
+    trainingMode: string,
+  ): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentTraining/get-training-assessment-details/${documentId}/${trainingMode}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -65,7 +68,7 @@ export class DocumentTrainingService {
     isActive: boolean,
     pageNumber: number,
     pageSize: number,
-    filters?: any
+    filters?: any,
   ): Observable<any> {
     const body = {
       searchText,
@@ -74,7 +77,7 @@ export class DocumentTrainingService {
       isActive,
       pageNumber,
       pageSize,
-      ...filters
+      ...filters,
     };
 
     const uri = `${this.apiUrl}/DMSDocumentTraining/get-all-document-training`;

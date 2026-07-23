@@ -753,19 +753,29 @@ export class CreateUpdateDocument {
   SubmiteDocument() {
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
-    const trainingMode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
+
+    const trainingUsers = (this.trainingUsersData || []).map((user: any) => {
+      const modeVal = user.TrainingMode === 'Classroom' ? 1 : (user.TrainingMode === 'Online' ? 2 : 0);
+      return {
+        trainingmode: modeVal,
+        employeecode: user.UserCode || '',
+      };
+    });
+
     const payLoad = {
       documentid: this.documentId,
-      userid: this.loginEmpId,
       attributes: attributeValues,
-      TrainingMode: trainingMode?.NAME == 'Classroom' ? 1 : 0, // Assuming 1 for Classroom and 0 for Online, adjust as needed
-      traininguserids: this.trainingUsersData.map((user) => user.UserCode), // Included in Payload as requested
+      trainingusers: trainingUsers,
     };
 
     // Append the new draft file if it exists
     const formData = new FormData();
     Object.keys(payLoad).forEach((key) => {
-      formData.append(key, (payLoad as any)[key]);
+      if (key === 'trainingusers' || key === 'TrainingUsers' || key === 'attributes') {
+        formData.append(key, JSON.stringify((payLoad as any)[key]));
+      } else {
+        formData.append(key, (payLoad as any)[key]);
+      }
     });
     if (this.draftFile) {
       formData.append('DraftFile', this.draftFile, this.draftFile.name);
