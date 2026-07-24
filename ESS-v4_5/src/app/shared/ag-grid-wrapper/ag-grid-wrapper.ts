@@ -34,6 +34,8 @@ import { FormsModule } from '@angular/forms';
 import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
 import { SettingOutline } from '@ant-design/icons-angular/icons';
 
+import { SpinnerComponent } from '../spinner/spinner.component';
+
 interface ColumnToggle {
   field: string;
   label: string;
@@ -50,7 +52,8 @@ interface ColumnToggle {
     NzAlertModule,
     NzSpinModule,
     NzSwitchModule,
-    NzIconModule    
+    NzIconModule,
+    SpinnerComponent
   ],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
@@ -59,6 +62,8 @@ export class AgGridWrapper implements OnInit, OnChanges {
   @Input() columnDefs: ColDef[] = [];
   @Input() autoSizeColumns: boolean = true;
   @Input() rowData: any[] = [];
+  @Input() loading: boolean | null = null;
+  isLoading = false;
   @Input() pageSize = 10;
   @Input() defaultColDef!: ColDef;
   @Input() totalRows = 0;
@@ -129,6 +134,11 @@ export class AgGridWrapper implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
+    if (this.loading !== null) {
+      this.isLoading = this.loading;
+    } else {
+      this.isLoading = true;
+    }
     this.isServerSide = this.serverQuery.observed;
     this.buildFinalColumnDefs();
   }
@@ -202,6 +212,14 @@ export class AgGridWrapper implements OnInit, OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['loading'] && this.loading !== null) {
+      this.isLoading = this.loading;
+    }
+    if (changes['rowData']) {
+      if (this.loading === null) {
+        this.isLoading = false;
+      }
+    }
     if (this.isServerSide && this.getRowsParams) {
       if (changes['rowData'] || changes['totalRows']) {
         const rows = this.rowData || [];
@@ -226,6 +244,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
         getRows: (params: any) => {
           this.getRowsParams = params;
           this.pageNumber = Math.floor(params.startRow / this.pageSize) + 1;
+
+          if (this.loading === null) {
+            this.isLoading = true;
+          }
 
           this.ngZone.run(() => {
             this.serverQuery.emit({
@@ -341,6 +363,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
   private emitQuery() {
     if (!this.gridApi) return;
     if (!this.pageSize || !this.pageNumber) return;
+
+    if (this.loading === null) {
+      this.isLoading = true;
+    }
 
     this.serverQuery.emit({
       pageNumber: this.pageNumber,

@@ -17,10 +17,11 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
         nz-input
         [(ngModel)]="displayValue"
         (ngModelChange)="onValueChange($event)"
-        (keydown)="$event.stopPropagation()"
+        (keydown)="onKeyDown($event)"
         (keyup)="$event.stopPropagation()"
         (keypress)="$event.stopPropagation()"
-        style="text-align: left;"
+        (wheel)="onWheel($event)"
+        style="text-align: right;"
       />
     </nz-input-group>
   `,
@@ -71,11 +72,6 @@ export class InputCellRenderer implements ICellRendererAngularComp {
   displayValue: string = '';
   prefix: string = '';
   suffix: string = '';
-  // private params!: ICellRendererParams & {
-  //   prefix?: string;
-  //   suffix?: string;
-  //   onValueChange?: (value: number | string, data: any) => void;
-  // };
   params: any;
 
   agInit(params: any): void {
@@ -91,27 +87,103 @@ export class InputCellRenderer implements ICellRendererAngularComp {
   }
 
   private formatValue(value: any): string {
-    if (value == null || value === '') return '0';
-    return value.toLocaleString();
+    if (value == null || value === '') return '';
+    const parsed = Number(value.toString().replace(/,/g, ''));
+    if (!isNaN(parsed)) {
+      return parsed.toLocaleString();
+    }
+    return '';
   }
 
   onValueChange(value: string): void {
     const field = this.params.colDef.field as string;
 
-    const numericValue =
-      value === '' || value == null ? null : Number(value.toString().replace(/,/g, ''));
+    // Filter out all characters except digits, decimal point, and minus sign
+    let cleanValue = value.toString().replace(/[^0-9.-]/g, '');
 
+    // Ensure only one decimal point
+    const parts = cleanValue.split('.');
+    if (parts.length > 2) {
+      cleanValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Ensure minus sign is only at the start
+    if (cleanValue.includes('-')) {
+      const isNegative = cleanValue.startsWith('-');
+      cleanValue = (isNegative ? '-' : '') + cleanValue.replace(/-/g, '');
+    }
+
+    this.displayValue = cleanValue;
+
+    const numericValue = cleanValue === '' ? null : Number(cleanValue);
     this.params.data[field] = numericValue;
 
     if (this.params.onValueChange) {
       this.params.onValueChange(numericValue, this.params.data);
     }
+  }
 
-    // const numericValue = parseFloat(value?.toString().replace(/[^0-9.-]/g, '')) || 0;
-    // this.params.data[this.params.colDef?.field as string] = numericValue;
+  onKeyDown(event: KeyboardEvent): void {
+    const allowedKeys = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'Home',
+      'End',
+    ];
+    
+    // Allow key combinations like Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if (
+      allowedKeys.indexOf(event.key) !== -1 ||
+      (event.key === 'a' && (event.ctrlKey || event.metaKey)) ||
+      (event.key === 'c' && (event.ctrlKey || event.metaKey)) ||
+      (event.key === 'v' && (event.ctrlKey || event.metaKey)) ||
+      (event.key === 'x' && (event.ctrlKey || event.metaKey))
+    ) {
+      return;
+    }
 
-    // if (this.params.onValueChange) {
-    //   this.params.onValueChange(numericValue, this.params.data);
-    // }
+    // Block non-numeric characters
+    const isNumber = /^[0-9]$/.test(event.key);
+    const isDecimal = event.key === '.' && !this.displayValue.includes('.');
+    const isMinus = event.key === '-' && this.displayValue === '';
+
+    if (!isNumber && !isDecimal && !isMinus && event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
+      event.preventDefault();
+    }
+    
+    // Up/down arrow key increments/decrements
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.step(1);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.step(-1);
+    }
+    
+    event.stopPropagation();
+  }
+
+  onWheel(event: WheelEvent): void {
+    event.preventDefault();
+    if (event.deltaY < 0) {
+      this.step(1);
+    } else if (event.deltaY > 0) {
+      this.step(-1);
+    }
+  }
+
+  step(direction: number): void {
+    const rawValue = this.displayValue.toString().replace(/,/g, '');
+    const current = Number(rawValue);
+    if (!isNaN(current) && this.displayValue.trim() !== '') {
+      const next = current + direction;
+      this.displayValue = this.formatValue(next);
+      this.onValueChange(this.displayValue);
+    }
   }
 }

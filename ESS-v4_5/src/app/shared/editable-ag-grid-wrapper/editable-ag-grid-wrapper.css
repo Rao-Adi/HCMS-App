@@ -16,3 +16,67 @@
 /* .ag-theme-alpine .ag-cell {
   padding: 0 8px !important;
 } */
+
+/* Allow tooltips to render outside cell bounds */
+:host ::ng-deep .ag-cell.actions-cell {
+  overflow: visible !important;
+  z-index: 999 !important;
+}
+
+:host ::ng-deep .ag-row-hover {
+  z-index: 10 !important;
+}
+
+/* Tooltip styling for grid action icons */
+.grid-action-btn-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-action-btn-container::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%; /* Position above the icon */
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.15s cubic-bezier(0.645, 0.045, 0.355, 1);
+  z-index: 9999;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+}
+
+.grid-action-btn-container::before {
+  content: '';
+  position: absolute;
+  bottom: 110%; /* Just below the tooltip */
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.15s cubic-bezier(0.645, 0.045, 0.355, 1);
+  z-index: 9999;
+}
+
+.grid-action-btn-container:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  bottom: 135%;
+}
+
+.grid-action-btn-container:hover::before {
+  opacity: 1;
+  bottom: 120%;
+}

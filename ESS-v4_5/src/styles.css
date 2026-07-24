@@ -5516,8 +5516,16 @@ ag-theme-alpine .ag-header-group-cell-label {
 
 /* Read Only Cells */
 .ag-cell-not-inline-editing {
-  padding-top: 10px;
+  padding-top: 0px;
 }
+
+.ant-input-group > input.ant-input {
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 4px !important;
+    height: 30px !important;
+}
+
+
 /*ng tabs*/
 .ant-tabs-tabpane {
   display: block !important;
@@ -5534,6 +5542,11 @@ ag-theme-alpine .ag-header-group-cell-label {
   opacity: 1 !important;
   right: 8px !important;
   top: 15px !important;
+}
+
+.ant-input-group-addon:first-child, .ant-input-group > .ant-input:first-child,
+.ant-input-group-addon:last-child, .ant-input-group > .ant-input:last-child{
+  border-radius: 5px !important;
 }
 
 
