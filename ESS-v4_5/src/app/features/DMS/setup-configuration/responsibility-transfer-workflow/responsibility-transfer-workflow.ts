@@ -46,9 +46,9 @@ export class ResponsibilityTransferWorkflow {
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
-  optionList: string[] = [];  
+  optionList: string[] = [];
   // single state
- 
+
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
@@ -150,7 +150,7 @@ export class ResponsibilityTransferWorkflow {
     };
 
     const selectedOption = this.approvalAuthority.find(
-      (opt) => opt.id === rowData.approvalAuthority
+      (opt) => opt.id === rowData.approvalAuthority,
     );
     let displayName = rowData.approvalAuthority;
     if (selectedOption) {
@@ -275,8 +275,15 @@ export class ResponsibilityTransferWorkflow {
           this.manualUserData = res.Data.Items.map((item: any) => ({
             id: item.Id,
             divisionCode: item.DivisionCode,
-            approvalAuthority: item.DivisionHeadName +"("+ item.DivisionHeadDesignation + ")" ? item.DivisionHeadName.toString() +"("+ item.DivisionHeadDesignation + ")"  : null,
-          }));
+            approvalAuthority:
+              item.DivisionHeadName + '(' + item.DivisionHeadDesignation + ')'
+                ? item.DivisionHeadName.toString() + '(' + item.DivisionHeadDesignation + ')'
+                : null,
+          })).sort((a: any, b: any) => {
+            const divA = this.getDisplayName(this.divisions, a.divisionCode).toLowerCase();
+            const divB = this.getDisplayName(this.divisions, b.divisionCode).toLowerCase();
+            return divA.localeCompare(divB);
+          });
         } else {
           this.manualUserData = [];
         }
@@ -286,10 +293,12 @@ export class ResponsibilityTransferWorkflow {
   getAllDivisionList = () => {
     this._peoplePartnersService.GetAllDivisions().subscribe((res) => {
       if (res?.Data) {
-        this.divisions = (res.Data ?? []).map((d: any) => ({
-          id: d.Id || d.id,
-          text: d.Value || d.value,
-        }));
+        this.divisions = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Id || d.id,
+            text: d.Value || d.value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.divisions = [];
       }
@@ -301,10 +310,19 @@ export class ResponsibilityTransferWorkflow {
   GetEmployeesByDivisionId = (divId: string) => {
     this._peoplePartnersService.GetEmployeesByDivisionId(divId).subscribe((res) => {
       if (res?.Data) {
-        this.approvalAuthority = (res.Data ?? []).map((d: any) => ({
-          id: d.EmployeeCode || d.employeecode,
-          text: d.employeecode + "-"+ (d.FullName || d.fullname) + "(" + (d.Designation || d.designation) + ")" ,
-        }));
+        this.approvalAuthority = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.EmployeeCode || d.employeecode,
+            text:
+              d.employeecode +
+              ' - ' +
+              (d.FullName || d.fullname) +
+              ' (' +
+              (d.Designation || d.designation) +
+              ')',
+            rawName: d.FullName || d.fullname || '',
+          }))
+          .sort((a: any, b: any) => (a.rawName || '').localeCompare(b.rawName || ''));
       } else {
         this.approvalAuthority = [];
       }

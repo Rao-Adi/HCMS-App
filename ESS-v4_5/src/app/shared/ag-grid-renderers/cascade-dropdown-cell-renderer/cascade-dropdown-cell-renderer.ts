@@ -48,8 +48,8 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
 
     const dispField = this.params.displayField || 'text';
     const sortFn = (a: any, b: any) => {
-      const textA = (a[dispField] || '').toString().toLowerCase();
-      const textB = (b[dispField] || '').toString().toLowerCase();
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
       return textA.localeCompare(textB);
     };
 

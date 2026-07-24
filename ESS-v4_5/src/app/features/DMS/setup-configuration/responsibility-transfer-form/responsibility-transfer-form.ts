@@ -104,8 +104,8 @@ export class ResponsibilityTransferForm {
 
   uploading = false;
   statues: any[] = [
-    { id: '1', text: 'Pending' },
     { id: '2', text: 'Approved' },
+    { id: '1', text: 'Pending' },
     { id: '3', text: 'Rejected' },
   ];
   reasonForTransfer: SelectList[] = [
@@ -359,8 +359,9 @@ export class ResponsibilityTransferForm {
         this.employeeOptions = this.tempEmployees.map(e => ({
           label: e.NAME + ' (' + e.CODE + ')',
           value: e.CODE ,
-          department: e.DEPARTMENT
-        }));
+          department: e.DEPARTMENT,
+          name: e.NAME
+        })).sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
         this.filteredEmployeeToOptions = [...this.employeeOptions];
 
         const currentUserCode = this._utilityService.GetUserEmpId();

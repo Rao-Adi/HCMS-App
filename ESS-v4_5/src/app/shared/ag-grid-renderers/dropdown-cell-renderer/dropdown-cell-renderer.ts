@@ -68,9 +68,9 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     const rawValue = params.data?.[field];
 
     const dispField = this.params.displayField || 'text';
-    this.options = [...(params.options || [])].sort((a, b) => {
-      const textA = (a[dispField] || '').toString().toLowerCase();
-      const textB = (b[dispField] || '').toString().toLowerCase();
+    this.options = [...(params.options || [])].sort((a: any, b: any) => {
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
       return textA.localeCompare(textB);
     });
 
@@ -112,9 +112,9 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     const rawValue = params.data?.[field];
 
     const dispField = this.params.displayField || 'text';
-    this.options = [...(params.options || [])].sort((a, b) => {
-      const textA = (a[dispField] || '').toString().toLowerCase();
-      const textB = (b[dispField] || '').toString().toLowerCase();
+    this.options = [...(params.options || [])].sort((a: any, b: any) => {
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
       return textA.localeCompare(textB);
     });
 

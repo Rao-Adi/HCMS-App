@@ -1431,8 +1431,9 @@ export class CreateUpdateDocument {
               ...u,
               CODE: code,
               NAME: '(' + code + ') ' + name,
+              RAW_NAME: name,
             };
-          }).sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
+          }).sort((a: any, b: any) => (a.RAW_NAME || '').localeCompare(b.RAW_NAME || ''));
         } else {
           this.users = [];
           this.totalRows = 0;

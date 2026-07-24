@@ -38,6 +38,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
+import { SafeTranslatePipe } from '../pipes/filter-label/safeTranslate.pipe';
 
 export interface GridColumn<T = any> {
   field: string;
@@ -137,6 +138,7 @@ export interface GridConfig {
     NzSpinModule,
     NzInputModule,
     NzIconModule,
+    SafeTranslatePipe
   ],
   templateUrl: './editable-ag-grid-wrapper.html',
   styleUrl: './editable-ag-grid-wrapper.css',
