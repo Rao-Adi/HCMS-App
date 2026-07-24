@@ -67,29 +67,39 @@
       >
         Observation is required
       </div>
-      <div class="row mt-4 btn-stick">
-        <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
+      <div class="row mt-4 pb-3">
+        <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center align-items-center gap-3">
           <button
             type="button"
             tabindex="0"
-            class="btn btn-sm btn-primary shadow-sm"
-            style="min-width: 120px;"
+            class="btn btn-primary shadow-sm"
+            style="width: 140px !important; height: 35px !important;"
             [disabled]="loading"
             (click)="submit()"
           >
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" *ngIf="loading"></span>
+            <span
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+              *ngIf="loading"
+            ></span>
             <i class="bi bi-file-earmark-text me-2" *ngIf="!loading"></i>
             Submit
           </button>
           <button
             type="button"
             tabindex="0"
-            class="btn btn-sm btn-secondary shadow-sm"
-            style="min-width: 150px;"
+            class="btn btn-secondary shadow-sm"
+            style="width: 160px !important; height: 35px !important;"
             [disabled]="loading"
             (click)="saveDraft()"
           >
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" *ngIf="loading"></span>
+            <span
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+              *ngIf="loading"
+            ></span>
             <i class="bi bi-save me-2" *ngIf="!loading"></i>
             Save Observation
           </button>
