@@ -465,7 +465,8 @@
         type="button"
         tabindex="0"
         [disabled]="!selectedDocumentType || !selectedTemplateType || isSubmitting"
-        class="btn btn-sm btn-outline-secondary shadow-sm"
+        class="btn btn-info shadow-sm"
+        style="min-width: 120px; height: 35px"
         (click)="DraftDocumentRequests()"
       >
         <i class="bi bi-file-earmark-text me-2"></i>
@@ -477,7 +478,8 @@
         type="button"
         tabindex="0"
         [disabled]="!selectedDocumentType || !selectedTemplateType || isSubmitting"
-        class="btn btn-sm btn-primary shadow-sm"
+        class="btn btn-primary shadow-sm"
+        style="min-width: 120px; height: 35px"
         (click)="SubmitDocumentRequests()"
       >
         <i class="bi bi-send me-2"></i>
