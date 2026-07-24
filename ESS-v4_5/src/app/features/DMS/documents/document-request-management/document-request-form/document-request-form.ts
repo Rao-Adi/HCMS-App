@@ -695,7 +695,7 @@ export class DocumentRequestForm {
 
           this._notificationToasService.createNotification(
             'success',
-            'User',
+            'Document Request',
             'Document drafted successfully!',
           );
         }

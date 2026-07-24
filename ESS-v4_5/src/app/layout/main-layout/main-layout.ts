@@ -411,7 +411,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   private applyCountToMenu(navigateUrl: string, count: number): void {
-    debugger;
     const updateCount = (menuList: MenuItem[]) => {
       for (const item of menuList) {
         const matchesUrl = !!(

@@ -163,7 +163,7 @@ export class SOPDocumentTraining {
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
-    { field: 'preVersionOn', headerName: 'Prev. Version On' },
+    { field: 'preVersionOn', headerName: 'Previous Version Created On' },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -217,7 +217,7 @@ export class SOPDocumentTraining {
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
-    { field: 'preVersionOn', label: 'Prev. Version On', visible: true },
+    { field: 'preVersionOn', label: 'Previous Version Created On', visible: true },
     { field: 'approvalHistory', label: 'Approval History', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];

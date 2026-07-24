@@ -42,12 +42,7 @@ export class DocumentService {
   getDocumentList(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-all-document-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
-
-  getMyDocumentCounts(): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocument/get-my-document-counts`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  }
+  } 
 
   getDocumentById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-document-by-id/id=${Id}`;

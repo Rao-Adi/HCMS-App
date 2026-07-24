@@ -6,7 +6,7 @@
       [columnDefs]="documentColumnDefs"
       [defaultColDef]="defaultColDef"
       [isSelectionRequired]="false"
-      [autoSizeColumns]="true"
+      [autoSizeColumns]="false"
       [showDisplayOption]="true"
       [rowData]="documentRequestsData"
       [pageSize]="pageSize"
@@ -199,8 +199,14 @@
             <div class="status-box-leftColmd6-standard">
               <h3 class="PnlHeader">Users</h3>
               <div class="col-lg-12 col-md-12 col-sm-12">
+                <!-- <app-drusers-component
+                  [selectedUsers]="distributionUserList"
+                  (usersChanged)="distributionUserList = $event"
+                ></app-drusers-component> -->
+
                 <app-drusers-component
                   [selectedUsers]="distributionUserList"
+                  [documentTypeCode]="selectedDocumentType"
                   (usersChanged)="distributionUserList = $event"
                 ></app-drusers-component>
               </div>
@@ -219,7 +225,7 @@
               </div>
             </div>
           </div>
-          <div class="row mt-4" *ngIf="draftFileUrl || selectedTemplateType === '3'">
+          <div class="row mt-4" *ngIf="selectedDocumentTypeCode">
             <div class="status-box-leftColmd6-standard">
               <div class="col-lg-12 col-md-12 col-sm-12">
                 <h3 class="PnlHeader">Document Content</h3>
@@ -233,36 +239,79 @@
                   ></app-dmsrich-text-edit>
                 </ng-container>
 
-                <!-- Word/PDF File Upload/Download -->
-                <ng-container *ngIf="selectedTemplateType !== '3' && draftFileUrl">
-                  <div
-                    class="alert alert-info d-flex align-items-center mb-4"
-                    style="font-size: 14px"
-                  >
-                    <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
-                    <div>
-                      <strong>Instructions:</strong> Download your drafted document below, update it
-                      offline if needed, and upload the finalized version.
-                    </div>
-                  </div>
-
-                  <div class="d-flex align-items-center gap-3 mb-4">
-                    <button type="button" class="btn btn-outline-success" (click)="downloadDraft()">
-                      <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Drafted Document
-                    </button>
-                  </div>
-
-                  <div class="PnlHeading">
-                    <label>Upload Drafted Document (DOCX/PDF)</label>
-                  </div>
-                  <input
-                    type="file"
-                    class="form-control input-sm mt-2"
-                    (change)="onDraftFileSelected($event)"
-                    accept=".pdf,.doc,.docx"
-                    style="width: 350px"
-                  />
-                </ng-container>
+                 <!-- Word/PDF File Upload/Download -->
+                 <ng-container *ngIf="selectedTemplateType !== '3'">
+                   <div
+                     class="alert alert-info d-flex align-items-center mb-4"
+                     style="font-size: 14px"
+                   >
+                     <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                     <div>
+                       <strong>Instructions:</strong>
+                       <span *ngIf="draftFileUrl || draftFile"> Download your drafted document below, update it offline if needed, and upload the finalized version.</span>
+                       <span *ngIf="!draftFileUrl && !draftFile"> Download the standard template, fill in the required details offline, and upload your finalized draft below.</span>
+                     </div>
+                   </div>
+ 
+                   <div class="PnlHeading">
+                     <label>Upload Drafted Document (DOCX/PDF)</label>
+                   </div>
+                   
+                   <div class="d-flex align-items-center gap-3 mt-2">
+                     <input
+                       #fileInput
+                       type="file"
+                       class="form-control input-sm"
+                       (change)="onDraftFileSelected($event)"
+                       accept=".pdf,.doc,.docx"
+                       style="width: 350px"
+                       [hidden]="draftFile || draftFileUrl"
+                     />
+ 
+                     <!-- File Info and Actions -->
+                     <div
+                       *ngIf="draftFile || draftFileUrl"
+                       class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm"
+                       style="min-width: 380px"
+                     >
+                       <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                         <i [class]="'bi fs-4 ' + getFileIconClass(getDraftFileName())"></i>
+                         <div class="d-flex flex-column min-w-0">
+                           <span
+                             class="fw-semibold text-dark text-truncate"
+                             style="max-width: 240px"
+                             [title]="getDraftFileName()"
+                           >
+                             {{ getDraftFileName() }}
+                           </span>
+                           <span class="text-muted" style="font-size: 11px">
+                             {{ draftFile ? 'Local Draft' : 'Submitted Document' }}
+                           </span>
+                         </div>
+                       </div>
+                       <div class="d-flex gap-2">
+                         <button
+                           type="button"
+                           class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                           (click)="draftFile ? reviewDraftedFile() : downloadDraft()"
+                           title="View / Review File"
+                           style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
+                         >
+                           <i class="bi bi-eye fs-6"></i>
+                         </button>
+                         <button
+                           type="button"
+                           class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                           (click)="removeDraftedFile()"
+                           title="Remove File"
+                           style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
+                         >
+                           <i class="bi bi-trash fs-6"></i>
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 </ng-container>
               </div>
             </div>
           </div>

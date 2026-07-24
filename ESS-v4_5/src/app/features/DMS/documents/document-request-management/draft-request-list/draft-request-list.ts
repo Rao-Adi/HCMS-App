@@ -6,6 +6,7 @@ import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interface
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { ColDef } from 'ag-grid-community';
+import { TemplateService } from '@app/shared/services/template.service';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
@@ -44,6 +45,7 @@ export enum DocumentRequestStatus {
 })
 export class DraftRequestList {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  @ViewChild('fileInput') fileInput!: any;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -56,6 +58,8 @@ export class DraftRequestList {
     filter: true,
     cellDataType: false,
     editable: false,
+    flex: 1,
+    minWidth: 100,
   };
 
   selectedDraftRequest: any;
@@ -198,6 +202,7 @@ export class DraftRequestList {
     private _notificationToasService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
+    private _documentTemplateService: TemplateService,
   ) {}
 
   ngOnInit() {
@@ -283,13 +288,7 @@ export class DraftRequestList {
               item.DraftFileUrl ||
               item.draftfileurl ||
               item.draftFileUrl ||
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              (String(item.TemplateType || item.templateType) === '1' ||
-              String(item.TemplateType || item.templateType) === '2'
-                ? item.ProposedContent
-                : ''),
+              '',
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,
@@ -381,6 +380,10 @@ export class DraftRequestList {
     this.selectedSubDepartment = row.subdepartment;
     this.selectedBusinessDomain = row.businessdomainId;
 
+    if (this.selectedDocumentTypeCode) {
+      this.GetTemplate(this.selectedDocumentTypeCode, true);
+    }
+
     // ✅ Populate Distribution List
     this.distributionListPayload = row.distributionListPayload || [];
 
@@ -395,7 +398,7 @@ export class DraftRequestList {
     if (!this.requestId) {
       this._notificationToasService.createNotification(
         'warning',
-        'Draft',
+        'Document Request (Draft)',
         'No drafted file available for download.',
       );
       return;
@@ -504,12 +507,98 @@ export class DraftRequestList {
     });
   }
 
+  GetTemplate(value: string, isRevision: boolean = false) {
+    this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
+      next: (response: any) => {
+        if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
+          this.selectedTemplateType = '';
+          this.templateFileUrl = '';
+          return;
+        }
+
+        this.selectedTemplateType =
+          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.templateFileUrl =
+          response.Data?.TemplateFileUrl ||
+          response.Data?.TemplateFileURL ||
+          response.Data?.templateFileUrl ||
+          '';
+      },
+      error: (err) => {
+        this.selectedTemplateType = '';
+        this.templateFileUrl = '';
+        console.error(err);
+      },
+    });
+  }
+
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
     if (fileList && fileList.length > 0) {
       this.draftFile = fileList[0];
     } else {
       this.draftFile = null;
+    }
+  }
+
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
+  }
+
+  getDraftFileName(): string {
+    if (this.draftFile) {
+      return this.draftFile.name;
+    }
+    if (this.draftFileUrl) {
+      try {
+        const decoded = decodeURIComponent(this.draftFileUrl);
+        const parts = decoded.split('/');
+        return parts[parts.length - 1].split('?')[0];
+      } catch (e) {
+        const parts = this.draftFileUrl.split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return '';
+  }
+
+  reviewDraftedFile(): void {
+    if (this.draftFile) {
+      const fileURL = URL.createObjectURL(this.draftFile);
+      window.open(fileURL, '_blank');
+      setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+    }
+  }
+
+  removeDraftedFile(): void {
+    this.draftFile = null;
+    this.draftFileUrl = '';
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.value = '';
     }
   }
 
@@ -551,7 +640,7 @@ export class DraftRequestList {
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
-            'User',
+            'Document Request (Draft)',
             'Document submitted successfully!',
           );
           this.GetAllDraftDocuments();
@@ -628,7 +717,7 @@ export class DraftRequestList {
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
-            'User',
+            'Document Request (Draft)',
             'Document updated successfully!',
           );
           this.GetAllDraftDocuments();
