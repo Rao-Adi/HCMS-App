@@ -725,10 +725,12 @@ export class ApprovalDocuments {
   getAllDesignationList = () => {
     this._documentRequestService.GetRequestCreatedByUserListAsync().subscribe((res) => {
       if (res?.Data) {
-        this.requestCreators = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Id || d.Code || d.code,
-          NAME: d.Value || d.value,
-        }));
+        this.requestCreators = (res.Data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code || d.code,
+            NAME: d.Value || d.value,
+          }))
+          .sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
       } else {
         this.requestCreators = [];
       }

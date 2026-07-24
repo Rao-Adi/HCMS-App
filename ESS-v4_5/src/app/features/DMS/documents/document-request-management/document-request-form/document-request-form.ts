@@ -353,10 +353,12 @@ export class DocumentRequestForm {
   getAllCompanies = () => {
     this._companyService.getCompanyList().subscribe((res) => {
       if (res) {
-        this.companies = (res.Data ?? []).map((d: any) => ({
-          id: d.Id,
-          text: d.Value,
-        }));
+        this.companies = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Id,
+            text: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.companies = [];
       }
@@ -366,10 +368,12 @@ export class DocumentRequestForm {
   getAllDocumentRequestTypes = () => {
     this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
       if (res) {
-        this.requestTypes = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Value,
-        }));
+        this.requestTypes = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Code,
+            text: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.requestTypes = [];
       }

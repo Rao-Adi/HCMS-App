@@ -82,11 +82,8 @@ export class DocumentAuthorizationPostTraining {
   pendingAuthorizationData: any[] = [];
   totalRows = 0;
   authorizationStatues: any[] = [
-    {
-      id: '1',
-      text: 'SOP',
-    },
     { id: '2', text: 'Other Documents' },
+    { id: '1', text: 'SOP' },
   ];
 
   columnToggles?: ColumnToggle[] = [

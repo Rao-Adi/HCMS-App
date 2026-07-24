@@ -304,10 +304,12 @@ export class CreateUpdateDocument {
     // Assuming you have a service that fetches this data
     this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
       if (res) {
-        this.requestTypes = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Value,
-        }));
+        this.requestTypes = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Code,
+            text: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
 
         // Create a map for easy lookup of display values
         this.requestTypeMap = new Map(res.Data.map((item: any) => [item.Code, item.Value]));
@@ -591,10 +593,12 @@ export class CreateUpdateDocument {
     };
     this._documentService.GetApprovedRequestForDocumentCreation(payLoad).subscribe((res) => {
       if (res) {
-        this.requestIds = (res.Data ?? []).map((d: any) => ({
-          id: d.id,
-          text: d.requestnumber,
-        }));
+        this.requestIds = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.id,
+            text: d.requestnumber,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.requestIds = [];
       }
@@ -1428,7 +1432,7 @@ export class CreateUpdateDocument {
               CODE: code,
               NAME: '(' + code + ') ' + name,
             };
-          });
+          }).sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
         } else {
           this.users = [];
           this.totalRows = 0;
