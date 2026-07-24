@@ -16,10 +16,11 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { WorkflowPolicyService } from '@app/shared/services/workflow-policy-service';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-manage-workflow-policy-modal',
-  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper, SpinnerComponent],
   templateUrl: './manage-workflow-policy-modal.html',
   styleUrl: './manage-workflow-policy-modal.css',
 })
@@ -82,9 +83,14 @@ export class ManageWorkflowPolicyModal {
   ];
 
   private getColumns(): GridColumn[] {
+    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
+      ...col,
+      minWidth: 140
+    }));
+
     return [
       ...this.getFixedColumns(),
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...cabinetCols,
       ...this.getRemainingColumns(),
     ];
   }
@@ -98,7 +104,7 @@ export class ManageWorkflowPolicyModal {
         dropdownOptions: this.documentTypes,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
-        minWidth: 180,
+        minWidth: 140,
         required: false,
       },
     ];
@@ -110,7 +116,7 @@ export class ManageWorkflowPolicyModal {
         field: 'policyName',
         headerName: 'Policy Name',
         type: 'text',
-        minWidth: 250,
+        minWidth: 180,
         pinned: 'left',
         required: true,
       },
@@ -197,6 +203,7 @@ export class ManageWorkflowPolicyModal {
       sortColumn = sortMapping[sortColumn];
     }
 
+    this.loading = true;
     this._workflowPolicyService
       .GetAllWorkflowPolicies(
         searchText,
@@ -207,48 +214,50 @@ export class ManageWorkflowPolicyModal {
         pageSize,
         this.modalData?.entityType,
       )
-      .subscribe((res) => {
-        const data = res?.Data;
-        const items = data?.Items || (Array.isArray(data) ? data : []);
-        this.totalRows = data?.TotalCount ?? items.length;
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+          this.totalRows = data?.TotalCount ?? items.length;
 
-        if (Array.isArray(items)) {
-          this.workflowPoliciesData = items.map((item: any) => ({
-            Id: item.Id,
-            policyName: item.Name,
-            documentTypeId: item.DocumentTypeCode,
-            documentTypeName: item.DocumentType,
-            level1Id: item.DivisionCode,
-            divisionName: item.Division,
-            level2Id: item.DepartmentCode,
-            departmentName: item.Department,
-            level3Id: item.SubDepartmentCode,
-            subDepartmentName: item.SubDepartment,
-            level4Id: item.BusinessDomainCode,
-            businessDomainName: item.BusinessDomain,
-            IsActive: item.IsActive,
-            IsDeleted: item.IsDeleted,
-            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
-            CreatedBy: item.CreatedBy,
-            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
-            LastModifiedBy: item.LastModifiedBy,
-          }));
+          if (Array.isArray(items)) {
+            this.workflowPoliciesData = items.map((item: any) => ({
+              Id: item.Id,
+              policyName: item.Name,
+              documentTypeId: item.DocumentTypeCode,
+              documentTypeName: item.DocumentType,
+              level1Id: item.DivisionCode,
+              divisionName: item.Division,
+              level2Id: item.DepartmentCode,
+              departmentName: item.Department,
+              level3Id: item.SubDepartmentCode,
+              subDepartmentName: item.SubDepartment,
+              level4Id: item.BusinessDomainCode,
+              businessDomainName: item.BusinessDomain,
+              IsActive: item.IsActive,
+              IsDeleted: item.IsDeleted,
+              CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
+              CreatedBy: item.CreatedBy,
+              LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
+              LastModifiedBy: item.LastModifiedBy,
+            }));
 
-          // Array padding trick: Creates a fake footprint for un-fetched server records
-          // const newRowData = new Array(this.totalRows).fill(null).map(() => ({}));
-          // newRowData.splice((pageNumber - 1) * pageSize, mappedItems.length, ...mappedItems);
-
-          // this.workflowPoliciesData = newRowData;
-
-          // Jump grid to the exact required page so the newly padded data shows up
-          setTimeout(() => {
-            if (this.gridApi) {
-              this.gridApi.paginationGoToPage(pageNumber - 1);
-            }
-          }, 0);
-        } else {
+            // Jump grid to the exact required page so the newly padded data shows up
+            setTimeout(() => {
+              if (this.gridApi) {
+                this.gridApi.paginationGoToPage(pageNumber - 1);
+              }
+            }, 0);
+          } else {
+            this.workflowPoliciesData = [];
+            this.totalRows = 0;
+          }
+          this.loading = false;
+        },
+        error: (err) => {
           this.workflowPoliciesData = [];
           this.totalRows = 0;
+          this.loading = false;
         }
       });
   }
