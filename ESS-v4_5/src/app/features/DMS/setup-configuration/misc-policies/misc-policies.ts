@@ -182,6 +182,7 @@ export class MiscPolicies {
         type: 'number',
         minWidth: 150,
         required: false,
+        suffix: "%"
       },
       {
         field: 'createdByName',
@@ -449,7 +450,7 @@ export class MiscPolicies {
               Id: item.id || item.Id,
               documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
               traningRequired: item.trainingRequired || item.TrainingRequired,
-              minimumscoreforpassing: "%"+ item.minimumScore || item.MinimumScore,
+              minimumscoreforpassing: Number(item.minimumScore) || Number(item.MinimumScore) || 0,
               IsActive: item.isActive || item.IsActive,
               IsDeleted: item.isDeleted || item.IsDeleted,
               createdByName: authorName,

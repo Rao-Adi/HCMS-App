@@ -525,8 +525,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         };
 
         colDef.valueFormatter = (params) => {
-          if (params.value == null) return '';
-          let formatted = parseFloat(params.value).toFixed(column.decimalPlaces || 0);
+          if (params.value == null || params.value === '') return '';
+          const parsed = parseFloat(params.value);
+          if (isNaN(parsed)) return '';
+          let formatted = parsed.toFixed(column.decimalPlaces || 0);
           if (column.prefix) formatted = column.prefix + ' ' + formatted;
           if (column.suffix) formatted = formatted + ' ' + column.suffix;
           return formatted;
