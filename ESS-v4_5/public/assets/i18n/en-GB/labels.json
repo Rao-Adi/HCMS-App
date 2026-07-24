@@ -939,6 +939,5 @@
   "BranchName": "Branch Name",
   "IncludeInNextPeriod": "Include in next Period",
   "Disallowedreason": "Disallowed reason",
-  "NoRowsFound": "No Rows Found"
-
+  "NoRowsFound": "No rows found"
 }

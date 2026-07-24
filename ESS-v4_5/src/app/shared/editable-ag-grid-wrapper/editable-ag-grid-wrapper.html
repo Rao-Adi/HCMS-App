@@ -4,6 +4,7 @@
       <span>Search</span>
       <input
         nz-input
+        style="border-radius: 5px;"
         placeholder="Search"
         [value]="value()"
         (input)="onFilterTextBoxChanged($event)"
@@ -21,6 +22,7 @@
   [rowData]="rowData"
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
+  [localeText]="{ noRowsToShow: 'No rows to show' }"
   [rowHeight]="config.rowHeight"
   [headerHeight]="config.headerHeight"
   [pagination]="config.enablePagination"

@@ -139,6 +139,12 @@ export class AgGridWrapper implements OnInit, OnChanges {
     } else {
       this.isLoading = true;
     }
+
+    this.defaultColDef = {
+      ...this.defaultColDef,
+      cellRenderer: (params: any) => this.highlightCellRenderer(params),
+    };
+
     this.isServerSide = this.serverQuery.observed;
     this.buildFinalColumnDefs();
   }
@@ -443,6 +449,9 @@ export class AgGridWrapper implements OnInit, OnChanges {
 
   refresh() {
     this.pageNumber = 1;
+    if (this.gridApi) {
+      this.gridApi.refreshCells({ force: true });
+    }
     if (this.isServerSide && this.gridApi) {
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
       this.gridApi.refreshInfiniteCache();
@@ -462,5 +471,36 @@ export class AgGridWrapper implements OnInit, OnChanges {
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
       this.gridApi.refreshInfiniteCache();
     }
+  }
+
+  highlightCellRenderer(params: any): HTMLElement | string {
+    const val = params.value;
+    if (val == null || val === '') return '';
+
+    const valStr = val.toString();
+    // Skip HTML content to prevent breaking tags
+    if (valStr.includes('<') && valStr.includes('>')) {
+      return valStr;
+    }
+
+    const searchTerm = this.searchValue().trim();
+    if (!searchTerm) {
+      return valStr;
+    }
+
+    const span = document.createElement('span');
+    const escapeHtml = (s: string) =>
+      s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const escapedSearch = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+
+    span.innerHTML = escapeHtml(valStr).replace(regex, '<mark style="background-color: #ffeb3b; padding: 0 2px; border-radius: 2px;">$1</mark>');
+    return span;
   }
 }
