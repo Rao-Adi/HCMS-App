@@ -81,7 +81,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   CompanyName: string = 'Your Company';
   EmpName: string = 'Employee Name';
   EmployeePic: string = '/assets/images/pro.png';
-  strBreadCrumb: string = 'Home / Dashboard';
+  strBreadCrumb: string = 'Dashboard';
 
   @HostBinding('class.sidebar-open')
   isSidebarOpen: boolean = false;
@@ -273,7 +273,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.showdesc = false;
       this.showfavourite = false;
       this.showfavouriteicon = false;
-      this.strBreadCrumb = 'Home / Dashboard';
+      this.strBreadCrumb = 'Dashboard';
       this.cdRef.detectChanges();
       this.logFormAccess(this.formName, this.currentFormId, Url, 'Direct/Default');
       return;
@@ -551,7 +551,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   generateBreadcrumb(url: string, currentFormName?: string): string {
     const segments = url.split('/').filter((s) => s && s.toLowerCase() !== 'dashboard');
-    let breadcrumb = 'Home';
+    let breadcrumb = '';
     if (segments.length > 0) {
       const pathParts = segments.map(
         (s) => s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' '),
@@ -563,7 +563,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       ) {
         pathParts[pathParts.length - 1] = currentFormName;
       }
-      breadcrumb += ' / ' + pathParts.join(' / ');
+      breadcrumb +=  pathParts.join(' / ');
     } else {
       breadcrumb += ' / Dashboard';
     }

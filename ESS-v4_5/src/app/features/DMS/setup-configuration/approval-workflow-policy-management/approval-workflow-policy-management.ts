@@ -233,6 +233,13 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   openManagePolicyModal() {
+    const heading =
+      this.selectedPolicyId == PolicyId.RequestForDocumentCreation
+        ? 'Request For Document Creation'
+        : this.selectedPolicyId == PolicyId.DocumentCreation
+          ? 'Document Creation'
+          : 'Document Revision/Obsoletion';
+
     const entityTypeStr =
       this.selectedPolicyId == PolicyId.RequestForDocumentCreation
         ? 'Request'
@@ -241,7 +248,7 @@ export class ApprovalWorkflowPolicyManagement {
           : 'Revision';
 
     const modalRef = this.modal.create({
-      nzTitle: `Manage Policy (${entityTypeStr})`,
+      nzTitle: `${heading}`,
       nzContent: ManageWorkflowPolicyModal,
       nzData: {
         entityType: entityTypeStr,
@@ -268,7 +275,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.showExclusionTable = this.showExclusionTable == true ? false : true;
 
     const payLoad = {
-      WorkflowPolicyId : this.selectedWorkflowPolicy,
+      WorkflowPolicyId: this.selectedWorkflowPolicy,
       EntityType:
         this.selectedPolicyId == PolicyId.RequestForDocumentCreation
           ? 'Request'

@@ -7,6 +7,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { ManualManageEmployee } from './manual-manage-employee/manual-manage-employee';
 import { PeoplePartnersEmployee } from './people-partners-employee/people-partners-employee';
+import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 
 @Component({
   selector: 'app-users',
@@ -18,6 +19,7 @@ import { PeoplePartnersEmployee } from './people-partners-employee/people-partne
     NzModalModule,
     ManualManageEmployee,
     PeoplePartnersEmployee,
+    SafeTranslatePipe
   ],
   templateUrl: './users.html',
   styleUrl: './users.css',
@@ -29,16 +31,18 @@ export class Users {
 
   selectedTab: string = 'Upload';
   loading = false;
-  switchValue1 = false;
+  switchValue1 = true;
   switchValue2 = false;
   // single state
-  activeMode: 'manual' | 'integration' | null = null;
+  activeMode: 'manual' | 'integration' | null = 'manual';
   pageSize = 10;
   manualUserData: any[] = [];
 
   constructor() {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadDataByTab('manual');
+  }
 
   clickSwitch(mode: 'manual' | 'integration'): void {
     if (this.loading) return;

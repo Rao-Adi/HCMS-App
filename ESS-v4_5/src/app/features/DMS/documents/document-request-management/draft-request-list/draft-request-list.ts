@@ -112,7 +112,7 @@ export class DraftRequestList {
   documentColumnDefs = [
     {
       field: 'id',
-      headerName: 'Id',
+      headerName: 'ID',
       hide: true,
     },
     {

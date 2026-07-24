@@ -47,23 +47,7 @@ export class DocumentAttributes {
   totalDocumentAttributes = 0;
   documentAttributeData: any[] = [];
 
-  controlTypes: any[] = [
-    // {
-    //   id: '1',
-    //   text: 'Date',
-    // },
-    // {
-    //   id: '2',
-    //   text: 'Numeric',
-    // },
-    // {
-    //   id: '3',
-    //   text: 'TextBox',
-    // },
-    // {
-    //   id: '4',
-    //   text: 'List',
-    // },
+  controlTypes: any[] = [ 
   ]; // for dropdowns
 
   selectedDocumentType?: string = '';
@@ -159,7 +143,7 @@ export class DocumentAttributes {
       },
       {
         field: 'Mandatory',
-        headerName: 'Mandatory(Cabinet Wise)',
+        headerName: 'Mandatory (Cabinet Wise)',
         type: 'button',
         minWidth: 150,
         pinned: 'left',

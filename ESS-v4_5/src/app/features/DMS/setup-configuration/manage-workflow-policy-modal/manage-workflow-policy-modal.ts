@@ -129,8 +129,7 @@ export class ManageWorkflowPolicyModal {
     //this.loadSampleData();
   }
 
-  ngOnInit() {
-    console.log('Modal data:', this.modalData);
+  ngOnInit() { 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;

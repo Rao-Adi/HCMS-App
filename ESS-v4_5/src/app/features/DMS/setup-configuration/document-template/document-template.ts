@@ -83,16 +83,16 @@ export class DocumentTemplate {
 
   templateTypes: any[] = [
     {
+      id: '3',
+      text: 'HTML',
+    },
+    {
       id: '1',
       text: 'PDF',
     },
     {
       id: '2',
       text: 'Word Document',
-    },
-    {
-      id: '3',
-      text: 'HTML',
     },
   ];
 

@@ -117,7 +117,7 @@ export class ResponsibilityTransferForm {
   selectedStatus: string = '1';
 
   pendingRequestApprovalColumnDefs: ColDef[] = [
-    { field: 'id', headerName: 'Id', flex: 1 },
+    { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
     { field: 'reason', headerName: 'Reason', flex: 1 }, 
@@ -127,7 +127,7 @@ export class ResponsibilityTransferForm {
   pendingApprovalData: any[] = [];
 
   submittedRequestColumnDefs: ColDef[] = [
-    { field: 'id', headerName: 'Id', flex: 1 }, 
+    { field: 'id', headerName: 'ID', flex: 1 }, 
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
     { field: 'reason', headerName: 'Reason', flex: 1 },     
