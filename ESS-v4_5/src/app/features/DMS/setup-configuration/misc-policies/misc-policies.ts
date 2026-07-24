@@ -449,7 +449,7 @@ export class MiscPolicies {
               Id: item.id || item.Id,
               documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
               traningRequired: item.trainingRequired || item.TrainingRequired,
-              minimumscoreforpassing: item.minimumScore || item.MinimumScore,
+              minimumscoreforpassing: "%"+ item.minimumScore || item.MinimumScore,
               IsActive: item.isActive || item.IsActive,
               IsDeleted: item.isDeleted || item.IsDeleted,
               createdByName: authorName,

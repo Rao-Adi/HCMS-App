@@ -199,7 +199,7 @@
                         </label>
                       </div>
                       <textarea
-                        style="width: 50%"
+                        style="width: 50%; resize: both;"
                         rows="4"
                         nz-input
                         [(ngModel)]="remarks"
@@ -215,7 +215,8 @@
                         <button
                           type="button"
                           tabindex="0"
-                          class="btn btn-sm btn-outline-secondary shadow-sm"
+                          class="btn btn-primary shadow-sm"
+                          style="min-width: 120px; height: 35px"
                           (click)="submitRequest($event)"
                         >
                           <i class="bi bi-file-earmark-text me-2"></i>
@@ -226,10 +227,11 @@
                         <button
                           type="button"
                           tabindex="0"
-                          class="btn btn-sm btn-primary shadow-sm"
+                          class="btn btn-secondary shadow-sm"
+                          style="min-width: 120px; height: 35px"
                           (click)="cancel()"
                         >
-                          <i class="bi bi-cancel me-2"></i>
+                          <i class="bi bi-x-circle me-2"></i>
                           Cancel
                         </button>
                       </div>
