@@ -401,12 +401,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // Fetch Count 4: trainingauthorization
     this._documentService.GetPendingAuthorizationCount(payload).subscribe({
       next: (response) => {
-        if (response && response.Data && response.Data.MyInbox) {
+        if (response && response.Data) {
           const count = (response.Data.PendingCount || response.Data.pendingCount) ?? 0;
           this.applyCountToMenu('trainingauthorization', count);
         }
       },
-      error: (err) => console.error('Failed to get document counts', err),
+      error: (err) => console.error('Failed to get training authorization counts', err),
     });
   }
 
@@ -437,8 +437,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
               textLower.includes('my approvals - request');
           } else if (navigateUrl === 'trainingauthorization') {
             matchesText =
-              textLower === 'document authorization – post training' ||
-              textLower === 'documents' ||
+              textLower.includes('post training') ||
+              textLower.includes('post-training') ||
+              textLower.includes('training authorization') ||
               textLower.includes('trainingauthorization');
           }
         }
