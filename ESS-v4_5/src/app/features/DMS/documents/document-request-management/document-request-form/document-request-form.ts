@@ -406,10 +406,6 @@ export class DocumentRequestForm {
           this.templateHtml =
             response.Data?.TemplateContent || response.Data?.templateContent || '';
         }
-
-        if (!this.draftFileUrl && (this.selectedTemplateType === '1' || this.selectedTemplateType === '2')) {
-          this.draftFileUrl = this.templateFileUrl;
-        }
       },
       error: (err) => {
         this.selectedTemplateType = '';

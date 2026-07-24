@@ -400,14 +400,14 @@ export class ApprovalDocuments {
                 startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
                 // Previous version info (only if present in real payloads)
-                previousVersionCreatedBy: get([
-                  'LastModifiedByName',
-                  'lastmodifiedbyname',
-                  'PreviousVersionCreatedBy',
-                ]),
-                previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                  get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn']),
-                ),
+                // previousVersionCreatedBy: get([
+                //   'LastModifiedByName',
+                //   'lastmodifiedbyname',
+                //   'PreviousVersionCreatedBy',
+                // ]),
+                // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                //   get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn']),
+                // ),
 
                 // ──────────────────────────────────────────────
                 // Placeholder / missing fields from your original

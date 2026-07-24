@@ -423,10 +423,10 @@ export class MyApprovalDocument {
               startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
-              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                get(['RequestCreatedAt', 'requestCreatedAt']),
-              ),
+              // previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+              //   get(['RequestCreatedAt', 'requestCreatedAt']),
+              // ),
 
               // ──────────────────────────────────────────────
               // Placeholder / missing fields from your original

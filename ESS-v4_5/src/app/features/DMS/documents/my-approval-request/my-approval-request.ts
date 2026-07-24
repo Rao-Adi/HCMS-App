@@ -109,13 +109,13 @@ export class MyApprovalRequest {
   documentColumnDefs = [
     {
       field: 'documentType',
-      headerName: 'Document Type', 
-      flex: 1
+      headerName: 'Document Type',
+      flex: 1,
     },
     {
       field: 'documentRequestId',
-      headerName: 'Request ID', 
-      flex: 1
+      headerName: 'Request ID',
+      flex: 1,
     },
     {
       field: 'documentName',
@@ -188,12 +188,12 @@ export class MyApprovalRequest {
     // {
     //   field: 'proposedDocumentNumber',
     //   headerName: 'Proposed Document Number',
-      
+
     // },
     {
       field: 'proposedVersionNumber',
-      headerName: 'Proposed Version Number',  
-      flex: 1
+      headerName: 'Proposed Version Number',
+      flex: 1,
     },
     {
       field: 'division',
@@ -209,7 +209,7 @@ export class MyApprovalRequest {
     },
     {
       field: 'executionStatus',
-      headerName: 'Execution Status', 
+      headerName: 'Execution Status',
       cellRenderer: (params: any) => {
         const val = params.value || '';
         const displayVal = val.toLowerCase() === 'reworked' ? 'Reverted' : val;
@@ -254,19 +254,33 @@ export class MyApprovalRequest {
             ${displayVal}
           </span>
         `;
-      }
-    },
-    { field: 'dateOfCreation', headerName: 'Date Of Creation',
-      flex: 1, cellClass: 'audit-cell', },
+      },
+    }, 
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', 
-      flex: 1, cellClass: 'audit-cell', },
-    { field: 'requestCreatedOn', headerName: 'Request Created On',
-      flex: 1, cellClass: 'audit-cell', },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By',
-      flex: 1, cellClass: 'audit-cell', },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On',
-      flex: 1, cellClass: 'audit-cell', },
+    {
+      field: 'requestCreatedBy',
+      headerName: 'Request Created By',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'requestCreatedOn',
+      headerName: 'Request Created On',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created By',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -298,7 +312,6 @@ export class MyApprovalRequest {
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
-    { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
@@ -310,7 +323,7 @@ export class MyApprovalRequest {
   constructor(
     private _documentRequestService: DocumentRequestService,
     private modal: NzModalService,
-    private _notificationToastService: NotificationToastService, 
+    private _notificationToastService: NotificationToastService,
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
     private route: ActivatedRoute,
@@ -319,7 +332,7 @@ export class MyApprovalRequest {
   ngOnInit() {
     // 1. Fetch synchronous data BEFORE any UI component can trigger an API call
     this.documentColumnDefsWithoutStatus = this.documentColumnDefs.filter(
-      (col) => col.field !== 'executionStatus'
+      (col) => col.field !== 'executionStatus',
     );
     this.hasSelectedRows = false;
     this.GetLoginEmpId();
@@ -397,10 +410,18 @@ export class MyApprovalRequest {
     this._documentRequestService.GetMyRequestCounts().subscribe({
       next: (response) => {
         if (response && response.Data) {
-          const myRequests = response.Data.MyRequests || { Pending: 0, Approved: 0, RejectedOrReverted: 0 };
-          const myInbox = response.Data.MyInbox || { Pending: 0, Approved: 0, RejectedOrReverted: 0 };
+          const myRequests = response.Data.MyRequests || {
+            Pending: 0,
+            Approved: 0,
+            RejectedOrReverted: 0,
+          };
+          const myInbox = response.Data.MyInbox || {
+            Pending: 0,
+            Approved: 0,
+            RejectedOrReverted: 0,
+          };
 
-          this.pendingRequestCount = myInbox.Pending ?? 0;//(myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
+          this.pendingRequestCount = myInbox.Pending ?? 0; //(myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
           this.approvedRequestCount = myInbox.Approved ?? 0; //(myRequests.Approved ?? 0) + (myInbox.Approved ?? 0);
           this.disapprovedRequestCount = myInbox.RejectedOrReverted ?? 0; //(myRequests.RejectedOrReverted ?? 0) + (myInbox.RejectedOrReverted ?? 0);
         }
@@ -462,6 +483,7 @@ export class MyApprovalRequest {
                 }
                 return defaultValue;
               };
+ 
 
               return {
                 id: get(['Id', 'id']),
@@ -478,25 +500,22 @@ export class MyApprovalRequest {
                 division: get(['Division', 'division']),
                 department: get(['Department', 'department']),
                 subdepartment: get(['SubDepartment', 'subdepartment', 'subDepartment']),
-                dateOfCreation: this.formatDate(get(['CreatedAt', 'createdAt'])),
                 requestCreatedBy: get([
                   'CreatedBy',
                   'createdBy',
                   'RequestCreatedBy',
                   'requestCreatedBy',
                 ]),
-                requestCreatedOn: this.formatDate(
+                requestCreatedOn: new CustomDateFormatPipe().transform(
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
-                ),
-                previousVersionCreatedOn: this.formatDate(
-                  get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt']),
-                ),
-                previousVersionCreatedBy: get([
-                  'DraftContentLastModifiedBy',
-                  'draftContentLastModifiedBy',
-                  'LastModifiedBy',
-                  'lastModifiedBy',
-                ]),
+                ), 
+                // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                //   get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt']),
+                // ),
+                // previousVersionCreatedBy: get([
+                //   'DraftContentLastModifiedBy',
+                //   'draftContentLastModifiedBy'
+                // ]),
                 stepId: get(['StepId', 'stepId']),
                 stepOrder: get(['StepOrder', 'stepOrder']),
                 startedAt: get(['StartedAt', 'startedAt']),
@@ -561,7 +580,6 @@ export class MyApprovalRequest {
 
   // Handle selection changes
   onSelectionChange(selectedRows: any): void {
-    debugger;
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     const row = selectedRows[0];
     if (row) {
@@ -725,26 +743,7 @@ export class MyApprovalRequest {
     });
   }
 
-  private formatDate(value: string | null | undefined): string {
-    if (!value) {
-      return '';
-    }
-    try {
-      const date = new Date(value);
-      if (isNaN(date.getTime())) {
-        return value; // Return original value if parsing fails
-      }
-      return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-      }).format(date);
-    } catch {
-      return value; // Return original value on any other error
-    }
-  }
-
-  exportDocumentRequests(): void {  
+  exportDocumentRequests(): void {
     const payload = {
       searchtext: '',
       sortby: 'DESC',
@@ -763,7 +762,9 @@ export class MyApprovalRequest {
 
     this._documentRequestService.exportMyPendingDocumentRequest(payload).subscribe({
       next: (response: any) => {
-        const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const blob = new Blob([response], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -772,15 +773,22 @@ export class MyApprovalRequest {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        this._notificationToastService.createNotification('success', 'Export', 'Document request list exported successfully!');
+        this._notificationToastService.createNotification(
+          'success',
+          'Export',
+          'Document request list exported successfully!',
+        );
       },
       error: (err) => {
         console.error('Export failed', err);
-        this._notificationToastService.createNotification('error', 'Export', 'Failed to export document request list.');
-      }
+        this._notificationToastService.createNotification(
+          'error',
+          'Export',
+          'Failed to export document request list.',
+        );
+      },
     });
   }
- 
 
   openObservationModal(rowData: any) {
     //console.log('Row clicked:', rowData);

@@ -44,7 +44,7 @@ export class AverageDocumentScoreModal {
     this.loadData();
   }
 
-  loadData() {
+  loadData() { 
     const docId = this.modalData?.data?.documentId || this.modalData?.data?.Id || this.modalData?.data?.id;
     if (!docId) return;
 

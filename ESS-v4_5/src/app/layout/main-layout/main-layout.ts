@@ -224,10 +224,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       }
     }
 
-    const cleanSessionKey = sessionKey && sessionKey !== 'null' && sessionKey !== 'undefined' ? sessionKey.trim() : '';
+    const cleanSessionKey =
+      sessionKey && sessionKey !== 'null' && sessionKey !== 'undefined' ? sessionKey.trim() : '';
     const userid = localStorage.getItem('HRISUserid');
     const empid = localStorage.getItem('HRISEmpId');
-    
+
     // Sanitize to avoid literal strings 'null' or 'undefined'
     const cleanUserid = userid && userid !== 'null' && userid !== 'undefined' ? userid.trim() : '';
     const cleanEmpid = empid && empid !== 'null' && empid !== 'undefined' ? empid.trim() : '';
@@ -385,9 +386,32 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       },
       error: (err) => console.error('Failed to get document counts', err),
     });
+
+    const payload = {
+      divisionCode: null,
+      departmentCode: null,
+      subDepartmentCode: null,
+      businessDomainCode: null,
+      documentTypeCode: null,
+      documentcategoryfilter: 1,
+      searchText: '',
+      isActive: true,
+    };
+
+    // Fetch Count 4: trainingauthorization
+    this._documentService.GetPendingAuthorizationCount(payload).subscribe({
+      next: (response) => {
+        if (response && response.Data && response.Data.MyInbox) {
+          const count = (response.Data.PendingCount || response.Data.pendingCount) ?? 0;
+          this.applyCountToMenu('trainingauthorization', count);
+        }
+      },
+      error: (err) => console.error('Failed to get document counts', err),
+    });
   }
 
   private applyCountToMenu(navigateUrl: string, count: number): void {
+    debugger;
     const updateCount = (menuList: MenuItem[]) => {
       for (const item of menuList) {
         const matchesUrl = !!(
@@ -411,6 +435,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
               textLower === 'my approvals - request' ||
               textLower === 'request' ||
               textLower.includes('my approvals - request');
+          } else if (navigateUrl === 'trainingauthorization') {
+            matchesText =
+              textLower === 'document authorization – post training' ||
+              textLower === 'documents' ||
+              textLower.includes('trainingauthorization');
           }
         }
 

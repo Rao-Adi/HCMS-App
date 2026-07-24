@@ -224,10 +224,7 @@ export class PendingRequestForApproval {
             ),
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.createdAt || item.CreatedAt || '',
-            ),
-            previousVersionCreatedOn:
-              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-            proposedVersionNumber: item.RowVersion || item.rowVersion,
+            )
           }));
         } else {
           this.documentRequestsData = [];

@@ -326,12 +326,18 @@ export class CreateUpdateDocument {
       if (!this.selectedRequestId) {
         return true;
       }
+    }
 
-      // Doucment should be mandatory if DocumentRequest has not any submitted document.
-      if (!this.draftFileUrl && !this.draftFile) {
-        return true;
+    // Document file is mandatory for file-based templates (types 1 & 2) if not already uploaded
+    if (this.selectedRequestType === 'DRT-0001' || this.selectedRequestType === 'DRT-0002') {
+      if (this.selectedTemplateType !== '3') {
+        if (!this.draftFileUrl && !this.draftFile) {
+          return true;
+        }
       }
+    }
 
+    if (this.selectedRequestType === 'DRT-0001') {
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return true;
@@ -376,11 +382,21 @@ export class CreateUpdateDocument {
   }
 
   onCellClicked(event: any): void {
-    // this.templateHtml = event.data?.proposedContent || '';
-    // this.draftFileUrl = event.data?.draftFileUrl || '';
-    // this.requestId = event.data?.requestId || event.data?.Id || event.data?.id || 0;
-    // this.documentName = event.data?.documentName || '';
-    // this.showDocumentContent = true;
+    const data = event.data;
+    this.templateHtml = data?.proposedContent || '';
+    this.draftFileUrl = data?.draftFileUrl || '';
+    this.requestId = data?.requestId || data?.Id || data?.id || 0;
+    this.documentName = data?.documentName || '';
+    this.selectedDocumentType = data?.documentTypeCode || '';
+    this.selectedTemplateType = data?.templateType?.toString() || '';
+    this.showDocumentContent = true;
+
+    if (this.selectedDocumentType) {
+      this.CheckTrainingPolicy(this.selectedDocumentType);
+      this.GetDocumentAttributes(this.selectedDocumentType);
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+      this.GetDocumentReviewPolicy();
+    }
   }
 
   loadRequestSpecificData(code: string) {
@@ -538,13 +554,6 @@ export class CreateUpdateDocument {
           response.Data?.TemplateFileURL ||
           response.Data?.templateFileUrl ||
           '';
-
-        if (
-          !this.draftFileUrl &&
-          (this.selectedTemplateType === '1' || this.selectedTemplateType === '2')
-        ) {
-          this.draftFileUrl = this.templateFileUrl;
-        }
       },
       error: (err) => {
         this.selectedTemplateType = '';
@@ -603,11 +612,6 @@ export class CreateUpdateDocument {
         this.draftFileUrl =
           res.Data[0].draftfileurl ||
           res.Data[0].draftFileUrl ||
-          res.Data[0].TemplateFileUrl ||
-          res.Data[0].templateFileUrl ||
-          res.Data[0].TemplateFileURL ||
-          res.Data[0].templatefileurl ||
-          this.templateFileUrl ||
           '';
         this.documentName = res.Data[0].title || '';
       } else {
@@ -1036,13 +1040,7 @@ export class CreateUpdateDocument {
               item.DraftFileUrl ||
               item.draftfileurl ||
               item.draftFileUrl ||
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              (String(item.TemplateType || item.templateType) === '1' ||
-              String(item.TemplateType || item.templateType) === '2'
-                ? item.ProposedContent
-                : ''),
+              '',
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,

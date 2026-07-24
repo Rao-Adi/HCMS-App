@@ -459,6 +459,7 @@ export class DocumentAuthorizationPostTraining {
       nzContent: AverageDocumentScoreModal,
       nzData: {
         data: row, // 👈 this is what we’ll read inside modal
+        trainingMode: '0',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
@@ -528,6 +529,7 @@ export class DocumentAuthorizationPostTraining {
       nzContent: AverageDocumentScoreModal,
       nzData: {
         data: row, // 👈 this is what we’ll read inside modal
+        trainingMode: '0',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
