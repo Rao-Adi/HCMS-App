@@ -151,10 +151,12 @@ export class DepartmentList implements ControlValueAccessor {
             (d) => d.DivisionCode?.toUpperCase() === divisionCode.toUpperCase(),
           );
 
-          this.departmentData = filtered.map((d) => ({
-            CODE: d.Code,
-            NAME: d.Name,
-          }));
+          this.departmentData = filtered
+            .map((d) => ({
+              CODE: d.Code,
+              NAME: d.Name,
+            }))
+            .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
 
           this.totalDepartments = filtered.length; // optional – if you want to show count
           this.isLoading = false;

@@ -67,12 +67,16 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     const field = params.colDef.field as string;
     const rawValue = params.data?.[field];
 
-    this.options = params.options || [];
+    const dispField = this.params.displayField || 'text';
+    this.options = [...(params.options || [])].sort((a, b) => {
+      const textA = (a[dispField] || '').toString().toLowerCase();
+      const textB = (b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    });
 
     // 🔥 FORCE type match (number ↔ number)
     if (rawValue !== null && rawValue !== undefined) {
       const valField = this.params.valueField || 'id';
-      const dispField = this.params.displayField || 'text';
       let matched = this.options.find((o) => o[valField] == rawValue);
       if (!matched) {
         matched = this.options.find((o) => o[dispField] == rawValue);
@@ -107,11 +111,15 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     const field = params.colDef.field as string;
     const rawValue = params.data?.[field];
 
-    this.options = params.options || [];
+    const dispField = this.params.displayField || 'text';
+    this.options = [...(params.options || [])].sort((a, b) => {
+      const textA = (a[dispField] || '').toString().toLowerCase();
+      const textB = (b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    });
 
     if (rawValue !== null && rawValue !== undefined) {
       const valField = this.params.valueField || 'id';
-      const dispField = this.params.displayField || 'text';
       let matched = this.options.find((o) => o[valField] == rawValue);
       if (!matched) {
         matched = this.options.find((o) => o[dispField] == rawValue);

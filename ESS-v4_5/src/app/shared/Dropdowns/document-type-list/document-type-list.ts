@@ -110,10 +110,12 @@ export class DocumentTypeList implements ControlValueAccessor {
         }),
       })
       .subscribe((data) => {
-        this.DocTypeData = (data ?? []).map((d: any) => ({
-          CODE: d.Code || d.code || d.CODE,
-          NAME: d.Name || d.name || d.NAME,
-        }));
+        this.DocTypeData = (data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code || d.code || d.CODE,
+            NAME: d.Name || d.name || d.NAME,
+          }))
+          .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
         if (this.filterByCode) {
           this.DocTypeData = this.DocTypeData.filter(
             (d) => (d.CODE ?? '').toUpperCase() === this.filterByCode!.toUpperCase()

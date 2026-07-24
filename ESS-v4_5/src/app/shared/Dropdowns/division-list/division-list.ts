@@ -108,10 +108,12 @@ export class DivisionList implements ControlValueAccessor {
         }),
       })
       .subscribe((data) => {
-        this.divisionData = (data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Name,
-        }));
+        this.divisionData = (data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code,
+            NAME: d.Name,
+          }))
+          .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
       });
   };
 }

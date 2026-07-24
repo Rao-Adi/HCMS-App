@@ -60,10 +60,12 @@ export class CompanyList {
   getAllDivisions = () => {
     this._companyService.getCompanyList().subscribe((res) => {
       if (res?.Data) {
-        this.data = (res.Data ?? []).map((d: any) => ({
-          ID: d.Id,
-          NAME: d.Value,
-        }));
+        this.data = (res.Data ?? [])
+          .map((d: any) => ({
+            ID: d.Id,
+            NAME: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
       } else {
         this.data = [];
       }

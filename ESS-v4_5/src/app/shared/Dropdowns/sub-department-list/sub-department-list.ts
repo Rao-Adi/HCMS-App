@@ -146,10 +146,12 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
             (d) => d.DepartmentCode?.toUpperCase() === divisionCode.toUpperCase(),
           );
 
-          this.subDepartmentData = filtered.map((d) => ({
-            CODE: d.Code,
-            NAME: d.Name,
-          }));
+          this.subDepartmentData = filtered
+            .map((d) => ({
+              CODE: d.Code,
+              NAME: d.Name,
+            }))
+            .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
 
           this.totalSubDepartments = filtered.length; // optional – if you want to show count
           this.isLoading = false;

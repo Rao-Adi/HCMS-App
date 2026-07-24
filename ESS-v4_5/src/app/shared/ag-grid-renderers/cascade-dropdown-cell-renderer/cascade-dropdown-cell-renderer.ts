@@ -46,9 +46,16 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
     const field = params.colDef.field as string;
     const rawValue = params.data?.[field] ?? null;
 
+    const dispField = this.params.displayField || 'text';
+    const sortFn = (a: any, b: any) => {
+      const textA = (a[dispField] || '').toString().toLowerCase();
+      const textB = (b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    };
+
     // ROOT DROPDOWN
     if (!params.dependsOn) {
-      this.options = params.options || [];
+      this.options = [...(params.options || [])].sort(sortFn);
       this.disabled = false;
     } else {
       // CASCADE DROPDOWN
@@ -62,9 +69,9 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
         // 🔥 FIX: USE params.options (NOT context)
         const source = params.options || [];
 
-        this.options = source.filter(
-          (item: any) => String(item[params.filterKey]) === String(parentValue),
-        );
+        this.options = source
+          .filter((item: any) => String(item[params.filterKey]) === String(parentValue))
+          .sort(sortFn);
 
         this.disabled = this.options.length === 0;
       }

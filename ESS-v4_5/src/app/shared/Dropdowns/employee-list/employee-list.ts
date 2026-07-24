@@ -152,10 +152,12 @@ export class EmployeeList {
   getAllUsersList = () => {
     this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
-        this.options = (res.Data ?? []).map((d: any) => ({
-          value: d.Code || d.code,
-          label: d.Value + ' (' + d.Code + ')' || d.value,
-        }));
+        this.options = (res.Data ?? [])
+          .map((d: any) => ({
+            value: d.Code || d.code,
+            label: (d.Value ? d.Value + ' (' + d.Code + ')' : d.value) || '',
+          }))
+          .sort((a: any, b: any) => (a.label || '').localeCompare(b.label || ''));
       } else {
         this.options = [];
       }

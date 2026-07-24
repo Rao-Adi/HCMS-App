@@ -138,10 +138,12 @@ export class DesignationList implements ControlValueAccessor {
   getAllDesignations = () => {
     this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
-        this.data = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Id || d.id,
-          NAME: d.Value || d.value,
-        }));
+        this.data = (res.Data ?? [])
+          .map((d: any) => ({
+            CODE: d.Id || d.id,
+            NAME: d.Value || d.value,
+          }))
+          .sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
       } else {
         this.data = [];
       }
