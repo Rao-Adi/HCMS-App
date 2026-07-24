@@ -174,6 +174,13 @@ export interface AuditableEntity {
   lastModifiedAt: string;
 }
 
+
+export interface EmployeeDraftObservation {
+  Id: number;
+  EmployeeCode: string;
+  ObservationText: string;
+}
+
 export interface CabinetStructureTabsConfig {
   Id: number;
   Name: string;

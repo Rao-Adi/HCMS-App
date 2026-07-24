@@ -527,15 +527,20 @@ export class ResponsibilityTransferForm {
         id: this.selectedRow.Id || this.selectedRow.id,
         entityType: 'Transfer',
         mode: 'input',
-        action: 'Approver',
+        action: action,
       },
       nzFooter: null,
       nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
-      if (!result || !result.observation) return;
-      this.submitWorkflowAction(action, result.observation);
+      if (!result) return;
+      const actionStr = (action || '').toUpperCase();
+      const isApprove = actionStr === 'APPROVED' || actionStr === 'APPROVE';
+      if (!isApprove && (!result.observation || result.observation.trim() === '')) {
+        return;
+      }
+      this.submitWorkflowAction(action, result.observation || '');
     });
   }
 

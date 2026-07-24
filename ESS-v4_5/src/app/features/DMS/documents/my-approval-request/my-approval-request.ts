@@ -16,13 +16,13 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { UserService } from '@app/shared/services/user-service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
-import { UtilitiesService } from '@app/core/services/utilities.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+
 
 @Component({
   selector: 'app-my-approval-request',
@@ -255,7 +255,7 @@ export class MyApprovalRequest {
           </span>
         `;
       },
-    }, 
+    },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
     {
       field: 'requestCreatedBy',
@@ -324,9 +324,9 @@ export class MyApprovalRequest {
     private _documentRequestService: DocumentRequestService,
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
-    private _UtilitiesService: UtilitiesService,
-    private _permissionService: PermissionService,
+    private _permissionService: PermissionService,    
     private route: ActivatedRoute,
+    private _employeeDraftObservationService: EmployeeDraftObservationService,
   ) {}
 
   ngOnInit() {
@@ -483,7 +483,6 @@ export class MyApprovalRequest {
                 }
                 return defaultValue;
               };
- 
 
               return {
                 id: get(['Id', 'id']),
@@ -508,7 +507,7 @@ export class MyApprovalRequest {
                 ]),
                 requestCreatedOn: new CustomDateFormatPipe().transform(
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
-                ), 
+                ),
                 // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
                 //   get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt']),
                 // ),
@@ -678,11 +677,6 @@ export class MyApprovalRequest {
   promptAction(action: string) {
     if (!this.selectedRow) return;
 
-    if (action === 'APPROVED') {
-      this.submitWorkflowAction(action, ''); // Send empty observation for approve action
-      return;
-    }
-
     const modalRef = this.modal.create({
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
@@ -690,15 +684,20 @@ export class MyApprovalRequest {
         id: this.selectedRow.Id || this.selectedRow.id,
         entityType: 'Request',
         mode: 'input',
-        action: 'Approver',
+        action: action,
       },
       nzFooter: null,
       nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
-      if (!result || !result.observation) return;
-      this.submitWorkflowAction(action, result.observation);
+      if (!result) return;
+      const actionStr = (action || '').toUpperCase();
+      const isApprove = actionStr === 'APPROVED' || actionStr === 'APPROVE';
+      if (!isApprove && (!result.observation || result.observation.trim() === '')) {
+        return;
+      }
+      this.submitWorkflowAction(action, result.observation || '');
     });
   }
 

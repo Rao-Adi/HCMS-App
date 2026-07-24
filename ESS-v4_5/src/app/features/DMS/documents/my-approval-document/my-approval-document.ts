@@ -24,6 +24,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -235,6 +236,7 @@ export class MyApprovalDocument {
     private _documentAttributeService: DocumentAttributeService,
     private _permissionService: PermissionService,
     private _documentRequestService: DocumentRequestService,
+    private _employeeDraftObservationService: EmployeeDraftObservationService,
   ) {}
 
   ngOnInit() {
@@ -548,11 +550,6 @@ export class MyApprovalDocument {
   promptAction(action: string) {
     if (!this.documentId) return;
 
-    if (action === 'Approve') {
-      this.submitWorkflowAction(action, ''); // Send empty observation for approve action
-      return;
-    }
-
     const modalRef = this.modal.create({
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
@@ -560,15 +557,20 @@ export class MyApprovalDocument {
         id: this.documentId,
         entityType: 'Document',
         mode: 'input',
-        action: 'Approver',
+        action: action,
       },
       nzFooter: null,
       nzWidth: 1200,
     });
 
     modalRef.afterClose.subscribe((result) => {
-      if (!result || !result.observation) return;
-      this.submitWorkflowAction(action, result.observation);
+      if (!result) return;
+      const actionStr = (action || '').toUpperCase();
+      const isApprove = actionStr === 'APPROVED' || actionStr === 'APPROVE';
+      if (!isApprove && (!result.observation || result.observation.trim() === '')) {
+        return;
+      }
+      this.submitWorkflowAction(action, result.observation || '');
     });
   }
 
@@ -734,7 +736,7 @@ export class MyApprovalDocument {
       this.observationData = [];
       return;
     }
-    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request').subscribe({
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Document').subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observationData = response.Data.map((item: any) => ({
