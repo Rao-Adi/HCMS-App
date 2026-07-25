@@ -91,6 +91,7 @@ export class CreateUpdateDocument {
   canEdit = false;
   canDelete = false;
   formId = 'uploadorcreate';
+  submitting: boolean = false;
 
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
@@ -320,6 +321,9 @@ export class CreateUpdateDocument {
   }
 
   get isSubmitDisabled(): boolean {
+    if (this.submitting) {
+      return true;
+    }
     if (!this.selectedRequestType || !this.selectedDocumentType) {
       return true;
     }
@@ -759,6 +763,7 @@ export class CreateUpdateDocument {
   }
 
   SubmiteDocument() {
+    this.submitting = true;
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
@@ -804,11 +809,15 @@ export class CreateUpdateDocument {
             this.dynamicForm.reset();
           }
           setTimeout(() => {
+            this.submitting = false;
             window.location.reload();
           }, 1000);
+        } else {
+          this.submitting = false;
         }
       },
       error: (err) => {
+        this.submitting = false;
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
 

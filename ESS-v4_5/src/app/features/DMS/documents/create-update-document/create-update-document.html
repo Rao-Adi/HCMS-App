@@ -480,9 +480,10 @@
                   tabindex="0"
                   class="btn btn-sm btn-primary shadow-sm"
                   (click)="SubmiteDocument()"
-                  [disabled]="isSubmitDisabled"
+                  [disabled]="isSubmitDisabled || submitting"
                 >
-                  <i class="bi bi-file-earmark-text me-2"></i>
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" *ngIf="submitting"></span>
+                  <i class="bi bi-file-earmark-text me-2" *ngIf="!submitting"></i>
                   Submit
                 </button>
               </div>

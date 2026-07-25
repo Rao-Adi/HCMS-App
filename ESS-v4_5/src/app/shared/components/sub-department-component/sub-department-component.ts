@@ -315,6 +315,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
@@ -323,7 +324,7 @@ export class SubDepartmentComponent {
         this.loadSubDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Sub-Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -335,7 +336,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Sub-Department', message);
       },
     });
   }
@@ -354,6 +355,7 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
@@ -362,7 +364,7 @@ export class SubDepartmentComponent {
         this.loadSubDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Sub-Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -374,7 +376,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Sub-Department', message);
       },
     });
   }
@@ -385,15 +387,16 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
-          'Sub-Department updated successfully!',
+          'Sub-Department deleted successfully!',
         );
         this.loadSubDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Sub-Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -405,7 +408,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Sub-Department', message);
       },
     });
   }

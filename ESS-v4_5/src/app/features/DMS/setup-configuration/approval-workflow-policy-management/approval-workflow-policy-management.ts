@@ -254,7 +254,7 @@ export class ApprovalWorkflowPolicyManagement {
         entityType: entityTypeStr,
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 1300,
     });
     modalRef.afterClose.subscribe((result) => {
       // console.log('Modal closed with:', result);

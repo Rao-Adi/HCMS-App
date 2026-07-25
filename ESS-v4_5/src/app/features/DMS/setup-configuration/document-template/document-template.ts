@@ -80,12 +80,9 @@ export class DocumentTemplate {
   selectedTemplateType: string = '';
   selectedFile: File | null = null;
   existingFileName: string = '';
-  showFileUpload = false;
-
-  onShowFileUploadChange(checked: boolean) {
-    if (!checked) {
-      this.selectedFile = null;
-    }
+  deleteTemplateFile(): void {
+    this.existingFileName = '';
+    this.selectedFile = null;
   }
 
   templateTypes: any[] = [
@@ -179,7 +176,6 @@ export class DocumentTemplate {
           this.selectedDepartment = data.DepartmentCode || '';
           this.selectedSubDepartment = data.SubDepartmentCode || '';
           this.selectedbusinessDomain = data.BusinessDomainCode || '';
-          this.showFileUpload = false;
         } else {
           this.resetTemplateDetails(false);
         }
@@ -202,7 +198,6 @@ export class DocumentTemplate {
     this.selectedSubDepartment = '';
     this.selectedbusinessDomain = '';
     this.selectedFile = null;
-    this.showFileUpload = false;
   }
 
   onFileSelected(event: any): void {

@@ -144,17 +144,23 @@
                         >
                           <i class="bi bi-download fs-5"></i>
                         </button>
+
+                        <!-- Delete Button: Clears the existing file so user can upload a new one -->
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                          (click)="deleteTemplateFile()"
+                          title="Delete Current Template"
+                          style="width: 36px; height: 36px; padding: 0; border-radius: 8px"
+                        >
+                          <i class="bi bi-trash fs-5"></i>
+                        </button>
                       </div>
                     </div>
-
-                    <!-- Checkbox to show file input for replacement -->
-                    <label nz-checkbox [(ngModel)]="showFileUpload" (ngModelChange)="onShowFileUploadChange($event)">
-                      Replace current template / Upload new template
-                    </label>
                   </div>
 
-                  <!-- Show file input if there is no existing file OR if the user selected to replace/upload a new one -->
-                  <div *ngIf="!existingFileName || showFileUpload" class="mt-3">
+                  <!-- Show file input if there is no existing file -->
+                  <div *ngIf="!existingFileName" class="mt-3">
                     <div class="PnlHeading">
                       <label>Choose File (DOCX/PDF)</label>
                     </div>

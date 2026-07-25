@@ -287,12 +287,12 @@ export class BusinessDomainComponent {
         this._notificationToastService.createNotification(
           'success',
           'Business Domain',
-          'Business Domain updated successfully!',
+          'Business Domain created successfully!',
         );
         this.loadBusinessDomains();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Business Domain failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -304,7 +304,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Business Domain', message);
       },
     });
   }
@@ -331,7 +331,7 @@ export class BusinessDomainComponent {
         this.loadBusinessDomains();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Business Domain failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -343,7 +343,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Business Domain', message);
       },
     });
   }
@@ -364,7 +364,7 @@ export class BusinessDomainComponent {
         this.loadBusinessDomains();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Business Domain failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -376,7 +376,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Business Domain', message);
       },
     });
   }

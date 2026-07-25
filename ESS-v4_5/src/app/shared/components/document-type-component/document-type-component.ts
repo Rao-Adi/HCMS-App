@@ -259,7 +259,7 @@ export class DocumentTypeComponent {
         this.loadDocumentTypes();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Document Type failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -271,7 +271,7 @@ export class DocumentTypeComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Type', message);
       },
     });
   }
@@ -296,7 +296,7 @@ export class DocumentTypeComponent {
         this.loadDocumentTypes();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Document Type failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -308,7 +308,7 @@ export class DocumentTypeComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Type', message);
       },
     });
   }
@@ -327,7 +327,7 @@ export class DocumentTypeComponent {
         this.loadDocumentTypes();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Document Type failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -339,7 +339,7 @@ export class DocumentTypeComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Type', message);
       },
     });
   }
