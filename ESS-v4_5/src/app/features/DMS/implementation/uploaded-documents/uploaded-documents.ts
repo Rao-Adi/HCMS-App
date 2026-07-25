@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, TemplateRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
@@ -10,14 +11,29 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentService } from '@app/shared/services/document.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { AppConfigService } from '@app/core/services/app-config';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'app-uploaded-documents',
-  imports: [AgGridWrapper],
+  imports: [
+    CommonModule,
+    AgGridWrapper,
+    NzButtonModule,
+    NzIconModule,
+    DMSRichTextEdit,
+  ],
   templateUrl: './uploaded-documents.html',
   styleUrl: './uploaded-documents.css',
 })
 export class UploadedDocuments {
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+
   gridConfig: GridConfig = {} as GridConfig;
 
   // --- PERMISSION FLAGS ---
@@ -38,6 +54,14 @@ export class UploadedDocuments {
   cabinetHierarchy: CabinetLevel[] = [];
   levelTitles: Record<number, string> = {};
 
+  templateHtml: string = '';
+  draftFileUrl: string = '';
+  isPdf = false;
+  isDocx = false;
+  safeDraftFileUrl?: SafeResourceUrl;
+  documentId: string = '';
+  currentDocumentName: string = '';
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
@@ -46,7 +70,26 @@ export class UploadedDocuments {
 
   workflowAuthoritiesColumnDefs = [
     { field: 'documentId', headerName: 'Document ID', flex: 1 },
-    { field: 'documentName', headerName: 'Document Name', flex: 1 },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+      flex: 1,
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span 
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+                ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'version', headerName: 'Version Number', flex: 1 },
     { field: 'documentType', headerName: 'Document Type', flex: 1 },
     { field: 'divisionName', headerName: 'Division', flex: 1 },
@@ -59,6 +102,10 @@ export class UploadedDocuments {
   constructor(
     private _documentService: DocumentService,
     private _permissionService: PermissionService,
+    private modal: NzModalService,
+    private _notificationToastService: NotificationToastService,
+    private sanitizer: DomSanitizer,
+    private _config: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -141,8 +188,8 @@ export class UploadedDocuments {
     this._documentService
       .GetAllDocument(
         query?.filterModel?.Name?.filter || '',
-        sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
+        sort?.sort?.toUpperCase() || 'DESC',
+        sort?.colId || 'CreatedAT',
         true,
         pageNumber,
         pageSize,
@@ -197,6 +244,134 @@ export class UploadedDocuments {
       pageSize: this.selectedPageSize,
       sortModel: [], // or your current sort/filter model
       filterModel: {},
+    });
+  }
+
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    this.documentId = rowData.Id || rowData.documentId || '';
+    this.currentDocumentName = rowData.documentName || '';
+    let fileUrl = rowData.DocumentURL || rowData.url || '';
+
+    if (fileUrl && !fileUrl.startsWith('http')) {
+      const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+      fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+    }
+    this.draftFileUrl = fileUrl;
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    if (this.draftFileUrl) {
+      const lowerUrl = this.draftFileUrl.toLowerCase();
+      if (lowerUrl.endsWith('.pdf')) {
+        this.isPdf = true;
+        this.safeDraftFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.draftFileUrl);
+      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc')) {
+        this.isDocx = true;
+      }
+    }
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '80%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
     });
   }
 }

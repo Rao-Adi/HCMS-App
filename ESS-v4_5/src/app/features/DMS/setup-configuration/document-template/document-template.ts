@@ -80,6 +80,13 @@ export class DocumentTemplate {
   selectedTemplateType: string = '';
   selectedFile: File | null = null;
   existingFileName: string = '';
+  showFileUpload = false;
+
+  onShowFileUploadChange(checked: boolean) {
+    if (!checked) {
+      this.selectedFile = null;
+    }
+  }
 
   templateTypes: any[] = [
     {
@@ -172,6 +179,7 @@ export class DocumentTemplate {
           this.selectedDepartment = data.DepartmentCode || '';
           this.selectedSubDepartment = data.SubDepartmentCode || '';
           this.selectedbusinessDomain = data.BusinessDomainCode || '';
+          this.showFileUpload = false;
         } else {
           this.resetTemplateDetails(false);
         }
@@ -194,6 +202,7 @@ export class DocumentTemplate {
     this.selectedSubDepartment = '';
     this.selectedbusinessDomain = '';
     this.selectedFile = null;
+    this.showFileUpload = false;
   }
 
   onFileSelected(event: any): void {
@@ -225,7 +234,8 @@ export class DocumentTemplate {
 
     if (
       (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
-      !this.selectedFile
+      !this.selectedFile &&
+      !this.existingFileName
     ) {
       this._notificationToastService.createNotification(
         'warning',
@@ -238,7 +248,7 @@ export class DocumentTemplate {
     const formData = new FormData();
     formData.append('DocumentTypeCode', this.selectedDocumentType);
     formData.append('TemplateName', this.templateName || 'Template');
-    formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : '');
+    formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : (this.existingFileName || ''));
     formData.append('TemplateType', this.selectedTemplateType);
     formData.append('IsDefault', String(this.isDefaultTemplate));
 
@@ -263,6 +273,9 @@ export class DocumentTemplate {
         );
 
         this.cabinetStructure.resetHierarchy();
+        if (this.selectedDocumentType) {
+          this.onDocumentTypeChange(this.selectedDocumentType);
+        }
       },
       error: (err) => {
         console.error('Document Template failed:', err);

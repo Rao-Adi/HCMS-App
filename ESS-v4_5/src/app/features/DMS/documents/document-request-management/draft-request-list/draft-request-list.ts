@@ -92,6 +92,8 @@ export class DraftRequestList {
   pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
+  loadingDraft = false;
+  loadingSubmit = false;
 
   currentGridQuery: any = {
     pageNumber: 1,
@@ -635,8 +637,10 @@ export class DraftRequestList {
       UserIds: userids,
     };
 
+    this.loadingSubmit = true;
     this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
       next: (response) => {
+        this.loadingSubmit = false;
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
@@ -648,6 +652,7 @@ export class DraftRequestList {
         }
       },
       error: (err) => {
+        this.loadingSubmit = false;
         this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
@@ -712,8 +717,10 @@ export class DraftRequestList {
       formData.append('DraftFile', this.draftFile);
     }
 
+    this.loadingDraft = true;
     this._doumentRequestService.UpdateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
+        this.loadingDraft = false;
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
@@ -724,6 +731,7 @@ export class DraftRequestList {
         }
       },
       error: (err) => {
+        this.loadingDraft = false;
         this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
       },
     });
