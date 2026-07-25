@@ -247,11 +247,11 @@ export class UploadedDocuments {
     });
   }
 
-  openDocumentModal(rowData: any) {
+  openDocumentModal(rowData: any) { 
     this.templateHtml = rowData.proposedContent || '';
-    this.documentId = rowData.Id || rowData.documentId || '';
-    this.currentDocumentName = rowData.documentName || '';
-    let fileUrl = rowData.DocumentURL || rowData.url || '';
+    this.documentId = rowData.Id;
+    this.currentDocumentName = rowData.documentName;
+    let fileUrl = rowData.DocumentURL;
 
     if (fileUrl && !fileUrl.startsWith('http')) {
       const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';

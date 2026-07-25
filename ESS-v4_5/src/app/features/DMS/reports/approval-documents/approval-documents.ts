@@ -543,13 +543,16 @@ export class ApprovalDocuments {
     }
   }
 
-  openDocumentModal(rowData: any) {
+  openDocumentModal(rowData: any) { 
     this.templateHtml = rowData.proposedContent || '';
     let fileUrl = rowData.url || '';
 
+    // This logic is incorrect as it prepends the API base URL.
+    // The correct logic uses window.location.origin.
     if (fileUrl && !fileUrl.startsWith('http')) {
-      const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
-      fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+      const origin = window.location.origin;
+      const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+      fileUrl = origin + relativeUrl;
     }
     this.draftFileUrl = fileUrl;
 
