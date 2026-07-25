@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { ICellRendererParams } from 'ag-grid-community';
 
@@ -11,6 +11,8 @@ export class HighlightCellRenderer implements ICellRendererAngularComp {
   displayValue: string = '';
   private params!: ICellRendererParams;
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   agInit(params: ICellRendererParams): void {
     this.params = params;
     this.refresh(params);
@@ -19,6 +21,7 @@ export class HighlightCellRenderer implements ICellRendererAngularComp {
   refresh(params: ICellRendererParams): boolean {
     this.params = params;
     this.displayValue = this.getHighlightedValue();
+    this.cdr.detectChanges();
     return true;
   }
 
@@ -32,6 +35,8 @@ export class HighlightCellRenderer implements ICellRendererAngularComp {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
     const api = this.params.api;
+    if (!api) return escapeHtml(text);
+
     const colId =
       this.params.column?.getColId?.() ??
       this.params.colDef?.colId ??
@@ -40,22 +45,49 @@ export class HighlightCellRenderer implements ICellRendererAngularComp {
     const fm = api.getFilterModel?.() || {};
     const m = colId ? (fm as any)[colId] : undefined;
 
-    if (!m) {
-      return escapeHtml(text);
-    }
+    const terms: string[] = [];
 
     // Handle text filters
-    const terms: string[] = [];
-    const collect = (c: any) => {
-      const t = (c?.filter ?? '').toString().trim();
-      if (t) terms.push(t);
-    };
+    if (m) {
+      const collect = (c: any) => {
+        const t = (c?.filter ?? '').toString().trim();
+        if (t) terms.push(t);
+      };
 
-    if (m.operator) {
-      collect(m.condition1);
-      collect(m.condition2);
-    } else {
-      collect(m);
+      if (m.operator) {
+        collect(m.condition1);
+        collect(m.condition2);
+      } else {
+        collect(m);
+      }
+    }
+
+    // Collect global Quick Filter / search term
+    let quickFilterText = '';
+    if (typeof api.getGridOption === 'function') {
+      quickFilterText = (api.getGridOption('quickFilterText') || '') as string;
+    }
+    // Fallback to componentParent signal/property
+    if (!quickFilterText && this.params.context && this.params.context.componentParent) {
+      const parent = this.params.context.componentParent;
+      if (parent.value) {
+        if (typeof parent.value === 'function') {
+          quickFilterText = parent.value() || '';
+        } else {
+          quickFilterText = parent.value || '';
+        }
+      } else if (parent.searchValue) {
+        if (typeof parent.searchValue === 'function') {
+          quickFilterText = parent.searchValue() || '';
+        } else {
+          quickFilterText = parent.searchValue || '';
+        }
+      }
+    }
+
+    quickFilterText = quickFilterText.trim();
+    if (quickFilterText) {
+      terms.push(quickFilterText);
     }
 
     if (!terms.length) {
@@ -66,6 +98,6 @@ export class HighlightCellRenderer implements ICellRendererAngularComp {
     const uniq = Array.from(new Set(terms.map(escapeRegExp)));
     const re = new RegExp(`(${uniq.join('|')})`, 'gi');
 
-    return escapeHtml(text).replace(re, '<mark class="ag-hl">$1</mark>');
+    return escapeHtml(text).replace(re, '<mark class="ag-hl" style="background-color: #ffeb3b; padding: 0 2px; border-radius: 2px;">$1</mark>');
   }
 }

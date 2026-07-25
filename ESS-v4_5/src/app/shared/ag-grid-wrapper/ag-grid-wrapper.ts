@@ -105,6 +105,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
     sortModel: any;
     filterModel: any;
     searchText?: string;
+    searchTerm?: string;
   }>();
 
   @Output() gridReady = new EventEmitter<GridReadyEvent>();
@@ -140,11 +141,6 @@ export class AgGridWrapper implements OnInit, OnChanges {
       this.isLoading = true;
     }
 
-    this.defaultColDef = {
-      ...this.defaultColDef,
-      cellRenderer: (params: any) => this.highlightCellRenderer(params),
-    };
-
     this.isServerSide = this.serverQuery.observed;
     this.buildFinalColumnDefs();
   }
@@ -160,7 +156,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
     // ✅ Append parent columns AS-IS
     cols.push(...this.columnDefs);
 
-    // ✅ Apply audit styling to all audit trail columns (header + cell)
+    // ✅ Apply audit styling to all audit trail columns (header + cell) and wrap cellRenderer for highlighting
     cols.forEach((col: ColDef) => {
       const isAuditCell =
         (typeof col.cellClass === 'string' && col.cellClass.includes('audit-cell')) ||
@@ -184,6 +180,51 @@ export class AgGridWrapper implements OnInit, OnChanges {
         } else if (!col.cellClass) {
           col.cellClass = 'audit-cell';
         }
+      }
+
+      // Wrap cell renderer for highlighting
+      if (col.checkboxSelection) {
+        return;
+      }
+
+      const originalCellRenderer = col.cellRenderer;
+      const isFn = typeof originalCellRenderer === 'function';
+      const isAngularComponent = isFn && 
+        (!!(originalCellRenderer as any).ɵcmp || 
+         !!(originalCellRenderer as any).ɵfac || 
+         (originalCellRenderer.prototype && typeof originalCellRenderer.prototype.agInit === 'function'));
+
+      // Only wrap if it's a function or if there is no custom renderer
+      if (!originalCellRenderer || (isFn && !isAngularComponent)) {
+        col.cellRenderer = (params: any) => {
+          let content: any = null;
+          if (originalCellRenderer) {
+            content = originalCellRenderer(params);
+          } else {
+            if (col.valueFormatter && typeof col.valueFormatter === 'function') {
+              content = col.valueFormatter(params);
+            } else {
+              content = params.value;
+            }
+          }
+
+          if (content == null || content === '') {
+            return '';
+          }
+
+          const searchTerm = this.searchValue ? this.searchValue.trim() : '';
+
+          if (content instanceof HTMLElement) {
+            this.highlightTextInElement(content, searchTerm);
+            return content;
+          }
+
+          const contentStr = content.toString();
+          const container = document.createElement('span');
+          container.innerHTML = contentStr;
+          this.highlightTextInElement(container, searchTerm);
+          return container;
+        };
       }
     });
 
@@ -226,6 +267,9 @@ export class AgGridWrapper implements OnInit, OnChanges {
         this.isLoading = false;
       }
     }
+    if (changes['columnDefs']) {
+      this.buildFinalColumnDefs();
+    }
     if (this.isServerSide && this.getRowsParams) {
       if (changes['rowData'] || changes['totalRows']) {
         const rows = this.rowData || [];
@@ -261,7 +305,8 @@ export class AgGridWrapper implements OnInit, OnChanges {
               pageSize: this.pageSize,
               sortModel: params.sortModel.map((c: any) => ({ colId: c.colId, sort: c.sort })),
               filterModel: params.filterModel,
-              searchText: this.searchValue(),
+              searchText: this.searchValue,
+              searchTerm: this.searchValue,
             });
           });
         },
@@ -382,7 +427,8 @@ export class AgGridWrapper implements OnInit, OnChanges {
         .filter((c) => c.sort)
         .map((c) => ({ colId: c.colId, sort: c.sort })),
       filterModel: this.gridApi.getFilterModel(),
-      searchText: this.searchValue(),
+      searchText: this.searchValue,
+      searchTerm: this.searchValue,
     });
   }
 
@@ -442,7 +488,12 @@ export class AgGridWrapper implements OnInit, OnChanges {
     this.gridApi.setColumnsVisible(fields, checked);
   }
 
-  readonly searchValue = signal('');
+  searchValue = '';
+  onSearchModelChange(value: string) {
+    this.searchValue = value;
+    this.refresh();
+  }
+
   onSearchEnter() {
     this.refresh();
   }
@@ -450,7 +501,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
   refresh() {
     this.pageNumber = 1;
     if (this.gridApi) {
-      this.gridApi.refreshCells({ force: true });
+      this.gridApi.redrawRows();
     }
     if (this.isServerSide && this.gridApi) {
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
@@ -473,34 +524,49 @@ export class AgGridWrapper implements OnInit, OnChanges {
     }
   }
 
-  highlightCellRenderer(params: any): HTMLElement | string {
-    const val = params.value;
-    if (val == null || val === '') return '';
+  highlightTextInElement(element: Node, searchTerm: string): void {
+    if (!searchTerm) return;
+    const lowerSearch = searchTerm.toLowerCase();
+    const children = Array.from(element.childNodes);
 
-    const valStr = val.toString();
-    // Skip HTML content to prevent breaking tags
-    if (valStr.includes('<') && valStr.includes('>')) {
-      return valStr;
+    for (const child of children) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.nodeValue || '';
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes(lowerSearch)) {
+          const fragment = document.createDocumentFragment();
+          let lastIndex = 0;
+          const escapedSearch = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`(${escapedSearch})`, 'gi');
+
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            const matchIndex = match.index;
+            const matchText = match[0];
+
+            if (matchIndex > lastIndex) {
+              fragment.appendChild(document.createTextNode(text.substring(lastIndex, matchIndex)));
+            }
+
+            const mark = document.createElement('mark');
+            mark.style.backgroundColor = '#ffeb3b';
+            mark.style.padding = '0 2px';
+            mark.style.borderRadius = '2px';
+            mark.textContent = matchText;
+            fragment.appendChild(mark);
+
+            lastIndex = regex.lastIndex;
+          }
+
+          if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+          }
+
+          child.replaceWith(fragment);
+        }
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        this.highlightTextInElement(child, searchTerm);
+      }
     }
-
-    const searchTerm = this.searchValue().trim();
-    if (!searchTerm) {
-      return valStr;
-    }
-
-    const span = document.createElement('span');
-    const escapeHtml = (s: string) =>
-      s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-
-    const escapedSearch = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(`(${escapedSearch})`, 'gi');
-
-    span.innerHTML = escapeHtml(valStr).replace(regex, '<mark style="background-color: #ffeb3b; padding: 0 2px; border-radius: 2px;">$1</mark>');
-    return span;
   }
 }

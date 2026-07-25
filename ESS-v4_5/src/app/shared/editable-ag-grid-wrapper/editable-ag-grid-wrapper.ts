@@ -731,6 +731,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   private getContextData(): any {
     // Return data that can be accessed by renderers via context
     return {
+      componentParent: this,
       documentTypes: this.documentTypeList,
       divisions: this.divisionList,
       departments: this.departmentList,

@@ -300,7 +300,7 @@ export class DocumentAuthorizationPostTraining {
       businessDomainCode: this.selectedbusinessDomain,
       documentTypeCode: this.selectedDocumentType,
       documentcategoryfilter: Number(this.selectedAuthorizationStatus),
-      searchText: query?.searchTerm || '',
+      searchText: query?.searchText || query?.searchTerm || '',
       sortBy: sort?.sort?.toUpperCase() || 'DESC',
       sortColumn: sort?.colId || 'Id',
       isActive: true,

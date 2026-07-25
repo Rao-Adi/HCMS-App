@@ -9,7 +9,7 @@
             nz-input
             placeholder="Search"
             [(ngModel)]="searchValue"
-            (input)="onSearchEnter()"
+            (ngModelChange)="onSearchModelChange($event)"
           />
         </div>
       </div>

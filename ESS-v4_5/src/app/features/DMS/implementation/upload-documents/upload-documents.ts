@@ -196,7 +196,7 @@ export class UploadDocuments {
 
     this._documentService
       .GetAllDocument(
-        query?.filterModel?.Name?.filter || '',
+        query?.searchText || query?.searchTerm || query?.filterModel?.Name?.filter || '',
         sort?.sort?.toUpperCase() || 'ASC',
         sort?.colId || 'Name',
         true,

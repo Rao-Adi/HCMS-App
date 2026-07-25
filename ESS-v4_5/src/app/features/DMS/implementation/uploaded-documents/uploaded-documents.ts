@@ -187,7 +187,7 @@ export class UploadedDocuments {
 
     this._documentService
       .GetAllDocument(
-        query?.filterModel?.Name?.filter || '',
+        query?.searchText || query?.searchTerm || query?.filterModel?.Name?.filter || '',
         sort?.sort?.toUpperCase() || 'DESC',
         sort?.colId || 'CreatedAT',
         true,
