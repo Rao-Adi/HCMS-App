@@ -268,7 +268,7 @@ export class UploadedDocuments {
       if (lowerUrl.endsWith('.pdf')) {
         this.isPdf = true;
         this.safeDraftFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.draftFileUrl);
-      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc')) {
+      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.xlsx')) {
         this.isDocx = true;
       }
     }

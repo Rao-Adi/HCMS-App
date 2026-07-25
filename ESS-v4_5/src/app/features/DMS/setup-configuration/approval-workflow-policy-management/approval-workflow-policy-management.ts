@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
@@ -167,6 +167,7 @@ export class ApprovalWorkflowPolicyManagement {
     private _peoplePartnerService: PeoplePartnersService,
     private modal: NzModalService,
     private _workflowPolicyService: WorkflowPolicyService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
@@ -297,26 +298,28 @@ export class ApprovalWorkflowPolicyManagement {
     };
 
     this._workflowStepService.create(payLoad).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          this.showExclusionTable = true;
-          this.approvalSequenceData = [...response.Data];
-          this.emptyInnerFields();
+        next: (res) => {
+          if (res.Success) {
+            this._notificationToastService.createNotification(
+              'success',
+              'Success',
+              'Authority added successfully.',
+            );
+            this.fetchApprovalSequence();
+            this.emptyInnerFields();
+            this.cdr.detectChanges();
+          } else {
+            this._notificationToastService.createNotification('error', 'Error', res.Message);
+          }
+        },
+        error: (err) => {
           this._notificationToastService.createNotification(
-            'success',
-            'Workflow',
-            response.Message,
+            'error',
+            'Error',
+            err.error?.Message || 'Failed to add authority.',
           );
-        }
-      },
-      error: (err) => {
-        this._notificationToastService.createNotification(
-          'error',
-          'Error',
-          err?.error?.Message || err?.Message || 'Failed to create workflow step.',
-        );
-      },
-    });
+        },
+      });
   }
 
   selectTab(policyId: any) {
@@ -590,38 +593,43 @@ export class ApprovalWorkflowPolicyManagement {
   getAllDesignationList = () => {
     this._peoplePartnerService.GetAllDesignationList().subscribe((res) => {
       if (res?.Data) {
-        this.designations = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Id || d.id,
-          NAME: d.Value || d.value,
-        }));
+        this.designations = (res.Data ?? [])
+          .map((d: any) => ({
+            CODE: d.Id || d.id,
+            NAME: d.Value || d.value,
+          }))
+          .sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
       } else {
         this.designations = [];
       }
-      //this.cdr.detectChanges(); // force update
     });
   };
 
   getAllRoles = () => {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
       if (res?.Data) {
-        this.userRoles = (res.Data ?? []).map((d: any) => ({
-          ID: d.Id,
-          NAME: d.Value,
-        }));
+        this.userRoles = (res.Data ?? [])
+          .map((d: any) => ({
+            ID: d.Id,
+            NAME: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
       } else {
         this.userRoles = [];
       }
-      //this.cdr.detectChanges(); // force update
     });
   };
 
   getAllUsersList = () => {
     this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
       if (res?.Data) {
-        this.employees = (res.Data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: '(' + d.Code + ') ' + d.Value,
-        }));
+        this.employees = (res.Data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code,
+            NAME: '(' + d.Code + ') ' + d.Value,
+            val: d.Value || '',
+          }))
+          .sort((a: any, b: any) => (a.val || '').localeCompare(b.val || ''));
       } else {
         this.employees = [];
       }
@@ -664,26 +672,17 @@ export class ApprovalWorkflowPolicyManagement {
             LastModifiedBy: item.LastModifiedBy,
           }));
 
-          // Map workflow policies for dropdown
-          this.workflowPolicies = items.map((d: any) => ({
-            CODE: d.Id,
-            NAME: d.Name,
-          }));
+          // Map workflow policies for dropdown and sort alphabetically
+          this.workflowPolicies = items
+            .map((d: any) => ({
+              CODE: d.Id,
+              NAME: d.Name,
+            }))
+            .sort((a: any, b: any) => (a.NAME || '').localeCompare(b.NAME || ''));
         } else {
           this.workflowPoliciesData = [];
           this.workflowPolicies = [];
         }
       });
-    // this._workflowPolicyService.GetWorkflowPoliciesByEntityType(entityTypeStr).subscribe((res) => {
-    //   if (res?.Data) {
-    //     this.workflowPolicies = (res.Data ?? []).map((d: any) => ({
-    //       CODE: d.Id,
-    //       NAME: d.Value,
-    //     }));
-    //   } else {
-    //     this.workflowPolicies = [];
-    //   }
-    //   //this.cdr.detectChanges(); // force update
-    // });
   };
 }

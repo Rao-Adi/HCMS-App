@@ -57,12 +57,12 @@
               <label>{{ 'labels.Company' | safeTranslate }} </label>
             </div>
             <div style="width: 100%; max-width: 250px">
-              <div class="disable">
+              <div>
                 <app-company-list
                   valueKey="CODE"
                   labelKey="NAME"
-                  placeholder="Select Division"
-                  [(ngModel)]="selectedDivisions"
+                  placeholder="Select Company"
+                  [(ngModel)]="selectedCompany"
                   (valueChange)="onCompanyChange($event)"
                   width="100%"
                 >
