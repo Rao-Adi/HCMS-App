@@ -217,7 +217,7 @@ export class ApprovalDocuments {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            View
+            Approval History
           </span>
         `;
       },
@@ -235,7 +235,7 @@ export class ApprovalDocuments {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            ${params.value ? 'View' : 'View'}
+            ${params.value ? 'Revision History' : 'Revision History'}
           </span>
         `;
       },
@@ -545,30 +545,26 @@ export class ApprovalDocuments {
 
   openDocumentModal(rowData: any) { 
     this.templateHtml = rowData.proposedContent || '';
+    this.documentId = rowData.Id || rowData.id;
+    this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
     let fileUrl = rowData.url || '';
 
-    // This logic is incorrect as it prepends the API base URL.
-    // The correct logic uses window.location.origin.
-    if (fileUrl && !fileUrl.startsWith('http')) {
-      const origin = window.location.origin;
-      const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
-      fileUrl = origin + relativeUrl;
+    if (fileUrl && fileUrl.trim()) {
+      // This logic is incorrect as it prepends the API base URL.
+      // The correct logic uses window.location.origin.
+      if (!fileUrl.startsWith('http')) {
+        const origin = window.location.origin;
+        const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+        fileUrl = origin + relativeUrl;
+      }
+      this.draftFileUrl = fileUrl;
+    } else {
+      this.draftFileUrl = '';
     }
-    this.draftFileUrl = fileUrl;
 
     this.isPdf = false;
     this.isDocx = false;
     this.safeDraftFileUrl = undefined;
-
-    if (this.draftFileUrl) {
-      const lowerUrl = this.draftFileUrl.toLowerCase();
-      if (lowerUrl.endsWith('.pdf')) {
-        this.isPdf = true;
-        this.safeDraftFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.draftFileUrl);
-      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc')) {
-        this.isDocx = true;
-      }
-    }
 
     this.modal.create({
       nzTitle: 'Document Content',

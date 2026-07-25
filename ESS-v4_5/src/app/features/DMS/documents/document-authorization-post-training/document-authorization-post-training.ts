@@ -179,7 +179,7 @@ export class DocumentAuthorizationPostTraining {
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
-          label: 'View',
+          label: 'Approval History',
           onClick: () => {
             this.openApprovalHistoryModal(params.data);
           },
@@ -192,7 +192,7 @@ export class DocumentAuthorizationPostTraining {
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
-          label: 'View',
+          label: 'Revision History',
           onClick: () => {
             this.openRevisionHistoryModal(params.data);
           },

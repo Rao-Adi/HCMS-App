@@ -251,27 +251,21 @@ export class UploadedDocuments {
     this.templateHtml = rowData.proposedContent || '';
     this.documentId = rowData.Id;
     this.currentDocumentName = rowData.documentName;
-    let fileUrl = rowData.DocumentURL;
+    let fileUrl = rowData.DocumentURL || '';
 
-    if (fileUrl && !fileUrl.startsWith('http')) {
-      const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
-      fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+    if (fileUrl && fileUrl.trim()) {
+      if (!fileUrl.startsWith('http')) {
+        const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+        fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+      }
+      this.draftFileUrl = fileUrl;
+    } else {
+      this.draftFileUrl = '';
     }
-    this.draftFileUrl = fileUrl;
 
     this.isPdf = false;
     this.isDocx = false;
     this.safeDraftFileUrl = undefined;
-
-    if (this.draftFileUrl) {
-      const lowerUrl = this.draftFileUrl.toLowerCase();
-      if (lowerUrl.endsWith('.pdf')) {
-        this.isPdf = true;
-        this.safeDraftFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.draftFileUrl);
-      } else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.xlsx')) {
-        this.isDocx = true;
-      }
-    }
 
     this.modal.create({
       nzTitle: 'Document Content',

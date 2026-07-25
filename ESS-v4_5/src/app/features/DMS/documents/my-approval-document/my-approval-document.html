@@ -233,11 +233,10 @@
             </app-dynamic-form-by-document-attribute>
           </div>
         </div>
-        <div class="row mb-4" *ngIf="documentId && (templateHtml || draftFileUrl)">
+        <div class="row" *ngIf="documentId && (templateHtml || draftFileUrl)">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="status-box-leftColmd6-standard">
-              <h3 class="PnlHeader">Document Content</h3>
-              <br />
+              <h3 class="PnlHeader">Document Content</h3> 
 
               <!-- HTML Template Editor -->
               <ng-container *ngIf="!draftFileUrl">
@@ -261,9 +260,9 @@
                   </div>
                 </div>
 
-                <div class="row mt-4 btn-stick">
+                <div class="row btn-stick">
                   <div
-                    class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
+                    class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4"
                   >
                     <div class="col-sm-2">
                       <button
@@ -283,13 +282,11 @@
           </div>
         </div>
 
-        <div class="row mt-10" *ngIf="observationData.length > 0">
+        <div class="row" *ngIf="observationData.length > 0">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto">
               <div class="observation-container">
-                <div class="observation-title">
-                  OBSERVATIONS HISTORY
-                </div>
+                <h3 class="PnlHeader" style="margin-top: 0">Observation History</h3>
 
                 <div class="observation-card" *ngFor="let item of observationData; let i = index">
                   <!-- Header -->

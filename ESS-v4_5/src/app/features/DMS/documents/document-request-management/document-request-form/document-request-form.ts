@@ -188,7 +188,7 @@ export class DocumentRequestForm {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            ${params.value ? 'View' : 'View'}
+            ${params.value ? 'Approval History' : 'Approval History'}
           </span>
         `;
       },
@@ -206,7 +206,7 @@ export class DocumentRequestForm {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            ${params.value ? 'View' : 'View'}
+            ${params.value ? 'Revision History' : 'Revision History'}
           </span>
         `;
       },
