@@ -388,7 +388,7 @@ export class DocumentRequestForm {
           this.templateFileUrl = '';
           this.draftFileUrl = '';
           if (!isRevision) {
-            this.templateHtml = '';
+          this.templateHtml = ''; // Clear only if not a revision and no data
           }
           this._notificationToasService.createNotification(
             'warning',
@@ -406,9 +406,20 @@ export class DocumentRequestForm {
           response.Data?.templateFileUrl ||
           '';
 
-        if (!isRevision) {
+        // Handle content based on TemplateType
+        if (this.selectedTemplateType === '3') {
+          // For HTML templates, set the HTML content.
           this.templateHtml =
             response.Data?.TemplateContent || response.Data?.templateContent || '';
+          this.draftFileUrl = ''; // Ensure no file URL is present
+        } else if (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') {
+          // For DOCX/PDF templates, set the draftFileUrl from the template URL.
+          this.draftFileUrl = this.templateFileUrl;
+          this.templateHtml = ''; // Ensure no HTML content is present
+        } else {
+          // Fallback for other cases or if template type is not set
+          this.templateHtml = '';
+          this.draftFileUrl = '';
         }
       },
       error: (err) => {
