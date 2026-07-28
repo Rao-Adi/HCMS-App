@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces'; 
+import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { ColDef } from 'ag-grid-community';
@@ -18,7 +18,8 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
- 
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+
 export enum DocumentRequestStatus {
   Draft = 0,
   Submitted = 1,
@@ -39,6 +40,7 @@ export enum DocumentRequestStatus {
     DRDistributionList,
     DRUsersComponent,
     DMSRichTextEdit,
+    CabinetStructureList,
   ],
   templateUrl: './draft-request-list.html',
   styleUrl: './draft-request-list.css',
@@ -73,10 +75,10 @@ export class DraftRequestList {
   distributionUserList: any[] = [];
 
   selectedCompany: string = '';
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType: string = '';
   selectedDocumentTypeCode: string = '';
   inputJustificationValue?: string;
@@ -140,7 +142,7 @@ export class DraftRequestList {
       headerName: 'Sub-Department',
     },
     { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentName', headerName: 'Document Title' }, 
+    { field: 'documentName', headerName: 'Document Title' },
     {
       field: 'justification',
       headerName: 'Justification',
@@ -238,7 +240,7 @@ export class DraftRequestList {
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {}, 
+      filterModel: this.currentGridQuery.filterModel || {},
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: searchText || '',
@@ -267,7 +269,8 @@ export class DraftRequestList {
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
-            justification: item.Justification || item.justification || item.Reason || item.reason || '',
+            justification:
+              item.Justification || item.justification || item.Reason || item.reason || '',
             businessdomainId: item.BusinessDomainCode,
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
@@ -282,15 +285,8 @@ export class DraftRequestList {
             proposedVersionNumber: item.RowVersion || item.rowVersion,
             templateType: item.TemplateType || item.templateType,
             templateFileUrl:
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              '',
-            draftFileUrl:
-              item.DraftFileUrl ||
-              item.draftfileurl ||
-              item.draftFileUrl ||
-              '',
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
+            draftFileUrl: item.DraftFileUrl || item.draftfileurl || item.draftFileUrl || '',
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,
@@ -352,7 +348,7 @@ export class DraftRequestList {
     // Maintain frontend format to avoid breaking the UI bindings
     this.distributionListPayload = list;
   }
-  
+
   onSelectionChange(selectedRows: any): void {
     this.requestId = selectedRows[0].id;
     this.submittedby = selectedRows[0].sumbittedby;
@@ -632,7 +628,7 @@ export class DraftRequestList {
     // Reverted back to JSON to resolve 415 Unsupported Media Type
     const payload = {
       CompanyId: this.selectedCompany,
-      RequestId: this.requestId, 
+      RequestId: this.requestId,
       DistributionList: cleanDistributionList,
       UserIds: userids,
     };
@@ -648,12 +644,16 @@ export class DraftRequestList {
             'Document submitted successfully!',
           );
           this.GetAllDraftDocuments();
-          this.selectedDraftRequest=null;
+          this.selectedDraftRequest = null;
         }
       },
       error: (err) => {
         this.loadingSubmit = false;
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
@@ -732,7 +732,11 @@ export class DraftRequestList {
       },
       error: (err) => {
         this.loadingDraft = false;
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
@@ -757,7 +761,6 @@ export class DraftRequestList {
     });
   }
 
-  
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
@@ -775,5 +778,4 @@ export class DraftRequestList {
       nzWidth: 600,
     });
   }
-  
 }

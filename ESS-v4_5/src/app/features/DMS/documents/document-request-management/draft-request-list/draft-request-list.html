@@ -80,6 +80,7 @@
                 ></textarea>
               </div>
             </div>
+
             <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
               <h3 class="PnlHeader">Cabinet</h3>
               <div class="row">
@@ -192,6 +193,27 @@
                   <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
                   </app-cabinet-structure-list>
                 </div> -->
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader" style="margin-top: 0">
+                    {{ 'labels.Cabinet' | safeTranslate }}
+                  </h3>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
+                      <app-cabinet-structure-list
+                        [divisionCode]="selectedDivisions"
+                        [departmentCode]="selectedDepartment"
+                        [subDepartmentCode]="selectedSubDepartment"
+                        [businessDomainCode]="selectedBusinessDomain"
+                        (hierarchyChange)="onHierarchyChange($event)"
+                      >
+                      </app-cabinet-structure-list>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
