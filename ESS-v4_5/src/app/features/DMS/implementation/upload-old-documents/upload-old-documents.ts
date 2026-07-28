@@ -14,11 +14,10 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 })
 export class UploadOldDocuments {
   selectedTab: string = 'Upload';
- 
+
   // Bulk Upload Properties
   excelFile: File | null = null;
   bulkDocuments: File[] = [];
-  isUploading: boolean = false;
   isUploadingMetadata: boolean = false;
   isUploadingDocuments: boolean = false;
 
@@ -28,7 +27,7 @@ export class UploadOldDocuments {
   constructor(
     private documentService: DocumentService,
     private _notificationToastService: NotificationToastService,
-    private modalService: NzModalService
+    private modalService: NzModalService,
   ) {}
 
   downloadTemplate() {
@@ -63,7 +62,7 @@ export class UploadOldDocuments {
       error: (err) => {
         console.error('Error downloading template:', err);
         alert('Failed to download template. Please check with your administrator.');
-      }
+      },
     });
   }
 
@@ -103,99 +102,56 @@ export class UploadOldDocuments {
       return;
     }
 
-    this.isUploading = true;
-
-    if (this.excelFile && this.bulkDocuments.length > 0) {
-      // Both selected: Upload Metadata First, then Files
-      this.documentService.bulkImportDocumentMetadata(this.excelFile).subscribe({
-        next: (metadataResponse: any) => {
-          console.log('Metadata imported successfully:', metadataResponse);
-
-          this.documentService.bulkUploadDocumentFiles(this.bulkDocuments).subscribe({
-            next: (filesResponse) => {
-              this._notificationToastService.createNotification(
-                'success',
-                'Success',
-                'File(s) saved successfully.',
-              );
-
-              this.clearExcelFile();
-              this.clearBulkDocuments();
-              this.isUploading = false;
-            },
-            error: (err) => {
-              console.error('Error uploading document files:', err);
-              this._notificationToastService.createNotification(
-                'error',
-                'Error',
-                'Failed to upload document files. Please try again.'
-              );
-              this.isUploading = false;
-            }
-          });
-        },
-        error: (err) => {
-          console.error('Error importing metadata:', err);
-          if (err?.error?.Data && Array.isArray(err.error.Data) && err.error.Data.length > 0) {
-            this.showSkippedRowsModal(err.error.Data);
-          } else {
-            this._notificationToastService.createNotification(
-              'error',
-              'Error',
-              'Failed to import Excel metadata. Please check the file and try again.'
-            );
-          }
-          this.isUploading = false;
-        }
-      });
-    } else if (this.excelFile) {
+    if (this.excelFile) {
+      this.isUploadingMetadata = true;
       // Only Excel template selected: Upload Metadata Only
       this.documentService.bulkImportDocumentMetadata(this.excelFile).subscribe({
         next: (metadataResponse: any) => {
-          console.log('Metadata imported successfully:', metadataResponse);
+          // console.log('Metadata imported successfully:', metadataResponse);
           this._notificationToastService.createNotification(
             'success',
             'Success',
-            'Excel metadata imported successfully!'
+            'Excel metadata imported successfully!',
           );
           this.clearExcelFile();
-          this.isUploading = false;
+          this.isUploadingMetadata = false;
         },
         error: (err) => {
-          console.error('Error importing metadata:', err);
+          // console.error('Error importing metadata:', err);
           if (err?.error?.Data && Array.isArray(err.error.Data) && err.error.Data.length > 0) {
             this.showSkippedRowsModal(err.error.Data);
           } else {
             this._notificationToastService.createNotification(
               'error',
               'Error',
-              'Failed to import Excel metadata. Please check the file and try again.'
+              'Failed to import Excel metadata. Please check the file and try again.',
             );
           }
-          this.isUploading = false;
-        }
+          this.isUploadingMetadata = false;
+        },
       });
     } else if (this.bulkDocuments.length > 0) {
+      this.isUploadingDocuments = true;
       // Only Documents selected: Upload Files Only
       this.documentService.bulkUploadDocumentFiles(this.bulkDocuments).subscribe({
         next: (filesResponse) => {
           this._notificationToastService.createNotification(
-                'success',
-                'Success',
-                'File(s) saved successfully.',
-              );
+            'success',
+            'Success',
+            'File(s) saved successfully.',
+          );
           this.clearBulkDocuments();
-          this.isUploading = false;
+          this.isUploadingDocuments = false;
         },
         error: (err) => {
           console.error('Error uploading document files:', err);
           this._notificationToastService.createNotification(
             'error',
             'Error',
-            'Failed to upload document files. Please try again.'
+            'Failed to upload document files. Please try again.',
           );
-          this.isUploading = false;
-        }
+          this.isUploadingDocuments = false;
+        },
       });
     }
   }
@@ -222,4 +178,3 @@ export class UploadOldDocuments {
     });
   }
 }
- 
