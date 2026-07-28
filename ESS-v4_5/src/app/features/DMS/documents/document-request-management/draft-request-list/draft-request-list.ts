@@ -263,12 +263,14 @@ export class DraftRequestList {
             stepOrder: item.StepOrder || item.stepOrder,
             startedAt: item.StartedAt || item.startedAt,
             division: item.Division,
+            divisionCode: item.DivisionCode || item.divisionCode,
             documentId: item.DocumentNumber,
             documentName: item.DocumentName,
             proposedContent: item.ProposedContent,
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
+            subDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode,
             justification:
               item.Justification || item.justification || item.Reason || item.reason || '',
             businessdomainId: item.BusinessDomainCode,
@@ -373,9 +375,9 @@ export class DraftRequestList {
     this.draftFileUrl = row.draftFileUrl || '';
     this.selectedDocumentType = row.documentType;
     this.selectedDocumentTypeCode = row.documentTypeCode || '';
-    this.selectedDivisions = row.division;
-    this.selectedDepartment = row.department;
-    this.selectedSubDepartment = row.subdepartment;
+    this.selectedDivisions = row.divisionCode || row.division;
+    this.selectedDepartment = row.departmentId || row.department;
+    this.selectedSubDepartment = row.subDepartmentCode || row.subdepartment;
     this.selectedBusinessDomain = row.businessdomainId;
 
     if (this.selectedDocumentTypeCode) {
