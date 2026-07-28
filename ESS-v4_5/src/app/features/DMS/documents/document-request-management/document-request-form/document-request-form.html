@@ -5,7 +5,7 @@
       <div class="row">
         <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
           <div class="PnlHeading">
-            <label>{{ 'labels.Request Type' | safeTranslate }} </label>
+            <label>{{ 'labels.Request Type' | safeTranslate }} <span class="text-danger">*</span></label>
           </div>
           <div>
             <nz-select
@@ -23,7 +23,7 @@
         </div>
         <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
           <div class="PnlHeading">
-            <label>{{ 'labels.Company' | safeTranslate }} </label>
+            <label>{{ 'labels.Company' | safeTranslate }} <span class="text-danger">*</span></label>
           </div>
           <div class="Divtxtemployeeschright">
             <div>
@@ -102,7 +102,7 @@
             <div class="row mb-4">
               <div class="col-sm-3 col-md-3 col-lg-3 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Document Name' | safeTranslate }} </label>
+                  <label>{{ 'labels.Document Name' | safeTranslate }} <span class="text-danger">*</span></label>
                 </div>
                 <input
                   maxlength="200"
@@ -120,7 +120,7 @@
               </div>
               <div class="col-lg-9 col-md-9 col-sm-6 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Justification' | safeTranslate }} </label>
+                  <label>{{ 'labels.Justification' | safeTranslate }} <span class="text-danger">*</span></label>
                 </div>
                 <textarea rows="3" nz-input [(ngModel)]="inputJustificationValue"></textarea>
               </div>
@@ -129,7 +129,7 @@
             <div class="row" *ngIf="!showDocumentDiv">
               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+                  <label>{{ 'labels.Document Type' | safeTranslate }} <span class="text-danger">*</span></label>
                 </div>
                 <div>
                   <app-document-type-list
@@ -455,7 +455,13 @@
   </div>
 </div>
 
-<div class="row mt-4 btn-stick" *ngIf="selectedDocumentRequestType">
+<div class="row btn-stick" *ngIf="selectedDocumentRequestType">
+  <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center px-4" *ngIf="submitDisabledReason">
+    <div class="alert alert-warning d-flex align-items-center mb-2 py-2 px-3" style="font-size: 13px">
+      <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+      <span>{{ submitDisabledReason }}</span>
+    </div>
+  </div>
   <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3">
     <div
       class="col-sm-1"
@@ -466,7 +472,7 @@
       <button
         type="button"
         tabindex="0"
-        [disabled]="!selectedDocumentType || !selectedTemplateType || isSubmitting"
+        [disabled]="!!submitDisabledReason || isSubmitting"
         class="btn btn-info shadow-sm"
         style="min-width: 120px; height: 35px"
         (click)="DraftDocumentRequests()"
@@ -479,7 +485,7 @@
       <button
         type="button"
         tabindex="0"
-        [disabled]="!selectedDocumentType || !selectedTemplateType || isSubmitting"
+        [disabled]="!!submitDisabledReason || isSubmitting"
         class="btn btn-primary shadow-sm"
         style="min-width: 120px; height: 35px"
         (click)="SubmitDocumentRequests()"

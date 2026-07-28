@@ -334,6 +334,14 @@ export class DocumentRequestForm {
     }
   }
 
+  get submitDisabledReason(): string | null {
+    if (this.isSubmitting) return null;
+    if (!this.selectedDocumentType) return 'Please select a Document Type to continue.';
+    if (!this.selectedTemplateType)
+      return 'No template has been uploaded for this Document Type. Please upload a template before creating a request.';
+    return null;
+  }
+
   onDistributionChanged(list: any[]) {
     this.distributionListPayload = list;
   }
