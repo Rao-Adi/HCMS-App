@@ -76,7 +76,7 @@ export class DocumentRequestForm {
   selectedTemplateType: string = '';
   templateFileUrl: string = '';
   draftFileUrl: string = '';
-  draftFile: File | null = null;
+  uploadedFile: File | null = null;
   displayDocumentType: string = '';
   displayDivision: string = '';
   displayDepartment: string = '';
@@ -315,12 +315,11 @@ export class DocumentRequestForm {
     // this.loading = true;
     this.templateHtml = '';
     this.draftFileUrl = '';
-    this.draftFile = null;
+    this.uploadedFile = null;
     this.templateFileUrl = '';
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
-
     if (value != null && value !== '') {
       this.selectedDocumentType = value;
 
@@ -382,7 +381,7 @@ export class DocumentRequestForm {
 
   GetTemplate(value: string, isRevision: boolean = false) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
-      next: (response: any) => {
+      next: (response: any) => { 
         if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
           this.selectedTemplateType = '';
           this.templateFileUrl = '';
@@ -398,8 +397,7 @@ export class DocumentRequestForm {
           return;
         }
 
-        this.selectedTemplateType =
-          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.selectedTemplateType = response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
         this.templateFileUrl =
           response.Data?.TemplateFileUrl ||
           response.Data?.TemplateFileURL ||
@@ -409,8 +407,7 @@ export class DocumentRequestForm {
         // Handle content based on TemplateType
         if (this.selectedTemplateType === '3') {
           // For HTML templates, set the HTML content.
-          this.templateHtml =
-            response.Data?.TemplateContent || response.Data?.templateContent || '';
+          this.templateHtml = response.Data?.TemplateContent || response.Data?.templateContent || '';
           this.draftFileUrl = ''; // Ensure no file URL is present
         } else if (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') {
           // For DOCX/PDF templates, set the draftFileUrl from the template URL.
@@ -556,9 +553,9 @@ export class DocumentRequestForm {
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
     if (fileList && fileList.length > 0) {
-      this.draftFile = fileList[0];
+      this.uploadedFile = fileList[0];
     } else {
-      this.draftFile = null;
+      this.uploadedFile = null;
     }
   }
 
@@ -694,8 +691,8 @@ export class DocumentRequestForm {
       formData.append(`UserIds[${index}]`, id);
     });
 
-    if (this.draftFile) {
-      formData.append('DraftFile', this.draftFile);
+    if (this.uploadedFile) {
+      formData.append('DraftFile', this.uploadedFile);
     }
 
     this.isSubmitting = true;
@@ -800,7 +797,7 @@ export class DocumentRequestForm {
 
     // if (
     //   (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
-    //   !this.draftFile
+    //   !this.uploadedFile
     // ) {
     //   this._notificationToasService.createNotification(
     //     'warning',
@@ -851,8 +848,8 @@ export class DocumentRequestForm {
       formData.append(`UserIds[${index}]`, id);
     });
 
-    if (this.draftFile) {
-      formData.append('DraftFile', this.draftFile);
+    if (this.uploadedFile) {
+      formData.append('DraftFile', this.uploadedFile);
     }
 
     this.isSubmitting = true;
@@ -900,7 +897,7 @@ export class DocumentRequestForm {
     this.selectedTemplateType = '';
     this.templateFileUrl = '';
     this.draftFileUrl = '';
-    this.draftFile = null;
+    this.uploadedFile = null;
     this.displayDocumentType = '';
     this.displayDivision = '';
     this.displayDepartment = '';
@@ -1178,8 +1175,8 @@ export class DocumentRequestForm {
   }
 
   reviewDraftedFile(): void {
-    if (this.draftFile) {
-      const fileURL = URL.createObjectURL(this.draftFile);
+    if (this.uploadedFile) {
+      const fileURL = URL.createObjectURL(this.uploadedFile);
       window.open(fileURL, '_blank');
       // Revoke the object URL after some time to free up memory
       setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
@@ -1187,8 +1184,8 @@ export class DocumentRequestForm {
   }
 
   getDraftFileName(): string {
-    if (this.draftFile) {
-      return this.draftFile.name;
+    if (this.uploadedFile) {
+      return this.uploadedFile.name;
     }
     if (this.draftFileUrl) {
       try {
@@ -1204,7 +1201,7 @@ export class DocumentRequestForm {
   }
 
   removeDraftedFile(): void {
-    this.draftFile = null;
+    this.uploadedFile = null;
     this.draftFileUrl = '';
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';

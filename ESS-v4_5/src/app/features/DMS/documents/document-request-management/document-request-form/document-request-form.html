@@ -366,12 +366,11 @@
                       (change)="onDraftFileSelected($event)"
                       accept=".pdf,.doc,.docx"
                       style="width: 350px"
-                      [hidden]="draftFile || draftFileUrl"
+                      [hidden]="uploadedFile"
                     />
 
                     <!-- File Info and Actions -->
-                    <div
-                      *ngIf="draftFile || draftFileUrl"
+                    <div *ngIf="uploadedFile"
                       class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm"
                       style="min-width: 380px"
                     >
@@ -386,7 +385,7 @@
                             {{ getDraftFileName() }}
                           </span>
                           <span class="text-muted" style="font-size: 11px">
-                            {{ draftFile ? 'Local Draft' : 'Submitted Document' }}
+                            {{ uploadedFile ? 'Local Draft' : 'Submitted Document' }}
                           </span>
                         </div>
                       </div>
@@ -394,7 +393,7 @@
                         <button
                           type="button"
                           class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
-                          (click)="draftFile ? reviewDraftedFile() : downloadDraft()"
+                          (click)="uploadedFile ? reviewDraftedFile() : downloadDraft()"
                           title="View / Review File"
                           style="width: 32px; height: 32px; padding: 0; border-radius: 6px"
                         >

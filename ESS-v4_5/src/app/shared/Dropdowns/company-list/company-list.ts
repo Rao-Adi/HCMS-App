@@ -22,8 +22,7 @@ export class CompanyList {
   data: SelectList2[] = [];
   @Output() valueChange = new EventEmitter<any>();
 
-  value: any;
-  disabled = true;
+  value: any; 
 
   constructor(private _companyService: CompanyService) {}
 
@@ -47,7 +46,7 @@ export class CompanyList {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled = true;
+    // this.disabled = true;
   }
 
   onSelectionChange(value: any): void {

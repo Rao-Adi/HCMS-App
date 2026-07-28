@@ -3,8 +3,7 @@
   [(ngModel)]="value"
   [nzPlaceHolder]="placeholder"
   [nzAllowClear]="allowClear"
-  [nzShowSearch]="showSearch"
-  [nzDisabled]="true"
+  [nzShowSearch]="showSearch" 
   (ngModelChange)="onSelectionChange($event)"
 >
   <nz-option *ngFor="let item of data" [nzValue]="item.ID" [nzLabel]="item.NAME"></nz-option>
