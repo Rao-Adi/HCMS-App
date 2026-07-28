@@ -3,7 +3,7 @@
     <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="card-custom">
         <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0"> 
+          <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
               <button
                 *ngFor="let tab of tabs; trackBy: trackByTabId"
@@ -33,18 +33,41 @@
                       maxlength="50"
                       type="text"
                       [(ngModel)]="selectedTabTitle"
+                      [disabled]="!isTitleEditing"
                       class="form-control input-sm"
                       style="width: 200px"
                     />
+                    <!-- Edit Button -->
                     <button
-                      aria-label="Save tabs name"
+                      *ngIf="!isTitleEditing"
+                      aria-label="Edit tab name"
                       class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       [disabled]="!(this.canAdd || this.canEdit)"
-                      title="Approve"
-                      (click)="saveTabTitle()"
-                      [disabled]="!this.canAdd"
+                      title="Edit"
+                      (click)="toggleTitleEdit(true)"
                     >
                       <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <!-- Update and Discard Buttons -->
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Update tab name"
+                      Changes
+                      not
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-success"
+                      title="Update"
+                      (click)="saveTabTitle()"
+                    >
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Discard changes"
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-danger"
+                      title="Discard"
+                      (click)="discardTitleChanges()"
+                    >
+                      <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
                 </div>
@@ -59,7 +82,7 @@
                   </div>
                 </div>
                 <div class="col-lg-3 col-md-3 col-sm-3" style="opacity: 0.65; font-size: 0.85em">
-                  <label class="text-muted fw-normal mb-0  audit-cell">{{
+                  <label class="text-muted fw-normal mb-0 audit-cell">{{
                     'labels.Last Saved By' | safeTranslate
                   }}</label>
                   <span class="text-muted d-block audit-cell">{{
@@ -93,6 +116,7 @@
                       appDecimalInput
                       name="level1Title"
                       [(ngModel)]="selectedTabTitle"
+                      [disabled]="!isTitleEditing"
                       type="text"
                       style="width: 200px !important"
                       [ngClass]="{
@@ -100,15 +124,37 @@
                         'input-sm': true,
                       }"
                     />
+                     <!-- Edit Button -->
                     <button
-                      aria-label="Save tabs name"
+                      *ngIf="!isTitleEditing"
+                      aria-label="Edit tab name"
                       class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       [disabled]="!(this.canAdd || this.canEdit)"
-                      title="Approve"
-                      (click)="saveTabTitle()"
-                      [disabled]="!this.canAdd"
+                      title="Edit"
+                      (click)="toggleTitleEdit(true)"
                     >
                       <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <!-- Update and Discard Buttons -->
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Update tab name"
+                      Changes
+                      not
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-success"
+                      title="Update"
+                      (click)="saveTabTitle()"
+                    >
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Discard changes"
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-danger"
+                      title="Discard"
+                      (click)="discardTitleChanges()"
+                    >
+                      <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
                 </div>
@@ -121,7 +167,7 @@
                     </nz-switch>
                     <span>{{ cabinetConfigStructure.isActive ? 'Enabled' : 'Disabled' }}</span>
                   </div>
-                </div> 
+                </div>
                 <div class="col-lg-3 col-md-3 col-sm-3" style="opacity: 0.65; font-size: 0.85em">
                   <label class="text-muted fw-normal mb-0 audit-cell">{{
                     'labels.Last Saved By' | safeTranslate
@@ -159,6 +205,7 @@
                       appDecimalInput
                       name="level1Title"
                       [(ngModel)]="selectedTabTitle"
+                      [disabled]="!isTitleEditing"
                       type="text"
                       style="width: 200px !important"
                       [ngClass]="{
@@ -166,15 +213,37 @@
                         'input-sm': true,
                       }"
                     />
+                     <!-- Edit Button -->
                     <button
-                      aria-label="Save tabs name"
+                      *ngIf="!isTitleEditing"
+                      aria-label="Edit tab name"
                       class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       [disabled]="!(this.canAdd || this.canEdit)"
-                      title="Approve"
-                      (click)="saveTabTitle()"
-                      [disabled]="!this.canAdd"
+                      title="Edit"
+                      (click)="toggleTitleEdit(true)"
                     >
                       <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <!-- Update and Discard Buttons -->
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Update tab name"
+                      Changes
+                      not
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-success"
+                      title="Update"
+                      (click)="saveTabTitle()"
+                    >
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Discard changes"
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-danger"
+                      title="Discard"
+                      (click)="discardTitleChanges()"
+                    >
+                      <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
                 </div>
@@ -187,7 +256,7 @@
                     </nz-switch>
                     <span>{{ cabinetConfigStructure.isActive ? 'Enabled' : 'Disabled' }}</span>
                   </div>
-                </div> 
+                </div>
                 <div class="col-lg-3 col-md-3 col-sm-3" style="opacity: 0.65; font-size: 0.85em">
                   <label class="text-muted fw-normal mb-0 audit-cell">{{
                     'labels.Last Saved By' | safeTranslate
@@ -223,6 +292,7 @@
                       appDecimalInput
                       name="level1Title"
                       [(ngModel)]="selectedTabTitle"
+                      [disabled]="!isTitleEditing"
                       type="text"
                       style="width: 200px !important"
                       [ngClass]="{
@@ -230,15 +300,37 @@
                         'input-sm': true,
                       }"
                     />
+                     <!-- Edit Button -->
                     <button
-                      aria-label="Save tabs name"
+                      *ngIf="!isTitleEditing"
+                      aria-label="Edit tab name"
                       class="grid-icon-btn sidebar-toggle-button sidebar-toggle-right d-inline-flex align-items-center justify-content-center ng-star-inserted"
                       [disabled]="!(this.canAdd || this.canEdit)"
-                      title="Approve"
-                      (click)="saveTabTitle()"
-                      [disabled]="!this.canAdd"
+                      title="Edit"
+                      (click)="toggleTitleEdit(true)"
                     >
                       <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <!-- Update and Discard Buttons -->
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Update tab name"
+                      Changes
+                      not
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-success"
+                      title="Update"
+                      (click)="saveTabTitle()"
+                    >
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button
+                      *ngIf="isTitleEditing"
+                      aria-label="Discard changes"
+                      class="grid-icon-btn d-inline-flex align-items-center justify-content-center text-danger"
+                      title="Discard"
+                      (click)="discardTitleChanges()"
+                    >
+                      <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
                 </div>
@@ -251,7 +343,7 @@
                     </nz-switch>
                     <span>{{ cabinetConfigStructure.isActive ? 'Enabled' : 'Disabled' }}</span>
                   </div>
-                </div> 
+                </div>
                 <div class="col-lg-3 col-md-3 col-sm-3" style="opacity: 0.65; font-size: 0.85em">
                   <label class="text-muted fw-normal mb-0 audit-cell">{{
                     'labels.Last Saved By' | safeTranslate

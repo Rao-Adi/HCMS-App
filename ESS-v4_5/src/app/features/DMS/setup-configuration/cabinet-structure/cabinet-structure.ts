@@ -13,6 +13,7 @@ import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.
 import { CabinetStructureTabsConfigService } from '@app/shared/services/CabinetStructureTabsConfig.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 
 @Component({
   selector: 'app-cabinet-structure',
@@ -48,6 +49,8 @@ export class CabinetStructure {
   selectedTab: string = 'Level 1';
   activeTab!: number | 'DOCUMENT_TYPE';
   //tabs: CabinetStructureTabsConfig[] = [];
+  isTitleEditing = false;
+  originalSelectedTabTitle = '';
   selectedTabId!: number;
   selectedTabTitle = ''; // for textbox editing
   // CabinetStructureComponent
@@ -59,6 +62,7 @@ export class CabinetStructure {
     private _cabietTabConfigService: CabinetStructureTabsConfigService,
     private readonly cabinetHierarchy: CabinetHierarchyService,
     private _permissionService: PermissionService,
+    private _notificationToastService: NotificationToastService,
   ) {}
 
   ngOnInit() {
@@ -167,10 +171,12 @@ export class CabinetStructure {
   selectedTabLevel!: number;
   cabinetConfigStructure!: CabinetTabVM;
 
-  onTabChange(tab: CabinetTabVM): void { 
+  onTabChange(tab: CabinetTabVM): void {
     this.activeTab = tab.level;
     this.cabinetConfigStructure = tab;
     this.selectedTabLevel = tab.level;
+    this.selectedTabTitle = tab.title;
+    this.originalSelectedTabTitle = tab.title; // Store original for discard
     this.selectedTabTitle = tab.title;
   }
 
@@ -184,7 +190,20 @@ export class CabinetStructure {
     const date = new Date(dateVal);
     if (isNaN(date.getTime())) return String(dateVal);
 
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const month = months[date.getMonth()];
     const day = String(date.getDate()).padStart(2, '0');
     const year = date.getFullYear();
@@ -205,6 +224,7 @@ export class CabinetStructure {
     this._cabietTabConfigService.update(payload).subscribe({
       next: (updated: any) => {
         const updatedData = updated.Data;
+
         this.tabs = this.tabs.map((tab) =>
           tab.level === updatedData.Id
             ? {
@@ -221,7 +241,14 @@ export class CabinetStructure {
           this.cabinetConfigStructure.lastModifiedBy = updatedData.LastModifiedBy;
           this.cabinetConfigStructure.lastModifiedAt = this.formatDate(updatedData.LastModifiedAt);
         }
-      }
+        this.isTitleEditing = false; // Exit editing mode after saving
+
+        this._notificationToastService.createNotification(
+          'success',
+          'Success',
+          'Level updated successfully.',
+        );
+      },
     });
   }
 
@@ -233,7 +260,7 @@ export class CabinetStructure {
     };
     this._cabietTabConfigService.update(payload).subscribe({
       next: () => {
-        const updatedTab = this.tabs.find(t => t.level === tab.level);
+        const updatedTab = this.tabs.find((t) => t.level === tab.level);
         if (updatedTab) {
           updatedTab.isActive = isActive;
         }
@@ -245,7 +272,7 @@ export class CabinetStructure {
       error: (err) => {
         console.error('Failed to update toggle state', err);
         // Optionally revert the toggle state on error
-        const updatedTab = this.tabs.find(t => t.level === tab.level);
+        const updatedTab = this.tabs.find((t) => t.level === tab.level);
         if (updatedTab) {
           updatedTab.isActive = !isActive;
           if (this.cabinetConfigStructure && this.cabinetConfigStructure.level === tab.level) {
@@ -253,11 +280,23 @@ export class CabinetStructure {
           }
         }
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
   trackByTabId(index: number, tab: any) {
     return tab.Id;
+  }
+
+  toggleTitleEdit(isEditing: boolean): void {
+    this.isTitleEditing = isEditing;
+    if (isEditing) {
+      this.originalSelectedTabTitle = this.selectedTabTitle; // Save current title for potential discard
+    }
+  }
+
+  discardTitleChanges(): void {
+    this.selectedTabTitle = this.originalSelectedTabTitle; // Revert to original title
+    this.isTitleEditing = false;
   }
 }
