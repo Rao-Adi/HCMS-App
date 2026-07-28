@@ -5,7 +5,9 @@
       <div class="row">
         <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
           <div class="PnlHeading">
-            <label>{{ 'labels.Request Type' | safeTranslate }} <span class="text-danger">*</span></label>
+            <label
+              >{{ 'labels.Request Type' | safeTranslate }} <span class="text-danger">*</span></label
+            >
           </div>
           <div>
             <nz-select
@@ -102,7 +104,10 @@
             <div class="row mb-4">
               <div class="col-sm-3 col-md-3 col-lg-3 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Document Name' | safeTranslate }} <span class="text-danger">*</span></label>
+                  <label
+                    >{{ 'labels.Document Name' | safeTranslate }}
+                    <span class="text-danger">*</span></label
+                  >
                 </div>
                 <input
                   maxlength="200"
@@ -120,7 +125,10 @@
               </div>
               <div class="col-lg-9 col-md-9 col-sm-6 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Justification' | safeTranslate }} <span class="text-danger">*</span></label>
+                  <label
+                    >{{ 'labels.Justification' | safeTranslate }}
+                    <span class="text-danger">*</span></label
+                  >
                 </div>
                 <textarea rows="3" nz-input [(ngModel)]="inputJustificationValue"></textarea>
               </div>
@@ -129,7 +137,10 @@
             <div class="row" *ngIf="!showDocumentDiv">
               <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Document Type' | safeTranslate }} <span class="text-danger">*</span></label>
+                  <label
+                    >{{ 'labels.Document Type 1' | safeTranslate }}
+                    <span class="text-danger">*</span></label
+                  >
                 </div>
                 <div>
                   <app-document-type-list
@@ -157,7 +168,7 @@
             </div>
 
             <div class="row" *ngIf="showDocumentDiv">
-              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+              <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
                 <div class="PnlHeading">
                   <label>{{ 'labels.Document Type' | safeTranslate }} </label>
                 </div>
@@ -177,7 +188,18 @@
                   />
                 </div>
               </div>
-              <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
+              <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+                <app-cabinet-structure-list
+                  [divisionCode]="selectedDivisions"
+                  [departmentCode]="selectedDepartment"
+                  [subDepartmentCode]="selectedSubDepartment"
+                  [businessDomainCode]="selectedBusinessDomain"
+                  [disabled]="showDocumentDiv"
+                  (hierarchyChange)="onHierarchyChange($event)"
+                >
+                </app-cabinet-structure-list>
+              </div>
+              <!-- <div class="col-lg-2 col-md-2 col-sm-6 mb-10">
                 <div class="PnlHeading">
                   <label>{{ 'labels.Division' | safeTranslate }} </label>
                 </div>
@@ -256,7 +278,7 @@
                     }"
                   />
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -279,7 +301,7 @@
             <h3 class="PnlHeader" style="margin-top: 0">Distribution List</h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <app-drdistribution-list
+                <app-drdistribution-list 
                   [DocumentTypeCode]="selectedDocumentType"
                   [selectedDistributionList]="distributionListPayload"
                   (distributionChanged)="onDistributionChanged($event)"
@@ -292,7 +314,8 @@
           <!-- Document Content Section -->
           <div
             class="status-box-leftColmd6-standard mb-4"
-            *ngIf="draftFileUrl || (templateHtml && templateHtml.trim() !== '')">
+            *ngIf="draftFileUrl || (templateHtml && templateHtml.trim() !== '')"
+          >
             <h3 class="PnlHeader" style="margin-top: 0">Document Content (Optional)</h3>
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
@@ -370,7 +393,8 @@
                     />
 
                     <!-- File Info and Actions -->
-                    <div *ngIf="uploadedFile"
+                    <div
+                      *ngIf="uploadedFile"
                       class="d-flex align-items-center gap-3 p-2 border rounded-2 bg-light shadow-sm"
                       style="min-width: 380px"
                     >
@@ -456,8 +480,14 @@
 </div>
 
 <div class="row btn-stick" *ngIf="selectedDocumentRequestType">
-  <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center px-4" *ngIf="submitDisabledReason">
-    <div class="alert alert-warning d-flex align-items-center mb-2 py-2 px-3" style="font-size: 13px">
+  <div
+    class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center px-4"
+    *ngIf="submitDisabledReason"
+  >
+    <div
+      class="alert alert-warning d-flex align-items-center mb-2 py-2 px-3"
+      style="font-size: 13px"
+    >
       <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
       <span>{{ submitDisabledReason }}</span>
     </div>
