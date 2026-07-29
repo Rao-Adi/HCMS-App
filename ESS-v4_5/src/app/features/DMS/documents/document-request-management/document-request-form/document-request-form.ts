@@ -334,6 +334,14 @@ export class DocumentRequestForm {
     }
   }
 
+  get isRevisionRequestType(): boolean {
+    return this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002';
+  }
+
+  get draftButtonLabel(): string {
+    return this.isRevisionRequestType ? 'Submit Revision' : 'Draft';
+  }
+
   get submitDisabledReason(): string | null {
     if (this.isSubmitting) return null;
     if (!this.selectedDocumentType) return 'Please select a Document Type to continue.';
@@ -885,6 +893,61 @@ export class DocumentRequestForm {
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to submit document.',
+        );
+      },
+    });
+  }
+
+
+   SubmiteRevisionDocumentRequests() {
+    const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
+      divisionCode: x.level1Id || x.divisionCode,
+      departmentCode: x.level2Id || x.departmentCode,
+      subDepartmentCode: x.level3Id || x.subDepartmentCode,
+      businessDomainCode: x.level4Id || x.businessDomainCode,
+      roleId: x.roleId,
+      distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+    }));
+
+    const userids = this.distributionUserList
+      .map(
+        (u: any) =>
+          u.employeeCode ||
+          u.EmployeeCode ||
+          u.empcode ||
+          u.empid ||
+          u.userId ||
+          u.UserId ||
+          u.id ||
+          u.Id,
+      )
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    // Reverted back to JSON to resolve 415 Unsupported Media Type
+    const payload = {
+      CompanyId: this.selectedCompany,
+      RequestId: this.requestId,
+      DistributionList: cleanDistributionList,
+      UserIds: userids,
+      DocumentRequestType : 'Revision'
+    };
+ 
+    this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
+      next: (response) => { 
+        if (response?.Success) {
+          this._notificationToasService.createNotification(
+            'success',
+            'Document Request (Draft)',
+            'Document submitted successfully!',
+          ); 
+        }
+      },
+      error: (err) => { 
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
         );
       },
     });

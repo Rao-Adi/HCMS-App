@@ -350,8 +350,13 @@ export class CreateUpdateDocument {
         }
       }
 
-      if (this.trainingRequired && !this.selectedTrainingMode) {
-        return true;
+      if (this.trainingRequired) {
+        if (!this.selectedTrainingMode) {
+          return true;
+        }
+        if (!this.trainingUsersData || this.trainingUsersData.length === 0) {
+          return true;
+        }
       }
     }
     return false;
@@ -601,8 +606,7 @@ export class CreateUpdateDocument {
           .map((d: any) => ({
             id: d.id,
             text: d.requestnumber,
-          }))
-          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
+          }));
       } else {
         this.requestIds = [];
       }

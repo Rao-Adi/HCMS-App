@@ -633,6 +633,7 @@ export class DraftRequestList {
       RequestId: this.requestId,
       DistributionList: cleanDistributionList,
       UserIds: userids,
+      DocumentRequestType : 'Request'
     };
 
     this.loadingSubmit = true;
