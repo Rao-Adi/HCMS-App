@@ -387,7 +387,7 @@
                       type="file"
                       class="form-control input-md"
                       (change)="onDraftFileSelected($event)"
-                      accept=".pdf,.doc,.docx"
+                      [attr.accept]="expectedTemplateExtension ? '.' + expectedTemplateExtension : '.pdf,.doc,.docx'"
                       style="width: 350px"
                       [hidden]="uploadedFile"
                     />

@@ -332,6 +332,21 @@ export class DraftRequestList {
     });
   };
 
+  // The actual file extension a drafted upload must match. Derived straight from the
+  // template/existing-document URL rather than the TemplateType code, since TemplateType
+  // is an unreliable classification (e.g. TemplateType 1 has been seen pointing at a .docx).
+  get expectedTemplateExtension(): string {
+    const url = this.templateFileUrl || this.draftFileUrl || '';
+    if (!url) return '';
+    try {
+      const clean = decodeURIComponent(url).split('?')[0].split('#')[0];
+      const parts = clean.split('.');
+      return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
+    } catch {
+      return '';
+    }
+  }
+
   onHierarchyChange(values: CabinetSelection[]) {
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
@@ -534,11 +549,27 @@ export class DraftRequestList {
 
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
-    if (fileList && fileList.length > 0) {
-      this.draftFile = fileList[0];
-    } else {
+    if (!fileList || fileList.length === 0) {
       this.draftFile = null;
+      return;
     }
+
+    const file = fileList[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const expectedExt = this.expectedTemplateExtension;
+
+    if (expectedExt && ext !== expectedExt) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Invalid File',
+        `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
+      );
+      event.target.value = '';
+      this.draftFile = null;
+      return;
+    }
+
+    this.draftFile = file;
   }
 
   getFileIconClass(filename: string | null | undefined): string {

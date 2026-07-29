@@ -350,6 +350,21 @@ export class DocumentRequestForm {
     return null;
   }
 
+  // The actual file extension a drafted upload must match. Derived straight from the
+  // template/existing-document URL rather than the TemplateType code, since TemplateType
+  // is an unreliable classification (e.g. TemplateType 1 has been seen pointing at a .docx).
+  get expectedTemplateExtension(): string {
+    const url = this.templateFileUrl || this.draftFileUrl || '';
+    if (!url) return '';
+    try {
+      const clean = decodeURIComponent(url).split('?')[0].split('#')[0];
+      const parts = clean.split('.');
+      return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
+    } catch {
+      return '';
+    }
+  }
+
   onDistributionChanged(list: any[]) {
     this.distributionListPayload = list;
   }
@@ -568,11 +583,27 @@ export class DocumentRequestForm {
 
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
-    if (fileList && fileList.length > 0) {
-      this.uploadedFile = fileList[0];
-    } else {
+    if (!fileList || fileList.length === 0) {
       this.uploadedFile = null;
+      return;
     }
+
+    const file = fileList[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const expectedExt = this.expectedTemplateExtension;
+
+    if (expectedExt && ext !== expectedExt) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Invalid File',
+        `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
+      );
+      event.target.value = '';
+      this.uploadedFile = null;
+      return;
+    }
+
+    this.uploadedFile = file;
   }
 
   DraftDocumentRequests() {
@@ -1272,8 +1303,10 @@ export class DocumentRequestForm {
   }
 
   removeDraftedFile(): void {
+    // Only clear the user's locally-picked replacement file — draftFileUrl holds the
+    // standard template / existing document reference, not the upload, and the
+    // "Document Content" section's visibility depends on it staying set.
     this.uploadedFile = null;
-    this.draftFileUrl = '';
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }

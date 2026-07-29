@@ -362,6 +362,21 @@ export class CreateUpdateDocument {
     return false;
   }
 
+  // The actual file extension a drafted upload must match. Derived straight from the
+  // template/existing-document URL rather than the TemplateType code, since TemplateType
+  // is an unreliable classification (e.g. TemplateType 1 has been seen pointing at a .docx).
+  get expectedTemplateExtension(): string {
+    const url = this.templateFileUrl || this.draftFileUrl || '';
+    if (!url) return '';
+    try {
+      const clean = decodeURIComponent(url).split('?')[0].split('#')[0];
+      const parts = clean.split('.');
+      return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
+    } catch {
+      return '';
+    }
+  }
+
   onRequestTypeChange(code: string): void {
     // this.selectedRequestType = value;
     this.selectedRequestType = code;
@@ -843,11 +858,27 @@ export class CreateUpdateDocument {
 
   onDraftFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.draftFile = input.files[0];
-    } else {
+    if (!input.files || input.files.length === 0) {
       this.draftFile = null;
+      return;
     }
+
+    const file = input.files[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const expectedExt = this.expectedTemplateExtension;
+
+    if (expectedExt && ext !== expectedExt) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Invalid File',
+        `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
+      );
+      input.value = '';
+      this.draftFile = null;
+      return;
+    }
+
+    this.draftFile = file;
   }
 
   reviewDraftedFile(): void {
