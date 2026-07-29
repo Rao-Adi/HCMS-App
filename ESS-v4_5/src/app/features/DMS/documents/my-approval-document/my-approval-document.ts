@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -30,6 +31,7 @@ import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynami
 import { PermissionService } from '@app/shared/services/permission.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -52,8 +54,9 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
 })
-export class MyApprovalDocument {
+export class MyApprovalDocument implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  private subscriptions: Subscription[] = [];
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -237,11 +240,22 @@ export class MyApprovalDocument {
     private _permissionService: PermissionService,
     private _documentRequestService: DocumentRequestService,
     private _employeeDraftObservationService: EmployeeDraftObservationService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
     this.hasSelectedRows = false;
     this.GetLoginEmpId();
+
+    // Tab badges reflect the same shared count state the sidebar menu uses (see
+    // NavigationCountsService), so this page and the menu never disagree.
+    this.subscriptions.push(
+      this._navigationCountsService.myDocumentApprovalCounts$.subscribe((counts) => {
+        this.pendingDocumentCount = counts.pending;
+        this.approvedDocumentCount = counts.approved;
+        this.disapprovedDocumentCount = counts.rejectedOrReverted;
+      }),
+    );
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
@@ -250,6 +264,10 @@ export class MyApprovalDocument {
       // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
       this.getDocumentCounts();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   private getCountPayload(status: string): any {
@@ -273,27 +291,10 @@ export class MyApprovalDocument {
   }
 
   getDocumentCounts() {
-    this._documentService.GetMyDocumentCounts().subscribe({
-      next: (response) => {
-        if (response && response.Data) {
-          const myRequests = response.Data.MyRequests || {
-            Pending: 0,
-            Approved: 0,
-            RejectedOrReverted: 0,
-          };
-          const myInbox = response.Data.MyInbox || {
-            Pending: 0,
-            Approved: 0,
-            RejectedOrReverted: 0,
-          };
-
-          this.pendingDocumentCount = myInbox.pending ?? 0; //(myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
-          this.approvedDocumentCount = myInbox.approved ?? 0; //(myRequests.Approved ?? 0) + (myInbox.Approved ?? 0);
-          this.disapprovedDocumentCount = myInbox.rejectedorreverted ?? 0; //(myRequests.RejectedOrReverted ?? 0) + (myInbox.RejectedOrReverted ?? 0);
-        }
-      },
-      error: (err) => console.error('Failed to get request counts', err),
-    });
+    // Fetches through the shared service; the ngOnInit subscription to
+    // myDocumentApprovalCounts$ applies the result to this page's tab badges, and
+    // main-layout's own subscription applies the same result to the sidebar badge.
+    this._navigationCountsService.refreshMyDocumentApprovalCounts();
   }
 
   GetLoginEmpId() {
@@ -611,6 +612,9 @@ export class MyApprovalDocument {
               response.Message,
             );
             this.GetAllPendingDocuments();
+            // Previously this action never refreshed the tab/sidebar badges at all —
+            // they'd only catch up on next navigation. Refresh immediately now.
+            this.getDocumentCounts();
             if (this.agGridWrapper) {
               this.agGridWrapper.refresh();
             }

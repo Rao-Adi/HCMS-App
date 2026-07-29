@@ -29,7 +29,7 @@ import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
-import { DocumentService } from '@app/shared/services/document.service';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 interface HeaderDetailsResponse {
   formName: string;
@@ -136,7 +136,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private notificationSignalrService: NotificationSignalrService,
     private notificationHttpService: NotificationService,
     private _documentRequestService: DocumentRequestService,
-    private _documentService: DocumentService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit(): void {
@@ -197,6 +197,31 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this._documentRequestService.refreshCounts$.subscribe(() => {
         this.updateNavigationCounts();
+      }),
+    );
+
+    // Subscribe once to the shared count state. Whoever triggers a refresh — this
+    // component on navigation, or my-approval-request.ts / my-approval-document.ts
+    // after an approve/reject/revert action — every subscriber (including this menu)
+    // picks up the same result, so the sidebar badge can never drift from the page.
+    this.subscriptions.push(
+      this._navigationCountsService.documentCreationRequestCount$.subscribe((count) => {
+        this.applyCountToMenu('request-for-document-creation-update', count);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.myDocumentApprovalCounts$.subscribe((counts) => {
+        this.applyCountToMenu('my-approvals-documents', counts.pending);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.myRequestApprovalCounts$.subscribe((counts) => {
+        this.applyCountToMenu('my-approvals-request', counts.pending);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.trainingAuthorizationCount$.subscribe((count) => {
+        this.applyCountToMenu('trainingauthorization', count);
       }),
     );
 
@@ -354,60 +379,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   updateNavigationCounts(): void {
     if (!this._menuItems || this._menuItems.length === 0) return;
 
-    // Fetch Count 1: My Approvals - Request for Document Creation
-    this._documentRequestService.getMyDocumentRequestForApprovalCount().subscribe({
-      next: (response) => {
-        if (response && response.Data) {
-          const count = (response.Data.count || response.Data.Count) ?? 0;
-          this.applyCountToMenu('request-for-document-creation-update', count);
-        }
-      },
-      error: (err) => console.error('Failed to get request approval count', err),
-    });
-
-    // Fetch Count 2: My Approvals - Documents
-    this._documentService.GetMyDocumentCounts().subscribe({
-      next: (response) => {
-        if (response && response.Data && response.Data.MyInbox) {
-          const count = (response.Data.MyInbox.pending || response.Data.MyInbox.Pending) ?? 0;
-          this.applyCountToMenu('my-approvals-documents', count);
-        }
-      },
-      error: (err) => console.error('Failed to get document counts', err),
-    });
-
-    // Fetch Count 3: My Approvals - Request
-    this._documentRequestService.GetMyRequestCounts().subscribe({
-      next: (response) => {
-        if (response && response.Data && response.Data.MyInbox) {
-          const count = (response.Data.MyInbox.pending || response.Data.MyInbox.Pending) ?? 0;
-          this.applyCountToMenu('my-approvals-request', count);
-        }
-      },
-      error: (err) => console.error('Failed to get document counts', err),
-    });
-
-    const payload = {
-      divisionCode: null,
-      departmentCode: null,
-      subDepartmentCode: null,
-      businessDomainCode: null,
-      documentTypeCode: null,
-      documentcategoryfilter: 1,
-      searchText: '',
-      isActive: true,
-    };
-
-    // Fetch Count 4: trainingauthorization
-    this._documentService.GetPendingAuthorizationCount(payload).subscribe({
-      next: (response) => {
-        if (response && response.Data) {
-          const count = (response.Data.PendingCount || response.Data.pendingCount) ?? 0;
-          this.applyCountToMenu('trainingauthorization', count);
-        }
-      },
-      error: (err) => console.error('Failed to get training authorization counts', err),
-    });
+    // Counts are fetched through NavigationCountsService and applied to the menu via the
+    // subscriptions set up in ngOnInit, so every subscriber (this menu, and any page that
+    // also subscribes) reacts to the same fetch instead of racing independent copies.
+    this._navigationCountsService.refreshAll();
   }
 
   private applyCountToMenu(navigateUrl: string, count: number): void {

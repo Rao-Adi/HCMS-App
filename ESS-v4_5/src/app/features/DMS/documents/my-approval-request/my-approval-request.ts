@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, OnInit } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -22,6 +23,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 
 @Component({
@@ -44,8 +46,9 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
   templateUrl: './my-approval-request.html',
   styleUrl: './my-approval-request.css',
 })
-export class MyApprovalRequest {
+export class MyApprovalRequest implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  private subscriptions: Subscription[] = [];
 
   selectedTab: string = 'Pending';
 
@@ -324,9 +327,10 @@ export class MyApprovalRequest {
     private _documentRequestService: DocumentRequestService,
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
-    private _permissionService: PermissionService,    
+    private _permissionService: PermissionService,
     private route: ActivatedRoute,
     private _employeeDraftObservationService: EmployeeDraftObservationService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -346,6 +350,16 @@ export class MyApprovalRequest {
       }
     });
 
+    // Tab badges reflect the same shared count state the sidebar menu uses (see
+    // NavigationCountsService), so this page and the menu never disagree.
+    this.subscriptions.push(
+      this._navigationCountsService.myRequestApprovalCounts$.subscribe((counts) => {
+        this.pendingRequestCount = counts.pending;
+        this.approvedRequestCount = counts.approved;
+        this.disapprovedRequestCount = counts.rejectedOrReverted;
+      }),
+    );
+
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
@@ -353,6 +367,10 @@ export class MyApprovalRequest {
       // Removed this.GetAllPendingDocuments(); to prevent double API call. AgGridWrapper triggers it automatically on init.
       this.getRequestCounts();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   GetLoginEmpId() {
@@ -407,27 +425,10 @@ export class MyApprovalRequest {
   }
 
   getRequestCounts() {
-    this._documentRequestService.GetMyRequestCounts().subscribe({
-      next: (response) => {
-        if (response && response.Data) {
-          const myRequests = response.Data.MyRequests || {
-            Pending: 0,
-            Approved: 0,
-            RejectedOrReverted: 0,
-          };
-          const myInbox = response.Data.MyInbox || {
-            Pending: 0,
-            Approved: 0,
-            RejectedOrReverted: 0,
-          };
-
-          this.pendingRequestCount = myInbox.Pending ?? 0; //(myRequests.Pending ?? 0) + (myInbox.Pending ?? 0);
-          this.approvedRequestCount = myInbox.Approved ?? 0; //(myRequests.Approved ?? 0) + (myInbox.Approved ?? 0);
-          this.disapprovedRequestCount = myInbox.RejectedOrReverted ?? 0; //(myRequests.RejectedOrReverted ?? 0) + (myInbox.RejectedOrReverted ?? 0);
-        }
-      },
-      error: (err) => console.error('Failed to get request counts', err),
-    });
+    // Fetches through the shared service; the ngOnInit subscription to
+    // myRequestApprovalCounts$ applies the result to this page's tab badges, and
+    // main-layout's own subscription applies the same result to the sidebar badge.
+    this._navigationCountsService.refreshMyRequestApprovalCounts();
   }
 
   GetAllPendingDocuments(query?: any) {
