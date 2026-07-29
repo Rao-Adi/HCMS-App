@@ -113,13 +113,29 @@ export class DocumentAuthorizationPostTraining {
   public noRowsOverlay: string = '';
 
   pendingAuthorizationColumnDefs: ColDef[] = [
-    { field: 'documentType', headerName: 'Document Type', pinned: 'left', minWidth: 100, flex: 1 },
+    { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
     { field: 'documentName', headerName: 'Document Name', pinned: 'left', flex: 1 },
     { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60, flex: 1 },
     { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },
+    // {
+    //   field: 'userAssigned',
+    //   headerName: 'User Assigned',
+    //   cellRendererSelector: (params: any) => ({
+    //     component: LinkRenderer,
+    //     params: {
+    //       label: params.value ?? 'View',
+    //       onClick: () => {
+    //         this.openTrainingProofModal(params.data);
+    //       },
+    //     },
+    //   }),
+    //   minWidth: 150,
+    //   flex: 1,
+    // },
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
+      editable: false,
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
@@ -129,9 +145,11 @@ export class DocumentAuthorizationPostTraining {
           },
         },
       }),
-      minWidth: 150,
+      minWidth: 180,
       flex: 1,
     },
+
+
     {
       field: 'averageDocumentScore',
       headerName: 'Average Document Score',
@@ -172,19 +190,24 @@ export class DocumentAuthorizationPostTraining {
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
     },
-
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
-      cellRendererSelector: (params: any) => ({
-        component: LinkRenderer,
-        params: {
-          label: 'Approval History',
-          onClick: () => {
-            this.openApprovalHistoryModal(params.data);
-          },
-        },
-      }),
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+        <span 
+          style="color:#1976d2; cursor:pointer; text-decoration:underline"
+          data-action="open"
+        >
+          Approval History
+        </span>
+      `;
+      },
+      onCellClicked: (event: any) => {
+        this.openApprovalHistoryModal(event.data);
+      },
     },
     {
       field: 'revisionHistory',
@@ -199,17 +222,6 @@ export class DocumentAuthorizationPostTraining {
         },
       }),
     },
-  ];
-
-  UploadedDocColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version Number' },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
 
   constructor(
@@ -327,7 +339,7 @@ export class DocumentAuthorizationPostTraining {
             this.pendingAuthorizationData = items.map((item: any) => ({
               ...item,
               Id: item.id || item.Id,
-              trainingMode: 'Class Room', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+              trainingMode: item.trainingmode == 1 ? 'Class Room': 'Online', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
               averageDocumentScore: item.averagescore || item.averagescore || 0,
               userAssigned: item.totalassigned || item.totalassigned,
               companyId: item.companyId || item.CompanyId,
