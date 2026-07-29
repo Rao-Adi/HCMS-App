@@ -21,14 +21,14 @@ export class LinkRenderer implements ICellRendererAngularComp {
 
   agInit(params: any): void {
     this.params = params;
-    this.label = params.label ?? 'View Cabinet';
+    this.label = String(params.label ?? 'View Cabinet');
     this.onClick = params.onClick;
     this.highlightedLabel = this.getHighlightedValue();
   }
 
   refresh(params: any): boolean {
     this.params = params;
-    this.label = params.label ?? 'View Cabinet';
+    this.label = String(params.label ?? 'View Cabinet');
     this.highlightedLabel = this.getHighlightedValue();
     this.cdr.detectChanges();
     return true;
