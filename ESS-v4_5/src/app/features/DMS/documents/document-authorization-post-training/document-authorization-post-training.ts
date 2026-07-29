@@ -88,6 +88,7 @@ export class DocumentAuthorizationPostTraining {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'documentnumber', label: 'Document Number', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
     { field: 'trainingMode', label: 'Training Mode', visible: true },
@@ -114,24 +115,10 @@ export class DocumentAuthorizationPostTraining {
 
   pendingAuthorizationColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
+    { field: 'documentnumber', headerName: 'Document Number', pinned: 'left', flex: 1 },
     { field: 'documentName', headerName: 'Document Name', pinned: 'left', flex: 1 },
     { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60, flex: 1 },
-    { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },
-    // {
-    //   field: 'userAssigned',
-    //   headerName: 'User Assigned',
-    //   cellRendererSelector: (params: any) => ({
-    //     component: LinkRenderer,
-    //     params: {
-    //       label: params.value ?? 'View',
-    //       onClick: () => {
-    //         this.openTrainingProofModal(params.data);
-    //       },
-    //     },
-    //   }),
-    //   minWidth: 150,
-    //   flex: 1,
-    // },
+    { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },     
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
@@ -145,7 +132,7 @@ export class DocumentAuthorizationPostTraining {
           },
         },
       }),
-      minWidth: 180,
+      minWidth: 100,
       flex: 1,
     },
 
@@ -162,7 +149,7 @@ export class DocumentAuthorizationPostTraining {
           },
         },
       }),
-      minWidth: 180,
+      minWidth: 100,
       flex: 1,
     },
     {
@@ -345,6 +332,7 @@ export class DocumentAuthorizationPostTraining {
               companyId: item.companyId || item.CompanyId,
               company: item.Company || item.company,
               requestNumber: item.RequestNumber || item.requestNumber,
+              documentnumber: item.Documentnumber || item.documentnumber,
               documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
               documentType: item.DocumentType || item.documenttype,
               proposedDocumentNumber:
