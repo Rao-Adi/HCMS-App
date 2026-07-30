@@ -42,7 +42,7 @@ export class DocumentService {
   getDocumentList(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-all-document-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
-  } 
+  }
 
   getDocumentById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-document-by-id/id=${Id}`;
@@ -105,7 +105,6 @@ export class DocumentService {
       { headers: this.getHeaders() },
     );
   }
-  
 
   GetDocumentsPendingTrainingAcknowledgmentAsync(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
@@ -136,15 +135,18 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  exportDocuments(payload: any): Observable<Blob> {
-    return this.http.post(
-      `${this.apiUrl}/DMSDocument/export-my-documents`,
+  GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-effective-documents-for-revision`,
       payload,
-      { responseType: 'blob' },
     );
   }
 
-  
+  exportDocuments(payload: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/DMSDocument/export-my-documents`, payload, {
+      responseType: 'blob',
+    });
+  }
 
   AuthorizeDocumentPostTraining(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(

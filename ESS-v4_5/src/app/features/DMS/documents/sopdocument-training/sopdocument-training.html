@@ -49,15 +49,15 @@
                       </nz-option>
                     </nz-select> -->
                     <app-document-type-list
-                        valueKey="CODE"
-                        labelKey="NAME"
-                        placeholder="Select Document Type"
-                        [(ngModel)]="selectedDocumentType"
-                        (valueChange)="onDocumentTypeChange($event)"
-                        width="250px" 
-                        [allowClear]="false"
-                      >
-                      </app-document-type-list>
+                      valueKey="CODE"
+                      labelKey="NAME"
+                      placeholder="Select Document Type"
+                      [(ngModel)]="selectedDocumentType"
+                      (valueChange)="onDocumentTypeChange($event)"
+                      width="250px"
+                      [allowClear]="false"
+                    >
+                    </app-document-type-list>
                   </div>
                 </div>
                 <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
@@ -106,17 +106,30 @@
               <app-ag-grid-wrapper
                 [gridStyle]="{ width: '100%', height: '450px' }"
                 [columnDefs]="classRoomColumnDefs"
+                [columnToggles]="columnToggles"
                 [defaultColDef]="defaultColDef"
                 [rowData]="onlineData"
                 [pageSize]="selectedPageSize"
-                [isSelectionRequired]="false"
-                [showDisplayOption]="false"
+                [isSelectionRequired]="true"
+                [showDisplayOption]="true"
                 [autoSizeColumns]="true"
                 gridId="onlineGrid"
-                (pageSizeChange)="onPageSizeChanged($event)"
                 [totalRows]="totalOnline"
+                (pageSizeChange)="onPageSizeChanged($event)"
                 (serverQuery)="GetAllOnline($event)"
+                (selectionChange)="onSelectionChange($event)"
               >
+              <div grid-actions class="grid-action-icons">
+                  <button
+                    class="btn btn-success btn-sm btn-action"
+                    [class.disabled]="!hasSelectedRows"
+                    title="Approve"
+                    (click)="approve()"
+                    [disabled]="hasSelectedRows === false"
+                  >
+                    <i class="bi bi-check-circle"></i> Approve
+                  </button>
+                </div>
               </app-ag-grid-wrapper>
             </div>
           </div>

@@ -120,17 +120,7 @@ export class ApprovalDocuments {
   public noRowsOverlay: string = '';
 
   selectedRequestCreator: number | null = null;
-
-  authorityTypes: SelectList[] = [
-    { CODE: '1', NAME: 'Reporting to Levels' },
-    { CODE: '2', NAME: 'Employee' },
-    { CODE: '3', NAME: 'Role' },
-    { CODE: '4', NAME: 'Designation' },
-    { CODE: '5', NAME: 'Head of Division' },
-    { CODE: '6', NAME: 'Head of Department' },
-    { CODE: '7', NAME: 'Head of Sub-Department' },
-  ];
-
+ 
   columnToggles?: ColumnToggle[] = [
     { field: 'requestId', label: 'Request ID', visible: false },
     { field: 'documentType', label: 'Document Type', visible: true },
@@ -151,6 +141,7 @@ export class ApprovalDocuments {
 
   documentsColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentnumber', headerName: 'Document Number' },    
     {
       field: 'documentName',
       headerName: 'Document Name',
@@ -361,17 +352,13 @@ export class ApprovalDocuments {
                 // ──────────────────────────────────────────────
                 // Document metadata
                 // ──────────────────────────────────────────────
+                documentnumber:get(['DocumentNumber', 'documentnumber']),
                 documentType: get(['DocumentType', 'documenttype']),
                 documentTypeCode: get(['DocumentTypeCode', 'documenttypecode']),
                 documentName: get(['Title', 'title', 'documentname']),
-                version: get(['Version', 'version', 'proposedVersionNumber']),
-                company: get(['Company', 'company'], ''),
-                proposedDocumentNumber: get(['DocumentNumber', 'documentnumber']),
-                proposedVersionNumber: get(
-                  ['ProposedVersionNumber', 'proposedVersionNumber'],
-                  '1.0',
-                ), // fallback
-
+                version: get(['Version', 'version']),
+                company: get(['Company', 'company'], ''), 
+                 
                 // ──────────────────────────────────────────────
                 // Organizational context
                 // ──────────────────────────────────────────────

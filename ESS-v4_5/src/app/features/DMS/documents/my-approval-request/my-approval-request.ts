@@ -509,13 +509,13 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
                 requestCreatedOn: new CustomDateFormatPipe().transform(
                   get(['CreatedAt', 'createdAt', 'RequestCreatedAt', 'requestCreatedAt']),
                 ),
-                // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                //   get(['DraftContentLastModifiedAt', 'draftContentLastModifiedAt']),
-                // ),
-                // previousVersionCreatedBy: get([
-                //   'DraftContentLastModifiedBy',
-                //   'draftContentLastModifiedBy'
-                // ]),
+                previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                  get(['PreviousVersionCreatedOn', 'previousVersionCreatedOn']),
+                ),
+                previousVersionCreatedBy: get([
+                  'PreviousVersionCreatedBy',
+                  'previousVersionCreatedBy'
+                ]),
                 stepId: get(['StepId', 'stepId']),
                 stepOrder: get(['StepOrder', 'stepOrder']),
                 startedAt: get(['StartedAt', 'startedAt']),
@@ -571,13 +571,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       this.agGridWrapper.refresh();
     }
   }
-
-  // handleGridAction(event: { action: string; rowData: any }) {
-  //   if (event.action === 'VIEW_CABINET') {
-  //     this.openWorkflowDeatilsModal(event.rowData);
-  //   }
-  // }
-
+ 
   // Handle selection changes
   onSelectionChange(selectedRows: any): void {
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;

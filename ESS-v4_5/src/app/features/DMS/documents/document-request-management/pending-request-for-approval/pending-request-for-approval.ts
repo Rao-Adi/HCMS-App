@@ -74,6 +74,11 @@ export class PendingRequestForApproval {
     {
       field: 'requestId',
       headerName: 'RequestId',
+      hide: true,
+    },
+    {
+      field: 'requestNumber',
+      headerName: 'Request Number',
       minWidth: 80,
       flex: 1,
     },
@@ -119,13 +124,14 @@ export class PendingRequestForApproval {
         }
       },
     },
-    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150 , cellClass: 'audit-cell'},
+    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell' },
     { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell' },
     { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell' },
   ];
 
   columnToggles?: ColumnToggle[] = [
     { field: 'requestId', label: 'Request ID', visible: true },
+    { field: 'requestNumber', label: 'Request Number', visible: true },
     { field: 'division', label: 'Division', visible: true },
     { field: 'department', label: 'Department', visible: true },
     { field: 'subdepartment', label: 'Sub-Department', visible: true },
@@ -203,6 +209,7 @@ export class PendingRequestForApproval {
           this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
             requestId: item.RequestId || item.requestId,
+            requestNumber: item.requestNumber || item.RequestNumber,
             documentType: item.DocumentType || item.documentType,
             proposedDocumentNumber: item.RequestNumber || item.requestNumber,
             stepId: item.StepId || item.stepId,
@@ -215,7 +222,8 @@ export class PendingRequestForApproval {
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
-            justification: item.Justification || item.justification || item.Reason || item.reason || '',
+            justification:
+              item.Justification || item.justification || item.Reason || item.reason || '',
             businessdomainId: item.BusinessDomainCode,
             pendingWith: item.CurrentAssignedUser,
             sumbittedby: item.CreatedBy,
@@ -224,7 +232,7 @@ export class PendingRequestForApproval {
             ),
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.createdAt || item.CreatedAt || '',
-            )
+            ),
           }));
         } else {
           this.documentRequestsData = [];

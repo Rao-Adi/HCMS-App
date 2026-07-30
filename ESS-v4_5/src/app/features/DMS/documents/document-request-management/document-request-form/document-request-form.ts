@@ -22,6 +22,7 @@ import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { TemplateService } from '@app/shared/services/template.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -133,8 +134,19 @@ export class DocumentRequestForm {
 
   documentColumnDefs: ColDef[] = [
     {
+      field: 'requestId',
+      headerName: 'requestId',
+      hide: true,
+    },
+    {
       field: 'documentType',
       headerName: 'Document Type',
+      cellEditor: 'agSelectCellEditor',
+      pinned: 'left',
+    },
+    {
+      field: 'documentNumber',
+      headerName: 'Document Number',
       cellEditor: 'agSelectCellEditor',
       pinned: 'left',
     },
@@ -241,6 +253,7 @@ export class DocumentRequestForm {
     private _companyService: CompanyService,
     private _notificationToasService: NotificationToastService,
     private _doumentRequestService: DocumentRequestService,
+    private _documentService: DocumentService,
     private _documentTemplateService: TemplateService,
     private _workflowStepService: WorkflowStepService,
     private _permissionService: PermissionService,
@@ -335,7 +348,9 @@ export class DocumentRequestForm {
   }
 
   get isRevisionRequestType(): boolean {
-    return this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002';
+    return (
+      this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002'
+    );
   }
 
   get draftButtonLabel(): string {
@@ -344,6 +359,8 @@ export class DocumentRequestForm {
 
   get submitDisabledReason(): string | null {
     if (this.isSubmitting) return null;
+    if (this.isRevisionRequestType && !this.selectedDocumentRow)
+      return 'Please select an existing document to revise.';
     if (!this.selectedDocumentType) return 'Please select a Document Type to continue.';
     if (!this.selectedTemplateType)
       return 'No template has been uploaded for this Document Type. Please upload a template before creating a request.';
@@ -412,13 +429,13 @@ export class DocumentRequestForm {
 
   GetTemplate(value: string, isRevision: boolean = false) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
-      next: (response: any) => { 
+      next: (response: any) => {
         if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
           this.selectedTemplateType = '';
           this.templateFileUrl = '';
           this.draftFileUrl = '';
           if (!isRevision) {
-          this.templateHtml = ''; // Clear only if not a revision and no data
+            this.templateHtml = ''; // Clear only if not a revision and no data
           }
           this._notificationToasService.createNotification(
             'warning',
@@ -428,7 +445,8 @@ export class DocumentRequestForm {
           return;
         }
 
-        this.selectedTemplateType = response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.selectedTemplateType =
+          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
         this.templateFileUrl =
           response.Data?.TemplateFileUrl ||
           response.Data?.TemplateFileURL ||
@@ -438,7 +456,8 @@ export class DocumentRequestForm {
         // Handle content based on TemplateType
         if (this.selectedTemplateType === '3') {
           // For HTML templates, set the HTML content.
-          this.templateHtml = response.Data?.TemplateContent || response.Data?.templateContent || '';
+          this.templateHtml =
+            response.Data?.TemplateContent || response.Data?.templateContent || '';
           this.draftFileUrl = ''; // Ensure no file URL is present
         } else if (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') {
           // For DOCX/PDF templates, set the draftFileUrl from the template URL.
@@ -929,8 +948,44 @@ export class DocumentRequestForm {
     });
   }
 
+  SubmiteRevisionDocumentRequests() {
+    // The document the user picked from the "existing documents" grid is what's being revised.
+    // Its own Id must travel to the backend as ParentDocumentId — it must NOT be confused with
+    // selectedDocumentRow.requestId, which is the ORIGINAL Creation request's Id and would just
+    // resubmit that already-approved request instead of creating a new revision.
+    if (!this.selectedDocumentRow || !this.selectedDocumentRow.Id) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select an existing document to revise.',
+      );
+      return;
+    }
+    if (!this.selectedCompany) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Company.',
+      );
+      return;
+    }
+    if (!this.documentName || this.documentName.trim() === '') {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Document Name.',
+      );
+      return;
+    }
+    if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Justification.',
+      );
+      return;
+    }
 
-   SubmiteRevisionDocumentRequests() {
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,
@@ -955,30 +1010,71 @@ export class DocumentRequestForm {
       .filter((code) => code != null && code !== '')
       .map(String);
 
-    // Reverted back to JSON to resolve 415 Unsupported Media Type
-    const payload = {
-      CompanyId: this.selectedCompany,
-      RequestId: this.requestId,
-      DistributionList: cleanDistributionList,
-      UserIds: userids,
-      DocumentRequestType : 'Revision'
-    };
- 
-    this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
-      next: (response) => { 
+    const formData = new FormData();
+    formData.append('CompanyId', this.selectedCompany || '');
+    formData.append('DocumentRequestTypeCode', this.selectedDocumentRequestType || '');
+    formData.append('ParentDocumentId', String(this.selectedDocumentRow.Id));
+    if (this.selectedDocumentType) formData.append('documentTypeCode', this.selectedDocumentType);
+    if (this.documentName) formData.append('documentName', this.documentName);
+    if (this.inputJustificationValue)
+      formData.append('justification', this.inputJustificationValue);
+    if (this.templateHtml) formData.append('proposedContent', this.templateHtml);
+    if (this.selectedDivisions) formData.append('divisionCode', this.selectedDivisions);
+    if (this.selectedDepartment) formData.append('departmentCode', this.selectedDepartment);
+    if (this.selectedSubDepartment)
+      formData.append('subDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedBusinessDomain)
+      formData.append('businessDomainCode', this.selectedBusinessDomain);
+
+    cleanDistributionList.forEach((item: any, index: number) => {
+      if (item.divisionCode)
+        formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode)
+        formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode)
+        formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode)
+        formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId)
+        formData.append(
+          `DistributionList[${index}].distributionTypeId`,
+          item.distributionTypeId.toString(),
+        );
+    });
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`UserIds[${index}]`, id);
+    });
+
+    if (this.uploadedFile) {
+      formData.append('DraftFile', this.uploadedFile);
+    }
+
+    this.isSubmitting = true;
+    this._doumentRequestService.CreateAndSubmitRevisionDocumentRequest(formData).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
         if (response?.Success) {
+          this.emptyFields();
+          this.requestCreated.emit();
+          this._doumentRequestService.refreshCounts$.next();
           this._notificationToasService.createNotification(
             'success',
-            'Document Request (Draft)',
-            'Document submitted successfully!',
-          ); 
+            'Document Request',
+            'Revision submitted successfully!',
+          );
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       },
-      error: (err) => { 
+      error: (err) => {
+        this.isSubmitting = false;
         this._notificationToasService.createNotification(
           'error',
           'Error',
-          'Failed to submit document.',
+          err?.error?.Message || err?.Message || 'Failed to submit revision.',
         );
       },
     });
@@ -1084,7 +1180,7 @@ export class DocumentRequestForm {
       searchText: searchText || '',
     };
 
-    this._doumentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
+    this._documentService.GetEffectiveDocumentsForRevision(payload).subscribe({
       next: (response) => {
         if (response?.Success || response?.Data) {
           const data = response?.Data;
@@ -1093,18 +1189,17 @@ export class DocumentRequestForm {
           this.totalRows = data?.TotalCount ?? items.length;
           this.documentRevisionData = items.map((item: any) => ({
             Id: item.id || item.Id,
+            requestId: item.RequestId || item.requestId,
             companyId: item.companyId || item.CompanyId,
             company: item.Company || item.company,
-            requestNumber: item.RequestNumber || item.requestNumber,
+            documentNumber: item.DocumentNumber || item.documentNumber,
             documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
             documentType: item.DocumentType || item.documenttype,
-            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
             stepId: item.StepId || item.stepId,
             stepOrder: item.StepOrder || item.stepOrder,
             startedAt: item.StartedAt || item.startedAt,
             division: item.Division || item.division,
             divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
-            documentId: item.DocumentNumber || item.documentid,
             documentName: item.DocumentName || item.documentname || item.title,
             proposedContent: item.ProposedContent || item.proposedcontent || item.content,
             department: item.Department || item.department,
@@ -1139,10 +1234,7 @@ export class DocumentRequestForm {
             proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
             templateType: item.TemplateType || item.templateType,
             templateFileUrl:
-              item.TemplateFileUrl ||
-              item.TemplateFileURL ||
-              item.templateFileUrl ||
-              '',
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
             draftFileUrl:
               item.DraftFileUrl ||
               item.draftfileurl ||
@@ -1205,10 +1297,9 @@ export class DocumentRequestForm {
 
   onCellClicked(event: any): void {
     const row = event.data;
-
     this.selectedDocumentRow = row;
 
-    this.requestId = row.Id;
+    this.requestId = row.RequestId || row.requestId;
     this.submittedby = row.submittedBy || row.sumbittedby;
     this.selectedCompany = row.companyId || row.company;
     // ✅ Populate form fields

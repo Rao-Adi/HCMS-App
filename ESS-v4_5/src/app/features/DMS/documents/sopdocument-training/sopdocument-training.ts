@@ -127,6 +127,7 @@ export class SOPDocumentTraining {
 
   classRoomColumnDefs = [
     { field: 'documentId', headerName: 'Document ID', hide: true },
+    { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'version', headerName: 'Version' },
@@ -163,7 +164,8 @@ export class SOPDocumentTraining {
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
-    { field: 'preVersionOn', headerName: 'Previous Version Created On' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -206,6 +208,7 @@ export class SOPDocumentTraining {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentName', label: 'Document Name', visible: true },
+    { field: 'documentNumber', label: 'Document Number', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'version', label: 'Version', visible: true },
     { field: 'trainingMode', label: 'Training Mode', visible: true },
@@ -217,51 +220,12 @@ export class SOPDocumentTraining {
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
-    { field: 'preVersionOn', label: 'Previous Version Created On', visible: true },
+    { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+    { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
     { field: 'approvalHistory', label: 'Approval History', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
-
-  onlineColumnDefs = [
-    { field: 'documentId', headerName: 'Document ID' },
-    { field: 'documentName', headerName: 'Document Name' },
-    { field: 'version', headerName: 'Version Number' },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'lmsStatus', headerName: 'LMS Status' },
-    {
-      field: 'averageScore',
-      headerName: 'Average Score (%)',
-      cellRenderer: (params: any) => {
-        return `<span style="color:#1976d2; cursor:pointer; text-decoration:underline" data-action="view-score">${params.value != null ? params.value : 0}%</span>`;
-      },
-      onCellClicked: (event: any) => {
-        if (event.event.target.getAttribute('data-action') === 'view-score') {
-          this.viewAssessmentDetails(event.data);
-        }
-      },
-    },
-    {
-      field: 'action',
-      headerName: 'Action',
-      cellRenderer: (params: any) => {
-        return `<button class="ant-btn ant-btn-primary ant-btn-sm" data-action="acknowledge">Acknowledge & Send</button>`;
-      },
-      onCellClicked: (event: any) => {
-        if (event.event.target.getAttribute('data-action') === 'acknowledge') {
-          this.acknowledgeAndSend(event.data);
-        }
-      },
-    },
-  ];
-
-  companies: SelectList[] = [
-    { CODE: '1', NAME: 'ATCO' },
-    { CODE: '2', NAME: 'Softronic' },
-  ];
-
+  
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
     this.selectedDepartment = '';
@@ -338,7 +302,8 @@ export class SOPDocumentTraining {
             proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
             division: item.Division || item.division,
             divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
-            documentId: item.DocumentNumber || item.documentid,
+            documentId: item.documentid || item.documentid,
+            documentNumber: item.DocumentNumber || item.documentnumber,
             documentName: item.DocumentName || item.documentname || item.title,
             proposedContent: item.ProposedContent || item.proposedcontent || item.content,
             department: item.Department || item.department,
@@ -358,11 +323,12 @@ export class SOPDocumentTraining {
               item.CreatedAt || item.createdat || '',
             ),
             requestCreatedBy: item.createdbyname || item.createdByName,
-            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            previousVersionCreatedBy:
+              item.PreviousVersionCreatedBy || item.previousversioncreatedby,
             previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              item.draftContentLastModifiedAt ||
-                item.DraftContentLastModifiedAt ||
-                item.lastmodifiedat ||
+              item.previousversioncreatedon ||
+                item.Previousversioncreatedon ||
+                item.PreviousVersionCreatedon ||
                 '',
             ),
             version: item.Version || item.version || item.RowVersion || item.rowVersion,
@@ -440,6 +406,7 @@ export class SOPDocumentTraining {
             division: item.Division || item.division,
             divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
             documentId: item.DocumentNumber || item.documentid,
+            documentNumber: item.DocumentNumber || item.documentnumber,
             documentName: item.DocumentName || item.documentname || item.title,
             proposedContent: item.ProposedContent || item.proposedcontent || item.content,
             department: item.Department || item.department,
@@ -459,11 +426,12 @@ export class SOPDocumentTraining {
               item.CreatedAt || item.createdat || '',
             ),
             requestCreatedBy: item.createdbyname || item.createdByName,
-            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            previousVersionCreatedBy:
+              item.PreviousVersionCreatedBy || item.previousversioncreatedby,
             previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              item.draftContentLastModifiedAt ||
-                item.DraftContentLastModifiedAt ||
-                item.lastmodifiedat ||
+              item.previousversioncreatedon ||
+                item.Previousversioncreatedon ||
+                item.PreviousVersionCreatedon ||
                 '',
             ),
             version: item.Version || item.version || item.RowVersion || item.rowVersion,
@@ -486,37 +454,40 @@ export class SOPDocumentTraining {
   viewAssessmentDetails(data: any) {
     const docId = data.documentId || data.DocumentId || data.Id;
     const trainingMode = this.selectedTab === 'Classroom' ? '1' : '2';
-    this._documentTrainingService.GetTrainingAssessmentDetails(docId,trainingMode).subscribe((res) => {
-      if (res?.Success) {
-        let usersHtml = '';
-        if (res.Data?.Users && Array.isArray(res.Data.Users) && res.Data.Users.length > 0) {
-          usersHtml =
-            '<ul style="margin-left: 20px; padding-left: 0;">' +
-            res.Data.Users.map(
-              (u: any) => `<li>${u.Name || u.name} - <strong>${u.Score || u.score}%</strong></li>`,
-            ).join('') +
-            '</ul>';
-        } else {
-          usersHtml = `<p>Users Attempted: ${res.Data?.UserCount ?? 'N/A'}</p>`;
-        }
+    this._documentTrainingService
+      .GetTrainingAssessmentDetails(docId, trainingMode)
+      .subscribe((res) => {
+        if (res?.Success) {
+          let usersHtml = '';
+          if (res.Data?.Users && Array.isArray(res.Data.Users) && res.Data.Users.length > 0) {
+            usersHtml =
+              '<ul style="margin-left: 20px; padding-left: 0;">' +
+              res.Data.Users.map(
+                (u: any) =>
+                  `<li>${u.Name || u.name} - <strong>${u.Score || u.score}%</strong></li>`,
+              ).join('') +
+              '</ul>';
+          } else {
+            usersHtml = `<p>Users Attempted: ${res.Data?.UserCount ?? 'N/A'}</p>`;
+          }
 
-        this.modal.info({
-          nzTitle: 'Assessment Details',
-          nzContent: `
+          this.modal.info({
+            nzTitle: 'Assessment Details',
+            nzContent: `
             <p><strong>Average Score:</strong> ${res.Data?.AverageScore ?? data.averageScore}%</p>
             <p><strong>User Performance:</strong></p>
             ${usersHtml}
           `,
-          nzWidth: 500,
-        });
-      } else {
-        this._notificationToastService.createNotification(
-          'error',
-          'Error',
-          res?.Message || 'Failed to load assessment details.',
-        );
-      }
-    });
+            nzWidth: 500,
+          });
+        } else {
+          this._notificationToastService.createNotification(
+            'error',
+            'Error',
+            res?.Message || 'Failed to load assessment details.',
+          );
+        }
+      });
   }
 
   acknowledgeAndSend(data: any) {

@@ -1041,7 +1041,7 @@ export class CreateUpdateDocument {
       searchText: searchText || '',
     };
 
-    this._documentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
+    this._documentService.GetEffectiveDocumentsForRevision(payload).subscribe({
       next: (response) => {
         if (response?.Success || response?.Data) {
           const data = response?.Data;

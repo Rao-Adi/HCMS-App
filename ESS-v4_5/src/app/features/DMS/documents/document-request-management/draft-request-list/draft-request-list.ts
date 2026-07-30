@@ -128,19 +128,6 @@ export class DraftRequestList {
       field: 'requestNumber',
       headerName: 'Request Number',
     },
-
-    {
-      field: 'division',
-      headerName: 'Division',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
-    },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     {
@@ -165,6 +152,18 @@ export class DraftRequestList {
           this.openJustificationModal(val);
         }
       },
+    },
+    {
+      field: 'division',
+      headerName: 'Division',
+    },
+    {
+      field: 'department',
+      headerName: 'Department',
+    },
+    {
+      field: 'subdepartment',
+      headerName: 'Sub-Department',
     },
     { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell' },
     {
@@ -664,7 +663,7 @@ export class DraftRequestList {
       RequestId: this.requestId,
       DistributionList: cleanDistributionList,
       UserIds: userids,
-      DocumentRequestType : 'Request'
+      DocumentRequestType: 'Request',
     };
 
     this.loadingSubmit = true;

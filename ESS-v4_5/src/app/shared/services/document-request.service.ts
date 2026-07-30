@@ -111,16 +111,13 @@ export class DocumentRequestService {
   }
 
   GetEffectiveDocumentDetailsForRevisionByIdAsync(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-details-by-id/${Id}`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-details-by-id`;
+    return this.http.get<GenericResponse<any>>(uri, {
+      headers: this.getHeaders(),
+      params: new HttpParams().set('documentId', Id),
+    });
   }
-
-  GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-for-revision`,
-      payload,
-    );
-  }
+ 
 
   UpdateDraftDocumentRequest(payload: any) {
     return this.http.post<ApiResponse<any>>(
@@ -198,6 +195,20 @@ export class DocumentRequestService {
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/delete-document-request/${code}`,
+    );
+  }
+
+  SubmitRivisionDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocumentRequest/submit-revision-document-request`,
+      payload,
+    );
+  }
+
+  CreateAndSubmitRevisionDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocumentRequest/create-and-submit-revision-document-request`,
+      payload,
     );
   }
 }

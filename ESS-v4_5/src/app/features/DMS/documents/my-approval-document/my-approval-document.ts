@@ -425,11 +425,13 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
               ),
               startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
-              // Previous version info (only if present in real payloads)
-              // previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              //   get(['RequestCreatedAt', 'requestCreatedAt']),
-              // ),
+              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                  get(['PreviousVersionCreatedOn', 'previousVersionCreatedOn']),
+                ),
+                previousVersionCreatedBy: get([
+                  'PreviousVersionCreatedBy',
+                  'previousVersionCreatedBy'
+                ]),
 
               // ──────────────────────────────────────────────
               // Placeholder / missing fields from your original
