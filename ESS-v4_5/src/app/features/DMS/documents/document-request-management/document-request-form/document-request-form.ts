@@ -28,6 +28,7 @@ import { RevisionHistoryModal } from '../../revision-history-modal/revision-hist
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-document-request-form',
@@ -132,7 +133,15 @@ export class DocumentRequestForm {
   loginEmpId: string = '';
   pageNumber = 1;
 
-  documentColumnDefs: ColDef[] = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  private readonly leadingColumnDefs: ColDef[] = [
     {
       field: 'requestId',
       headerName: 'requestId',
@@ -161,21 +170,9 @@ export class DocumentRequestForm {
       headerName: 'Version',
       pinned: 'left', // ✅ now correctly typed
     },
-    {
-      field: 'division',
-      headerName: 'Division',
-      cellEditor: 'agSelectCellEditor',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      cellEditor: 'agSelectCellEditor',
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
-      cellEditor: 'agSelectCellEditor',
-    },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
@@ -196,7 +193,7 @@ export class DocumentRequestForm {
       editable: false,
       cellRenderer: (params: any) => {
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -214,7 +211,7 @@ export class DocumentRequestForm {
       editable: false,
       cellRenderer: (params: any) => {
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -228,13 +225,14 @@ export class DocumentRequestForm {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out showing
+  // just the leading/trailing columns until we know which cabinet levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'nextReviewDate', label: 'Next Review Date', visible: true },
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -257,6 +255,7 @@ export class DocumentRequestForm {
     private _documentTemplateService: TemplateService,
     private _workflowStepService: WorkflowStepService,
     private _permissionService: PermissionService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -269,6 +268,43 @@ export class DocumentRequestForm {
 
       this.getAllDocumentRequestTypes();
       this.getAllCompanies();
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns on the
+    // Revision/Obsoletion documents grid for cabinet levels that are currently Enabled
+    // (CabinetLevel.isActive), labeled with whichever title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({
+          field: def.field,
+          headerName: def.title,
+          cellEditor: 'agSelectCellEditor',
+        })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'version', label: 'Version', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'nextReviewDate', label: 'Next Review Date', visible: true },
+        { field: 'url', label: 'URL', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
+      ];
     });
   }
 
