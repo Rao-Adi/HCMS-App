@@ -211,4 +211,12 @@ export class DocumentRequestService {
       payload,
     );
   }
+
+  GetDocumentRevisionHistory(documentId: number | string): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-revision-history`;
+    return this.http.get<GenericResponse<any>>(uri, {
+      headers: this.getHeaders(),
+      params: new HttpParams().set('documentId', documentId),
+    });
+  }
 }

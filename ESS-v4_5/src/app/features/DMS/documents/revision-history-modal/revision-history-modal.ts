@@ -2,6 +2,25 @@ import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+
+// Case of incoming JSON keys is inconsistent across this app depending on whether a controller
+// returns a strongly-typed DTO or a raw Dapper dynamic row (PascalCase vs all-lowercase), so
+// every read here checks both.
+function pick(source: any, keys: string[], fallback: any = ''): any {
+  if (!source) return fallback;
+  for (const key of keys) {
+    if (source[key] !== undefined && source[key] !== null && source[key] !== '') {
+      return source[key];
+    }
+    const lower = key.toLowerCase();
+    if (source[lower] !== undefined && source[lower] !== null && source[lower] !== '') {
+      return source[lower];
+    }
+  }
+  return fallback;
+}
 
 @Component({
   selector: 'app-revision-history-modal',
@@ -10,40 +29,75 @@ import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
   styleUrl: './revision-history-modal.css',
 })
 export class RevisionHistoryModal {
-  revisionHistoryData: any[] = []; // Changed to match likely HTML binding
+  revisionHistoryData: any[] = [];
   pageSize = 10;
   selectedPageSize = 10;
   totalRows = 0;
-  averateDocumentScoreData: any[] = [];
+  loading = false;
+
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
   };
 
-  pendingAuthorizationColumnDefs: ColDef[] = [
-    { field: 'document', headerName: 'Document', flex: 1 },
+  revisionHistoryColumnDefs: ColDef[] = [
+    { field: 'documentNumber', headerName: 'Document Number', flex: 1 },
     { field: 'version', headerName: 'Version' },
+    { field: 'status', headerName: 'Status' },
     {
-      field: 'revisedBy',
-      headerName: 'Revised By',
+      field: 'requestedBy',
+      headerName: 'Requested By',
       flex: 1,
-      cellClass: 'audit-cell'
+      cellClass: 'audit-cell',
     },
     {
-      field: 'revisedOn',
-      headerName: 'Revised On',
+      field: 'requestedOn',
+      headerName: 'Requested On',
       flex: 1,
-      cellClass: 'audit-cell'
+      cellClass: 'audit-cell',
     },
     {
-      field: 'approvalHistory',
-      headerName: 'Approval History',
+      field: 'approvedBy',
+      headerName: 'Approved By',
       flex: 1,
-      cellClass: 'audit-cell'
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'approvedOn',
+      headerName: 'Approved On',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'effectiveBy',
+      headerName: 'Effective By',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'effectiveOn',
+      headerName: 'Effective On',
+      flex: 1,
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'isCurrentVersion',
+      headerName: 'Current Version',
+      cellRenderer: (p: any) => (p.value ? 'Yes' : ''),
     },
   ];
 
-  constructor(@Inject(NZ_MODAL_DATA) public modalData: any) {}
+  private documentId: number | null = null;
+
+  constructor(
+    @Inject(NZ_MODAL_DATA) public modalData: any,
+    private _documentRequestService: DocumentRequestService,
+  ) {
+    const source = this.modalData?.data;
+    const rawId = pick(source, ['documentId', 'DocumentId', 'Id', 'id', 'documentid'], null);
+    const parsedId = Number(rawId);
+    this.documentId = rawId != null && !isNaN(parsedId) ? parsedId : null;
+  }
 
   ngOnInit() {
     this.loadData({ pageNumber: 1 });
@@ -61,30 +115,46 @@ export class RevisionHistoryModal {
   }
 
   loadData(query: any = {}) {
+    if (!this.documentId) {
+      this.revisionHistoryData = [];
+      this.totalRows = 0;
+      return;
+    }
+
     const pageNumber = Number(query.pageNumber) || 1;
     const pageSize = Number(query.pageSize) || this.pageSize;
+    const dateFmt = new CustomDateFormatPipe();
 
-    // 🔹 TEMP: Dummy data mode
-    const allData = this.getDummyData();
+    this.loading = true;
+    this._documentRequestService.GetDocumentRevisionHistory(this.documentId).subscribe({
+      next: (res: any) => {
+        this.loading = false;
+        const items = res?.Data || res?.data || [];
 
-    // 🔹 Simulate server-side pagination
-    const start = (pageNumber - 1) * pageSize;
-    const end = start + pageSize;
+        const mapped = items.map((item: any) => ({
+          documentId: pick(item, ['DocumentId', 'documentId']),
+          documentNumber: pick(item, ['DocumentNumber', 'documentNumber']),
+          version: pick(item, ['Version', 'version']),
+          status: pick(item, ['CurrentStatus', 'currentStatus']),
+          requestedBy: pick(item, ['RequestedBy', 'requestedBy']),
+          requestedOn: dateFmt.transform(pick(item, ['RequestedOn', 'requestedOn'], null)) || '',
+          approvedBy: pick(item, ['ApprovedBy', 'approvedBy']),
+          approvedOn: dateFmt.transform(pick(item, ['ApprovedOn', 'approvedOn'], null)) || '',
+          effectiveBy: pick(item, ['EffectiveBy', 'effectiveBy']),
+          effectiveOn: dateFmt.transform(pick(item, ['EffectiveOn', 'effectiveOn'], null)) || '',
+          isCurrentVersion: !!pick(item, ['IsCurrentVersion', 'isCurrentVersion'], false),
+        }));
 
-    this.revisionHistoryData = allData.slice(start, end);
-    this.totalRows = allData.length;
-
-    // 🔹 REMOVE THIS when backend is ready
-    // this.gridService.loadData(this.apiUrl, request).subscribe(...)
-  }
-
-  private getDummyData(): any[] {
-    return Array.from({ length: 100 }).map((_, i) => ({
-      document: ['1', '2', '3', '4', '5'][i % 2],
-      version: ['Jhon Doe', 'Jane Smith', 'Mike Johnson'][i % 2],
-      revisedBy: ['Trainee Software Engineer', 'Solution Architect'][i % 2],
-      revisedOn: ['13 Aug 2024', '09 Aug 2024'][i % 2],
-      approvalHistory: ['Approved', 'Reject'][i % 2],
-    }));
+        // Chain is small and returned in full by the API; paginate client-side to match the grid wrapper's contract.
+        const start = (pageNumber - 1) * pageSize;
+        this.revisionHistoryData = mapped.slice(start, start + pageSize);
+        this.totalRows = mapped.length;
+      },
+      error: () => {
+        this.loading = false;
+        this.revisionHistoryData = [];
+        this.totalRows = 0;
+      },
+    });
   }
 }

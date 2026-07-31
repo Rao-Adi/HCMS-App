@@ -598,7 +598,7 @@ export class SOPDocumentTraining {
       nzTitle: 'Revision History',
       nzContent: RevisionHistoryModal,
       nzData: {
-        data: rowData.requestid || rowData.RequestId,
+        data: rowData, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1200,
