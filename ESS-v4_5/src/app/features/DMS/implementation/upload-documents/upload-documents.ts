@@ -185,7 +185,7 @@ export class UploadDocuments {
   private getColumns(): GridColumn[] {
     const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
       ...col,
-      minWidth: 200
+      minWidth: 230
     }));
 
     return [

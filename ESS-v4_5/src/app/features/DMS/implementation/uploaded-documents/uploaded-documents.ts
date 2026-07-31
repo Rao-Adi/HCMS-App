@@ -19,6 +19,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-uploaded-documents',
@@ -69,7 +70,15 @@ export class UploadedDocuments {
     cellDataType: false,
   };
 
-  workflowAuthoritiesColumnDefs = [
+  // field name each cabinet level maps to in the (read-only) row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, string> = {
+    1: 'divisionName',
+    2: 'departmentName',
+    3: 'subDepartmentName',
+    4: 'businessDomainName',
+  };
+
+  private readonly fixedColumnDefs: ColDef[] = [
     { field: 'documentId', headerName: 'Document ID', flex: 1 },
     {
       field: 'documentName',
@@ -79,7 +88,7 @@ export class UploadedDocuments {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -93,12 +102,15 @@ export class UploadedDocuments {
     },
     { field: 'version', headerName: 'Version Number', flex: 1 },
     { field: 'documentType', headerName: 'Document Type', flex: 1 },
-    { field: 'divisionName', headerName: 'Division', flex: 1 },
-    { field: 'departmentName', headerName: 'Department', flex: 1 },
-    { field: 'subDepartmentName', headerName: 'Sub-Department', flex: 1 },
-    { field: 'businessDomainName', headerName: 'Business Domain', flex: 1 },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'nextReviewDate', headerName: 'Next Review Date', flex: 1 },
   ];
+
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  workflowAuthoritiesColumnDefs: ColDef[] = [...this.fixedColumnDefs, ...this.trailingColumnDefs];
 
   constructor(
     private _documentService: DocumentService,
@@ -107,7 +119,8 @@ export class UploadedDocuments {
     private _notificationToastService: NotificationToastService,
     private sanitizer: DomSanitizer,
     private _config: AppConfigService,
-    private cabinetGridService: CabinetGridService
+    private cabinetGridService: CabinetGridService,
+    private hierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -115,6 +128,28 @@ export class UploadedDocuments {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for
+    // cabinet levels that are currently Enabled (CabinetLevel.isActive), and label
+    // them with whatever title is configured for that level.
+    this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      this.cabinetHierarchy = levels;
+      this.levelTitles = this.hierarchyService.getLevelTitles();
+
+      const cabinetColumnDefs: ColDef[] = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          field: this.cabinetLevelFields[level.level],
+          headerName: level.title,
+          flex: 1,
+        }));
+
+      this.workflowAuthoritiesColumnDefs = [
+        ...this.fixedColumnDefs,
+        ...cabinetColumnDefs,
+        ...this.trailingColumnDefs,
+      ];
     });
   }
 
