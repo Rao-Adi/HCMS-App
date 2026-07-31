@@ -98,8 +98,16 @@ export class DMSRichTextEdit implements OnInit {
   ngOnInit() {}
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['contentHtml'] && this.editor && this.contentHtml) {
-      this.editor.quillEditor.clipboard.dangerouslyPasteHTML(this.contentHtml);
+    if (changes['contentHtml'] && this.editor?.quillEditor && this.contentHtml) {
+      // Guard against a feedback loop: every keystroke emits contentHtmlChange, the parent
+      // writes it straight back into [contentHtml], which re-triggers this hook. Re-pasting
+      // HTML the editor already has resets Quill's cursor to the start on every keystroke.
+      // Only re-sync when the incoming value actually differs from what's already in the
+      // editor — i.e. it came from outside (initial load, switching records, etc).
+      const current = this.editor.quillEditor.root.innerHTML;
+      if (this.contentHtml !== current) {
+        this.editor.quillEditor.clipboard.dangerouslyPasteHTML(this.contentHtml);
+      }
     }
   }
 
