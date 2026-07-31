@@ -193,6 +193,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   // @Output() rowAdded = new EventEmitter<any>();
   @Output() rowUpdated = new EventEmitter<{ rowData: any; index: number }>();
   @Output() rowDeleted = new EventEmitter<number>();
+  // Fired the moment a row enters edit mode — lets the parent lazily load anything a
+  // dropdown column's options depend on (e.g. a cascading dropdown's options for the row's
+  // existing selection), since dropdownOptions is only ever populated on-demand.
+  @Output() rowEditingStarted = new EventEmitter<{ rowData: any; index: number }>();
   @Output() cellValueChanged = new EventEmitter<{
     field: string;
     value: any;
@@ -1048,6 +1052,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.editingRowData = { ...event.data };
     this.editingRowIndex = event.rowIndex!;
     this.gridApi?.refreshCells({ force: true });
+    this.rowEditingStarted.emit({ rowData: event.data, index: event.rowIndex! });
   }
 
   updateRow(event: CellClickedEvent): void {
