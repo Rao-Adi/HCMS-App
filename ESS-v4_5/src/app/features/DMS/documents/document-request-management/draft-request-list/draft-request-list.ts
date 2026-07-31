@@ -19,6 +19,7 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -113,7 +114,15 @@ export class DraftRequestList {
     { value: DocumentRequestStatus.Rejected, label: 'Rejected' },
   ];
 
-  documentColumnDefs = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  private readonly fixedColumnDefs: ColDef[] = [
     {
       field: 'id',
       headerName: 'ID',
@@ -138,7 +147,7 @@ export class DraftRequestList {
         const val = params.value || (params.data && params.data.justification) || '';
         if (!val) return '<span>-</span>';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
@@ -153,18 +162,9 @@ export class DraftRequestList {
         }
       },
     },
-    {
-      field: 'division',
-      headerName: 'Division',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
-    },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell' },
     {
       field: 'status',
@@ -172,7 +172,7 @@ export class DraftRequestList {
       editable: false,
       cellRenderer: (params: any) => {
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -187,11 +187,12 @@ export class DraftRequestList {
     { field: 'submittedby', headerName: 'Submitted By', hide: true },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.fixedColumnDefs, ...this.trailingColumnDefs];
+
   columnToggles?: ColumnToggle[] = [
     { field: 'requestNumber', label: 'Request Number', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -206,6 +207,7 @@ export class DraftRequestList {
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
     private _documentTemplateService: TemplateService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -214,6 +216,34 @@ export class DraftRequestList {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       // this.getAllUsersList();
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.fixedColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'requestNumber', label: 'Request Number', visible: true },
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Title', visible: true },
+        { field: 'justification', label: 'Justification', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'createdOn', label: 'Last Saved On', visible: true },
+        { field: 'status', label: 'Status', visible: true },
+      ];
     });
   }
 
@@ -272,6 +302,7 @@ export class DraftRequestList {
             subDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode,
             justification:
               item.Justification || item.justification || item.Reason || item.reason || '',
+            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
             businessdomainId: item.BusinessDomainCode,
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
