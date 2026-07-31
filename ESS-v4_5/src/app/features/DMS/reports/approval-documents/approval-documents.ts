@@ -25,6 +25,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { AppConfigService } from '@app/core/services/app-config';
 import { RevisionHistoryModal } from '../../documents/revision-history-modal/revision-history-modal';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-approval-documents',
@@ -121,14 +122,20 @@ export class ApprovalDocuments {
 
   selectedRequestCreator: number | null = null;
  
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subDepartment', label: 'Sub-Department' },
+    4: { field: 'businessDomain', label: 'Business Domain' },
+  };
+
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit) alongside documentsColumnDefs.
   columnToggles?: ColumnToggle[] = [
     { field: 'requestId', label: 'Request ID', visible: false },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subDepartment', label: 'Sub-Department', visible: true },
     { field: 'url', label: 'URL', visible: true },
     { field: 'distributionList', label: 'Distribution List', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -139,9 +146,10 @@ export class ApprovalDocuments {
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
 
-  documentsColumnDefs = [
+  // Columns before the cabinet (Division/Department/...) columns
+  private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentnumber', headerName: 'Document Number' },    
+    { field: 'documentnumber', headerName: 'Document Number' },
     {
       field: 'documentName',
       headerName: 'Document Name',
@@ -149,7 +157,7 @@ export class ApprovalDocuments {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -162,9 +170,10 @@ export class ApprovalDocuments {
       },
     },
     { field: 'version', headerName: 'Version' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
+  ];
+
+  // Columns after the cabinet (Division/Department/...) columns
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'url', headerName: 'URL' },
     {
       field: 'distributionList',
@@ -173,7 +182,7 @@ export class ApprovalDocuments {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -236,6 +245,10 @@ export class ApprovalDocuments {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentsColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
   radioValue = '';
   // single state
 
@@ -248,6 +261,7 @@ export class ApprovalDocuments {
     private sanitizer: DomSanitizer,
     private _config: AppConfigService,
     private cdr: ChangeDetectorRef,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -257,6 +271,40 @@ export class ApprovalDocuments {
       this.canDelete = permissions.canDelete;
     });
     this.getAllDesignationList();
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentsColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'requestId', label: 'Request ID', visible: false },
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'version', label: 'Version', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'url', label: 'URL', visible: true },
+        { field: 'distributionList', label: 'Distribution List', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
+      ];
+    });
   }
 
   onRequestCreatorChange(value: any): void {

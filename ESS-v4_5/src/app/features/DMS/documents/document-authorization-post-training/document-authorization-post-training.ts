@@ -25,6 +25,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -86,6 +87,15 @@ export class DocumentAuthorizationPostTraining {
     { id: '1', text: 'SOP' },
   ];
 
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subDepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit).
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentnumber', label: 'Document Number', visible: true },
@@ -94,9 +104,6 @@ export class DocumentAuthorizationPostTraining {
     { field: 'trainingMode', label: 'Training Mode', visible: true },
     { field: 'userAssigned', label: 'User Assigned', visible: true },
     { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subDepartment', label: 'Sub-Department', visible: true },
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
@@ -113,12 +120,13 @@ export class DocumentAuthorizationPostTraining {
   };
   public noRowsOverlay: string = '';
 
-  pendingAuthorizationColumnDefs: ColDef[] = [
+  // Columns before the cabinet (Division/Department/...) columns
+  private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
     { field: 'documentnumber', headerName: 'Document Number', pinned: 'left', flex: 1 },
     { field: 'documentName', headerName: 'Document Name', pinned: 'left', flex: 1 },
     { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60, flex: 1 },
-    { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },     
+    { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
@@ -135,8 +143,6 @@ export class DocumentAuthorizationPostTraining {
       minWidth: 100,
       flex: 1,
     },
-
-
     {
       field: 'averageDocumentScore',
       headerName: 'Average Document Score',
@@ -152,18 +158,10 @@ export class DocumentAuthorizationPostTraining {
       minWidth: 100,
       flex: 1,
     },
-    {
-      field: 'division',
-      headerName: 'Division',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-    },
-    {
-      field: 'subDepartment',
-      headerName: 'Sub-Department',
-    },
+  ];
+
+  // Columns after the cabinet (Division/Department/...) columns
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
@@ -211,6 +209,13 @@ export class DocumentAuthorizationPostTraining {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  pendingAuthorizationColumnDefs: ColDef[] = [
+    ...this.leadingColumnDefs,
+    ...this.trailingColumnDefs,
+  ];
+
   constructor(
     private modal: NzModalService,
     private _documentService: DocumentService,
@@ -218,6 +223,7 @@ export class DocumentAuthorizationPostTraining {
     private _UtilitiesService: UtilitiesService,
     private _permissionService: PermissionService,
     private cdr: ChangeDetectorRef,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -227,6 +233,42 @@ export class DocumentAuthorizationPostTraining {
       this.canDelete = permissions.canDelete;
 
       this.GetLoginEmpId();
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.pendingAuthorizationColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentnumber', label: 'Document Number', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'version', label: 'Version', visible: true },
+        { field: 'trainingMode', label: 'Training Mode', visible: true },
+        { field: 'userAssigned', label: 'User Assigned', visible: true },
+        { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'url', label: 'URL', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
+      ];
     });
   }
 

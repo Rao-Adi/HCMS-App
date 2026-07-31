@@ -23,6 +23,7 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { AppConfigService } from '@app/core/services/app-config';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -86,7 +87,16 @@ export class ViewDocumentPendingApproval {
   selectedUser?: string;
   documentTypeData: any[] = [];
 
-  documentsColumnDefs = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subDepartment', label: 'Sub-Department' },
+    4: { field: 'businessDomain', label: 'Business Domain' },
+  };
+
+  // Columns before the cabinet (Division/Department/...) columns
+  private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentNumber', headerName: 'Document Number' },
     {
@@ -96,7 +106,7 @@ export class ViewDocumentPendingApproval {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -109,9 +119,10 @@ export class ViewDocumentPendingApproval {
       },
     },
     { field: 'version', headerName: 'Version' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
+  ];
+
+  // Columns after the cabinet (Division/Department/...) columns
+  private readonly trailingColumnDefs: ColDef[] = [
     // { field: 'url', headerName: 'URL' ,
     //   editable: false,
     //   cellRenderer: (params: any) => {
@@ -148,7 +159,7 @@ export class ViewDocumentPendingApproval {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -162,13 +173,15 @@ export class ViewDocumentPendingApproval {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentsColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit) alongside documentsColumnDefs.
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subDepartment', label: 'Sub-Department', visible: true },
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
@@ -199,6 +212,7 @@ export class ViewDocumentPendingApproval {
     private _notificationToastService: NotificationToastService,
     private sanitizer: DomSanitizer,
     private _config: AppConfigService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -206,6 +220,37 @@ export class ViewDocumentPendingApproval {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentsColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'version', label: 'Version', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'url', label: 'URL', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+      ];
     });
   }
 

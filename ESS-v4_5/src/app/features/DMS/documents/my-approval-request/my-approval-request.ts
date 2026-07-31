@@ -24,6 +24,7 @@ import { EmployeeDraftObservationService } from '@app/shared/services/employee-d
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 
 @Component({
@@ -109,7 +110,16 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
   observation: string = '';
   documentColumnDefsWithoutStatus: ColDef[] = [];
 
-  documentColumnDefs = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  // Columns before the cabinet (Division/Department/...) columns
+  private readonly leadingColumnDefs: ColDef[] = [
     {
       field: 'documentType',
       headerName: 'Document Type',
@@ -173,7 +183,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         const val = params.value || (params.data && params.data.justification) || '';
         if (!val) return '<span>-</span>';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
@@ -198,18 +208,9 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       headerName: 'Proposed Version Number',
       flex: 1,
     },
-    {
-      field: 'division',
-      headerName: 'Division',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
-    },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     {
       field: 'executionStatus',
       headerName: 'Execution Status',
@@ -304,6 +305,10 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentRequestId', label: 'Request ID', visible: true },
@@ -312,9 +317,6 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
@@ -331,6 +333,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private _employeeDraftObservationService: EmployeeDraftObservationService,
     private _navigationCountsService: NavigationCountsService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -359,6 +362,43 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         this.disapprovedRequestCount = counts.rejectedOrReverted;
       }),
     );
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+      this.documentColumnDefsWithoutStatus = this.documentColumnDefs.filter(
+        (col) => col.field !== 'executionStatus',
+      );
+
+      this.columnToggles = [
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentRequestId', label: 'Request ID', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'observation', label: 'Observation', visible: true },
+        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+        { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+      ];
+    });
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
@@ -500,6 +540,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
                 division: get(['Division', 'division']),
                 department: get(['Department', 'department']),
                 subdepartment: get(['SubDepartment', 'subdepartment', 'subDepartment']),
+                businessdomain: get(['BusinessDomain', 'businessDomain', 'businessdomain']),
                 requestCreatedBy: get([
                   'CreatedBy',
                   'createdBy',

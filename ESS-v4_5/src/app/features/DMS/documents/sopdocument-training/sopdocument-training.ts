@@ -23,6 +23,7 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -85,6 +86,7 @@ export class SOPDocumentTraining {
     private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -92,6 +94,42 @@ export class SOPDocumentTraining {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.classRoomColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'documentNumber', label: 'Document Number', visible: true },
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'version', label: 'Version', visible: true },
+        { field: 'trainingMode', label: 'Training Mode', visible: true },
+        { field: 'userAssigned', label: 'User Assigned', visible: true },
+        { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'url', label: 'URL', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
+      ];
     });
 
     // 1. First, load the document types list
@@ -125,7 +163,16 @@ export class SOPDocumentTraining {
   };
   public noRowsOverlay: string = '';
 
-  classRoomColumnDefs = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subDepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  // Columns before the cabinet (Division/Department/...) columns
+  private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentId', headerName: 'Document ID', hide: true },
     { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
@@ -158,9 +205,10 @@ export class SOPDocumentTraining {
         },
       }),
     },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
+  ];
+
+  // Columns after the cabinet (Division/Department/...) columns
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'url', headerName: 'URL' },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
@@ -173,7 +221,7 @@ export class SOPDocumentTraining {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-        <span 
+        <span
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
@@ -192,7 +240,7 @@ export class SOPDocumentTraining {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-        <span 
+        <span
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
@@ -206,6 +254,11 @@ export class SOPDocumentTraining {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  classRoomColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit) alongside classRoomColumnDefs.
   columnToggles?: ColumnToggle[] = [
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'documentNumber', label: 'Document Number', visible: true },
@@ -214,9 +267,6 @@ export class SOPDocumentTraining {
     { field: 'trainingMode', label: 'Training Mode', visible: true },
     { field: 'userAssigned', label: 'User Assigned', visible: true },
     { field: 'averageDocumentScore', label: 'Average Document Score', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subDepartment', label: 'Sub-Department', visible: true },
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
@@ -225,7 +275,7 @@ export class SOPDocumentTraining {
     { field: 'approvalHistory', label: 'Approval History', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
-  
+
   onDivisionChange(value: string): void {
     this.selectedDivisions = value;
     this.selectedDepartment = '';

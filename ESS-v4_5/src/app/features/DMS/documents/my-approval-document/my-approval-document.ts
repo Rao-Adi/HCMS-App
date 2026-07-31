@@ -32,6 +32,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 @Component({
   selector: 'app-my-approval-document',
@@ -114,6 +115,14 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   disapprovedDocumentCount: number = 0;
   public noRowsOverlay: string = '';
 
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subDepartment', label: 'Sub-Department' },
+    4: { field: 'businessDomain', label: 'Business Domain' },
+  };
+
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentId', label: 'Document ID', visible: true },
@@ -122,9 +131,6 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -134,7 +140,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'approvalHistory', label: 'Approval History', visible: true },
   ];
 
-  pendingDocumentsGridColumnDefs = [
+  private readonly leadingColumnDefs: ColDef[] = [
     { field: 'executionId', headerName: 'ExecutionId', hide: true },
     { field: 'observation', headerName: 'Observation', hide: true },
     // {
@@ -168,7 +174,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         const val = params.value || (params.data && params.data.justification) || '';
         if (!val) return '<span>-</span>';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
@@ -186,9 +192,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'company', headerName: 'Company', minWidth: 100, flex: 1 },
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
     { field: 'proposedVersionNumber', headerName: 'Proposed Version Number' },
-    { field: 'division', headerName: 'Division' },
-    { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'dateOfCreation', headerName: 'Date of Creation', cellClass: 'audit-cell', minWidth: 150,
       flex: 1 },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
@@ -215,7 +221,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-        <span 
+        <span
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
@@ -229,6 +235,10 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  pendingDocumentsGridColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
   pendingDocumentData: any[] = [];
 
   constructor(
@@ -241,6 +251,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     private _documentRequestService: DocumentRequestService,
     private _employeeDraftObservationService: EmployeeDraftObservationService,
     private _navigationCountsService: NavigationCountsService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -256,6 +267,41 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         this.disapprovedDocumentCount = counts.rejectedOrReverted;
       }),
     );
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.pendingDocumentsGridColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentId', label: 'Document ID', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'observation', label: 'Observation', visible: true },
+        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+        { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+      ];
+    });
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
