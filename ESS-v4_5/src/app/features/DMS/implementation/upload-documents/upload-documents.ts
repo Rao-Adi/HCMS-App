@@ -64,7 +64,7 @@ export class UploadDocuments {
   dropdownDataSources: Record<number, any[]> = {};
   cabinetHierarchy: CabinetLevel[] = [];
   levelTitles: Record<number, string> = {};
-
+ 
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
@@ -180,14 +180,21 @@ export class UploadDocuments {
       suppressCellFocus: true,
     };
   }
+ 
 
   private getColumns(): GridColumn[] {
+    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
+      ...col,
+      minWidth: 200
+    }));
+
     return [
       ...this.getFixedColumns(),
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...cabinetCols,
       ...this.getRemainingColumns(),
     ];
   }
+
 
   GetAllUploadedDocuments(query: any) {
     const sort = query.sortModel?.[0];

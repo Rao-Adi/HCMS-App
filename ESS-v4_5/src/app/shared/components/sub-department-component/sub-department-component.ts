@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -22,6 +22,8 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './sub-department-component.css',
 })
 export class SubDepartmentComponent {
+  @Input() level!: number;
+  @Input() levelTitles!: Record<number, string>;
   gridConfig: GridConfig = {} as GridConfig;
 
   // --- PERMISSION FLAGS ---
@@ -35,6 +37,9 @@ export class SubDepartmentComponent {
   totalSubDepartments = 0;
   subDepartmentData: any[] = [];
   departments: any[] = [];
+
+  currentTitle = '';
+  parentTitle = '';
 
   defaultColDef: ColDef = {
     filter: true,
@@ -99,6 +104,9 @@ export class SubDepartmentComponent {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
+      this.currentTitle = this.levelTitles[this.level]; // Department
+      this.parentTitle = this.levelTitles[this.level - 1]; // Division
+
       this.getAllDepartmeList();
     });
   }
@@ -150,7 +158,7 @@ export class SubDepartmentComponent {
       // ✅ Department
       {
         field: 'Department',
-        headerName: 'Department',
+        headerName: `${this.parentTitle}`,
         type: 'dropdown',
         dropdownOptions: this.departments,
         dropdownValueField: 'id',

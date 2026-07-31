@@ -75,8 +75,8 @@ export class DepartmentComponent {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
-      this.currentTitle = this.levelTitles[this.level]; // Department
-      this.parentTitle = this.levelTitles[this.level - 1]; // Division
+      this.currentTitle = this.levelTitles[this.level];
+      this.parentTitle = this.levelTitles[this.level - 1];
 
       this.getAllDivisionList();
     });

@@ -124,7 +124,7 @@
                         'input-sm': true,
                       }"
                     />
-                     <!-- Edit Button -->
+                    <!-- Edit Button -->
                     <button
                       *ngIf="!isTitleEditing"
                       aria-label="Edit tab name"
@@ -213,7 +213,7 @@
                         'input-sm': true,
                       }"
                     />
-                     <!-- Edit Button -->
+                    <!-- Edit Button -->
                     <button
                       *ngIf="!isTitleEditing"
                       aria-label="Edit tab name"
@@ -277,7 +277,10 @@
               <br />
               <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12">
-                  <app-sub-department-component></app-sub-department-component>
+                  <app-sub-department-component
+                    [level]="activeTab"
+                    [levelTitles]="levelTitles"
+                  ></app-sub-department-component>
                 </div>
               </div>
             </div>
@@ -300,7 +303,7 @@
                         'input-sm': true,
                       }"
                     />
-                     <!-- Edit Button -->
+                    <!-- Edit Button -->
                     <button
                       *ngIf="!isTitleEditing"
                       aria-label="Edit tab name"
@@ -364,7 +367,10 @@
               <br />
               <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <app-business-domain-component></app-business-domain-component>
+                  <app-business-domain-component
+                    [level]="activeTab"
+                    [levelTitles]="levelTitles"
+                  ></app-business-domain-component>
                 </div>
               </div>
             </div>

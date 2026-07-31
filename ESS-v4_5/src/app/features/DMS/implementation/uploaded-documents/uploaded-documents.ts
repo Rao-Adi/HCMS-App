@@ -18,6 +18,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 
 @Component({
   selector: 'app-uploaded-documents',
@@ -106,6 +107,7 @@ export class UploadedDocuments {
     private _notificationToastService: NotificationToastService,
     private sanitizer: DomSanitizer,
     private _config: AppConfigService,
+    private cabinetGridService: CabinetGridService
   ) {}
 
   ngOnInit() {
@@ -173,11 +175,37 @@ export class UploadedDocuments {
   }
 
   private getColumns(): GridColumn[] {
+    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
+      ...col,
+      minWidth: 230
+    }));
+
     return [
       ...this.getFixedColumns(),
-      //...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...cabinetCols,
       ...this.getRemainingColumns(),
     ];
+  }
+
+  
+  private buildGrid(): void {
+    this.gridConfig = {
+      columns: this.getColumns(),
+      enablePagination: true,
+      pageSize: this.selectedPageSize,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
   }
 
   GetAllUploadedDocuments(query: any) {

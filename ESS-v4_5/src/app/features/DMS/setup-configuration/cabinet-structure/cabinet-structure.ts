@@ -241,6 +241,14 @@ export class CabinetStructure {
           this.cabinetConfigStructure.lastModifiedBy = updatedData.LastModifiedBy;
           this.cabinetConfigStructure.lastModifiedAt = this.formatDate(updatedData.LastModifiedAt);
         }
+
+        // Keep this page's own levelTitles (passed to Level 2/3/4 child components) in sync,
+        // and patch the shared CabinetHierarchyService cache so every other already-loaded
+        // <app-cabinet-structure-list> across the app picks up the rename immediately instead
+        // of waiting for a full page reload to re-fetch the hierarchy.
+        this.levelTitles = { ...this.levelTitles, [updatedData.Id]: updatedData.Name };
+        this.cabinetHierarchy.updateLevelTitle(updatedData.Id, updatedData.Name);
+
         this.isTitleEditing = false; // Exit editing mode after saving
 
         this._notificationToastService.createNotification(

@@ -135,4 +135,18 @@ export class CabinetHierarchyService {
     this._dropdownLevels = [];
     this._levelTitles = {};
   }
+
+  /**
+   * Patches a single level's title in this shared, app-wide cache (e.g. right after an
+   * inline rename succeeds). Every component holding a reference to the cached levels/titles
+   * — every <app-cabinet-structure-list> instance across the app — reflects the change
+   * immediately, instead of only picking it up on the next full loadDropdownHierarchy() call.
+   */
+  public updateLevelTitle(level: number, title: string): void {
+    this._levelTitles[level] = title;
+    const match = this._dropdownLevels.find((l) => l.level === level);
+    if (match) {
+      match.title = title;
+    }
+  }
 }

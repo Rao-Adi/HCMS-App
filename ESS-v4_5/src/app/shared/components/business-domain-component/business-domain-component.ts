@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -22,6 +22,9 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './business-domain-component.css',
 })
 export class BusinessDomainComponent {
+  @Input() level!: number;
+  @Input() levelTitles!: Record<number, string>;
+
   gridConfig: GridConfig = {} as GridConfig;
 
   selectedPageSize = 10;
@@ -34,6 +37,9 @@ export class BusinessDomainComponent {
     filter: true,
     cellDataType: false,
   };
+
+  currentTitle = '';
+  parentTitle = '';
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -67,8 +73,11 @@ export class BusinessDomainComponent {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
+      this.currentTitle = this.levelTitles[this.level];
+      this.parentTitle = this.levelTitles[this.level - 1];
+
       this.getAllDepartmeList();
-    });    
+    });
   }
 
   private buildGrid(): void {
@@ -118,7 +127,7 @@ export class BusinessDomainComponent {
       // ✅ SubDepartment
       {
         field: 'SubDepartment',
-        headerName: 'Sub-Department',
+        headerName: `${this.parentTitle}`,
         type: 'dropdown',
         dropdownOptions: this.subdepartments,
         dropdownValueField: 'id',
@@ -188,13 +197,13 @@ export class BusinessDomainComponent {
           Name: item.Name || item.name,
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
-          IsActive :item.isActive || item.IsActive || false,
-          IsDeleted :item.isDeleted || item.IsDeleted || false,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -220,13 +229,13 @@ export class BusinessDomainComponent {
           Name: item.name || item.Name,
           SubDepartment: item.SubDepartment || item.SubDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.SubDepartmentCode || '',
-          IsActive :item.isActive || item.IsActive || false,
-          IsDeleted :item.isDeleted || item.IsDeleted || false,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -272,7 +281,7 @@ export class BusinessDomainComponent {
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event; 
+    const { rowData } = event;
     const payLoad = {
       Code: rowData.Code,
       Name: rowData.Name,

@@ -37,7 +37,7 @@ export class CabinetGridService {
           dropdownDisplayField: 'text',
           dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
           filterKey: parentLevel ? 'parentId' : undefined,
-          minWidth: 220,
+          minWidth: 230,
           required: false,
         } as GridColumn;
       });
