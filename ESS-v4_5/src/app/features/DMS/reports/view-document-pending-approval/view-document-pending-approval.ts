@@ -117,7 +117,7 @@ export class ViewDocumentPendingApproval {
     //   cellRenderer: (params: any) => {
     //     if (!params.data) return '';
     //     return `
-    //       <span 
+    //       <span
     //         style="color:#1976d2; cursor:pointer; text-decoration:underline"
     //         data-action="open"
     //       >
@@ -131,8 +131,16 @@ export class ViewDocumentPendingApproval {
     // },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', cellClass: 'audit-cell' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', cellClass: 'audit-cell' },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created By',
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      cellClass: 'audit-cell',
+    },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -284,8 +292,8 @@ export class ViewDocumentPendingApproval {
               documentName: get(['Title', 'title', 'documentname']),
               documentNumber: get(['DocumentNumber', 'documentnumber']),
               version: get(['Version', 'version', 'proposedVersionNumber']),
-              company: get(['Company', 'company'], ''), 
-              
+              company: get(['Company', 'company'], ''),
+
               // ──────────────────────────────────────────────
               // Organizational context
               // ──────────────────────────────────────────────
@@ -314,14 +322,13 @@ export class ViewDocumentPendingApproval {
               startedAt: new CustomDateFormatPipe().transform(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
-              // previousVersionCreatedBy: get([
-              //   'LastModifiedByName',
-              //   'lastmodifiedbyname',
-              //   'PreviousVersionCreatedBy',
-              // ]),
-              // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              //   get(['LastModifiedAt', 'lastmodifiedat', 'PreviousVersionCreatedOn']),
-              // ),
+              previousVersionCreatedBy: get([
+                'previousversioncreatedby',
+                'previousversioncreatedby',
+              ]),
+              previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+                get(['previousversioncreatedon', 'previousversioncreatedon']),
+              ),
 
               // ──────────────────────────────────────────────
               // Placeholder / missing fields from your original
@@ -372,7 +379,6 @@ export class ViewDocumentPendingApproval {
     this.documentId = row?.RequestId || row?.Id || row?.id;
     this.currentDocumentName = row?.documentName || '';
   }
- 
 
   onDocumentTypeChange(value: string): void {
     this.selectedDocumentType = value;
@@ -456,7 +462,7 @@ export class ViewDocumentPendingApproval {
     });
   }
 
-  downloadDraft(): void { 
+  downloadDraft(): void {
     const idToDownload = this.documentId;
     this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
       next: (response: any) => {

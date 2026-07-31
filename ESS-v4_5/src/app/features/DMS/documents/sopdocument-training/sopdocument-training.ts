@@ -662,8 +662,22 @@ export class SOPDocumentTraining {
               'Request',
               response.Message,
             );
-            this.GetAllClassRooms({}); // Refresh the grid
-            this.selectedDocumentId = null; // Clear the selection
+            this.selectedDocumentId = null;
+            // Clear both the tracked selection state and the grid's own checkbox
+            // selection immediately — don't rely on the approved record simply
+            // disappearing from the next fetch to disable the Approve button.
+            this.hasSelectedRows = false;
+            this.agGridWrapper?.gridApi?.deselectAll();
+            if (this.agGridWrapper) {
+              // Server-side (infinite-model) grid: refresh() invalidates AG Grid's
+              // own cache and re-requests data, unlike calling GetAllClassRooms()
+              // directly, which only updates the parent's array without AG Grid
+              // ever re-pulling it — the grid kept showing the stale, pre-approval
+              // rows even though the fetch itself succeeded.
+              this.agGridWrapper.refresh();
+            } else {
+              this.GetAllClassRooms({});
+            }
           }
         },
         error: (err) => {
