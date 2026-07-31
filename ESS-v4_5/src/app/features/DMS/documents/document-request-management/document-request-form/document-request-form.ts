@@ -295,6 +295,12 @@ export class DocumentRequestForm {
       this.showDocumentCreationDiv = true;
     } else {
       this.showDocumentDiv = true; // show document grid on obseletion as well.
+      // Without this, switching directly from a type that already shows this grid (e.g.
+      // Revision) to Obsoletion never remounts <app-ag-grid-wrapper> (showDocumentDiv flips
+      // false->true synchronously within emptyFields()+this branch, so Angular's *ngIf never
+      // observes an intermediate unmount) — AG Grid's one-time automatic first load never
+      // re-fires, rowData never gets reassigned, and the wrapper's loading spinner never clears.
+      this.GetEffectiveDocumentsForRevision('');
       this.showDocumentCreationDiv = true;
     }
   }

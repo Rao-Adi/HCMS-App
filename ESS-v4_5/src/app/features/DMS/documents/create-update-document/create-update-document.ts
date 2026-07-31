@@ -179,6 +179,7 @@ export class CreateUpdateDocument {
   documentRevisionData: [] = [];
   documentRevisionColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
     { field: 'division', headerName: 'Division' },
@@ -229,6 +230,7 @@ export class CreateUpdateDocument {
 
   DocumentObsoletionGridColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
     { field: 'division', headerName: 'Division' },
@@ -395,7 +397,7 @@ export class CreateUpdateDocument {
         break;
       case 'DRT-0003': // Obsoletion of existing document
         //this.trainingRequired = false;
-        this.showExclusionTable = true;
+        this.showExclusionTable = false;
         break;
       default:
         //this.trainingRequired = false;
@@ -452,8 +454,11 @@ export class CreateUpdateDocument {
   }
 
   loadObsoletionData() {
-    // Load data for obsoletion (e.g., documents grid)
-    //this.loadDocumentsForObsoletion();
+    // This grid (like the Revision one) has no (serverQuery) binding — it's a plain
+    // client-side grid that only ever shows whatever rowData it's given. Without this call,
+    // DocumentObseletionData never gets assigned, AgGridWrapper's rowData input never
+    // changes, and its loading spinner never clears.
+    this.GetAllApprovedDocuments('');
   }
 
   // Helper method to get display text
@@ -1059,7 +1064,8 @@ export class CreateUpdateDocument {
             startedAt: item.StartedAt || item.startedAt,
             version: item.Version,
             division: item.Division,
-            documentId: item.DocumentNumber,
+            documentId: item.Id || item.id,
+            documentNumber: item.documentNumber || item.DocumentNumber,
             documentName: item.DocumentName,
             proposedContent: item.ProposedContent,
             department: item.Department,
@@ -1075,12 +1081,11 @@ export class CreateUpdateDocument {
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.CreatedAt || item.CreatedAt || '',
             ),
-            previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-              item.createdAt || item.CreatedAt || '',
-            ),
+            // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+            //   item.createdAt || item.CreatedAt || '',
+            // ),
             // previousVersionCreatedOn:
-            //   item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-            proposedVersionNumber: item.RowVersion || item.rowVersion,
+            //   item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '', 
             templateType: item.TemplateType || item.templateType,
             templateFileUrl:
               item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
@@ -1151,8 +1156,15 @@ export class CreateUpdateDocument {
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this.totalRows = response.Data.TotalCount;
-          this.DocumentObseletionData = response.Data.map((item: any) => {
+          // response.Data is { Items: [...], TotalCount } like every other list endpoint in
+          // this app — it is NOT itself an array. Calling .map() on it directly (as this used
+          // to) throws a TypeError before DocumentObseletionData is ever reassigned, which
+          // RxJS routes to the error handler below and leaves the grid's rowData untouched —
+          // so AgGridWrapper's loading spinner never clears.
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.DocumentObseletionData = items.map((item: any) => {
             // Helper to get value with case-insensitive fallback
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
@@ -1182,10 +1194,9 @@ export class CreateUpdateDocument {
               // ──────────────────────────────────────────────
               documentType: get(['DocumentType', 'documentType']),
               documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
+              documentNumber: get(['DocumentNumber', 'documentNumber','documentnumber']),
               documentName: get(['Title', 'title']),
-              company: get(['Company', 'company'], ''),
-              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
-              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
+              company: get(['Company', 'company'], ''),  
 
               // ──────────────────────────────────────────────
               // Organizational context
@@ -1213,10 +1224,10 @@ export class CreateUpdateDocument {
               startedAt: this.formatDate(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
-              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              previousVersionCreatedOn: this.formatDate(
-                get(['RequestCreatedAt', 'requestCreatedAt']),
-              ),
+              //previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              // previousVersionCreatedOn: this.formatDate(
+              //   get(['RequestCreatedAt', 'requestCreatedAt']),
+              // ),
 
               // ──────────────────────────────────────────────
               // Placeholder / missing fields from your original
@@ -1228,13 +1239,20 @@ export class CreateUpdateDocument {
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
             };
           });
+        } else {
+          // A falsy Success must still clear the grid's rowData — otherwise it's left
+          // showing stale data (or none) while the loading spinner never turns off.
+          this.DocumentObseletionData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
+        this.DocumentObseletionData = [];
+        this.totalRows = 0;
         this._notificationToastService.createNotification(
           'error',
           'Error',
-          'Failed to submit document.',
+          err?.error?.Message || err?.Message || 'Failed to fetch documents for obsoletion.',
         );
       },
     });
