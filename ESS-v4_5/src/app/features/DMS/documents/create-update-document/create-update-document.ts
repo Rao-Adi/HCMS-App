@@ -547,18 +547,23 @@ export class CreateUpdateDocument {
   }
 
   GetDocumentAttributes(value: string) {
-    this._documentAttributeService.getDocumentAttributeByDocumentType(value).subscribe((res) => {
-      if (res) {
-        if (!res?.Data) return;
-        this.attributes = res.Data.map((attr: any) => ({
-          ...attr,
-          ControlType: attr.ControlType.toLowerCase() as ControlTypes,
-          options: attr.ListValues ? attr.ListValues.split(',').map((v: string) => v.trim()) : [],
-        }));
-        //this.attributes = res.Data;
-      } else {
+    this._documentAttributeService.getDocumentAttributeByDocumentType(value).subscribe({
+      next: (res) => {
+        if (res) {
+          if (!res?.Data) return;
+          this.attributes = res.Data.map((attr: any) => ({
+            ...attr,
+            ControlType: attr.ControlType.toLowerCase() as ControlTypes,
+            options: attr.ListValues ? attr.ListValues.split(',').map((v: string) => v.trim()) : [],
+          }));
+          //this.attributes = res.Data;
+        } else {
+          this.attributes = [];
+        }
+      },
+      error: () => {
         this.attributes = [];
-      }
+      },
     });
   }
 
@@ -597,15 +602,20 @@ export class CreateUpdateDocument {
   }
 
   CheckTrainingPolicy(value: string) {
-    this._trainingPolicyService.GetTrainingPolicyByDocumentType(value).subscribe((res) => {
-      if (res && res.Data) {
-        const data = res.Data;
+    this._trainingPolicyService.GetTrainingPolicyByDocumentType(value).subscribe({
+      next: (res) => {
+        if (res && res.Data) {
+          const data = res.Data;
 
-        // 1. Assign the TrainingRequired value safely
-        this.trainingRequired = !!data.TrainingRequired;
-      } else {
+          // 1. Assign the TrainingRequired value safely
+          this.trainingRequired = !!data.TrainingRequired;
+        } else {
+          this.trainingRequired = false;
+        }
+      },
+      error: () => {
         this.trainingRequired = false;
-      }
+      },
     });
   }
 

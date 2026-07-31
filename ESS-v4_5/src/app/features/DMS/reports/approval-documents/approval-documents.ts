@@ -496,13 +496,11 @@ export class ApprovalDocuments {
   }
 
   onGridReady(event: GridReadyEvent) {
+    // Don't fetch here — this grid binds (serverQuery), so AgGridWrapper wires up an
+    // infinite-row-model datasource right after gridReady fires, and AG Grid's own first
+    // getRows() call already triggers GetAllPendingDocuments() via serverQuery. Calling it
+    // again here just duplicates the initial API request.
     this.gridApi = event.api;
-    this.GetAllPendingDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
   }
 
   onCellClicked(event: any): void {
