@@ -128,7 +128,8 @@
            [attr.aria-expanded]="root.child?.length ? openSubmenus[key(root.Value)] : null">
           <i class="menu-icon bi" [ngClass]="'bi-' + getIconClass(root.Value)" aria-hidden="true"></i>
           <span class="menu-text flex-grow-1 text-truncate fw-medium">{{root.Text}}</span>
-          <span *ngIf="root.count" class="menu-count">{{root.count}}</span>
+          <span *ngIf="isExpanded && root.count" class="menu-count">{{root.count}}</span>
+          <span *ngIf="!isExpanded && hasPendingCount(root)" class="menu-count-dot" aria-hidden="true"></span>
           <span *ngIf="root.child?.length" class="submenu-indicator" aria-hidden="true">›</span>
         </a>
 
