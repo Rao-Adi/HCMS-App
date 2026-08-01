@@ -82,7 +82,16 @@ export class ResponsibilityTransferForm {
   activeMode: 'manual' | 'integration' | null = null;
   isPermanentTransfer: boolean = false;
 
-  totalPendingApprovals = 0; 
+  totalPendingApprovals = 0;
+
+  // Counts shown as badges on the tabs -- populated via get-my-responsibility-transfers-approvals-count
+  responsibilityTransferApprovalCounts = {
+    pendingCount: 0,
+    approvedCount: 0,
+    rejectedCount: 0,
+    revertedCount: 0,
+    totalCount: 0,
+  };
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -167,11 +176,33 @@ export class ResponsibilityTransferForm {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       this.getAllUsersList();
     });
+
+    this.getMyResponsibilityTransfersApprovalsCount();
   }
- 
+
+  getMyResponsibilityTransfersApprovalsCount(): void {
+    this._responsibilityTransfer.GetMyResponsibilityTransfersApprovalsCount().subscribe({
+      next: (res: any) => {
+        if (res?.Success && res.Data) {
+          const data = res.Data;
+          this.responsibilityTransferApprovalCounts = {
+            pendingCount: data.PendingCount ?? data.pendingCount ?? 0,
+            approvedCount: data.ApprovedCount ?? data.approvedCount ?? 0,
+            rejectedCount: data.RejectedCount ?? data.rejectedCount ?? 0,
+            revertedCount: data.RevertedCount ?? data.revertedCount ?? 0,
+            totalCount: data.TotalCount ?? data.totalCount ?? 0,
+          };
+        }
+      },
+      error: () => {
+        // Non-critical -- tab badge just stays at its last known value if this fails.
+      },
+    });
+  }
+
   private getStatusText(statusId: any): string {
     const statusMap: { [key: string]: string } = {
       '1': 'Pending',
@@ -571,6 +602,7 @@ export class ResponsibilityTransferForm {
             res?.Message || `Request has been ${actionType.toLowerCase()}d.`,
           );
           this.GetAllResponsibilityTransferForms(); // Automatically refresh Grid
+          this.getMyResponsibilityTransfersApprovalsCount(); // Refresh tab badge
           this.observation = '';
           this.selectedRow = null;
         } else {

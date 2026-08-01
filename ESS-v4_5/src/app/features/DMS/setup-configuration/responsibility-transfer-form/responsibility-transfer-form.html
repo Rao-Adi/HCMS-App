@@ -20,6 +20,11 @@
                 (click)="onTabChange('Requests pending My Approval')"
               >
                 Requests pending My Approval
+                <span
+                  class="badge bg-danger ms-1"
+                  *ngIf="responsibilityTransferApprovalCounts.pendingCount > 0"
+                  >{{ responsibilityTransferApprovalCounts.pendingCount }}</span
+                >
               </button>
               <button
                 class="tab-button"

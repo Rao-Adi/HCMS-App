@@ -93,6 +93,14 @@ export class ResponsibilityTransferService {
     });
   }
 
+  GetMyResponsibilityTransfersApprovalsCount(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSTransferWorkflowPolicy/get-my-responsibility-transfers-approvals-count`;
+
+    return this.http.get<GenericResponse<any>>(uri, {
+      headers: this.getHeaders(),
+    });
+  }
+
   takeAction(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSTransferWorkflowPolicy/take-action`,
