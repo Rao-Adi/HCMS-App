@@ -521,9 +521,12 @@ export class DocumentAuthorizationPostTraining {
     const documentToApprove = selectedRows[0]; // Processes one document at a time
     const docId = documentToApprove.Id || documentToApprove.id || documentToApprove.documentId;
 
+    const actionLabel = actionType === 'APPROVED' ? 'Approve' : actionType === 'REJECTED' ? 'Reject' : actionType;
+    const actionColor = actionType === 'APPROVED' ? '#28a745' : '#dc3545';
+
     this.modal.confirm({
-      nzTitle: `${actionType} Document`,
-      nzContent: `Are you sure you want to ${actionType} the document: ${documentToApprove.documentName}?`,
+      nzTitle: `${actionLabel} Document`,
+      nzContent: `<b style="color: ${actionColor}">${actionLabel}</b> the document: ${documentToApprove.documentName}?`,
       nzOnOk: () => {
         const payload = {
           documentId: docId,
