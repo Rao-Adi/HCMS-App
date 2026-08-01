@@ -7,6 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 import { DocumentTrainingAuthorizationService } from '@app/shared/services/document-training-authorization.service';
@@ -28,6 +29,7 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
     AgGridWrapper,
     NzModalModule,
     EditableAgGridWrapper,
+    SpinnerComponent,
   ],
   templateUrl: './misc-policies.html',
   styleUrl: './misc-policies.css',
@@ -55,6 +57,11 @@ export class MiscPolicies {
 
   totalDocumentReview = 0;
   totalTrainingPolicies = 0;
+
+  // Shown over the grid while its add/update request is in flight
+  savingTrainingPolicy = false;
+  savingDocumentReview = false;
+  savingAuthorizationPolicy = false;
 
   pinnedTopRowDataAuthorization: any[] = [
     {
@@ -295,13 +302,28 @@ export class MiscPolicies {
     });
   }
 
+  // documentTypesList only holds active document types (it's also the "add new" source
+  // list). A policy row can reference a document type that's since been deleted — without a
+  // matching dropdown option, the grid's valueFormatter falls back to the raw code (e.g.
+  // "DT-0003"), which reads like real data instead of flagging that it's gone.
+  private getAuthorizationPolicyDocumentTypeOptions(): any[] {
+    const knownCodes = new Set(this.documentTypesList.map((d) => d.id));
+    const deletedTypeOptions = (this.authorizationPolicyData || [])
+      .map((row) => row.documentTypeCode)
+      .filter((code) => code && !knownCodes.has(code))
+      .filter((code, index, codes) => codes.indexOf(code) === index)
+      .map((code) => ({ id: code, text: `${code} (Deleted)` }));
+
+    return [...this.documentTypesList, ...deletedTypeOptions];
+  }
+
   private getAuthorizationPolicyColumns(): GridColumn[] {
     return [
       {
         field: 'documentTypeCode',
         headerName: 'Document Type',
         type: 'dropdown',
-        dropdownOptions: this.documentTypesList,
+        dropdownOptions: this.getAuthorizationPolicyDocumentTypeOptions(),
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         required: true,
@@ -342,6 +364,46 @@ export class MiscPolicies {
 
   private generateId(): number {
     return Date.now();
+  }
+
+  // EditableAgGridWrapper.resetPinnedRow() only clears its own internal copy of
+  // pinnedTopRowData and pushes that straight into ag-grid — it never touches the array these
+  // components are bound from via [pinnedTopRowData]. Since that binding is re-evaluated on
+  // every change detection cycle (e.g. right after the Get...() refresh below runs), the stale
+  // parent-owned array — still holding whatever was typed/selected before Add — gets pushed
+  // back down and overwrites the wrapper's reset, so the dropdown reappears "selected" after a
+  // successful add. Resetting the parent-owned array here closes that gap.
+  private resetTrainingPolicyPinnedRow(): void {
+    this.pinnedTopRowDataPlanning = [
+      {
+        documentTypeCode: '',
+        traningRequired: false,
+        minimumscoreforpassing: 0,
+        createdByName: '',
+        requestCreatedOn: '',
+      },
+    ];
+  }
+
+  private resetAuthorizationPolicyPinnedRow(): void {
+    this.pinnedTopRowDataAuthorization = [
+      {
+        documentTypeCode: '',
+        authorizationRequired: false,
+        authorizingAuthority: '',
+        createdByName: '',
+        requestCreatedOn: '',
+      },
+    ];
+  }
+
+  private resetDocumentReviewPinnedRow(): void {
+    this.pinnedTopRowDataDocumentReview = [
+      {
+        documentType: '',
+        reviewAfter: 0,
+      },
+    ];
   }
 
   private getDisplayName(options: any[], id: any): string {
@@ -536,6 +598,15 @@ export class MiscPolicies {
         } else {
           this.authorizationPolicyData = [];
         }
+
+        // Rebuild the Document Type dropdown options so any deleted-but-still-referenced
+        // codes in the rows just loaded get a "(Deleted)" label instead of showing raw.
+        if (this.selectedTab === 'AuthorizationPolicy') {
+          this.authGridConfig = {
+            ...this.authGridConfig,
+            columns: this.getAuthorizationPolicyColumns(),
+          };
+        }
       });
   }
 
@@ -587,8 +658,10 @@ export class MiscPolicies {
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
+    this.savingTrainingPolicy = true;
     this._trainingPolicyService.create(payLoad).subscribe({
       next: (res: any) => {
+        this.savingTrainingPolicy = false;
         if (res && (res.Success === false || res.success === false)) {
           this._notificationToastService.createNotification(
             'error',
@@ -608,6 +681,7 @@ export class MiscPolicies {
           'Training Policy',
           'Training policy added successfully!',
         );
+        this.resetTrainingPolicyPinnedRow();
         this.GetAllTrainingPolicy({
           pageNumber: 1,
           pageSize: this.pageSize,
@@ -616,6 +690,7 @@ export class MiscPolicies {
         });
       },
       error: (err: any) => {
+        this.savingTrainingPolicy = false;
         this._notificationToastService.createNotification(
           'error',
           'Training Policy',
@@ -647,8 +722,10 @@ export class MiscPolicies {
       authorizingUserId: rowData.authorizingAuthority,
     };
 
+    this.savingAuthorizationPolicy = true;
     this._documentTrainingAuthorizationService.create(payLoad).subscribe({
       next: (res: any) => {
+        this.savingAuthorizationPolicy = false;
         if (res && (res.Success === false || res.success === false)) {
           this._notificationToastService.createNotification(
             'error',
@@ -668,6 +745,7 @@ export class MiscPolicies {
           'Authorization Policy',
           'Authorization policy added successfully!',
         );
+        this.resetAuthorizationPolicyPinnedRow();
         this.GetDocumentTrainingAuthorization({
           pageNumber: 1,
           pageSize: this.pageSize,
@@ -676,6 +754,7 @@ export class MiscPolicies {
         });
       },
       error: (err: any) => {
+        this.savingAuthorizationPolicy = false;
         this._notificationToastService.createNotification(
           'error',
           'Authorization Policy',
@@ -708,8 +787,10 @@ export class MiscPolicies {
       authorizingUserId: rowData.authorizingAuthority,
     };
 
+    this.savingAuthorizationPolicy = true;
     this._documentTrainingAuthorizationService.update(payLoad).subscribe({
       next: (res: any) => {
+        this.savingAuthorizationPolicy = false;
         if (res && (res.Success === false || res.success === false)) {
           this._notificationToastService.createNotification(
             'error',
@@ -737,6 +818,7 @@ export class MiscPolicies {
         });
       },
       error: (err: any) => {
+        this.savingAuthorizationPolicy = false;
         this._notificationToastService.createNotification(
           'error',
           'Authorization Policy',
@@ -807,8 +889,10 @@ export class MiscPolicies {
       reviewPeriodYears: rowData.reviewAfter,
     };
 
+    this.savingDocumentReview = true;
     this._documentReviewPolicyService.create(payLoad).subscribe({
       next: (res: any) => {
+        this.savingDocumentReview = false;
         if (res && (res.Success === false || res.success === false)) {
           this._notificationToastService.createNotification(
             'error',
@@ -828,6 +912,7 @@ export class MiscPolicies {
           'Document Review',
           'Document review policy added successfully!',
         );
+        this.resetDocumentReviewPinnedRow();
         this.GetAllDocumentReviewPolicies({
           pageNumber: 1,
           pageSize: this.pageSize,
@@ -836,6 +921,7 @@ export class MiscPolicies {
         });
       },
       error: (err: any) => {
+        this.savingDocumentReview = false;
         this._notificationToastService.createNotification(
           'error',
           'Document Review',
@@ -859,8 +945,10 @@ export class MiscPolicies {
       reviewPeriodYears: rowData.reviewAfter,
     };
 
+    this.savingDocumentReview = true;
     this._documentReviewPolicyService.update(payLoad).subscribe({
       next: (res: any) => {
+        this.savingDocumentReview = false;
         if (res && (res.Success === false || res.success === false)) {
           this._notificationToastService.createNotification(
             'error',
@@ -888,6 +976,7 @@ export class MiscPolicies {
         });
       },
       error: (err: any) => {
+        this.savingDocumentReview = false;
         this._notificationToastService.createNotification(
           'error',
           'Document Review',
@@ -960,8 +1049,10 @@ export class MiscPolicies {
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
 
+    this.savingTrainingPolicy = true;
     this._trainingPolicyService.update(payLoad).subscribe({
       next: (res: any) => {
+        this.savingTrainingPolicy = false;
         if (res && (res.Success === false || res.success === false)) {
           this._notificationToastService.createNotification(
             'error',
@@ -989,6 +1080,7 @@ export class MiscPolicies {
         });
       },
       error: (err: any) => {
+        this.savingTrainingPolicy = false;
         this._notificationToastService.createNotification(
           'error',
           'Training Policy',
