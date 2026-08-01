@@ -149,18 +149,12 @@ export class ResponsibilityTransferWorkflow {
       approvaluserid: rowData.approvalAuthority,
     };
 
-    const selectedOption = this.approvalAuthority.find(
-      (opt) => opt.id === rowData.approvalAuthority,
-    );
-    let displayName = rowData.approvalAuthority;
-    if (selectedOption) {
-      const parts = selectedOption.text.split('-');
-      displayName = parts.length > 1 ? parts.slice(1).join('-') : selectedOption.text;
-    }
-
+    // Keep approvalAuthority as the employee code (matches what the server stores and
+    // returns as ApprovalUserId) — the grid's dropdown valueFormatter resolves it to a
+    // friendly name via dropdownOptions, which already has this division's employees loaded
+    // since that's where this selection came from.
     const rowWithId = {
       ...rowData,
-      approvalAuthority: displayName,
       id: this.generateId(),
     };
 
@@ -274,10 +268,11 @@ export class ResponsibilityTransferWorkflow {
     } else if (event.field === 'divisionCode') {
       if (event.value) {
         this.GetEmployeesByDivisionId(event.value);
-      } else {
-        this.approvalAuthority = [];
-        this.buildGrid();
       }
+      // Note: approvalAuthority (the dropdown option pool) is intentionally left alone here
+      // even when the division is cleared — it now accumulates every division touched across
+      // the whole grid (see GetEmployeesByDivisionId), so wiping it would blank out the
+      // dropdown/valueFormatter for every other row too, not just this one.
       event.rowData.approvalAuthority = null;
       if (event.rowIndex !== undefined && event.rowIndex !== null && event.rowIndex >= 0) {
         this.manualUserData[event.rowIndex] = { ...event.rowData };
@@ -323,19 +318,33 @@ export class ResponsibilityTransferWorkflow {
           this.manualUserData = res.Data.Items.map((item: any) => ({
             id: item.Id,
             divisionCode: item.DivisionCode,
-            approvalAuthority:
-              item.DivisionHeadName + '(' + item.DivisionHeadDesignation + ')'
-                ? item.DivisionHeadName.toString() + '(' + item.DivisionHeadDesignation + ')'
-                : null,
+            // The actually-saved approver — NOT item.DivisionHeadName/DivisionHeadDesignation,
+            // which describe the division's separate HR-configured head. Mapping from those
+            // was the bug: no matter who got saved as approver, the grid always showed the
+            // division head instead.
+            approvalAuthority: item.ApprovalUserId || item.approvaluserid || null,
           })).sort((a: any, b: any) => {
             const divA = this.getDisplayName(this.divisions, a.divisionCode).toLowerCase();
             const divB = this.getDisplayName(this.divisions, b.divisionCode).toLowerCase();
             return divA.localeCompare(divB);
           });
+
+          // Resolve every row's approver code to a friendly name for the read-only view.
+          // dropdownOptions is shared by the editor AND the valueFormatter, so without this
+          // sweep only whichever division was most recently edited would show a name instead
+          // of a bare code.
+          this.loadApprovalAuthorityForAllDivisions();
         } else {
           this.manualUserData = [];
         }
       });
+  }
+
+  private loadApprovalAuthorityForAllDivisions(): void {
+    const divisionCodes = Array.from(
+      new Set(this.manualUserData.map((row) => row.divisionCode).filter((code) => !!code)),
+    );
+    divisionCodes.forEach((code) => this.GetEmployeesByDivisionId(code));
   }
 
   getAllDivisionList = () => {
@@ -357,9 +366,8 @@ export class ResponsibilityTransferWorkflow {
 
   GetEmployeesByDivisionId = (divId: string, onLoaded?: () => void) => {
     this._peoplePartnersService.GetEmployeesByDivisionId(divId).subscribe((res) => {
-      if (res?.Data) {
-        this.approvalAuthority = (res.Data ?? [])
-          .map((d: any) => ({
+      const employees = res?.Data
+        ? (res.Data ?? []).map((d: any) => ({
             id: d.EmployeeCode || d.employeecode,
             text:
               d.employeecode +
@@ -370,10 +378,17 @@ export class ResponsibilityTransferWorkflow {
               ')',
             rawName: d.FullName || d.fullname || '',
           }))
-          .sort((a: any, b: any) => (a.rawName || '').localeCompare(b.rawName || ''));
-      } else {
-        this.approvalAuthority = [];
-      }
+        : [];
+
+      // Merge rather than overwrite — approvalAuthority backs the dropdown for whichever
+      // row is being edited/added AND the read-only valueFormatter for every other row, so
+      // employees loaded for other divisions must stay available.
+      const existingIds = new Set(this.approvalAuthority.map((o) => o.id));
+      this.approvalAuthority = [
+        ...this.approvalAuthority,
+        ...employees.filter((e: any) => !existingIds.has(e.id)),
+      ].sort((a: any, b: any) => (a.rawName || '').localeCompare(b.rawName || ''));
+
       this.buildGrid();
       onLoaded?.();
       //this.cdr.detectChanges(); // force update
@@ -381,29 +396,12 @@ export class ResponsibilityTransferWorkflow {
   };
 
   onRowEditingStarted(event: { rowData: any; index: number }): void {
-    const { rowData, index } = event;
-    // The Approval Authority dropdown's options are only ever loaded for whichever division
-    // was last touched via the divisionCode cell editor — for every other row, the dropdown
-    // has nothing to show. Load this row's division here so the options exist as soon as it
-    // enters edit mode.
-    if (!rowData?.divisionCode) return;
-
-    this.GetEmployeesByDivisionId(rowData.divisionCode, () => {
-      // The grid stores a formatted "Name(Designation)" string for read-only display, not
-      // the employee code the dropdown editor matches selections against. Now that this
-      // division's employee list is loaded, resolve it to the matching option's code so the
-      // dropdown shows the current selection instead of appearing empty.
-      const stored = (rowData.approvalAuthority || '').toString().trim().toLowerCase();
-      if (!stored) return;
-
-      const match = this.approvalAuthority.find(
-        (opt) => opt.rawName && stored.startsWith(opt.rawName.toLowerCase()),
-      );
-      if (match) {
-        this.manualUserData[index] = { ...rowData, approvalAuthority: match.id };
-        this.manualUserData = [...this.manualUserData];
-      }
-    });
+    const { rowData } = event;
+    // approvalAuthority now accumulates every division touched so far (initial load sweep,
+    // prior edits) — this is just a safety net for a division that hasn't been loaded yet.
+    if (rowData?.divisionCode) {
+      this.GetEmployeesByDivisionId(rowData.divisionCode);
+    }
   }
 }
 
