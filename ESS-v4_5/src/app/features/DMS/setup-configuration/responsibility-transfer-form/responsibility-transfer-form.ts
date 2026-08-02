@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
@@ -7,7 +7,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces'; 
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
@@ -28,6 +28,7 @@ import {
   ResponsibilityTransferItem 
 } from '@app/shared/services/responsibility-transfer.service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -51,8 +52,10 @@ import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-
   templateUrl: './responsibility-transfer-form.html',
   styleUrl: './responsibility-transfer-form.css',
 })
-export class ResponsibilityTransferForm {
+export class ResponsibilityTransferForm implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
+  private subscriptions: Subscription[] = [];
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -84,7 +87,8 @@ export class ResponsibilityTransferForm {
 
   totalPendingApprovals = 0;
 
-  // Counts shown as badges on the tabs -- populated via get-my-responsibility-transfers-approvals-count
+  // "Requests pending My Approval" tab badge -- routed through NavigationCountsService (see
+  // ngOnInit) so this page's badge and the "Responsibilities Transfer" sidebar badge never drift.
   responsibilityTransferApprovalCounts = {
     pendingCount: 0,
     approvedCount: 0,
@@ -92,6 +96,11 @@ export class ResponsibilityTransferForm {
     revertedCount: 0,
     totalCount: 0,
   };
+
+  // "My Submitted Requests" tab badge -- a separate concern from the above (requests I created,
+  // not requests pending on me as approver), fetched directly since there's no corresponding
+  // sidebar item to keep in sync with.
+  mySubmittedRequestsCount = 0;
 
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -168,7 +177,8 @@ export class ResponsibilityTransferForm {
     private _responsibilityTransfer: ResponsibilityTransferService,
     private _utilityService: UtilitiesService,
     private _peoplePartnerService: PeoplePartnersService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -180,21 +190,41 @@ export class ResponsibilityTransferForm {
       this.getAllUsersList();
     });
 
+    // "Requests pending My Approval" tab badge reflects the same shared count state the sidebar
+    // menu uses (see NavigationCountsService), so this page and the "Responsibilities Transfer"
+    // menu item never disagree.
+    this.subscriptions.push(
+      this._navigationCountsService.responsibilityTransferApprovalCounts$.subscribe((counts) => {
+        this.responsibilityTransferApprovalCounts = {
+          pendingCount: counts.pending,
+          approvedCount: counts.approved,
+          rejectedCount: counts.rejectedOrReverted,
+          revertedCount: counts.rejectedOrReverted,
+          totalCount: counts.pending + counts.approved + counts.rejectedOrReverted,
+        };
+      }),
+    );
+
     this.getMyResponsibilityTransfersApprovalsCount();
+    this.getMySubmittedResponsibilityTransfersCount();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   getMyResponsibilityTransfersApprovalsCount(): void {
-    this._responsibilityTransfer.GetMyResponsibilityTransfersApprovalsCount().subscribe({
+    // Fetches through the shared service; the ngOnInit subscription above applies the result
+    // to this page's tab badge, and main-layout's own subscription applies the same result
+    // to the "Responsibilities Transfer" sidebar badge.
+    this._navigationCountsService.refreshResponsibilityTransferApprovalCounts();
+  }
+
+  getMySubmittedResponsibilityTransfersCount(): void {
+    this._responsibilityTransfer.GetMySubmittedResponsibilityTransfersCount().subscribe({
       next: (res: any) => {
         if (res?.Success && res.Data) {
-          const data = res.Data;
-          this.responsibilityTransferApprovalCounts = {
-            pendingCount: data.PendingCount ?? data.pendingCount ?? 0,
-            approvedCount: data.ApprovedCount ?? data.approvedCount ?? 0,
-            rejectedCount: data.RejectedCount ?? data.rejectedCount ?? 0,
-            revertedCount: data.RevertedCount ?? data.revertedCount ?? 0,
-            totalCount: data.TotalCount ?? data.totalCount ?? 0,
-          };
+          this.mySubmittedRequestsCount = Number(res.Data.PendingCount ?? res.Data.pendingCount) || 0;
         }
       },
       error: () => {

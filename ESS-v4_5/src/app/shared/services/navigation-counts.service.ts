@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { DocumentService } from './document.service';
 import { DocumentRequestService } from './document-request.service';
+import { ResponsibilityTransferService } from './responsibility-transfer.service';
 
 export interface InboxCounts {
   pending: number;
@@ -55,9 +56,18 @@ export class NavigationCountsService {
   );
   readonly documentsPendingTrainingCounts$ = this._documentsPendingTrainingCounts$.asObservable();
 
+  // "Responsibilities Transfer" menu badge + responsibility-transfer-form.ts's
+  // "Requests pending My Approval" tab badge. Deliberately scoped to ApproverId only -- a user's
+  // own submitted requests are a separate concern (see responsibility-transfer-form.ts, which
+  // fetches that count directly since there's no corresponding sidebar item for it).
+  private _responsibilityTransferApprovalCounts$ = new BehaviorSubject<InboxCounts>(EMPTY_INBOX_COUNTS);
+  readonly responsibilityTransferApprovalCounts$ =
+    this._responsibilityTransferApprovalCounts$.asObservable();
+
   constructor(
     private _documentService: DocumentService,
     private _documentRequestService: DocumentRequestService,
+    private _responsibilityTransferService: ResponsibilityTransferService,
   ) {}
 
   /** Refreshes every count. Used on app init and on route/menu navigation. */
@@ -67,6 +77,7 @@ export class NavigationCountsService {
     this.refreshMyRequestApprovalCounts();
     this.refreshTrainingAuthorizationCount();
     this.refreshDocumentsPendingTrainingCounts();
+    this.refreshResponsibilityTransferApprovalCounts();
   }
 
   refreshDocumentCreationRequestCount(): void {
@@ -152,6 +163,24 @@ export class NavigationCountsService {
         }
       },
       error: (err) => console.error('Failed to get documents pending training count', err),
+    });
+  }
+
+  refreshResponsibilityTransferApprovalCounts(): void {
+    this._responsibilityTransferService.GetMyResponsibilityTransfersApprovalsCount().subscribe({
+      next: (response:any) => {
+        if (response?.Success && response.Data) {
+          const data = response.Data;
+          const rejected = Number(data.RejectedCount ?? data.rejectedCount) || 0;
+          const reverted = Number(data.RevertedCount ?? data.revertedCount) || 0;
+          this._responsibilityTransferApprovalCounts$.next({
+            pending: Number(data.PendingCount ?? data.pendingCount) || 0,
+            approved: Number(data.ApprovedCount ?? data.approvedCount) || 0,
+            rejectedOrReverted: rejected + reverted,
+          });
+        }
+      },
+      error: (err) => console.error('Failed to get responsibility transfer approval counts', err),
     });
   }
 }

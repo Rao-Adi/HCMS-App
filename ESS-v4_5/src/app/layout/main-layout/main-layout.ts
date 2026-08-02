@@ -229,6 +229,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.applyCountToMenu('documents-pending-training', counts.total);
       }),
     );
+    this.subscriptions.push(
+      this._navigationCountsService.responsibilityTransferApprovalCounts$.subscribe((counts) => {
+        this.applyCountToMenu('responsibility-transfer-form', counts.pending);
+      }),
+    );
 
     this.fetchExistingNotifications();
   }

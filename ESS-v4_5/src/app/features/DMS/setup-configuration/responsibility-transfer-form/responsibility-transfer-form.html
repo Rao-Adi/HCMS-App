@@ -21,7 +21,7 @@
               >
                 Requests pending My Approval
                 <span
-                  class="badge bg-danger ms-1"
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1"
                   *ngIf="responsibilityTransferApprovalCounts.pendingCount > 0"
                   >{{ responsibilityTransferApprovalCounts.pendingCount }}</span
                 >
@@ -33,6 +33,11 @@
                 (click)="onTabChange('My Submitted Requests')"
               >
                 My Submitted Requests
+                <span
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1"
+                  *ngIf="mySubmittedRequestsCount > 0"
+                  >{{ mySubmittedRequestsCount }}</span
+                >
               </button>
             </div>
             <div class="row row-space" *ngIf="selectedTab === 'Requests'">
