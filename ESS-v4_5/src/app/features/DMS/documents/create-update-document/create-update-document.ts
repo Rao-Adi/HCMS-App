@@ -824,11 +824,16 @@ export class CreateUpdateDocument {
         formData.append(key, (payLoad as any)[key]);
       }
     });
+    // Template attachment for documents that didn't get one at Document Request creation time.
+    // Which one applies depends on the DocumentType's configured Template: a file (PDF/Word) or
+    // HTML content edited in the template editor -- never both.
     if (this.draftFile) {
-      formData.append('DraftFile', this.draftFile, this.draftFile.name);
+      formData.append('DocumentFile', this.draftFile, this.draftFile.name);
+    } else if (this.templateHtml) {
+      formData.append('ProposedContent', this.templateHtml);
     }
 
-    this._documentService.submitDocument(payLoad).subscribe({
+    this._documentService.submitDocument(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
           this._notificationToastService.createNotification(

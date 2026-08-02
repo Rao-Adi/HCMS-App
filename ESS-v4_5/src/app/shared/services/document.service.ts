@@ -70,10 +70,11 @@ export class DocumentService {
     );
   }
 
-  submitDocument(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/submit-document`, payload, {
-      headers: this.getHeaders(),
-    });
+  submitDocument(payload: FormData): Observable<ApiResponse<any>> {
+    // No Content-Type header here on purpose: payload is FormData (it may carry a file), and
+    // forcing 'application/json' (getHeaders()'s default) would stop the browser from setting
+    // the multipart boundary, breaking the upload.
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/submit-document`, payload);
   }
 
   rejectDocument(payload: any): Observable<ApiResponse<any>> {
