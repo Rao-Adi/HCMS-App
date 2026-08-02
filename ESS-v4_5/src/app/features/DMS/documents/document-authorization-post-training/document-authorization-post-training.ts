@@ -141,9 +141,28 @@ export class DocumentAuthorizationPostTraining {
   private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
     { field: 'documentnumber', headerName: 'Document Number', pinned: 'left', flex: 1 },
-    { field: 'documentName', headerName: 'Document Name', pinned: 'left', flex: 1 },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+      pinned: 'left',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+                ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60, flex: 1 },
-    { field: 'trainingMode', headerName: 'Training Mode', minWidth: 120, flex: 1 },
+    { field: 'trainingMode', headerName: 'Training Mode',pinned: 'left', minWidth: 120, flex: 1 },
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
@@ -700,6 +719,7 @@ export class DocumentAuthorizationPostTraining {
 
   openDocumentModal(rowData: any) {
     this.templateHtml = rowData.proposedContent || '';
+    this.documentId = rowData.Id; 
     this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
     let fileUrl = rowData.url || '';
 

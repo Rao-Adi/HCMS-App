@@ -356,26 +356,31 @@
                       >
                     </div>
                   </div>
-
-                  <div class="d-flex align-items-center gap-3 mb-4">
-                    <button
-                      *ngIf="!showDocumentDiv"
-                      type="button"
-                      class="btn btn-outline-primary"
-                      (click)="downloadTemplate()"
+                  <div class="row mt-4 btn-stick">
+                    <div
+                      class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center align-items-center gap-3 px-4 pb-3"
                     >
-                      <i class="bi bi-download me-1"></i> Download Standard Template
-                    </button>
-                    <button
-                      *ngIf="showDocumentDiv"
-                      type="button"
-                      class="btn btn-outline-success"
-                      (click)="downloadDraft()"
-                    >
-                      <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Existing Document
-                    </button>
+                      <div class="d-flex align-items-center gap-3 mb-4">
+                        <button
+                          *ngIf="!showDocumentDiv"
+                          type="button"
+                          class="btn btn-outline-secondary btn-lg shadow-sm"
+                          (click)="downloadTemplate()"
+                        >
+                          <i class="bi bi-download me-1"></i> Download Standard Template
+                        </button>
+                        <button
+                          *ngIf="showDocumentDiv"
+                          type="button"
+                          class="btn btn-outline-secondary btn-lg shadow-sm"
+                          (click)="downloadDraftTemplate()"
+                        >
+                          <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Existing
+                          Document
+                        </button>
+                      </div>
+                    </div>
                   </div>
-
                   <div class="PnlHeading">
                     <label>Upload Drafted Document (DOCX/PDF)</label>
                   </div>
@@ -387,7 +392,11 @@
                       type="file"
                       class="form-control input-md"
                       (change)="onDraftFileSelected($event)"
-                      [attr.accept]="expectedTemplateExtension ? '.' + expectedTemplateExtension : '.pdf,.doc,.docx'"
+                      [attr.accept]="
+                        expectedTemplateExtension
+                          ? '.' + expectedTemplateExtension
+                          : '.pdf,.doc,.docx'
+                      "
                       style="width: 350px"
                       [hidden]="uploadedFile"
                     />
@@ -540,3 +549,34 @@
     </div>
   </div>
 </div>
+
+<!-- Document Content Modal Template -->
+<ng-template #documentModalTpl>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <!-- Download Button (If URL exists) -->
+      <ng-container *ngIf="draftFileUrl">
+        <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+          <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+          <div>
+            <strong>Instructions:</strong> Please download the attached document to view it.
+          </div>
+        </div>
+        <div class="d-flex justify-content-center mt-4 mb-4">
+          <button nz-button nzType="primary" (click)="downloadDraft()">
+            <span nz-icon nzType="download"></span> Download Document
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Rich Text Box (If no URL exists) -->
+      <ng-container *ngIf="!draftFileUrl">
+        <app-dmsrich-text-edit
+          [editorStyle]="{ width: '100%', height: '500px' }"
+          [contentHtml]="templateHtml"
+          (contentHtmlChange)="templateHtml = $event"
+        ></app-dmsrich-text-edit>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>

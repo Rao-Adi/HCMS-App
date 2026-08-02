@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, TemplateRef, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -29,6 +29,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-document-request-form',
@@ -58,6 +59,7 @@ export class DocumentRequestForm {
   @Input() draftData: any;
   @Output() requestCreated = new EventEmitter<void>();
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
   isSubmitting = false;
 
   // --- PERMISSION FLAGS ---
@@ -99,6 +101,13 @@ export class DocumentRequestForm {
     filterModel: {},
     searchTerm: '',
   };
+
+  
+  documentId: number = 0;
+  currentDocumentName: string = ''; 
+  safeDraftFileUrl?: SafeResourceUrl;
+  isPdf: boolean = false;
+  isDocx: boolean = false;
 
   pageSize = 10;
   totalRows = 0;
@@ -175,7 +184,25 @@ export class DocumentRequestForm {
 
   private readonly trailingColumnDefs: ColDef[] = [
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
-    { field: 'url', headerName: 'URL' },
+    {
+      field: 'url',
+      headerName: 'Url',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+               View
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
     {
@@ -232,6 +259,7 @@ export class DocumentRequestForm {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'documentNumber', label: 'Document Number', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
     { field: 'nextReviewDate', label: 'Next Review Date', visible: true },
@@ -250,7 +278,7 @@ export class DocumentRequestForm {
     private modal: NzModalService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
-    private _notificationToasService: NotificationToastService,
+    private _notificationToastService: NotificationToastService, 
     private _doumentRequestService: DocumentRequestService,
     private _documentService: DocumentService,
     private _documentTemplateService: TemplateService,
@@ -480,7 +508,7 @@ export class DocumentRequestForm {
           if (!isRevision) {
             this.templateHtml = ''; // Clear only if not a revision and no data
           }
-          this._notificationToasService.createNotification(
+          this._notificationToastService.createNotification(
             'warning',
             'Template Missing',
             'Please first upload the template against this Document Type. Document request cannot be created.',
@@ -530,7 +558,7 @@ export class DocumentRequestForm {
 
   downloadTemplate(): void {
     if (!this.selectedDocumentType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Template',
         'Please select a Document Type first.',
@@ -556,13 +584,13 @@ export class DocumentRequestForm {
               blob.text().then((text) => {
                 try {
                   const res = JSON.parse(text);
-                  this._notificationToasService.createNotification(
+                  this._notificationToastService.createNotification(
                     'warning',
                     'Template',
                     res.Message || 'Template not available.',
                   );
                 } catch {
-                  this._notificationToasService.createNotification(
+                  this._notificationToastService.createNotification(
                     'error',
                     'Template',
                     'Failed to read response.',
@@ -602,7 +630,7 @@ export class DocumentRequestForm {
             if (url) {
               window.open(url, '_blank');
             } else {
-              this._notificationToasService.createNotification(
+              this._notificationToastService.createNotification(
                 'warning',
                 'Template',
                 'No file template available for download.',
@@ -618,13 +646,13 @@ export class DocumentRequestForm {
             err.error.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notificationToasService.createNotification(
+                this._notificationToastService.createNotification(
                   'error',
                   'Template',
                   res.Message || 'Failed to download template.',
                 );
               } catch {
-                this._notificationToasService.createNotification(
+                this._notificationToastService.createNotification(
                   'error',
                   'Template',
                   'Failed to download template.',
@@ -633,7 +661,7 @@ export class DocumentRequestForm {
             });
           } else {
             console.error('Error downloading template', err);
-            this._notificationToasService.createNotification(
+            this._notificationToastService.createNotification(
               'error',
               'Template',
               err?.error?.Message || err?.Message || 'Failed to download template.',
@@ -655,7 +683,7 @@ export class DocumentRequestForm {
     const expectedExt = this.expectedTemplateExtension;
 
     if (expectedExt && ext !== expectedExt) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Invalid File',
         `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
@@ -670,7 +698,7 @@ export class DocumentRequestForm {
 
   DraftDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an Document Request Type.',
@@ -678,7 +706,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Company.',
@@ -686,7 +714,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Document Name.',
@@ -694,7 +722,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedDocumentType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Document Type.',
@@ -702,7 +730,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.inputJustificationValue) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Justification.',
@@ -710,7 +738,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedTemplateType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Template Missing',
         'Please first upload the template against this Document Type.',
@@ -718,7 +746,7 @@ export class DocumentRequestForm {
       return;
     }
     // if (!this.selectedDivisions) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Division.',
@@ -726,7 +754,7 @@ export class DocumentRequestForm {
     //   return;
     // }
     // if (!this.selectedDepartment) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Department.',
@@ -734,7 +762,7 @@ export class DocumentRequestForm {
     //   return;
     // }
     // if (!this.selectedSubDepartment) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Sub Department.',
@@ -742,7 +770,7 @@ export class DocumentRequestForm {
     //   return;
     // }
     // if (!this.selectedBusinessDomain) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Business Domain.',
@@ -814,7 +842,7 @@ export class DocumentRequestForm {
           this.requestCreated.emit();
           this._doumentRequestService.refreshCounts$.next();
 
-          this._notificationToasService.createNotification(
+          this._notificationToastService.createNotification(
             'success',
             'Document Request',
             'Document drafted successfully!',
@@ -823,7 +851,7 @@ export class DocumentRequestForm {
       },
       error: (err) => {
         this.isSubmitting = false;
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to draft document.',
@@ -834,7 +862,7 @@ export class DocumentRequestForm {
 
   SubmitDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Request Type.',
@@ -842,7 +870,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Company.',
@@ -850,7 +878,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Document Name.',
@@ -858,7 +886,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedDocumentType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Document Type.',
@@ -866,7 +894,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Justification.',
@@ -875,7 +903,7 @@ export class DocumentRequestForm {
     }
 
     if (!this.selectedTemplateType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Template Missing',
         'Please first upload the template against this Document Type.',
@@ -886,7 +914,7 @@ export class DocumentRequestForm {
     // UC-22: Revision Validation Checks
     if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       if (!this.selectedDocumentRow) {
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'warning',
           'Validation',
           'Please select an existing document to revise.',
@@ -908,7 +936,7 @@ export class DocumentRequestForm {
     //   (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
     //   !this.uploadedFile
     // ) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please upload your drafted document before submitting.',
@@ -970,7 +998,7 @@ export class DocumentRequestForm {
           this.emptyFields();
           this.requestCreated.emit();
           this._doumentRequestService.refreshCounts$.next();
-          this._notificationToasService.createNotification(
+          this._notificationToastService.createNotification(
             'success',
             'User',
             'Document Request submitted successfully!',
@@ -982,7 +1010,7 @@ export class DocumentRequestForm {
       },
       error: (err) => {
         this.isSubmitting = false;
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to submit document.',
@@ -997,7 +1025,7 @@ export class DocumentRequestForm {
     // selectedDocumentRow.requestId, which is the ORIGINAL Creation request's Id and would just
     // resubmit that already-approved request instead of creating a new revision.
     if (!this.selectedDocumentRow || !this.selectedDocumentRow.Id) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an existing document to revise.',
@@ -1005,7 +1033,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Company.',
@@ -1013,7 +1041,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Document Name.',
@@ -1021,7 +1049,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Justification.',
@@ -1102,7 +1130,7 @@ export class DocumentRequestForm {
           this.emptyFields();
           this.requestCreated.emit();
           this._doumentRequestService.refreshCounts$.next();
-          this._notificationToasService.createNotification(
+          this._notificationToastService.createNotification(
             'success',
             'Document Request',
             'Revision submitted successfully!',
@@ -1114,7 +1142,7 @@ export class DocumentRequestForm {
       },
       error: (err) => {
         this.isSubmitting = false;
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to submit revision.',
@@ -1183,16 +1211,178 @@ export class DocumentRequestForm {
     const { gridId, pageSize } = event;
   }
 
-  downloadDraft(): void {
-    if (this.draftFileUrl) {
-      window.open(this.draftFileUrl, '_blank');
-    } else {
-      this._notificationToasService.createNotification(
+  downloadDraftTemplate(): void {
+    if (!this.draftFileUrl) {
+      this._notificationToastService.createNotification(
         'warning',
         'Download',
         'No existing document available for download.',
       );
+      return;
     }
+
+    // window.open() just navigates to the URL — for file types the browser knows how to
+    // render (PDF, images) that opens an inline viewer instead of downloading. Fetching the
+    // file ourselves and driving the save through a Blob + <a download> forces an actual
+    // download regardless of content type, matching downloadTemplate()/downloadDraft() below.
+    fetch(this.draftFileUrl)
+      .then((response) => {
+        if (!response.ok) throw new Error('Download failed');
+        return response.blob();
+      })
+      .then((blob) => {
+        let filename = `Document_${this.selectedDocumentType || 'template'}`;
+        try {
+          const decoded = decodeURIComponent(this.draftFileUrl);
+          const last = decoded.split('?')[0].split('#')[0].split('/').pop();
+          if (last) filename = last;
+        } catch {
+          // keep the fallback filename
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(() => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Download',
+          'Failed to download the existing document.',
+        );
+      });
+  }
+
+  
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    this.documentId = rowData.Id;
+    this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
+    let fileUrl = rowData.url || '';
+
+    if (fileUrl && fileUrl.trim()) {
+      // This logic is incorrect as it prepends the API base URL.
+      // The correct logic uses window.location.origin.
+      if (!fileUrl.startsWith('http')) {
+        const origin = window.location.origin;
+        const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+        fileUrl = origin + relativeUrl;
+      }
+      this.draftFileUrl = fileUrl;
+    } else {
+      this.draftFileUrl = '';
+    }
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '50%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
+    });
   }
 
   GetEffectiveDocumentsForRevision(query?: any) {
@@ -1312,7 +1502,7 @@ export class DocumentRequestForm {
       error: (err) => {
         this.documentRevisionData = [];
         this.totalRows = 0;
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to fetch draft documents.',

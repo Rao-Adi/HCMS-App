@@ -808,6 +808,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
 
   openDocumentModal(rowData: any) {
     this.templateHtml = rowData.proposedContent || '';
+    this.documentId = rowData.Id;
     this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
     let fileUrl = rowData.url || '';
 
