@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy, TemplateRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
@@ -26,6 +26,8 @@ import { AverageDocumentScoreModal } from '../average-document-score-modal/avera
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { SafeResourceUrl } from '@angular/platform-browser';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -43,16 +45,26 @@ import { NavigationCountsService } from '@app/shared/services/navigation-counts.
     CabinetStructureList,
     DocumentTypeList,
     NzModalModule,
+    DMSRichTextEdit,
   ],
   templateUrl: './sopdocument-training.html',
   styleUrl: './sopdocument-training.css',
 })
 export class SOPDocumentTraining implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
 
   private subscriptions: Subscription[] = [];
 
   selectedTab: string = 'Classroom';
+
+  documentId: number = 0;
+  currentDocumentName: string = '';
+  templateHtml: string = '';
+  draftFileUrl: string = '';
+  safeDraftFileUrl?: SafeResourceUrl;
+  isPdf: boolean = false;
+  isDocx: boolean = false;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -243,7 +255,25 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
 
   // Columns after the cabinet (Division/Department/...) columns
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'url', headerName: 'URL' },
+    {
+      field: 'url',
+      headerName: 'Url',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+               View
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
     { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
@@ -774,5 +804,130 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
           );
         },
       });
+  }
+
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
+    let fileUrl = rowData.url || '';
+
+    if (fileUrl && fileUrl.trim()) {
+      // This logic is incorrect as it prepends the API base URL.
+      // The correct logic uses window.location.origin.
+      if (!fileUrl.startsWith('http')) {
+        const origin = window.location.origin;
+        const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+        fileUrl = origin + relativeUrl;
+      }
+      this.draftFileUrl = fileUrl;
+    } else {
+      this.draftFileUrl = '';
+    }
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '50%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
+    });
   }
 }

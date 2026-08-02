@@ -121,7 +121,7 @@ export class ApprovalDocuments {
   public noRowsOverlay: string = '';
 
   selectedRequestCreator: number | null = null;
- 
+
   // field name each cabinet level maps to in the row data, keyed by level number
   private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
     1: { field: 'division', label: 'Division' },
@@ -134,9 +134,10 @@ export class ApprovalDocuments {
   columnToggles?: ColumnToggle[] = [
     { field: 'requestId', label: 'Request ID', visible: false },
     { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'documentnumber', label: 'Document Number', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
-    { field: 'url', label: 'URL', visible: true },
+    // { field: 'url', label: 'URL', visible: true },
     { field: 'distributionList', label: 'Distribution List', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
@@ -174,11 +175,12 @@ export class ApprovalDocuments {
 
   // Columns after the cabinet (Division/Department/...) columns
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'url', headerName: 'URL' },
+    // { field: 'url', headerName: 'URL', minWidth: 100 },
     {
       field: 'distributionList',
       headerName: 'Distribution List',
       editable: false,
+      minWidth: 100,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -400,13 +402,13 @@ export class ApprovalDocuments {
                 // ──────────────────────────────────────────────
                 // Document metadata
                 // ──────────────────────────────────────────────
-                documentnumber:get(['DocumentNumber', 'documentnumber']),
+                documentnumber: get(['DocumentNumber', 'documentnumber']),
                 documentType: get(['DocumentType', 'documenttype']),
                 documentTypeCode: get(['DocumentTypeCode', 'documenttypecode']),
                 documentName: get(['Title', 'title', 'documentname']),
                 version: get(['Version', 'version']),
-                company: get(['Company', 'company'], ''), 
-                 
+                company: get(['Company', 'company'], ''),
+
                 // ──────────────────────────────────────────────
                 // Organizational context
                 // ──────────────────────────────────────────────
@@ -576,7 +578,7 @@ export class ApprovalDocuments {
     }
   }
 
-  openDocumentModal(rowData: any) { 
+  openDocumentModal(rowData: any) {
     this.templateHtml = rowData.proposedContent || '';
     this.documentId = rowData.Id || rowData.id;
     this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
@@ -603,7 +605,7 @@ export class ApprovalDocuments {
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,
       nzFooter: null,
-      nzWidth: '80%',
+      nzWidth: '50%',
       nzStyle: { top: '20px' },
     });
   }

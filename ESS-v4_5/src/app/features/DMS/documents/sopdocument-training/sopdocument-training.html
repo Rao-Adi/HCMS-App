@@ -11,9 +11,12 @@
               (click)="selectedTab = 'Classroom'"
             >
               Class Room
-              <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px" *ngIf="classRoomPendingCount > 0">{{
-                classRoomPendingCount
-              }}</span>
+              <span
+                class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1"
+                style="font-size: 11px"
+                *ngIf="classRoomPendingCount > 0"
+                >{{ classRoomPendingCount }}</span
+              >
             </button>
             <button
               class="tab-button"
@@ -22,9 +25,12 @@
               (click)="selectedTab = 'Online'"
             >
               Online
-              <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px" *ngIf="onlinePendingCount > 0">{{
-                onlinePendingCount
-              }}</span>
+              <span
+                class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1"
+                style="font-size: 11px"
+                *ngIf="onlinePendingCount > 0"
+                >{{ onlinePendingCount }}</span
+              >
             </button>
           </div>
 
@@ -125,7 +131,7 @@
                 (serverQuery)="GetAllOnline($event)"
                 (selectionChange)="onSelectionChange($event)"
               >
-              <div grid-actions class="grid-action-icons">
+                <div grid-actions class="grid-action-icons">
                   <button
                     class="btn btn-success btn-sm btn-action"
                     [class.disabled]="!hasSelectedRows"
@@ -144,3 +150,34 @@
     </div>
   </div>
 </div>
+
+<!-- Document Content Modal Template -->
+<ng-template #documentModalTpl>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <!-- Download Button (If URL exists) -->
+      <ng-container *ngIf="draftFileUrl">
+        <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+          <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+          <div>
+            <strong>Instructions:</strong> Please download the attached document to view it.
+          </div>
+        </div>
+        <div class="d-flex justify-content-center mt-4 mb-4">
+          <button nz-button nzType="primary" (click)="downloadDraft()">
+            <span nz-icon nzType="download"></span> Download Document
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Rich Text Box (If no URL exists) -->
+      <ng-container *ngIf="!draftFileUrl">
+        <app-dmsrich-text-edit
+          [editorStyle]="{ width: '100%', height: '500px' }"
+          [contentHtml]="templateHtml"
+          (contentHtmlChange)="templateHtml = $event"
+        ></app-dmsrich-text-edit>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>

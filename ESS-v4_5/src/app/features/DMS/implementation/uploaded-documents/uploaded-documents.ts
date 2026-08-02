@@ -334,7 +334,7 @@ export class UploadedDocuments {
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,
       nzFooter: null,
-      nzWidth: '80%',
+      nzWidth: '50%',
       nzStyle: { top: '20px' },
     });
   }

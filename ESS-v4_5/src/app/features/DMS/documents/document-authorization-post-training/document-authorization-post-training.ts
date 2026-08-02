@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, ViewChild, TemplateRef } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
@@ -26,6 +26,9 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { SafeResourceUrl } from '@angular/platform-browser';
+import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -43,17 +46,28 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
     MyPendingRequestForApproval,
     CabinetStructureList,
     AgGridWrapper,
+    DMSRichTextEdit,
   ],
   templateUrl: './document-authorization-post-training.html',
   styleUrl: './document-authorization-post-training.css',
 })
 export class DocumentAuthorizationPostTraining {
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+
   gridApi!: GridApi;
   selectedTab: string = 'Pending Authorization';
 
   pendingCount = 0;
   authorizedCount = 0;
   rejectedCount = 0;
+
+  documentId: number = 0;
+  currentDocumentName: string = '';
+  templateHtml: string = '';
+  draftFileUrl: string = '';
+  safeDraftFileUrl?: SafeResourceUrl;
+  isPdf: boolean = false;
+  isDocx: boolean = false;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -68,6 +82,9 @@ export class DocumentAuthorizationPostTraining {
   selectedDocumentType: string = '';
   selectedAuthorizationStatus: string = '1'; // Default to '1' (SOP)
   hasSelectedRows = false;
+  // True while an approve/reject call is in flight -- disables the Approve/Reject buttons so a
+  // second click can't fire a duplicate request before the first response comes back.
+  isProcessingAction = false;
   loginEmpId: string = '';
 
   // Store page sizes for each grid separately
@@ -162,7 +179,26 @@ export class DocumentAuthorizationPostTraining {
 
   // Columns after the cabinet (Division/Department/...) columns
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'url', headerName: 'URL' },
+    // { field: 'url', headerName: 'URL' },
+    {
+      field: 'url',
+      headerName: 'Url',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+               View
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
     {
@@ -179,6 +215,7 @@ export class DocumentAuthorizationPostTraining {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
+      minWidth: 120,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -224,6 +261,7 @@ export class DocumentAuthorizationPostTraining {
     private _permissionService: PermissionService,
     private cdr: ChangeDetectorRef,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -368,7 +406,7 @@ export class DocumentAuthorizationPostTraining {
             this.pendingAuthorizationData = items.map((item: any) => ({
               ...item,
               Id: item.id || item.Id,
-              trainingMode: item.trainingmode == 1 ? 'Class Room': 'Online', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+              trainingMode: item.trainingmode == 1 ? 'Class Room' : 'Online', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
               averageDocumentScore: item.averagescore || item.averagescore || 0,
               userAssigned: item.totalassigned || item.totalassigned,
               companyId: item.companyId || item.CompanyId,
@@ -403,7 +441,8 @@ export class DocumentAuthorizationPostTraining {
                 item.CreatedAt || item.createdat || '',
               ),
               requestCreatedBy: item.createdbyname || item.createdByName,
-              previousVersionCreatedBy: item.PreviousVersionCreatedBy || item.previousversioncreatedby,
+              previousVersionCreatedBy:
+                item.PreviousVersionCreatedBy || item.previousversioncreatedby,
               previousVersionCreatedOn: new CustomDateFormatPipe().transform(
                 item.previousversioncreatedon ||
                   item.Previousversioncreatedon ||
@@ -521,7 +560,8 @@ export class DocumentAuthorizationPostTraining {
     const documentToApprove = selectedRows[0]; // Processes one document at a time
     const docId = documentToApprove.Id || documentToApprove.id || documentToApprove.documentId;
 
-    const actionLabel = actionType === 'APPROVED' ? 'Approve' : actionType === 'REJECTED' ? 'Reject' : actionType;
+    const actionLabel =
+      actionType === 'APPROVED' ? 'Approve' : actionType === 'REJECTED' ? 'Reject' : actionType;
     const actionColor = actionType === 'APPROVED' ? '#28a745' : '#dc3545';
 
     this.modal.confirm({
@@ -535,17 +575,27 @@ export class DocumentAuthorizationPostTraining {
           observation: `${actionType} via post-training screen`, // TODO: Collect via a form/modal wrapper if required by BL-011
         };
 
+        this.isProcessingAction = true;
+
         this._documentService.AuthorizeDocumentPostTraining(payload).subscribe({
           next: (res) => {
+            this.isProcessingAction = false;
             if (res?.Success) {
               this._notificationToastService.createNotification(
                 'success',
                 'Success',
                 `Document ${actionType} successfully.`,
               );
+              // Clear the tracked selection state and the grid's own checkbox selection
+              // immediately -- don't rely on the approved/rejected row simply disappearing
+              // from the next fetch to disable the Approve/Reject buttons.
+              this.hasSelectedRows = false;
               if (this.gridApi) {
+                this.gridApi.deselectAll();
                 this.gridApi.refreshInfiniteCache();
               }
+              // Updates the "Training Authorization" sidebar badge.
+              this._navigationCountsService.refreshTrainingAuthorizationCount();
             } else {
               this._notificationToastService.createNotification(
                 'error',
@@ -554,12 +604,14 @@ export class DocumentAuthorizationPostTraining {
               );
             }
           },
-          error: () =>
+          error: () => {
+            this.isProcessingAction = false;
             this._notificationToastService.createNotification(
               'error',
               'Error',
               `Failed to ${actionType} document.`,
-            ),
+            );
+          },
         });
       },
     });
@@ -643,6 +695,131 @@ export class DocumentAuthorizationPostTraining {
         }
       },
       error: (err) => console.error('Failed to load authorization counts', err),
+    });
+  }
+
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
+    let fileUrl = rowData.url || '';
+
+    if (fileUrl && fileUrl.trim()) {
+      // This logic is incorrect as it prepends the API base URL.
+      // The correct logic uses window.location.origin.
+      if (!fileUrl.startsWith('http')) {
+        const origin = window.location.origin;
+        const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+        fileUrl = origin + relativeUrl;
+      }
+      this.draftFileUrl = fileUrl;
+    } else {
+      this.draftFileUrl = '';
+    }
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '50%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
     });
   }
 }
