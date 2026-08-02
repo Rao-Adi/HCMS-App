@@ -224,6 +224,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.applyCountToMenu('trainingauthorization', count);
       }),
     );
+    this.subscriptions.push(
+      this._navigationCountsService.documentsPendingTrainingCounts$.subscribe((counts) => {
+        this.applyCountToMenu('documents-pending-training', counts.total);
+      }),
+    );
 
     this.fetchExistingNotifications();
   }
@@ -415,6 +420,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
               textLower.includes('post-training') ||
               textLower.includes('training authorization') ||
               textLower.includes('trainingauthorization');
+          } else if (navigateUrl === 'documents-pending-training') {
+            matchesText =
+              textLower.includes('training for sop') ||
+              textLower.includes('sop documents') ||
+              textLower.includes('sop-training');
           }
         }
 

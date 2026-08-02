@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -24,6 +25,7 @@ import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-r
 import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -45,8 +47,10 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
   templateUrl: './sopdocument-training.html',
   styleUrl: './sopdocument-training.css',
 })
-export class SOPDocumentTraining {
+export class SOPDocumentTraining implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
+  private subscriptions: Subscription[] = [];
 
   selectedTab: string = 'Classroom';
 
@@ -72,6 +76,12 @@ export class SOPDocumentTraining {
   onlineData: any[] = [];
   totalClassRoom = 0;
   totalOnline = 0;
+
+  // Tab badge counts -- independent of the grid's own (filtered/paginated) totalClassRoom /
+  // totalOnline above, so the badge always reflects the true pending-training count.
+  classRoomPendingCount = 0;
+  onlinePendingCount = 0;
+
   documentTypes: any[] = [];
   // Store page sizes for each grid separately
   divisionPageSize = 10;
@@ -87,6 +97,7 @@ export class SOPDocumentTraining {
     private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -154,6 +165,29 @@ export class SOPDocumentTraining {
         // 3. Then, load the grid by rendering it
         this.isGridVisible = true;
       });
+
+    // Tab badges reflect the same shared count state the sidebar menu uses (see
+    // NavigationCountsService), so this page and the "Training for SOP Documents" menu
+    // item never disagree.
+    this.subscriptions.push(
+      this._navigationCountsService.documentsPendingTrainingCounts$.subscribe((counts) => {
+        this.classRoomPendingCount = counts.classroom;
+        this.onlinePendingCount = counts.online;
+      }),
+    );
+
+    this.getTrainingPendingCounts();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  getTrainingPendingCounts(): void {
+    // Fetches through the shared service; the ngOnInit subscription above applies the result
+    // to this page's tab badges, and main-layout's own subscription applies the same result
+    // to the "Training for SOP Documents" sidebar badge.
+    this._navigationCountsService.refreshDocumentsPendingTrainingCounts();
   }
 
   // Default Column Definitions: Apply configuration across all columns
@@ -728,6 +762,7 @@ export class SOPDocumentTraining {
             } else {
               this.GetAllClassRooms({});
             }
+            this.getTrainingPendingCounts();
           }
         },
         error: (err) => {

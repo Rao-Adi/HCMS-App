@@ -11,6 +11,14 @@ export interface InboxCounts {
 
 const EMPTY_INBOX_COUNTS: InboxCounts = { pending: 0, approved: 0, rejectedOrReverted: 0 };
 
+export interface TrainingPendingCounts {
+  classroom: number;
+  online: number;
+  total: number;
+}
+
+const EMPTY_TRAINING_PENDING_COUNTS: TrainingPendingCounts = { classroom: 0, online: 0, total: 0 };
+
 /**
  * Single source of truth for every sidebar-menu badge count.
  *
@@ -41,6 +49,12 @@ export class NavigationCountsService {
   private _trainingAuthorizationCount$ = new BehaviorSubject<number>(0);
   readonly trainingAuthorizationCount$ = this._trainingAuthorizationCount$.asObservable();
 
+  // "Training for SOP Documents" menu badge + sopdocument-training.ts's Classroom/Online tab badges
+  private _documentsPendingTrainingCounts$ = new BehaviorSubject<TrainingPendingCounts>(
+    EMPTY_TRAINING_PENDING_COUNTS,
+  );
+  readonly documentsPendingTrainingCounts$ = this._documentsPendingTrainingCounts$.asObservable();
+
   constructor(
     private _documentService: DocumentService,
     private _documentRequestService: DocumentRequestService,
@@ -52,6 +66,7 @@ export class NavigationCountsService {
     this.refreshMyDocumentApprovalCounts();
     this.refreshMyRequestApprovalCounts();
     this.refreshTrainingAuthorizationCount();
+    this.refreshDocumentsPendingTrainingCounts();
   }
 
   refreshDocumentCreationRequestCount(): void {
@@ -118,6 +133,25 @@ export class NavigationCountsService {
         }
       },
       error: (err) => console.error('Failed to get training authorization counts', err),
+    });
+  }
+
+  refreshDocumentsPendingTrainingCounts(): void {
+    // Uses the combined-counts endpoint (not GetDocumentsPendingTrainingCount, which requires a
+    // Classroom/Online Requeststatus to mean anything) so one fetch covers both modes -- the
+    // sidebar badge uses .total, sopdocument-training.ts's own tab badges use .classroom/.online.
+    this._documentService.GetDocumentsPendingTrainingCounts({}).subscribe({
+      next: (response) => {
+        if (response?.Success && response.Data) {
+          const data = response.Data;
+          this._documentsPendingTrainingCounts$.next({
+            classroom: Number(data.ClassroomCount ?? data.classroomCount) || 0,
+            online: Number(data.OnlineCount ?? data.onlineCount) || 0,
+            total: Number(data.TotalCount ?? data.totalCount) || 0,
+          });
+        }
+      },
+      error: (err) => console.error('Failed to get documents pending training count', err),
     });
   }
 }

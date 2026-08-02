@@ -11,6 +11,9 @@
               (click)="selectedTab = 'Classroom'"
             >
               Class Room
+              <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px" *ngIf="classRoomPendingCount > 0">{{
+                classRoomPendingCount
+              }}</span>
             </button>
             <button
               class="tab-button"
@@ -19,6 +22,9 @@
               (click)="selectedTab = 'Online'"
             >
               Online
+              <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px" *ngIf="onlinePendingCount > 0">{{
+                onlinePendingCount
+              }}</span>
             </button>
           </div>
 

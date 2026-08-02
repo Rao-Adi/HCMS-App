@@ -115,6 +115,22 @@ export class DocumentService {
     );
   }
 
+  GetDocumentsPendingTrainingCount(payload: any = {}): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-training-count`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetDocumentsPendingTrainingCounts(payload: any = {}): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-training-counts`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
   GetAllDocumentPendingApprovals(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-documents-pending-approval`,
