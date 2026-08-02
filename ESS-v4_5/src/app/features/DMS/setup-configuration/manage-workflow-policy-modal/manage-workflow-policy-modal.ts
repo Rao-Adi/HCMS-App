@@ -17,6 +17,7 @@ import { WorkflowPolicyService } from '@app/shared/services/workflow-policy-serv
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
+import { map, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-manage-workflow-policy-modal',
@@ -284,84 +285,141 @@ export class ManageWorkflowPolicyModal {
     this.gridApi = gridApi;
   }
 
+  // Workflow step/approval-sequence lookup (see WorkflowStepService.getWorkflowStepByDocumentTypeCode
+  // / getWorkflowPolicyByDocumentTypeCode) is keyed purely by EntityType + DocumentTypeCode +
+  // Division/Department/SubDepartment/BusinessDomain codes — it never takes a policy Id or Name.
+  // That means two policies saved with the same cabinet structure (even under different names)
+  // are indistinguishable to that lookup: only whichever one the backend happens to return for
+  // that combination is ever actually used for approval routing, silently making the other one
+  // dead configuration. Block that combination up front instead of letting it happen silently.
+  private findDuplicateCabinetStructurePolicy(rowData: any, excludeId?: any): Observable<any> {
+    return this._workflowPolicyService
+      .GetAllWorkflowPolicies('', 'ASC', 'Id', true, 1, 10000, this.modalData?.entityType)
+      .pipe(
+        map((res: any) => {
+          const items = res?.Data?.Items || (Array.isArray(res?.Data) ? res.Data : []);
+          return (
+            items.find((item: any) => {
+              if (excludeId != null && String(item.Id) === String(excludeId)) return false;
+              return (
+                (item.DocumentTypeCode || null) === (rowData.documentTypeId || null) &&
+                (item.DivisionCode || null) === (rowData.level1Id || null) &&
+                (item.DepartmentCode || null) === (rowData.level2Id || null) &&
+                (item.SubDepartmentCode || null) === (rowData.level3Id || null) &&
+                (item.BusinessDomainCode || null) === (rowData.level4Id || null)
+              );
+            }) || null
+          );
+        }),
+      );
+  }
+
+  private duplicateCabinetStructureMessage(duplicate: any): string {
+    return `A policy ("${duplicate.Name}") already exists for this exact Division / Department / Sub-Department / Business Domain / Document Type combination. Approval routing is resolved by that combination alone, so only one policy per combination is ever actually used — please choose a different cabinet structure, or edit the existing policy instead.`;
+  }
+
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
 
-    // Add logic to generate IDs, validate, etc.
-    const payLoad = {
-      name: rowData.policyName,
-      WorkflowPolicyName: rowData.policyName,
-      DocumentTypeCode: rowData.documentTypeId,
-      DivisionCode: rowData.level1Id,
-      DepartmentCode: rowData.level2Id,
-      SubDepartmentCode: rowData.level3Id,
-      BusinessDomainCode: rowData.level4Id,
-      EntityType: this.modalData?.entityType,
-      IsActive: true,
-    };
+    this.findDuplicateCabinetStructurePolicy(rowData).subscribe((duplicate) => {
+      if (duplicate) {
+        this._notificationToastService.createNotification(
+          'error',
+          'Workflow Policy',
+          this.duplicateCabinetStructureMessage(duplicate),
+        );
+        return;
+      }
 
-    this._workflowPolicyService.create(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Workflow Policy',
-        'Workflow Policy created successfully!',
-      );
+      // Add logic to generate IDs, validate, etc.
+      const payLoad = {
+        name: rowData.policyName,
+        WorkflowPolicyName: rowData.policyName,
+        DocumentTypeCode: rowData.documentTypeId,
+        DivisionCode: rowData.level1Id,
+        DepartmentCode: rowData.level2Id,
+        SubDepartmentCode: rowData.level3Id,
+        BusinessDomainCode: rowData.level4Id,
+        EntityType: this.modalData?.entityType,
+        IsActive: true,
+      };
+
+      this._workflowPolicyService.create(payLoad).subscribe(() => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Workflow Policy',
+          'Workflow Policy created successfully!',
+        );
+      });
+      const rowWithId = {
+        ...rowData,
+        id: this.generateId(),
+        divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
+        departmentName: this.getDisplayName(this.departments, rowData.level2Id),
+        subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
+        businessDomainName: this.getDisplayName(this.subDepartments, rowData.level4Id),
+        documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
+      };
+
+      this.workflowPoliciesData = [rowWithId, ...this.workflowPoliciesData];
     });
-    const rowWithId = {
-      ...rowData,
-      id: this.generateId(),
-      divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
-      departmentName: this.getDisplayName(this.departments, rowData.level2Id),
-      subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
-      businessDomainName: this.getDisplayName(this.subDepartments, rowData.level4Id),
-      documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
-    };
-
-    this.workflowPoliciesData = [rowWithId, ...this.workflowPoliciesData];
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
     const { rowData, index } = event;
 
-    const payLoad = {
-      Id: rowData.Id || rowData.id,
-      name: rowData.policyName,
-      WorkflowPolicyName: rowData.policyName,
-      DocumentTypeCode: rowData.documentTypeId,
-      DivisionCode: rowData.level1Id,
-      DepartmentCode: rowData.level2Id,
-      SubDepartmentCode: rowData.level3Id,
-      BusinessDomainCode: rowData.level4Id,
-      EntityType: this.modalData?.entityType,
-      IsActive: true,
-    };
+    this.findDuplicateCabinetStructurePolicy(rowData, rowData.Id || rowData.id).subscribe(
+      (duplicate) => {
+        if (duplicate) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Workflow Policy',
+            this.duplicateCabinetStructureMessage(duplicate),
+          );
+          return;
+        }
 
-    this._workflowPolicyService.update(payLoad).subscribe({
-      next: () => {
-        this._notificationToastService.createNotification(
-          'success',
-          'Workflow Policy',
-          'Workflow Policy updated successfully!'
-        );
+        const payLoad = {
+          Id: rowData.Id || rowData.id,
+          name: rowData.policyName,
+          WorkflowPolicyName: rowData.policyName,
+          DocumentTypeCode: rowData.documentTypeId,
+          DivisionCode: rowData.level1Id,
+          DepartmentCode: rowData.level2Id,
+          SubDepartmentCode: rowData.level3Id,
+          BusinessDomainCode: rowData.level4Id,
+          EntityType: this.modalData?.entityType,
+          IsActive: true,
+        };
 
-        // Update display names
-        rowData.divisionName = this.getDisplayName(this.divisions, rowData.level1Id);
-        rowData.departmentName = this.getDisplayName(this.departments, rowData.level2Id);
-        rowData.subDepartmentName = this.getDisplayName(this.subDepartments, rowData.level3Id);
-        rowData.businessDomainName = this.getDisplayName(this.subDepartments, rowData.level4Id);
-        rowData.documentTypeName = this.getDisplayName(this.documentTypes, rowData.documentTypeId);
+        this._workflowPolicyService.update(payLoad).subscribe({
+          next: () => {
+            this._notificationToastService.createNotification(
+              'success',
+              'Workflow Policy',
+              'Workflow Policy updated successfully!'
+            );
 
-        this.workflowPoliciesData[index] = { ...rowData };
-        this.workflowPoliciesData = [...this.workflowPoliciesData]; // Trigger change detection
+            // Update display names
+            rowData.divisionName = this.getDisplayName(this.divisions, rowData.level1Id);
+            rowData.departmentName = this.getDisplayName(this.departments, rowData.level2Id);
+            rowData.subDepartmentName = this.getDisplayName(this.subDepartments, rowData.level3Id);
+            rowData.businessDomainName = this.getDisplayName(this.subDepartments, rowData.level4Id);
+            rowData.documentTypeName = this.getDisplayName(this.documentTypes, rowData.documentTypeId);
+
+            this.workflowPoliciesData[index] = { ...rowData };
+            this.workflowPoliciesData = [...this.workflowPoliciesData]; // Trigger change detection
+          },
+          error: (err: any) => {
+            this._notificationToastService.createNotification(
+              'error',
+              'Error',
+              err?.error?.Message || err?.Message || 'Failed to update workflow policy.'
+            );
+          }
+        });
       },
-      error: (err: any) => {
-        this._notificationToastService.createNotification(
-          'error',
-          'Error',
-          err?.error?.Message || err?.Message || 'Failed to update workflow policy.'
-        );
-      }
-    });
+    );
   }
 
   onRowDeleted(rowIndex: number): void {
