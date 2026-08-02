@@ -232,7 +232,7 @@ export class MyPendingRequestForApproval {
         name: 'Access Level',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {

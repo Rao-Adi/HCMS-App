@@ -540,7 +540,7 @@ export class DocumentAuthorizationPostTraining {
         trainingMode: '0',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 
@@ -626,7 +626,7 @@ export class DocumentAuthorizationPostTraining {
         trainingMode: '0',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 
@@ -639,7 +639,7 @@ export class DocumentAuthorizationPostTraining {
         entityType: 'Document',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -655,7 +655,7 @@ export class DocumentAuthorizationPostTraining {
         data: row, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 

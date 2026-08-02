@@ -659,7 +659,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -723,7 +723,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         action: action,
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 800,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -837,7 +837,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {

@@ -561,7 +561,7 @@ export class ResponsibilityTransferForm {
         action: action,
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {

@@ -1387,7 +1387,7 @@ export class DocumentRequestForm {
         data: row, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 

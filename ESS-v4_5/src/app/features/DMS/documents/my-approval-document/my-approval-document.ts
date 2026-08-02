@@ -594,6 +594,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     this.documentAttributeValues = [];
     this.observationData = [];
     this.attributes = [];
+    this.hasSelectedRows = false;
+    this.stepId = 0;
+    this.executionId = 0;
   }
 
   promptAction(action: string) {
@@ -609,7 +612,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         action: action,
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -659,13 +662,17 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
               'Workflow',
               response.Message,
             );
-            this.GetAllPendingDocuments();
+            // This grid binds (serverQuery), so it's server-side/infinite-row-model — calling
+            // GetAllPendingDocuments() directly only reassigns documentRequestsData, which
+            // doesn't reach AG Grid's rendered rows unless a fetch happens to be mid-flight.
+            // refresh() (via refreshInfiniteCache()) is what actually re-fetches what's on
+            // screen; calling both meant every action fired the list request twice.
+            this.agGridWrapper?.gridApi?.deselectAll();
+            this.agGridWrapper?.refresh();
+            this.emptyAllFileds();
             // Previously this action never refreshed the tab/sidebar badges at all —
             // they'd only catch up on next navigation. Refresh immediately now.
             this.getDocumentCounts();
-            if (this.agGridWrapper) {
-              this.agGridWrapper.refresh();
-            }
           }
         },
         error: (err: any) => {
@@ -819,7 +826,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         entityType: 'Document',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {

@@ -250,7 +250,7 @@ export class DRUsersComponent {
         documentTypeCode: this.documentTypeCode,
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((selectedUsers: any[]) => {

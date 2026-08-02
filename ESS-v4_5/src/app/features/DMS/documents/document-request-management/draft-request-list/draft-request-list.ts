@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
@@ -49,6 +49,12 @@ export enum DocumentRequestStatus {
 export class DraftRequestList {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
   @ViewChild('fileInput') fileInput!: any;
+
+  // Lets the parent (document-request-management.ts) know a draft moved out of Draft status
+  // (submitted) or was otherwise saved, so it can refresh the "Draft Request" tab badge count —
+  // that count lives on the parent and otherwise only refreshes on init / after creating a new
+  // request from the other tab.
+  @Output() draftRequestChanged = new EventEmitter<void>();
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -707,8 +713,15 @@ export class DraftRequestList {
             'Document Request (Draft)',
             'Document submitted successfully!',
           );
-          this.GetAllDraftDocuments();
+          // This grid binds (serverQuery), so it's server-side/infinite-row-model —
+          // reassigning documentRequestsData directly (via GetAllDraftDocuments()) doesn't
+          // actually push the change into AG Grid's rendered rows unless it's mid-request.
+          // refresh() forces a real refetch of what's on screen; deselecting clears the now-
+          // submitted row's selection so it can't be selected and submitted again.
+          this.agGridWrapper?.gridApi?.deselectAll();
+          this.agGridWrapper?.refresh();
           this.selectedDraftRequest = null;
+          this.draftRequestChanged.emit();
         }
       },
       error: (err) => {
@@ -790,7 +803,13 @@ export class DraftRequestList {
             'Document Request (Draft)',
             'Document updated successfully!',
           );
-          this.GetAllDraftDocuments();
+          // Same server-side-grid refresh as SubmiteDocumentRequests() — GetAllDraftDocuments()
+          // alone doesn't reach AG Grid's rendered rows. Also clear the selection so the user
+          // has to explicitly pick a row again instead of re-saving the same in-memory form.
+          this.agGridWrapper?.gridApi?.deselectAll();
+          this.agGridWrapper?.refresh();
+          this.selectedDraftRequest = null;
+          this.draftRequestChanged.emit();
         }
       },
       error: (err) => {
@@ -816,7 +835,7 @@ export class DraftRequestList {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {

@@ -8,7 +8,7 @@
   font-family: 'Geist', sans-serif;
 }
 
-html {
+html {.ant-select-selection-search-input
   scroll-behavior: smooth;
   font-family: 'Geist', sans-serif;
   /*font-size: 16px !important;*/
@@ -6578,7 +6578,7 @@ html.ant-scrolling-effect {
 
 /* Style the search input inside select */
 .ant-select-selection-search-input {
-  height: 34px !important;
+  height: 30px !important;
   font-size: 0.8500rem !important;
 }
 

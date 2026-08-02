@@ -699,7 +699,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         entityType: 'Request',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -715,7 +715,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         data: rowData, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 
@@ -729,7 +729,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         trainingMode: this.selectedTab === 'Classroom' ? '1' : '2',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 
@@ -742,7 +742,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         trainingMode: this.selectedTab === 'Classroom' ? '1' : '2',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 

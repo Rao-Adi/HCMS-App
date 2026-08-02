@@ -113,8 +113,8 @@ export class login implements OnInit {
 
     // 3. Now, navigate with SPA routing.
     if (localStorage.getItem('HRISRedirectURL') != null) {
-      this.redirecturl = localStorage.getItem('HRISRedirectURL');
-      localStorage.removeItem('HRISRedirectURL');
+      // this.redirecturl = localStorage.getItem('HRISRedirectURL');
+      // localStorage.removeItem('HRISRedirectURL');
 
       this.route.navigate([this.redirecturl]);
     }
