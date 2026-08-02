@@ -50,8 +50,7 @@ export class SwitchRenderer implements ICellRendererAngularComp {
     this.params?.onValueChange?.(checked, this.params.data);
   }
 
-  clickSwitch(checked: boolean): void {
-    debugger;
+  clickSwitch(checked: boolean): void { 
     if (this.loading) return;
 
     this.loading = true;

@@ -722,8 +722,7 @@ export class DraftRequestList {
     });
   }
 
-  UpdateDocumentRequests() {
-    // debugger;
+  UpdateDocumentRequests() { 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,

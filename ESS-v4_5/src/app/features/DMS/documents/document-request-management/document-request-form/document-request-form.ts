@@ -66,6 +66,7 @@ export class DocumentRequestForm {
   canDelete = false;
   formId = 'requestdocumentcreation';
 
+  selectedEntityType: string ='Request';
   selectedDivisions: string = '';
   selectedDepartment: string = '';
   selectedSubDepartment: string = '';
@@ -318,18 +319,18 @@ export class DocumentRequestForm {
 
     this.selectedDocumentRequestType = value;
     this.selectedCompany = currentCompany;
-
+    
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
       this.showDocumentCreationDiv = true;
       this.showDocumentDiv = false;
-    } else if (
-      this.selectedDocumentRequestType == '2' ||
-      this.selectedDocumentRequestType == 'DRT-0002'
-    ) {
+      this.selectedEntityType ='Request';
+    } else if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       this.showDocumentDiv = true;
+      this.selectedEntityType ='Revision';
       this.GetEffectiveDocumentsForRevision('');
-      this.showDocumentCreationDiv = true;
+      this.showDocumentCreationDiv = true;      
     } else {
+      this.selectedEntityType ='Revision';
       this.showDocumentDiv = true; // show document grid on obseletion as well.
       // Without this, switching directly from a type that already shows this grid (e.g.
       // Revision) to Obsoletion never remounts <app-ag-grid-wrapper> (showDocumentDiv flips
@@ -353,7 +354,7 @@ export class DocumentRequestForm {
     }
 
     const payLoad = {
-      EntityType: 'Request',
+      EntityType: this.selectedEntityType, //'Request',
       documentTypeCode: documentType,
       divisionCode: this.selectedDivisions || '',
       departmentCode: this.selectedDepartment || '',

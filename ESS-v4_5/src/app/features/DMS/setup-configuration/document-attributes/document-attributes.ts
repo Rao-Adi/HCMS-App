@@ -208,8 +208,7 @@ export class DocumentAttributes {
 
     this._documentAttribute.create(payLoad).subscribe({
       next: (res: ApiResponse<any>) => {
-        if (res.Success) {
-          debugger;
+        if (res.Success) { 
           this._notificationToastService.createNotification('success', 'Document attribute', res.Message);
           this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
         } else {
@@ -247,8 +246,7 @@ export class DocumentAttributes {
     }; 
     this._documentAttribute.update(payLoad).subscribe({
       next: (res: ApiResponse<any>) => {
-        if (res.Success) {
-          debugger;
+        if (res.Success) { 
           this._notificationToastService.createNotification('success', 'Document attribute', res.Message);
           this.getAllDocumentAttributesByDocumentType(this.selectedDocumentType);
         } else {

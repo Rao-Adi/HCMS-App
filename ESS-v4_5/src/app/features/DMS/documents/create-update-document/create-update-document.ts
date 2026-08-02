@@ -122,6 +122,7 @@ export class CreateUpdateDocument {
   draftFile: File | null = null;
   reviewYear: number = 0;
 
+  selectedEntityType: string = 'Document';
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
 
@@ -389,17 +390,21 @@ export class CreateUpdateDocument {
       case 'DRT-0001': // Creation of new document
         //this.trainingRequired = false;
         this.showExclusionTable = true;
+        this.selectedEntityType = 'Document';
         break;
       case 'DRT-0002': // Revision of existing document
         //this.trainingRequired = false;
+        this.selectedEntityType = 'Revision';
         this.showExclusionTable = false;
         this.GetEffectiveDocumentsForRevision('');
         break;
       case 'DRT-0003': // Obsoletion of existing document
         //this.trainingRequired = false;
+        this.selectedEntityType = 'Revision';
         this.showExclusionTable = false;
         break;
       default:
+        this.selectedEntityType = 'Document';
         //this.trainingRequired = false;
         this.showExclusionTable = false;
         break;
@@ -501,28 +506,7 @@ export class CreateUpdateDocument {
       this.GetTemplate(this.selectedDocumentType);
     } else {
       this.emptyFields();
-    }
-    // const payLoad = {
-    //   EntityType: 'Document',
-    //   documentTypeCode: this.selectedDocumentType,
-    //   divisionCode: this.selectedDivisions,
-    //   departmentCode: this.selectedDepartment,
-    //   subDepartmentCode: this.selectedSubDepartment,
-    //   businessDomainCode: this.selectedBusinessDomain,
-    // };
-
-    // this._workflowStepService
-    //   .getWorkflowStepByDocumentTypeCode(
-    //     payLoad,
-    //     // value,
-    //     // this.selectedRequestType === '1' ? 1 : this.selectedRequestType === '2' ? 2 : 3,
-    //   )
-    //   .subscribe((res) => {
-    //     // console.log('User Details:', res);
-    //     this.showExclusionTable = true;
-    //     // this.totalDistribution = res?.Data ? res.Data.length : 0;
-    //     this.approvalSequenceData = res?.Data ? res.Data : [];
-    //   });
+    } 
   }
 
   loadWorkflowAuthorities(documentType: string) {
@@ -533,7 +517,7 @@ export class CreateUpdateDocument {
     }
 
     const payLoad = {
-      EntityType: 'Document',
+      EntityType: this.selectedEntityType || 'Document',
       documentTypeCode: documentType,
       divisionCode: this.selectedDivisions || '',
       departmentCode: this.selectedDepartment || '',
@@ -1022,7 +1006,7 @@ export class CreateUpdateDocument {
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,
-        entityType: 'Document',
+        entityType: this.selectedEntityType || 'Document',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1000,
