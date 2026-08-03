@@ -48,6 +48,7 @@ export class PeoplePartnersService {
     const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-designations`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
+ 
 
   GetAllDivisions(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-divisions`;
@@ -69,9 +70,24 @@ export class PeoplePartnersService {
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
   }
 
+  GetEmployeesByDivisionId(divId: string): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-employees-by-divisionId/${divId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+  
   GetEmployeeList(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-employee-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetHeadByDivisionId(divId: string): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-head-by-division-id/${divId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetDepartmentsByDivisionId(divId: string): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-departments-by-division-id/${divId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
   //   GetUserByFilters(payload: any): Observable<ApiResponse<any>> {

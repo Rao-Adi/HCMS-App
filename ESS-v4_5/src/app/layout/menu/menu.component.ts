@@ -247,6 +247,16 @@ export class MenuComponent implements OnDestroy {
   key(v: string) { return v; }
   getSubmenuKey(rootValue: string, childValue: string) { return `${rootValue}::${childValue}`; }
 
+  // Individual counts stay on child/subChild items purely as data (still used to compute
+  // this), but per-item numeric badges are no longer shown — only a single dot on the root
+  // folder icon, rolled up from this item's own count plus every descendant's.
+  hasPendingCount(item: MenuItem): boolean {
+    if (item.count && item.count > 0) return true;
+    if (item.child?.some((c) => this.hasPendingCount(c))) return true;
+    if (item.subChild?.some((s) => this.hasPendingCount(s))) return true;
+    return false;
+  }
+
   toggleRoot(root: MenuItem) {
     if (!this.isExpanded) return;
     const k = this.key(root.Value);

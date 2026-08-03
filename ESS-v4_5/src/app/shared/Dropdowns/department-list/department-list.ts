@@ -111,12 +111,12 @@ export class DepartmentList implements ControlValueAccessor {
         // If it doesn't exist yet → implement getDepartmentsByDivisionCodeCached or similar
         getData$: () =>
           this._departmentServices.GetAllDepartments(
-            divisionCode, // filter parameter – adjust according to your real API
-            'ASC',
-            'Name',
+            '', // Fetch all so the global cache is complete
+            'DESC',
+            'CreatedAt',
             true,
             1,
-            1000, // ← or use a higher limit / pagination if needed
+            1000,
           ),
 
         // Same mapping logic as in GetAllDepartments
@@ -126,8 +126,15 @@ export class DepartmentList implements ControlValueAccessor {
           Name: item.Name || item.name,
           Division: item.Division || item.division || '',
           DivisionCode: item.DivisionCode || item.divisionCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedByName:
+            item.CreateByName ||
+            item.createByName ||
+            item.CreatedByName ||
+            item.createdByName ||
+            '',
           CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
           LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
           LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
@@ -144,10 +151,12 @@ export class DepartmentList implements ControlValueAccessor {
             (d) => d.DivisionCode?.toUpperCase() === divisionCode.toUpperCase(),
           );
 
-          this.departmentData = filtered.map((d) => ({
-            CODE: d.Code,
-            NAME: d.Name,
-          }));
+          this.departmentData = filtered
+            .map((d) => ({
+              CODE: d.Code,
+              NAME: d.Name,
+            }))
+            .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
 
           this.totalDepartments = filtered.length; // optional – if you want to show count
           this.isLoading = false;
@@ -160,5 +169,5 @@ export class DepartmentList implements ControlValueAccessor {
           this.isLoading = false;
         },
       });
-  }; 
+  };
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, TemplateRef, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -22,11 +22,14 @@ import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { TemplateService } from '@app/shared/services/template.service';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { DocumentService } from '@app/shared/services/document.service';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { RevisionHistoryModal } from '../../revision-history-modal/revision-history-modal';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-document-request-form',
@@ -54,6 +57,10 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DocumentRequestForm {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() draftData: any;
+  @Output() requestCreated = new EventEmitter<void>();
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+  isSubmitting = false;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -61,6 +68,7 @@ export class DocumentRequestForm {
   canDelete = false;
   formId = 'requestdocumentcreation';
 
+  selectedEntityType: string ='Request';
   selectedDivisions: string = '';
   selectedDepartment: string = '';
   selectedSubDepartment: string = '';
@@ -73,7 +81,7 @@ export class DocumentRequestForm {
   selectedTemplateType: string = '';
   templateFileUrl: string = '';
   draftFileUrl: string = '';
-  draftFile: File | null = null;
+  uploadedFile: File | null = null;
   displayDocumentType: string = '';
   displayDivision: string = '';
   displayDepartment: string = '';
@@ -93,6 +101,13 @@ export class DocumentRequestForm {
     filterModel: {},
     searchTerm: '',
   };
+
+  
+  documentId: number = 0;
+  currentDocumentName: string = ''; 
+  safeDraftFileUrl?: SafeResourceUrl;
+  isPdf: boolean = false;
+  isDocx: boolean = false;
 
   pageSize = 10;
   totalRows = 0;
@@ -128,10 +143,29 @@ export class DocumentRequestForm {
   loginEmpId: string = '';
   pageNumber = 1;
 
-  documentColumnDefs: ColDef[] = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  private readonly leadingColumnDefs: ColDef[] = [
+    {
+      field: 'requestId',
+      headerName: 'requestId',
+      hide: true,
+    },
     {
       field: 'documentType',
       headerName: 'Document Type',
+      cellEditor: 'agSelectCellEditor',
+      pinned: 'left',
+    },
+    {
+      field: 'documentNumber',
+      headerName: 'Document Number',
       cellEditor: 'agSelectCellEditor',
       pinned: 'left',
     },
@@ -146,38 +180,52 @@ export class DocumentRequestForm {
       headerName: 'Version',
       pinned: 'left', // ✅ now correctly typed
     },
-    {
-      field: 'division',
-      headerName: 'Division',
-      cellEditor: 'agSelectCellEditor',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-      cellEditor: 'agSelectCellEditor',
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
-      cellEditor: 'agSelectCellEditor',
-    },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     { field: 'nextReviewDate', headerName: 'Next Review Date' },
-    { field: 'url', headerName: 'URL' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created  By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    {
+      field: 'url',
+      headerName: 'Url',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+               View
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
+    {
+      field: 'previousVersionCreatedBy',
+      headerName: 'Previous Version Created  By',
+      cellClass: 'audit-cell',
+    },
+    {
+      field: 'previousVersionCreatedOn',
+      headerName: 'Previous Version Created On',
+      cellClass: 'audit-cell',
+    },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
       cellRenderer: (params: any) => {
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            ${params.value ? 'View' : 'View'}
+            ${params.value ? 'Approval History' : 'Approval History'}
           </span>
         `;
       },
@@ -191,11 +239,11 @@ export class DocumentRequestForm {
       editable: false,
       cellRenderer: (params: any) => {
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            ${params.value ? 'View' : 'View'}
+            ${params.value ? 'Revision History' : 'Revision History'}
           </span>
         `;
       },
@@ -205,13 +253,15 @@ export class DocumentRequestForm {
     },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out showing
+  // just the leading/trailing columns until we know which cabinet levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
   columnToggles?: ColumnToggle[] = [
     { field: 'documentType', label: 'Document Type', visible: true },
+    { field: 'documentNumber', label: 'Document Number', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'version', label: 'Version', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
     { field: 'nextReviewDate', label: 'Next Review Date', visible: true },
     { field: 'url', label: 'URL', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -228,11 +278,13 @@ export class DocumentRequestForm {
     private modal: NzModalService,
     private _documentRequestTypeService: DocumentRequestTypeService,
     private _companyService: CompanyService,
-    private _notificationToasService: NotificationToastService,
+    private _notificationToastService: NotificationToastService, 
     private _doumentRequestService: DocumentRequestService,
+    private _documentService: DocumentService,
     private _documentTemplateService: TemplateService,
     private _workflowStepService: WorkflowStepService,
     private _permissionService: PermissionService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -246,6 +298,43 @@ export class DocumentRequestForm {
       this.getAllDocumentRequestTypes();
       this.getAllCompanies();
     });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns on the
+    // Revision/Obsoletion documents grid for cabinet levels that are currently Enabled
+    // (CabinetLevel.isActive), labeled with whichever title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({
+          field: def.field,
+          headerName: def.title,
+          cellEditor: 'agSelectCellEditor',
+        })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'version', label: 'Version', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'nextReviewDate', label: 'Next Review Date', visible: true },
+        { field: 'url', label: 'URL', visible: true },
+        { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
+        { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
+        { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
+        { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
+        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
+      ];
+    });
   }
 
   GetLoginEmpId() {
@@ -258,19 +347,25 @@ export class DocumentRequestForm {
 
     this.selectedDocumentRequestType = value;
     this.selectedCompany = currentCompany;
-
+    
     if (this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001') {
       this.showDocumentCreationDiv = true;
       this.showDocumentDiv = false;
-    } else if (
-      this.selectedDocumentRequestType == '2' ||
-      this.selectedDocumentRequestType == 'DRT-0002'
-    ) {
+      this.selectedEntityType ='Request';
+    } else if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       this.showDocumentDiv = true;
+      this.selectedEntityType ='Revision';
       this.GetEffectiveDocumentsForRevision('');
-      this.showDocumentCreationDiv = true;
+      this.showDocumentCreationDiv = true;      
     } else {
+      this.selectedEntityType ='Revision';
       this.showDocumentDiv = true; // show document grid on obseletion as well.
+      // Without this, switching directly from a type that already shows this grid (e.g.
+      // Revision) to Obsoletion never remounts <app-ag-grid-wrapper> (showDocumentDiv flips
+      // false->true synchronously within emptyFields()+this branch, so Angular's *ngIf never
+      // observes an intermediate unmount) — AG Grid's one-time automatic first load never
+      // re-fires, rowData never gets reassigned, and the wrapper's loading spinner never clears.
+      this.GetEffectiveDocumentsForRevision('');
       this.showDocumentCreationDiv = true;
     }
   }
@@ -287,14 +382,14 @@ export class DocumentRequestForm {
     }
 
     const payLoad = {
-      EntityType: 'Request',
+      EntityType: this.selectedEntityType, //'Request',
       documentTypeCode: documentType,
       divisionCode: this.selectedDivisions || '',
       departmentCode: this.selectedDepartment || '',
       subDepartmentCode: this.selectedSubDepartment || '',
       businessDomainCode: this.selectedBusinessDomain || '',
     };
-    this._workflowStepService.getWorkflowPolicyByDocumentTypeCode(payLoad).subscribe((res) => {
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
     });
@@ -302,7 +397,14 @@ export class DocumentRequestForm {
 
   onDocumentTypeChange(value: string): void {
     // this.loading = true;
-    if (value != null) {
+    this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.uploadedFile = null;
+    this.templateFileUrl = '';
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+    if (value != null && value !== '') {
       this.selectedDocumentType = value;
 
       //Get Template
@@ -313,6 +415,41 @@ export class DocumentRequestForm {
       this.approvalSequenceData = [];
       this.selectedDocumentType = '';
       this.showExclusionTable = false;
+    }
+  }
+
+  get isRevisionRequestType(): boolean {
+    return (
+      this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002'
+    );
+  }
+
+  get draftButtonLabel(): string {
+    return this.isRevisionRequestType ? 'Submit Revision' : 'Draft';
+  }
+
+  get submitDisabledReason(): string | null {
+    if (this.isSubmitting) return null;
+    if (this.isRevisionRequestType && !this.selectedDocumentRow)
+      return 'Please select an existing document to revise.';
+    if (!this.selectedDocumentType) return 'Please select a Document Type to continue.';
+    if (!this.selectedTemplateType)
+      return 'No template has been uploaded for this Document Type. Please upload a template before creating a request.';
+    return null;
+  }
+
+  // The actual file extension a drafted upload must match. Derived straight from the
+  // template/existing-document URL rather than the TemplateType code, since TemplateType
+  // is an unreliable classification (e.g. TemplateType 1 has been seen pointing at a .docx).
+  get expectedTemplateExtension(): string {
+    const url = this.templateFileUrl || this.draftFileUrl || '';
+    if (!url) return '';
+    try {
+      const clean = decodeURIComponent(url).split('?')[0].split('#')[0];
+      const parts = clean.split('.');
+      return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
+    } catch {
+      return '';
     }
   }
 
@@ -334,10 +471,12 @@ export class DocumentRequestForm {
   getAllCompanies = () => {
     this._companyService.getCompanyList().subscribe((res) => {
       if (res) {
-        this.companies = (res.Data ?? []).map((d: any) => ({
-          id: d.Id,
-          text: d.Value,
-        }));
+        this.companies = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Id,
+            text: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.companies = [];
       }
@@ -347,10 +486,12 @@ export class DocumentRequestForm {
   getAllDocumentRequestTypes = () => {
     this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
       if (res) {
-        this.requestTypes = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Value,
-        }));
+        this.requestTypes = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Code,
+            text: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.requestTypes = [];
       }
@@ -359,18 +500,55 @@ export class DocumentRequestForm {
 
   GetTemplate(value: string, isRevision: boolean = false) {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
-      next: (response) => {
+      next: (response: any) => {
+        if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
+          this.selectedTemplateType = '';
+          this.templateFileUrl = '';
+          this.draftFileUrl = '';
+          if (!isRevision) {
+            this.templateHtml = ''; // Clear only if not a revision and no data
+          }
+          this._notificationToastService.createNotification(
+            'warning',
+            'Template Missing',
+            'Please first upload the template against this Document Type. Document request cannot be created.',
+          );
+          return;
+        }
+
         this.selectedTemplateType =
           response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
         this.templateFileUrl =
-          response.Data?.TemplateFileURL || response.Data?.templateFileUrl || '';
+          response.Data?.TemplateFileUrl ||
+          response.Data?.TemplateFileURL ||
+          response.Data?.templateFileUrl ||
+          '';
 
-        if (!isRevision) {
+        // Handle content based on TemplateType
+        if (this.selectedTemplateType === '3') {
+          // For HTML templates, set the HTML content.
           this.templateHtml =
             response.Data?.TemplateContent || response.Data?.templateContent || '';
+          this.draftFileUrl = ''; // Ensure no file URL is present
+        } else if (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') {
+          // For DOCX/PDF templates, set the draftFileUrl from the template URL.
+          this.draftFileUrl = this.templateFileUrl;
+          this.templateHtml = ''; // Ensure no HTML content is present
+        } else {
+          // Fallback for other cases or if template type is not set
+          this.templateHtml = '';
+          this.draftFileUrl = '';
         }
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        this.selectedTemplateType = '';
+        this.templateFileUrl = '';
+        this.draftFileUrl = '';
+        if (!isRevision) {
+          this.templateHtml = '';
+        }
+        console.error(err);
+      },
     });
 
     if (value === 'Select') {
@@ -380,7 +558,7 @@ export class DocumentRequestForm {
 
   downloadTemplate(): void {
     if (!this.selectedDocumentType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Template',
         'Please select a Document Type first.',
@@ -406,13 +584,13 @@ export class DocumentRequestForm {
               blob.text().then((text) => {
                 try {
                   const res = JSON.parse(text);
-                  this._notificationToasService.createNotification(
+                  this._notificationToastService.createNotification(
                     'warning',
                     'Template',
                     res.Message || 'Template not available.',
                   );
                 } catch {
-                  this._notificationToasService.createNotification(
+                  this._notificationToastService.createNotification(
                     'error',
                     'Template',
                     'Failed to read response.',
@@ -445,13 +623,14 @@ export class DocumentRequestForm {
             const url =
               typeof response?.Data === 'string'
                 ? response.Data
-                : response?.Data?.TemplateFileURL ||
+                : response?.Data?.TemplateFileUrl ||
+                  response?.Data?.TemplateFileURL ||
                   response?.Data?.templateFileUrl ||
                   this.templateFileUrl;
             if (url) {
               window.open(url, '_blank');
             } else {
-              this._notificationToasService.createNotification(
+              this._notificationToastService.createNotification(
                 'warning',
                 'Template',
                 'No file template available for download.',
@@ -467,13 +646,13 @@ export class DocumentRequestForm {
             err.error.text().then((text: string) => {
               try {
                 const res = JSON.parse(text);
-                this._notificationToasService.createNotification(
+                this._notificationToastService.createNotification(
                   'error',
                   'Template',
                   res.Message || 'Failed to download template.',
                 );
               } catch {
-                this._notificationToasService.createNotification(
+                this._notificationToastService.createNotification(
                   'error',
                   'Template',
                   'Failed to download template.',
@@ -482,7 +661,7 @@ export class DocumentRequestForm {
             });
           } else {
             console.error('Error downloading template', err);
-            this._notificationToasService.createNotification(
+            this._notificationToastService.createNotification(
               'error',
               'Template',
               err?.error?.Message || err?.Message || 'Failed to download template.',
@@ -494,16 +673,32 @@ export class DocumentRequestForm {
 
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
-    if (fileList && fileList.length > 0) {
-      this.draftFile = fileList[0];
-    } else {
-      this.draftFile = null;
+    if (!fileList || fileList.length === 0) {
+      this.uploadedFile = null;
+      return;
     }
+
+    const file = fileList[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const expectedExt = this.expectedTemplateExtension;
+
+    if (expectedExt && ext !== expectedExt) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Invalid File',
+        `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
+      );
+      event.target.value = '';
+      this.uploadedFile = null;
+      return;
+    }
+
+    this.uploadedFile = file;
   }
 
   DraftDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select an Document Request Type.',
@@ -511,7 +706,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Company.',
@@ -519,7 +714,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Document Name.',
@@ -527,15 +722,31 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedDocumentType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Document Type.',
       );
       return;
     }
+    if (!this.inputJustificationValue) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Justification.',
+      );
+      return;
+    }
+    if (!this.selectedTemplateType) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Template Missing',
+        'Please first upload the template against this Document Type.',
+      );
+      return;
+    }
     // if (!this.selectedDivisions) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Division.',
@@ -543,7 +754,7 @@ export class DocumentRequestForm {
     //   return;
     // }
     // if (!this.selectedDepartment) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Department.',
@@ -551,7 +762,7 @@ export class DocumentRequestForm {
     //   return;
     // }
     // if (!this.selectedSubDepartment) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Sub Department.',
@@ -559,7 +770,7 @@ export class DocumentRequestForm {
     //   return;
     // }
     // if (!this.selectedBusinessDomain) {
-    //   this._notificationToasService.createNotification(
+    //   this._notificationToastService.createNotification(
     //     'warning',
     //     'Validation',
     //     'Please select a Business Domain.',
@@ -617,25 +828,30 @@ export class DocumentRequestForm {
       formData.append(`UserIds[${index}]`, id);
     });
 
-    if (this.draftFile) {
-      formData.append('DraftFile', this.draftFile);
+    if (this.uploadedFile) {
+      formData.append('DraftFile', this.uploadedFile);
     }
 
+    this.isSubmitting = true;
     this._doumentRequestService.CreateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
+        this.isSubmitting = false;
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
+          this.requestCreated.emit();
+          this._doumentRequestService.refreshCounts$.next();
 
-          this._notificationToasService.createNotification(
+          this._notificationToastService.createNotification(
             'success',
-            'User',
+            'Document Request',
             'Document drafted successfully!',
           );
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification(
+        this.isSubmitting = false;
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to draft document.',
@@ -646,7 +862,7 @@ export class DocumentRequestForm {
 
   SubmitDocumentRequests() {
     if (!this.selectedDocumentRequestType) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Request Type.',
@@ -654,7 +870,7 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.selectedCompany) {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please select a Company.',
@@ -662,10 +878,35 @@ export class DocumentRequestForm {
       return;
     }
     if (!this.documentName || this.documentName.trim() === '') {
-      this._notificationToasService.createNotification(
+      this._notificationToastService.createNotification(
         'warning',
         'Validation',
         'Please enter Document Name.',
+      );
+      return;
+    }
+    if (!this.selectedDocumentType) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Document Type.',
+      );
+      return;
+    }
+    if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Justification.',
+      );
+      return;
+    }
+
+    if (!this.selectedTemplateType) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Template Missing',
+        'Please first upload the template against this Document Type.',
       );
       return;
     }
@@ -673,33 +914,13 @@ export class DocumentRequestForm {
     // UC-22: Revision Validation Checks
     if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       if (!this.selectedDocumentRow) {
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'warning',
           'Validation',
           'Please select an existing document to revise.',
         );
         return;
       }
-
-      // Mandatory Justification
-      if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
-        this._notificationToasService.createNotification(
-          'warning',
-          'Validation',
-          'Justification is mandatory for a document revision.',
-        );
-        return;
-      }
-
-      // Special Requirement: Document Content must be altered
-      // if (this.templateHtml === this.originalContentHtml) {
-      //   this._notificationToasService.createNotification(
-      //     'warning',
-      //     'Validation',
-      //     'Document Content must be altered from the original version before submission.',
-      //   );
-      //   return;
-      // }
     }
 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
@@ -711,17 +932,17 @@ export class DocumentRequestForm {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    if (
-      (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
-      !this.draftFile
-    ) {
-      this._notificationToasService.createNotification(
-        'warning',
-        'Validation',
-        'Please upload your drafted document before submitting.',
-      );
-      return;
-    }
+    // if (
+    //   (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
+    //   !this.uploadedFile
+    // ) {
+    //   this._notificationToastService.createNotification(
+    //     'warning',
+    //     'Validation',
+    //     'Please upload your drafted document before submitting.',
+    //   );
+    //   return;
+    // }
 
     const formData = new FormData();
     formData.append('CompanyId', this.selectedCompany || '');
@@ -764,24 +985,168 @@ export class DocumentRequestForm {
       formData.append(`UserIds[${index}]`, id);
     });
 
-    if (this.draftFile) {
-      formData.append('DraftFile', this.draftFile);
+    if (this.uploadedFile) {
+      formData.append('DraftFile', this.uploadedFile);
     }
 
+    this.isSubmitting = true;
     this._doumentRequestService.CreateAndSubmitDraftDocumentRequest(formData).subscribe({
       next: (response) => {
+        this.isSubmitting = false;
         if (response?.Success) {
           //clear all fields
           this.emptyFields();
-          this._notificationToasService.createNotification(
+          this.requestCreated.emit();
+          this._doumentRequestService.refreshCounts$.next();
+          this._notificationToastService.createNotification(
             'success',
             'User',
-            'Document submitted successfully!',
+            'Document Request submitted successfully!',
           );
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', err?.error?.Message || err?.Message || 'Failed to submit document.');
+        this.isSubmitting = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to submit document.',
+        );
+      },
+    });
+  }
+
+  SubmiteRevisionDocumentRequests() {
+    // The document the user picked from the "existing documents" grid is what's being revised.
+    // Its own Id must travel to the backend as ParentDocumentId — it must NOT be confused with
+    // selectedDocumentRow.requestId, which is the ORIGINAL Creation request's Id and would just
+    // resubmit that already-approved request instead of creating a new revision.
+    if (!this.selectedDocumentRow || !this.selectedDocumentRow.Id) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select an existing document to revise.',
+      );
+      return;
+    }
+    if (!this.selectedCompany) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Company.',
+      );
+      return;
+    }
+    if (!this.documentName || this.documentName.trim() === '') {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Document Name.',
+      );
+      return;
+    }
+    if (!this.inputJustificationValue || this.inputJustificationValue.trim() === '') {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please enter Justification.',
+      );
+      return;
+    }
+
+    const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
+      divisionCode: x.level1Id || x.divisionCode,
+      departmentCode: x.level2Id || x.departmentCode,
+      subDepartmentCode: x.level3Id || x.subDepartmentCode,
+      businessDomainCode: x.level4Id || x.businessDomainCode,
+      roleId: x.roleId,
+      distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+    }));
+
+    const userids = this.distributionUserList
+      .map(
+        (u: any) =>
+          u.employeeCode ||
+          u.EmployeeCode ||
+          u.empcode ||
+          u.empid ||
+          u.userId ||
+          u.UserId ||
+          u.id ||
+          u.Id,
+      )
+      .filter((code) => code != null && code !== '')
+      .map(String);
+
+    const formData = new FormData();
+    formData.append('CompanyId', this.selectedCompany || '');
+    formData.append('DocumentRequestTypeCode', this.selectedDocumentRequestType || '');
+    formData.append('ParentDocumentId', String(this.selectedDocumentRow.Id));
+    if (this.selectedDocumentType) formData.append('documentTypeCode', this.selectedDocumentType);
+    if (this.documentName) formData.append('documentName', this.documentName);
+    if (this.inputJustificationValue)
+      formData.append('justification', this.inputJustificationValue);
+    if (this.templateHtml) formData.append('proposedContent', this.templateHtml);
+    if (this.selectedDivisions) formData.append('divisionCode', this.selectedDivisions);
+    if (this.selectedDepartment) formData.append('departmentCode', this.selectedDepartment);
+    if (this.selectedSubDepartment)
+      formData.append('subDepartmentCode', this.selectedSubDepartment);
+    if (this.selectedBusinessDomain)
+      formData.append('businessDomainCode', this.selectedBusinessDomain);
+
+    cleanDistributionList.forEach((item: any, index: number) => {
+      if (item.divisionCode)
+        formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode)
+        formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode)
+        formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode)
+        formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId)
+        formData.append(
+          `DistributionList[${index}].distributionTypeId`,
+          item.distributionTypeId.toString(),
+        );
+    });
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`UserIds[${index}]`, id);
+    });
+
+    if (this.uploadedFile) {
+      formData.append('DraftFile', this.uploadedFile);
+    }
+
+    this.isSubmitting = true;
+    this._doumentRequestService.CreateAndSubmitRevisionDocumentRequest(formData).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        if (response?.Success) {
+          this.emptyFields();
+          this.requestCreated.emit();
+          this._doumentRequestService.refreshCounts$.next();
+          this._notificationToastService.createNotification(
+            'success',
+            'Document Request',
+            'Revision submitted successfully!',
+          );
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to submit revision.',
+        );
       },
     });
   }
@@ -801,7 +1166,7 @@ export class DocumentRequestForm {
     this.selectedTemplateType = '';
     this.templateFileUrl = '';
     this.draftFileUrl = '';
-    this.draftFile = null;
+    this.uploadedFile = null;
     this.displayDocumentType = '';
     this.displayDivision = '';
     this.displayDepartment = '';
@@ -814,20 +1179,210 @@ export class DocumentRequestForm {
     this.showDocumentCreationDiv = false;
   }
 
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
+  }
+
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
   }
 
-  downloadDraft(): void {
-    if (this.draftFileUrl) {
-      window.open(this.draftFileUrl, '_blank');
-    } else {
-      this._notificationToasService.createNotification(
+  downloadDraftTemplate(): void {
+    if (!this.draftFileUrl) {
+      this._notificationToastService.createNotification(
         'warning',
         'Download',
         'No existing document available for download.',
       );
+      return;
     }
+
+    // window.open() just navigates to the URL — for file types the browser knows how to
+    // render (PDF, images) that opens an inline viewer instead of downloading. Fetching the
+    // file ourselves and driving the save through a Blob + <a download> forces an actual
+    // download regardless of content type, matching downloadTemplate()/downloadDraft() below.
+    fetch(this.draftFileUrl)
+      .then((response) => {
+        if (!response.ok) throw new Error('Download failed');
+        return response.blob();
+      })
+      .then((blob) => {
+        let filename = `Document_${this.selectedDocumentType || 'template'}`;
+        try {
+          const decoded = decodeURIComponent(this.draftFileUrl);
+          const last = decoded.split('?')[0].split('#')[0].split('/').pop();
+          if (last) filename = last;
+        } catch {
+          // keep the fallback filename
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(() => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Download',
+          'Failed to download the existing document.',
+        );
+      });
+  }
+
+  
+  openDocumentModal(rowData: any) {
+    this.templateHtml = rowData.proposedContent || '';
+    this.documentId = rowData.Id;
+    this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
+    let fileUrl = rowData.url || '';
+
+    if (fileUrl && fileUrl.trim()) {
+      // This logic is incorrect as it prepends the API base URL.
+      // The correct logic uses window.location.origin.
+      if (!fileUrl.startsWith('http')) {
+        const origin = window.location.origin;
+        const relativeUrl = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+        fileUrl = origin + relativeUrl;
+      }
+      this.draftFileUrl = fileUrl;
+    } else {
+      this.draftFileUrl = '';
+    }
+
+    this.isPdf = false;
+    this.isDocx = false;
+    this.safeDraftFileUrl = undefined;
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '50%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
+  downloadDraft(): void {
+    const idToDownload = this.documentId;
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+      next: (response: any) => {
+        const body = response?.body || response;
+        let blob: Blob | null = null;
+
+        if (body instanceof Blob) {
+          blob = body;
+        } else if (body instanceof ArrayBuffer) {
+          blob = new Blob([body]);
+        }
+
+        if (blob) {
+          if (blob.type === 'application/json' || blob.type === 'application/problem+json') {
+            blob.text().then((text) => {
+              try {
+                const res = JSON.parse(text);
+                this._notificationToastService.createNotification(
+                  'warning',
+                  'Draft',
+                  res.Message || 'Draft not available.',
+                );
+              } catch {
+                this._notificationToastService.createNotification(
+                  'error',
+                  'Draft',
+                  'Failed to read response.',
+                );
+              }
+            });
+            return;
+          }
+
+          let filename = `Draft_${this.currentDocumentName || this.documentId}`;
+          const contentDisposition =
+            response?.headers?.get('content-disposition') ||
+            response?.headers?.get('Content-Disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Draft',
+            'No drafted file available for download.',
+          );
+        }
+      },
+      error: (err: any) => {
+        if (
+          err.error instanceof Blob &&
+          (err.error.type === 'application/json' || err.error.type === 'application/problem+json')
+        ) {
+          err.error.text().then((text: string) => {
+            try {
+              const res = JSON.parse(text);
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                res.Message || 'Failed to download draft.',
+              );
+            } catch {
+              this._notificationToastService.createNotification(
+                'error',
+                'Draft',
+                'Failed to download draft.',
+              );
+            }
+          });
+        } else {
+          console.error('Error downloading draft', err);
+          this._notificationToastService.createNotification(
+            'error',
+            'Draft',
+            'Failed to download draft.',
+          );
+        }
+      },
+    });
   }
 
   GetEffectiveDocumentsForRevision(query?: any) {
@@ -858,7 +1413,7 @@ export class DocumentRequestForm {
       searchText: searchText || '',
     };
 
-    this._doumentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
+    this._documentService.GetEffectiveDocumentsForRevision(payload).subscribe({
       next: (response) => {
         if (response?.Success || response?.Data) {
           const data = response?.Data;
@@ -867,18 +1422,17 @@ export class DocumentRequestForm {
           this.totalRows = data?.TotalCount ?? items.length;
           this.documentRevisionData = items.map((item: any) => ({
             Id: item.id || item.Id,
+            requestId: item.RequestId || item.requestId,
             companyId: item.companyId || item.CompanyId,
             company: item.Company || item.company,
-            requestNumber: item.RequestNumber || item.requestNumber,
+            documentNumber: item.DocumentNumber || item.documentNumber,
             documentTypeCode: item.DocumentTypeCode || item.documenttypecode,
             documentType: item.DocumentType || item.documenttype,
-            proposedDocumentNumber: item.RequestNumber || item.requestNumber || item.documentnumber,
             stepId: item.StepId || item.stepId,
             stepOrder: item.StepOrder || item.stepOrder,
             startedAt: item.StartedAt || item.startedAt,
             division: item.Division || item.division,
             divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
-            documentId: item.DocumentNumber || item.documentid,
             documentName: item.DocumentName || item.documentname || item.title,
             proposedContent: item.ProposedContent || item.proposedcontent || item.content,
             department: item.Department || item.department,
@@ -898,7 +1452,7 @@ export class DocumentRequestForm {
               item.CreatedAt || item.createdat || '',
             ),
             requestCreatedBy: item.CreatedByName || item.createdByName,
-            previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
+            // previousVersionCreatedBy: item.LastModifiedByName || item.lastmodifiedbyname,
             previousVersionCreatedOn: new CustomDateFormatPipe().transform(
               item.draftContentLastModifiedAt ||
                 item.DraftContentLastModifiedAt ||
@@ -912,10 +1466,15 @@ export class DocumentRequestForm {
             url: item.DocumentURL || item.documenturl,
             proposedVersionNumber: item.RowVersion || item.rowVersion || item.version,
             templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            templateFileUrl:
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
             draftFileUrl:
               item.DraftFileUrl ||
+              item.draftfileurl ||
               item.draftFileUrl ||
+              item.TemplateFileUrl ||
+              item.TemplateFileURL ||
+              item.templateFileUrl ||
               (String(item.TemplateType || item.templateType) === '1' ||
               String(item.TemplateType || item.templateType) === '2'
                 ? item.ProposedContent || item.proposedcontent
@@ -943,7 +1502,7 @@ export class DocumentRequestForm {
       error: (err) => {
         this.documentRevisionData = [];
         this.totalRows = 0;
-        this._notificationToasService.createNotification(
+        this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to fetch draft documents.',
@@ -971,10 +1530,9 @@ export class DocumentRequestForm {
 
   onCellClicked(event: any): void {
     const row = event.data;
-
     this.selectedDocumentRow = row;
 
-    this.requestId = row.Id;
+    this.requestId = row.RequestId || row.requestId;
     this.submittedby = row.submittedBy || row.sumbittedby;
     this.selectedCompany = row.companyId || row.company;
     // ✅ Populate form fields
@@ -1019,7 +1577,7 @@ export class DocumentRequestForm {
         data: row, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 
@@ -1040,5 +1598,41 @@ export class DocumentRequestForm {
     modalRef.afterClose.subscribe((result) => {
       console.log('Modal closed with:', result);
     });
+  }
+
+  reviewDraftedFile(): void {
+    if (this.uploadedFile) {
+      const fileURL = URL.createObjectURL(this.uploadedFile);
+      window.open(fileURL, '_blank');
+      // Revoke the object URL after some time to free up memory
+      setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+    }
+  }
+
+  getDraftFileName(): string {
+    if (this.uploadedFile) {
+      return this.uploadedFile.name;
+    }
+    if (this.draftFileUrl) {
+      try {
+        const decoded = decodeURIComponent(this.draftFileUrl);
+        const parts = decoded.split('/');
+        return parts[parts.length - 1].split('?')[0];
+      } catch (e) {
+        const parts = this.draftFileUrl.split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return '';
+  }
+
+  removeDraftedFile(): void {
+    // Only clear the user's locally-picked replacement file — draftFileUrl holds the
+    // standard template / existing document reference, not the upload, and the
+    // "Document Content" section's visibility depends on it staying set.
+    this.uploadedFile = null;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 }

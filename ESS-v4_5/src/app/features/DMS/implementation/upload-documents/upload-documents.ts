@@ -34,9 +34,10 @@ export class UploadDocuments {
   divisions: any[] = [];
   departments: any[] = [];
   subDepartments: any[] = [];
+  businessDomains: any[] = [];
   documentTypes: any[] = [];
 
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -46,10 +47,10 @@ export class UploadDocuments {
 
   pinnedTopRowDataPlanning: UploadDocumentColumns[] = [
     {
-      documentId: '',
+      documentNumber: '',
       documentName: '',
       version: '',
-      documentTypeId: null,
+      documentType: null,
       divisionId: null,
       departmentId: null,
       subDepartmentId: null,
@@ -63,7 +64,7 @@ export class UploadDocuments {
   dropdownDataSources: Record<number, any[]> = {};
   cabinetHierarchy: CabinetLevel[] = [];
   levelTitles: Record<number, string> = {};
-
+ 
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
@@ -93,22 +94,22 @@ export class UploadDocuments {
         this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
       });
 
-      this.GetAllUploadedDocuments({
-        pageNumber: 1,
-        pageSize: this.selectedPageSize,
-        sortModel: [], // or your current sort/filter model
-        filterModel: {},
-      });
+      // this.GetAllUploadedDocuments({
+      //   pageNumber: 1,
+      //   pageSize: this.selectedPageSize,
+      //   sortModel: [], // or your current sort/filter model
+      //   filterModel: {},
+      // });
     });
   }
 
   private getFixedColumns(): GridColumn[] {
     return [
       {
-        field: 'documentId',
+        field: 'documentNumber',
         headerName: 'Document Number',
         type: 'text',
-        minWidth: 150,
+        minWidth: 200,
         pinned: 'left',
         required: true,
       },
@@ -116,20 +117,20 @@ export class UploadDocuments {
         field: 'documentName',
         headerName: 'Document Name',
         type: 'text',
-        minWidth: 150,
+        minWidth: 250,
         pinned: 'left',
         required: true,
       },
       {
         field: 'version',
         headerName: 'Version',
-        type: 'text',
-        minWidth: 120,
+        type: 'number',
+        minWidth: 100,
         pinned: 'left',
         required: true,
       },
       {
-        field: 'documentTypeId',
+        field: 'documentType',
         headerName: 'Document Type',
         type: 'dropdown',
         dropdownOptions: this.documentTypes,
@@ -148,12 +149,14 @@ export class UploadDocuments {
         headerName: 'Next Review Date',
         type: 'date',
         required: true,
+        minWidth: 180,
       },
       {
         field: 'uploadDocument',
         headerName: 'Upload Document',
         type: 'file',
         required: true,
+        minWidth: 180,
       },
     ];
   }
@@ -162,7 +165,7 @@ export class UploadDocuments {
     this.gridConfig = {
       columns: this.getColumns(),
       enablePagination: true,
-      pageSize: 10,
+      pageSize: this.selectedPageSize,
       pageSizeOptions: [10, 20, 50, 100],
       enableSorting: true,
       enableFiltering: true,
@@ -177,23 +180,30 @@ export class UploadDocuments {
       suppressCellFocus: true,
     };
   }
+ 
 
   private getColumns(): GridColumn[] {
+    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
+      ...col,
+      minWidth: 230
+    }));
+
     return [
       ...this.getFixedColumns(),
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...cabinetCols,
       ...this.getRemainingColumns(),
     ];
   }
 
+
   GetAllUploadedDocuments(query: any) {
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
+    const pageSize = Number(query?.pageSize) || this.selectedPageSize;
 
     this._documentService
       .GetAllDocument(
-        query?.filterModel?.Name?.filter || '',
+        query?.searchText || query?.searchTerm || query?.filterModel?.Name?.filter || '',
         sort?.sort?.toUpperCase() || 'ASC',
         sort?.colId || 'Name',
         true,
@@ -206,13 +216,13 @@ export class UploadDocuments {
         if (Array.isArray(items)) {
           this.uploadedDocumentsData = items.map((item: any) => ({
             Id: item.Id,
-            documentTypeId: item.DocumentTypeCode,
+            documentType: item.DocumentTypeCode,
             documentTypeName: item.DocumentTypeCode,
             version: item.Version,
             divisionName: item.Division,
             level1Id: item.DivisionCode,
-            documentId: item.DocumentNumber,
-            documentName: item.DocumentName,
+            documentNumber: item.DocumentNumber,
+            documentName: item.Title,
             DocumentCode: item.DocumentCode,
             level2Id: item.Department,
             departmentId: item.DepartmentCode,
@@ -263,16 +273,33 @@ export class UploadDocuments {
 
     const formData = new FormData();
 
-    formData.append('DocumentNumber', rowData.documentId);
-    formData.append('DocumentName', rowData.documentName);
-    formData.append('DocumentTypeCode', rowData.documentTypeId);
-    formData.append('Version', rowData.version);
-    formData.append('Status', 'Approved'); // Assuming legacy docs are active/approved. Adjust as per your API rules.
-    formData.append('DivisionCode', rowData.level1Id);
-    formData.append('DepartmentCode', rowData.level2Id);
-    formData.append('SubDepartmentCode', rowData.level3Id);
-    formData.append('BusinessDomainCode', rowData.level4Id);
-    formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
+    const safeAppend = (key: string, val: any) => {
+      if (val === undefined || val === null || val === 'undefined' || val === 'null') {
+        formData.append(key, '');
+      } else {
+        formData.append(key, String(val));
+      }
+    };
+
+    safeAppend('DocumentNumber', rowData.documentNumber);
+    safeAppend('DocumentName', rowData.documentName);
+    safeAppend('DocumentTypeCode', rowData.documentType);
+    safeAppend('Version', rowData.version);
+    safeAppend('Status', 'Approved'); // Assuming legacy docs are active/approved. Adjust as per your API rules.
+    safeAppend('DivisionCode', rowData.level1Id);
+    safeAppend('DepartmentCode', rowData.level2Id);
+    safeAppend('SubDepartmentCode', rowData.level3Id);
+    safeAppend('BusinessDomainCode', rowData.level4Id);
+
+    if (rowData.nextReviewDate) {
+      try {
+        formData.append('NextReviewDate', new Date(rowData.nextReviewDate).toISOString());
+      } catch (e) {
+        formData.append('NextReviewDate', '');
+      }
+    } else {
+      formData.append('NextReviewDate', '');
+    }
 
     // ✅ REAL FILE — GUARANTEED
     if (!(file instanceof File)) {
@@ -292,17 +319,17 @@ export class UploadDocuments {
       const rowWithId = {
         ...rowData,
         id: this.generateId(),
-        documentId: rowData.documentId,
+        documentNumber: rowData.documentNumber,
         documentName: rowData.documentName,
         version: rowData.version,
         nextReviewDate: rowData.nextReviewDate,
         uploadDocument: 'Uploaded', // ❌ DO NOT store file
         // Map dropdown IDs to display names
-        documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
+        documentType: this.getDisplayName(this.documentTypes, rowData.documentType),
         divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
         departmentName: this.getDisplayName(this.departments, rowData.level2Id),
         subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
-        businessDomainname: this.getDisplayName(this.subDepartments, rowData.level4Id),
+        businessDomainname: this.getDisplayName(this.businessDomains, rowData.level4Id),
       };
 
       this.uploadedDocumentsData = [rowWithId, ...this.uploadedDocumentsData];
@@ -320,7 +347,7 @@ export class UploadDocuments {
       event.rowData.level3Id,
     );
     event.rowData.businessDomainname = this.getDisplayName(
-      this.subDepartments,
+      this.businessDomains,
       event.rowData.level4Id,
     );
     // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
@@ -391,10 +418,10 @@ export class UploadDocuments {
 }
 
 class UploadDocumentColumns {
-  documentId: string = '';
+  documentNumber: string = '';
   documentName: string = '';
   version: string = '';
-  documentTypeId: string | null = null;
+  documentType: string | null = null;
   //documentType: string = '';
 
   divisionId: string | null = null;

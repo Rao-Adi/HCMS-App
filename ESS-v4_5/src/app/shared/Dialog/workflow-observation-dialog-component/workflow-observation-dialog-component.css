@@ -1,6 +1,13 @@
 .approval-table-wrapper {
   max-height: 400px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.editor {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .approval-table {

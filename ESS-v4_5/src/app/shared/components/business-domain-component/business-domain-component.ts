@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -22,6 +22,9 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './business-domain-component.css',
 })
 export class BusinessDomainComponent {
+  @Input() level!: number;
+  @Input() levelTitles!: Record<number, string>;
+
   gridConfig: GridConfig = {} as GridConfig;
 
   selectedPageSize = 10;
@@ -34,6 +37,9 @@ export class BusinessDomainComponent {
     filter: true,
     cellDataType: false,
   };
+
+  currentTitle = '';
+  parentTitle = '';
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -67,8 +73,11 @@ export class BusinessDomainComponent {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
+      this.currentTitle = this.levelTitles[this.level];
+      this.parentTitle = this.levelTitles[this.level - 1];
+
       this.getAllDepartmeList();
-    });    
+    });
   }
 
   private buildGrid(): void {
@@ -118,29 +127,56 @@ export class BusinessDomainComponent {
       // ✅ SubDepartment
       {
         field: 'SubDepartment',
-        headerName: 'Sub-Department',
+        headerName: `${this.parentTitle}`,
         type: 'dropdown',
         dropdownOptions: this.subdepartments,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         required: true,
       },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
-        field: 'LastModifiedByName',
+        field: 'CreatedByName',
         headerName: 'Last Saved By',
         type: 'readonly',
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
       {
-        field: 'LastModifiedAt',
+        field: 'CreatedAt',
         headerName: 'Last Saved On',
         type: 'readonly',
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
+      // {
+      //   field: 'LastModifiedByName',
+      //   headerName: 'Last Action Performed By',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
+      // {
+      //   field: 'LastModifiedAt',
+      //   headerName: 'Last Action Performed On',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
     ];
   }
 
@@ -152,7 +188,7 @@ export class BusinessDomainComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
+          this._businessDomainService.GetAllBusinessDomains('', 'DESC', 'CreatedAt', true, 1, 1000),
 
         // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
@@ -161,11 +197,13 @@ export class BusinessDomainComponent {
           Name: item.Name || item.name,
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -184,18 +222,20 @@ export class BusinessDomainComponent {
         cacheKey: MASTER_CACHE_KEYS.BUSINESS_DOMAIN,
         getCount$: () => this._businessDomainService.getBusinessDomainCount(),
         getData$: () =>
-          this._businessDomainService.GetAllBusinessDomains('', 'ASC', 'Name', true, 1, 1000),
+          this._businessDomainService.GetAllBusinessDomains('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           SubDepartment: item.SubDepartment || item.SubDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.SubDepartmentCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -241,12 +281,12 @@ export class BusinessDomainComponent {
   /* ================= Inline Events ================= */
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event; 
+    const { rowData } = event;
     const payLoad = {
       Code: rowData.Code,
       Name: rowData.Name,
       SubDepartmentCode: rowData.SubDepartment,
-      IsActive: true,
+      IsActive: rowData.IsActive,
       IsDeleted: false,
     };
 
@@ -256,12 +296,12 @@ export class BusinessDomainComponent {
         this._notificationToastService.createNotification(
           'success',
           'Business Domain',
-          'Business Domain updated successfully!',
+          'Business Domain created successfully!',
         );
         this.loadBusinessDomains();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Business Domain failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -273,7 +313,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Business Domain', message);
       },
     });
   }
@@ -284,8 +324,8 @@ export class BusinessDomainComponent {
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
-      DepartmentCode: event.rowData.SubDepartment,
-      IsActive: true,
+      SubDepartmentCode: event.rowData.SubDepartmentCode,
+      IsActive: event.rowData.IsActive,
       // IsDeleted: false,
     };
 
@@ -300,7 +340,7 @@ export class BusinessDomainComponent {
         this.loadBusinessDomains();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Business Domain failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -312,7 +352,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Business Domain', message);
       },
     });
   }
@@ -333,7 +373,7 @@ export class BusinessDomainComponent {
         this.loadBusinessDomains();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Business Domain failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -345,7 +385,7 @@ export class BusinessDomainComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Business Domain', message);
       },
     });
   }

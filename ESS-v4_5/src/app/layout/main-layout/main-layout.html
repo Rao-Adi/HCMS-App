@@ -15,8 +15,8 @@
 
       <div *ngIf="isSidebarOpen || !isSidebarHovering" class="brand-logo-wrapper">
         <a routerLink="/dashboard" class="brand-logo" title="Go to Dashboard">
-          <img class="brand-logo-full" src="/assets/images/HCMSLogo.png" alt="HCMS Logo" />
-          <img class="brand-logo-icon" src="/assets/images/HCMSLogo.png" alt="HCMS" />
+          <img class="brand-logo-full" src="./assets/images/dms/favicon-32x32.png" alt="HCMS Logo" />
+          <img class="brand-logo-icon" src="./assets/images/dms/favicon-32x32.png" alt="HCMS" />
         </a>
       </div>
 
@@ -55,7 +55,7 @@
                 <h2 class="page-title fs-6 fw-semibold mb-0 text-truncate" [title]="showdesc ? formdescription : ''">
                   {{ formName }}
                 </h2>
-                <div class="page-path-dim" *ngIf="strBreadCrumb && strBreadCrumb !== 'Home / Dashboard'">
+                <div class="page-path-dim" *ngIf="strBreadCrumb && strBreadCrumb !== 'Dashboard'">
                   {{ strBreadCrumb }}
                 </div>
                 <small *ngIf="showdesc" class="title-sub text-truncate">{{ formdescription }}</small>
@@ -215,13 +215,13 @@
                   <i class="bi bi-info-circle text-info fs-6"></i>
                 </a>
 
-                <hr class="my-1 text-light border-secondary opacity-25">
+                <!-- <hr class="my-1 text-light border-secondary opacity-25">
 
                 <a class="d-flex align-items-center justify-content-between p-2 rounded-2 text-decoration-none text-danger notif-item-hover" 
                    (click)="logout()" style="cursor: pointer;">
                   <span class="text-truncate fw-medium" style="font-size: 0.875rem;">Logout</span>
                   <i class="bi bi-box-arrow-right fs-6"></i>
-                </a>
+                </a> -->
               </div>
             </div>
           </div>

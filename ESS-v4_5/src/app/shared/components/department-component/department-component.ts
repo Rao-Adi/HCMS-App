@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -25,6 +25,7 @@ export class DepartmentComponent {
   @Input() level!: number;
   @Input() levelTitles!: Record<number, string>;
 
+  @ViewChild(EditableAgGridWrapper) gridWrapper!: EditableAgGridWrapper;
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
@@ -74,8 +75,8 @@ export class DepartmentComponent {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
-      this.currentTitle = this.levelTitles[this.level]; // Department
-      this.parentTitle = this.levelTitles[this.level - 1]; // Division
+      this.currentTitle = this.levelTitles[this.level];
+      this.parentTitle = this.levelTitles[this.level - 1];
 
       this.getAllDivisionList();
     });
@@ -134,7 +135,15 @@ export class DepartmentComponent {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         required: true,
+        minWidth: 200,
       },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
@@ -142,6 +151,7 @@ export class DepartmentComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
       {
         field: 'LastModifiedAt',
@@ -150,7 +160,26 @@ export class DepartmentComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
+      // {
+      //   field: 'LastModifiedByName',
+      //   headerName: 'Last Action Performed By',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
+      // {
+      //   field: 'LastModifiedAt',
+      //   headerName: 'Last Action Performed On',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
     ];
   }
 
@@ -159,14 +188,15 @@ export class DepartmentComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.DEPARTMENTS,
         getCount$: () => this._departmentServices.getDepartmentCount(),
-        getData$: () =>
-          this._departmentServices.GetAllDepartments('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () => this._departmentServices.GetAllDepartments('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Division: item.Division || item.division || '',
           DivisionCode: item.DivisionCode || item.divisionCode || '',
+          IsActive :item.isActive || item.IsActive || false,
+          IsDeleted :item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
@@ -191,13 +221,15 @@ export class DepartmentComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._departmentServices.GetAllDepartments('', 'ASC', 'Name', true, 1, 1000),
+          this._departmentServices.GetAllDepartments('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.Code || item.code,
           Name: item.Name || item.name,
           Division: item.Division || item.division || '',
           DivisionCode: item.DivisionCode || item.divisionCode || '',
+          IsActive :item.isActive || item.IsActive || false,
+          IsDeleted :item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
@@ -257,7 +289,7 @@ export class DepartmentComponent {
 
   onRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-
+    
     const payLoad = {
       Name: rowData.Name,
       DivisionCode: rowData.Division,
@@ -268,15 +300,18 @@ export class DepartmentComponent {
     this._departmentServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Department',
-          'Department updated successfully!',
+          'Department created successfully!',
         );
         this.loadDepartments();
+        this.gridWrapper.clearSelection();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -288,23 +323,26 @@ export class DepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Department', message);
       },
     });
   }
 
   onRowUpdated(event: { rowData: any }): void {
-    //console.log('✏️ Row Updated:', event.rowData);
-    const payLoad = {
+    //console.log('✏️ Row Updated:', event.rowData); 
+    const payLoad = { 
+      Code: event.rowData.Code,
       Name: event.rowData.Name,
-      DivisionCode: event.rowData.DivisionCode,
-      IsActive: true,
+      DivisionCode: event.rowData.Division,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
 
     this._departmentServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Department',
@@ -313,7 +351,7 @@ export class DepartmentComponent {
         this.loadDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -325,7 +363,7 @@ export class DepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Department', message);
       },
     });
   }
@@ -336,6 +374,8 @@ export class DepartmentComponent {
     this._departmentServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Department',
@@ -344,7 +384,7 @@ export class DepartmentComponent {
         this.loadDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -356,7 +396,7 @@ export class DepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Department', message);
       },
     });
   }

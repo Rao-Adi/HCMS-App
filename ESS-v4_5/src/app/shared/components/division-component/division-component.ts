@@ -112,6 +112,13 @@ export class DivisionComponent {
         required: true,
         minWidth: 200,
       },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
@@ -119,6 +126,7 @@ export class DivisionComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
       {
         field: 'LastModifiedAt',
@@ -127,7 +135,26 @@ export class DivisionComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
+      // {
+      //   field: 'LastModifiedByName',
+      //   headerName: 'Last Action Performed By',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
+      // {
+      //   field: 'LastModifiedAt',
+      //   headerName: 'Last Action Performed On',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
     ];
   }
 
@@ -136,11 +163,13 @@ export class DivisionComponent {
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.DIVISIONS,
         getCount$: () => this._divisionServices.getDivisionCount(),
-        getData$: () => this._divisionServices.GetAllDivisions('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () => this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
+          IsActive :item.isActive || item.IsActive || false,
+          IsDeleted :item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
@@ -165,11 +194,13 @@ export class DivisionComponent {
         getCount$: () => this._divisionServices.getDivisionCount(),
 
         // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._divisionServices.GetAllDivisions('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () => this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
+          IsActive :item.isActive || item.IsActive || false,
+          IsDeleted :item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName : item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
@@ -222,6 +253,9 @@ export class DivisionComponent {
     this._divisionServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Division',
@@ -230,7 +264,7 @@ export class DivisionComponent {
         this.loadDivisions();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Division failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -242,7 +276,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Division', message);
       },
     });
   }
@@ -252,13 +286,16 @@ export class DivisionComponent {
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
 
     this._divisionServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Division',
@@ -267,7 +304,7 @@ export class DivisionComponent {
         this.loadDivisions();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Division failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -279,7 +316,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Division', message);
       },
     });
   }
@@ -290,6 +327,9 @@ export class DivisionComponent {
     this._divisionServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.DIVISIONS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Division',
@@ -298,7 +338,7 @@ export class DivisionComponent {
         this.loadDivisions();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Division failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -310,7 +350,7 @@ export class DivisionComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Division', message);
       },
     });
   }

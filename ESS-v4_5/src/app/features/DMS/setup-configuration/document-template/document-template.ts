@@ -80,8 +80,16 @@ export class DocumentTemplate {
   selectedTemplateType: string = '';
   selectedFile: File | null = null;
   existingFileName: string = '';
+  deleteTemplateFile(): void {
+    this.existingFileName = '';
+    this.selectedFile = null;
+  }
 
   templateTypes: any[] = [
+    {
+      id: '3',
+      text: 'HTML',
+    },
     {
       id: '1',
       text: 'PDF',
@@ -89,10 +97,6 @@ export class DocumentTemplate {
     {
       id: '2',
       text: 'Word Document',
-    },
-    {
-      id: '3',
-      text: 'HTML',
     },
   ];
 
@@ -225,7 +229,8 @@ export class DocumentTemplate {
 
     if (
       (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') &&
-      !this.selectedFile
+      !this.selectedFile &&
+      !this.existingFileName
     ) {
       this._notificationToastService.createNotification(
         'warning',
@@ -238,7 +243,7 @@ export class DocumentTemplate {
     const formData = new FormData();
     formData.append('DocumentTypeCode', this.selectedDocumentType);
     formData.append('TemplateName', this.templateName || 'Template');
-    formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : '');
+    formData.append('TemplateFileUrl', this.selectedFile ? this.selectedFile.name : (this.existingFileName || ''));
     formData.append('TemplateType', this.selectedTemplateType);
     formData.append('IsDefault', String(this.isDefaultTemplate));
 
@@ -263,6 +268,9 @@ export class DocumentTemplate {
         );
 
         this.cabinetStructure.resetHierarchy();
+        if (this.selectedDocumentType) {
+          this.onDocumentTypeChange(this.selectedDocumentType);
+        }
       },
       error: (err) => {
         console.error('Document Template failed:', err);
@@ -282,10 +290,129 @@ export class DocumentTemplate {
     });
   }
 
+  downloadTemplateFile(): void {
+    if (!this.selectedDocumentType) {
+      this._notificationToastService.createNotification('warning', 'Document Type', 'Please select a Document Type first');
+      return;
+    }
+
+    if (this.selectedFile) {
+      const url = window.URL.createObjectURL(this.selectedFile);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = this.selectedFile.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      return;
+    }
+
+    if (!this.existingFileName) {
+      this._notificationToastService.createNotification('warning', 'Template', 'No template file exists to download');
+      return;
+    }
+
+    this.documentTemplateService.DownloadTemplateByDocumentTypeCode(this.selectedDocumentType).subscribe({
+      next: (response: any) => {
+        const blob = response.body;
+        if (!blob) {
+          this._notificationToastService.createNotification('error', 'Download', 'Failed to download template: Empty response');
+          return;
+        }
+
+        let filename = this.existingFileName;
+        const contentDisposition = response.headers?.get('content-disposition') || response.headers?.get('Content-Disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Error downloading template:', err);
+        this._notificationToastService.createNotification('error', 'Download', 'Failed to download template from server');
+      }
+    });
+  }
+
+  viewTemplateFile(): void {
+    if (!this.selectedDocumentType) {
+      this._notificationToastService.createNotification('warning', 'Document Type', 'Please select a Document Type first');
+      return;
+    }
+
+    if (this.selectedFile) {
+      const url = window.URL.createObjectURL(this.selectedFile);
+      window.open(url, '_blank');
+      return;
+    }
+
+    if (!this.existingFileName) {
+      this._notificationToastService.createNotification('warning', 'Template', 'No template file exists to view');
+      return;
+    }
+
+    this.documentTemplateService.DownloadTemplateByDocumentTypeCode(this.selectedDocumentType).subscribe({
+      next: (response: any) => {
+        const blob = response.body;
+        if (!blob) {
+          this._notificationToastService.createNotification('error', 'View Template', 'Failed to view template: Empty response');
+          return;
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      },
+      error: (err) => {
+        console.error('Error loading template file:', err);
+        this._notificationToastService.createNotification('error', 'View Template', 'Failed to retrieve template file from server');
+      }
+    });
+  }
+
   onHierarchyChange(values: CabinetSelection[]) {
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedbusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+  }
+
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
   }
 }

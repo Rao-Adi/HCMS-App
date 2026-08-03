@@ -1,7 +1,7 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom"> 
+      <div class="card-custom">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">
             <div class="custom-tab-container">
@@ -9,17 +9,25 @@
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'TrainingPoliciy' }"
-                (click)="selectedTab = 'TrainingPoliciy'"
+                (click)="onTabChange('TrainingPoliciy')"
               >
-                Training Policiy
+                Training Policy
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
                 [ngClass]="{ 'active-tab': selectedTab === 'DocumentReview' }"
-                (click)="selectedTab = 'DocumentReview'"
+                (click)="onTabChange('DocumentReview')"
               >
                 Document Review
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'AuthorizationPolicy' }"
+                (click)="onTabChange('AuthorizationPolicy')"
+              >
+                Authorization Policy
               </button>
             </div>
 
@@ -27,61 +35,117 @@
               <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
                 <div class="status-box-leftColmd6-standard">
                   <h3 class="PnlHeader">Document requiring Training before Authorization</h3>
-                  <br />
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
                       <div class="d-flex">
-                        <label
-                          >Approval Authorities can only give their observations, but not edit the
-                          document</label
-                        >
-
-                        <label
-                          >Users will be required to go through training if any document is
-                          created/updated w.r.t following Document Types</label
+                        <label style="text-transform: math-auto;"
+                          >Configure the document types that require mandatory user training and
+                          define the minimum passing score required for certification before users
+                          are authorized to access or acknowledge the document.</label
                         >
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="col-lg-12 col-md-12 col-sm-12" style="position: relative;">
                 <app-editable-ag-grid-wrapper
                   [gridStyle]="{ width: '100%', height: '500px' }"
                   class="ag-theme-alpine"
-                  [gridId]="'employee-planning-grid'"
+                  [gridId]="'TrainingPoliciyGrid'"
                   [config]="gridConfig"
                   [isSelectionRequired]="true"
+                  [autoSizeColumns]="true"
                   [rowData]="trainingPolicesData"
                   [pinnedTopRowData]="pinnedTopRowDataPlanning"
-                  (rowAdded)="onRowAdded($event)"
-                  (rowUpdated)="onRowUpdated($event)"
-                  (rowDeleted)="onRowDeleted($event)"
+                  (rowAdded)="onTrainingPoliciyRowAdded($event)"
+                  (rowUpdated)="onTrainingPoliciyRowUpdated($event)"
+                  (rowDeleted)="onTrainingPoliciyRowDeleted($event)"
                   (cellValueChanged)="onCellValueChanged($event)"
                   (selectionChanged)="onSelectionChanged($event)"
                   (gridReady)="onGridReady($event)"
                   (actionClicked)="handleGridAction($event)"
                 >
                 </app-editable-ag-grid-wrapper>
+                <app-spinner *ngIf="savingTrainingPolicy"></app-spinner>
               </div>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'DocumentReview'">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <app-ag-grid-wrapper
-                  [gridStyle]="{ width: '100%', height: '250px' }"
-                  [columnDefs]="documentReviewColumnDef"
-                  [defaultColDef]="defaultColDef"
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Document Review</h3>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
+                      <div class="d-flex">
+                        <label style="text-transform: math-auto;"
+                          >Configure the review period for each document type. The default review
+                          period can be overridden by the user during document creation, subject to
+                          applicable business requirements.</label
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="position: relative;">
+                <app-editable-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '500px' }"
+                  class="ag-theme-alpine"
+                  [gridId]="'DocumentReviewPoliciyGrid'"
+                  [config]="documentReviewGridConfig"
+                  [isSelectionRequired]="true"
+                  [autoSizeColumns]="true"
                   [rowData]="documentReviewRowData"
-                  [pageSize]="selectedPageSize"
-                  [isSelectionRequired]="false"
-                  [showDisplayOption]="false"
-                  gridId="DocumentReview"
-                  (pageSizeChange)="onPageSizeChanged($event)"
-                  [totalRows]="totalDocumentReview"
-                  (serverQuery)="GetAllDocumentReview($event)"
+                  [pinnedTopRowData]="pinnedTopRowDataDocumentReview"
+                  (rowAdded)="onDocReviewRowAdded($event)"
+                  (rowUpdated)="onDocReviewRowUpdated($event)"
+                  (rowDeleted)="onDocReviewRowDeleted($event)"
+                  (cellValueChanged)="onCellValueChanged($event)"
+                  (selectionChanged)="onSelectionChanged($event)"
+                  (gridReady)="onGridReady($event)"
                 >
-                </app-ag-grid-wrapper>
+                </app-editable-ag-grid-wrapper>
+                <app-spinner *ngIf="savingDocumentReview"></app-spinner>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'AuthorizationPolicy'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-4">
+                <div class="status-box-leftColmd6-standard">
+                  <h3 class="PnlHeader">Authorization Policy</h3>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
+                      <div class="d-flex">
+                        <label style="text-transform: math-auto;"
+                          >Configure the document types that require authorization and assign the
+                          designated authorizer(s) responsible for approving each document type
+                          before it becomes effective.</label
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-12 col-md-12 col-sm-12" style="position: relative;">
+                <app-editable-ag-grid-wrapper
+                  [gridStyle]="{ width: '100%', height: '500px' }"
+                  class="ag-theme-alpine"
+                  [gridId]="'AuthorizationPolicyGrid'"
+                  [config]="authGridConfig"
+                  [isSelectionRequired]="true"
+                  [autoSizeColumns]="true"
+                  [rowData]="authorizationPolicyData"
+                  [pinnedTopRowData]="pinnedTopRowDataAuthorization"
+                  (rowAdded)="onAuthPolicyRowAdded($event)"
+                  (rowUpdated)="onAuthPolicyRowUpdated($event)"
+                  (rowDeleted)="onAuthPolicyRowDeleted($event)"
+                  (cellValueChanged)="onCellValueChanged($event)"
+                  (selectionChanged)="onSelectionChanged($event)"
+                  (gridReady)="onGridReady($event)"
+                >
+                </app-editable-ag-grid-wrapper>
+                <app-spinner *ngIf="savingAuthorizationPolicy"></app-spinner>
               </div>
             </div>
           </div>

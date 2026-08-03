@@ -20,6 +20,9 @@
                 (click)="selectedTab = 'DraftRequest'"
               >
                 Draft Request
+                <span *ngIf="draftDocumentCounts > 0" class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
+                  draftDocumentCounts
+                }}</span>
               </button>
               <button
                 class="tab-button"
@@ -28,15 +31,19 @@
                 (click)="selectedTab = 'MyRequestPendingApproval'"
               >
                 My Requests Pending Approval
+                <span
+                  *ngIf="myDocumentRequestPendingForApprovalCount > 0"
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+                  >{{ myDocumentRequestPendingForApprovalCount }}</span>
               </button>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'NewRequest'">
-              <app-document-request-form [mode]="'create'"> </app-document-request-form>
+              <app-document-request-form [mode]="'create'" (requestCreated)="onRequestCreated()"> </app-document-request-form>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'DraftRequest'">
-              <app-draft-request-list></app-draft-request-list>
+              <app-draft-request-list (draftRequestChanged)="onRequestCreated()"></app-draft-request-list>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'MyRequestPendingApproval'">

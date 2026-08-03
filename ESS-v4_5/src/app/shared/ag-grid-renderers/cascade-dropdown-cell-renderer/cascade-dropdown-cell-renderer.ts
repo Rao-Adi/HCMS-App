@@ -14,7 +14,8 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
       style="width: 200px;"
       [nzShowSearch]="params?.showSearch"
       [nzFilterOption]="params?.customFilter"
-      nzPlaceHolder="-- Select --"
+      nzPlaceHolder="-- Any --"
+      [nzAllowClear]="true"
       [nzDisabled]="disabled"
       [(ngModel)]="value"
       (ngModelChange)="onChange($event)"
@@ -42,35 +43,55 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
 
   agInit(params: any): void {
     this.params = params;
+    const field = params.colDef.field as string;
+    const rawValue = params.data?.[field] ?? null;
 
-    // ALWAYS read value from rowData
-    this.value = params.data?.[params.colDef.field] ?? null;
+    const dispField = this.params.displayField || 'text';
+    const sortFn = (a: any, b: any) => {
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    };
 
     // ROOT DROPDOWN
     if (!params.dependsOn) {
-      this.options = params.options || [];
+      this.options = [...(params.options || [])].sort(sortFn);
       this.disabled = false;
-      return;
+    } else {
+      // CASCADE DROPDOWN
+      const parentField = params.dependsOn;
+      const parentValue = params.data?.[parentField];
+
+      if (!parentValue) {
+        this.disabled = true;
+        this.options = [];
+      } else {
+        // 🔥 FIX: USE params.options (NOT context)
+        const source = params.options || [];
+
+        this.options = source
+          .filter((item: any) => String(item[params.filterKey]) === String(parentValue))
+          .sort(sortFn);
+
+        this.disabled = this.options.length === 0;
+      }
     }
 
-    // CASCADE DROPDOWN
-    const parentField = params.dependsOn;
-    const parentValue = params.data?.[parentField];
-
-    if (!parentValue) {
-      this.disabled = true;
-      this.options = [];
-      return;
+    // Resolve matched value and normalize data
+    if (rawValue !== null && rawValue !== undefined) {
+      const valField = this.params.valueField || 'id';
+      const dispField = this.params.displayField || 'text';
+      let matched = this.options.find((o) => o[valField] == rawValue);
+      if (!matched) {
+        matched = this.options.find((o) => o[dispField] == rawValue);
+        if (matched && params.data) {
+          params.data[field] = matched[valField];
+        }
+      }
+      this.value = matched ? matched[valField] : null;
+    } else {
+      this.value = null;
     }
-
-    // 🔥 FIX: USE params.options (NOT context)
-    const source = params.options || [];
-
-    this.options = source.filter(
-      (item: any) => String(item[params.filterKey]) === String(parentValue),
-    );
-
-    this.disabled = this.options.length === 0;
   }
 
   // agInit(params: any): void {
@@ -139,7 +160,8 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
     this.params.onValueChange(value, this.params.data);
   }
 
-  refresh(): boolean {
-    return false;
+  refresh(params: any): boolean {
+    this.agInit(params);
+    return true;
   }
 }

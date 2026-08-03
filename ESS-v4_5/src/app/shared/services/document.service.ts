@@ -70,10 +70,11 @@ export class DocumentService {
     );
   }
 
-  submitDocument(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/submit-document`, payload, {
-      headers: this.getHeaders(),
-    });
+  submitDocument(payload: FormData): Observable<ApiResponse<any>> {
+    // No Content-Type header here on purpose: payload is FormData (it may carry a file), and
+    // forcing 'application/json' (getHeaders()'s default) would stop the browser from setting
+    // the multipart boundary, breaking the upload.
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/submit-document`, payload);
   }
 
   rejectDocument(payload: any): Observable<ApiResponse<any>> {
@@ -98,12 +99,70 @@ export class DocumentService {
     );
   }
 
+  GetPendingAuthorizationCount(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-pending-authorizations-counts`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
   GetDocumentsPendingTrainingAcknowledgmentAsync(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-documents-pending-training`,
       payload,
       { headers: this.getHeaders() },
     );
+  }
+
+  GetDocumentsPendingTrainingCount(payload: any = {}): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-training-count`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetDocumentsPendingTrainingCounts(payload: any = {}): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-training-counts`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetAllDocumentPendingApprovals(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-documents-pending-approval`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetApprovedEffectiveDocuments(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-approved-effective-documents`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  GetMyDocumentCounts(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-my-document-counts`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-effective-documents-for-revision`,
+      payload,
+    );
+  }
+
+  exportDocuments(payload: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/DMSDocument/export-my-documents`, payload, {
+      responseType: 'blob',
+    });
   }
 
   AuthorizeDocumentPostTraining(payload: any): Observable<ApiResponse<any>> {
@@ -161,6 +220,50 @@ export class DocumentService {
 
   DownloadDocumentTemplate(id: any) {
     const uri = `${this.apiUrl}/DMSDocument/download-submitted-document-template/${id}`;
+    return this.http.get(uri, {
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+
+  /**
+   * Uploads the CSV file for bulk metadata import.
+   * Connects to: BulkImportDocumentMetadataAsync(IFormFile csvFile)
+   *
+   * @param csvFile The CSV File object selected from an <input type="file">
+   * @returns An observable of string array containing import logs/results
+   */
+  bulkImportDocumentMetadata(csvFile: File): Observable<string[]> {
+    const formData = new FormData();
+
+    // The key 'csvFile' MUST match the parameter name defined in your C# Controller.
+    // e.g. public async Task<IActionResult> ImportMetadata(IFormFile csvFile)
+    formData.append('csvFile', csvFile, csvFile.name);
+
+    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/bulk-import-metadata`, formData);
+  }
+
+  /**
+   * Uploads multiple physical files to attach to previously imported metadata.
+   * Connects to: BulkUploadDocumentFilesAsync(List<IFormFile> files)
+   *
+   * @param files An array of File objects selected from an <input type="file" multiple>
+   * @returns An observable of string array containing upload logs/results
+   */
+  bulkUploadDocumentFiles(files: File[]): Observable<string[]> {
+    const formData = new FormData();
+
+    // The key 'files' MUST match the parameter name defined in your C# Controller.
+    // e.g. public async Task<IActionResult> UploadBulkFiles(List<IFormFile> files)
+    files.forEach((file) => {
+      formData.append('files', file, file.name);
+    });
+
+    return this.http.post<string[]>(`${this.apiUrl}/DMSDocument/bulk-upload-files`, formData);
+  }
+
+  DownloadBulkMetadataTemplate(): Observable<any> {
+    const uri = `${this.apiUrl}/DMSDocument/download-bulk-upload-template`;
     return this.http.get(uri, {
       observe: 'response',
       responseType: 'blob',

@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces'; 
+import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { ColDef } from 'ag-grid-community';
+import { TemplateService } from '@app/shared/services/template.service';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { DRUsersComponent } from '../drusers-component/drusers-component';
 import { DRDistributionList } from '../drdistribution-list/drdistribution-list';
@@ -17,7 +18,9 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
- 
+import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+
 export enum DocumentRequestStatus {
   Draft = 0,
   Submitted = 1,
@@ -38,12 +41,20 @@ export enum DocumentRequestStatus {
     DRDistributionList,
     DRUsersComponent,
     DMSRichTextEdit,
+    CabinetStructureList,
   ],
   templateUrl: './draft-request-list.html',
   styleUrl: './draft-request-list.css',
 })
 export class DraftRequestList {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  @ViewChild('fileInput') fileInput!: any;
+
+  // Lets the parent (document-request-management.ts) know a draft moved out of Draft status
+  // (submitted) or was otherwise saved, so it can refresh the "Draft Request" tab badge count —
+  // that count lives on the parent and otherwise only refreshes on init / after creating a new
+  // request from the other tab.
+  @Output() draftRequestChanged = new EventEmitter<void>();
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -56,6 +67,8 @@ export class DraftRequestList {
     filter: true,
     cellDataType: false,
     editable: false,
+    flex: 1,
+    minWidth: 100,
   };
 
   selectedDraftRequest: any;
@@ -69,10 +82,10 @@ export class DraftRequestList {
   distributionUserList: any[] = [];
 
   selectedCompany: string = '';
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedBusinessDomain?: string = '';
+  selectedDivisions: string = '';
+  selectedDepartment: string = '';
+  selectedSubDepartment: string = '';
+  selectedBusinessDomain: string = '';
   selectedDocumentType: string = '';
   selectedDocumentTypeCode: string = '';
   inputJustificationValue?: string;
@@ -88,6 +101,8 @@ export class DraftRequestList {
   pageSize = 10;
   totalRows = 0;
   totalUsers = 0;
+  loadingDraft = false;
+  loadingSubmit = false;
 
   currentGridQuery: any = {
     pageNumber: 1,
@@ -105,10 +120,18 @@ export class DraftRequestList {
     { value: DocumentRequestStatus.Rejected, label: 'Rejected' },
   ];
 
-  documentColumnDefs = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  private readonly fixedColumnDefs: ColDef[] = [
     {
       field: 'id',
-      headerName: 'Id',
+      headerName: 'ID',
       hide: true,
     },
     {
@@ -118,32 +141,44 @@ export class DraftRequestList {
     },
     {
       field: 'requestNumber',
-      headerName: 'RequestNumber',
-    },
-
-    {
-      field: 'division',
-      headerName: 'Division',
-    },
-    {
-      field: 'department',
-      headerName: 'Department',
-    },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
+      headerName: 'Request Number',
     },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Last Saved On' },
+    {
+      field: 'justification',
+      headerName: 'Justification',
+      editable: false,
+      cellRenderer: (params: any) => {
+        const val = params.value || (params.data && params.data.justification) || '';
+        if (!val) return '<span>-</span>';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-justification"
+          >
+            Justification
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        const val = event.value || (event.data && event.data.justification);
+        if (val) {
+          this.openJustificationModal(val);
+        }
+      },
+    },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
+    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell' },
     {
       field: 'status',
       headerName: 'Status',
       editable: false,
       cellRenderer: (params: any) => {
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -155,14 +190,15 @@ export class DraftRequestList {
         this.openObservationModal(event.data);
       },
     },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
+    { field: 'submittedby', headerName: 'Submitted By', hide: true },
   ];
 
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.fixedColumnDefs, ...this.trailingColumnDefs];
+
   columnToggles?: ColumnToggle[] = [
-    { field: 'requestNumber', label: 'Request ID', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
+    { field: 'requestNumber', label: 'Request Number', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -176,6 +212,8 @@ export class DraftRequestList {
     private _notificationToasService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
+    private _documentTemplateService: TemplateService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -184,7 +222,34 @@ export class DraftRequestList {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
       // this.getAllUsersList();
-      this.GetAllDraftDocuments();
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.fixedColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'requestNumber', label: 'Request Number', visible: true },
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Title', visible: true },
+        { field: 'justification', label: 'Justification', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'createdOn', label: 'Last Saved On', visible: true },
+        { field: 'status', label: 'Status', visible: true },
+      ];
     });
   }
 
@@ -210,7 +275,7 @@ export class DraftRequestList {
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {}, 
+      filterModel: this.currentGridQuery.filterModel || {},
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: searchText || '',
@@ -233,13 +298,17 @@ export class DraftRequestList {
             stepOrder: item.StepOrder || item.stepOrder,
             startedAt: item.StartedAt || item.startedAt,
             division: item.Division,
+            divisionCode: item.DivisionCode || item.divisionCode,
             documentId: item.DocumentNumber,
             documentName: item.DocumentName,
             proposedContent: item.ProposedContent,
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
-            justification: item.Justification,
+            subDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode,
+            justification:
+              item.Justification || item.justification || item.Reason || item.reason || '',
+            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
             businessdomainId: item.BusinessDomainCode,
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
@@ -253,14 +322,9 @@ export class DraftRequestList {
               item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
             proposedVersionNumber: item.RowVersion || item.rowVersion,
             templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
-            draftFileUrl:
-              item.DraftFileUrl ||
-              item.draftFileUrl ||
-              (String(item.TemplateType || item.templateType) === '1' ||
-              String(item.TemplateType || item.templateType) === '2'
-                ? item.ProposedContent
-                : ''),
+            templateFileUrl:
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
+            draftFileUrl: item.DraftFileUrl || item.draftfileurl || item.draftFileUrl || '',
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,
@@ -304,6 +368,21 @@ export class DraftRequestList {
     });
   };
 
+  // The actual file extension a drafted upload must match. Derived straight from the
+  // template/existing-document URL rather than the TemplateType code, since TemplateType
+  // is an unreliable classification (e.g. TemplateType 1 has been seen pointing at a .docx).
+  get expectedTemplateExtension(): string {
+    const url = this.templateFileUrl || this.draftFileUrl || '';
+    if (!url) return '';
+    try {
+      const clean = decodeURIComponent(url).split('?')[0].split('#')[0];
+      const parts = clean.split('.');
+      return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
+    } catch {
+      return '';
+    }
+  }
+
   onHierarchyChange(values: CabinetSelection[]) {
     this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
@@ -322,7 +401,7 @@ export class DraftRequestList {
     // Maintain frontend format to avoid breaking the UI bindings
     this.distributionListPayload = list;
   }
-  
+
   onSelectionChange(selectedRows: any): void {
     this.requestId = selectedRows[0].id;
     this.submittedby = selectedRows[0].sumbittedby;
@@ -347,10 +426,14 @@ export class DraftRequestList {
     this.draftFileUrl = row.draftFileUrl || '';
     this.selectedDocumentType = row.documentType;
     this.selectedDocumentTypeCode = row.documentTypeCode || '';
-    this.selectedDivisions = row.division;
-    this.selectedDepartment = row.department;
-    this.selectedSubDepartment = row.subdepartment;
+    this.selectedDivisions = row.divisionCode || row.division;
+    this.selectedDepartment = row.departmentId || row.department;
+    this.selectedSubDepartment = row.subDepartmentCode || row.subdepartment;
     this.selectedBusinessDomain = row.businessdomainId;
+
+    if (this.selectedDocumentTypeCode) {
+      this.GetTemplate(this.selectedDocumentTypeCode, true);
+    }
 
     // ✅ Populate Distribution List
     this.distributionListPayload = row.distributionListPayload || [];
@@ -366,7 +449,7 @@ export class DraftRequestList {
     if (!this.requestId) {
       this._notificationToasService.createNotification(
         'warning',
-        'Draft',
+        'Document Request (Draft)',
         'No drafted file available for download.',
       );
       return;
@@ -427,7 +510,8 @@ export class DraftRequestList {
           const url =
             typeof response?.Data === 'string'
               ? response.Data
-              : response?.Data?.TemplateFileURL ||
+              : response?.Data?.TemplateFileUrl ||
+                response?.Data?.TemplateFileURL ||
                 response?.Data?.templateFileUrl ||
                 this.templateFileUrl;
           if (url) {
@@ -474,12 +558,114 @@ export class DraftRequestList {
     });
   }
 
+  GetTemplate(value: string, isRevision: boolean = false) {
+    this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
+      next: (response: any) => {
+        if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
+          this.selectedTemplateType = '';
+          this.templateFileUrl = '';
+          return;
+        }
+
+        this.selectedTemplateType =
+          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.templateFileUrl =
+          response.Data?.TemplateFileUrl ||
+          response.Data?.TemplateFileURL ||
+          response.Data?.templateFileUrl ||
+          '';
+      },
+      error: (err) => {
+        this.selectedTemplateType = '';
+        this.templateFileUrl = '';
+        console.error(err);
+      },
+    });
+  }
+
   onDraftFileSelected(event: any): void {
     const fileList: FileList = event.target.files;
-    if (fileList && fileList.length > 0) {
-      this.draftFile = fileList[0];
-    } else {
+    if (!fileList || fileList.length === 0) {
       this.draftFile = null;
+      return;
+    }
+
+    const file = fileList[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const expectedExt = this.expectedTemplateExtension;
+
+    if (expectedExt && ext !== expectedExt) {
+      this._notificationToasService.createNotification(
+        'warning',
+        'Invalid File',
+        `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
+      );
+      event.target.value = '';
+      this.draftFile = null;
+      return;
+    }
+
+    this.draftFile = file;
+  }
+
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
+  }
+
+  getDraftFileName(): string {
+    if (this.draftFile) {
+      return this.draftFile.name;
+    }
+    if (this.draftFileUrl) {
+      try {
+        const decoded = decodeURIComponent(this.draftFileUrl);
+        const parts = decoded.split('/');
+        return parts[parts.length - 1].split('?')[0];
+      } catch (e) {
+        const parts = this.draftFileUrl.split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return '';
+  }
+
+  reviewDraftedFile(): void {
+    if (this.draftFile) {
+      const fileURL = URL.createObjectURL(this.draftFile);
+      window.open(fileURL, '_blank');
+      setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+    }
+  }
+
+  removeDraftedFile(): void {
+    this.draftFile = null;
+    this.draftFileUrl = '';
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.value = '';
     }
   }
 
@@ -511,31 +697,45 @@ export class DraftRequestList {
     // Reverted back to JSON to resolve 415 Unsupported Media Type
     const payload = {
       CompanyId: this.selectedCompany,
-      RequestId: this.requestId, 
+      RequestId: this.requestId,
       DistributionList: cleanDistributionList,
       UserIds: userids,
+      DocumentRequestType: 'Request',
     };
 
+    this.loadingSubmit = true;
     this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
       next: (response) => {
+        this.loadingSubmit = false;
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
-            'User',
+            'Document Request (Draft)',
             'Document submitted successfully!',
           );
-          this.GetAllDraftDocuments();
-          this.selectedDraftRequest=null;
+          // This grid binds (serverQuery), so it's server-side/infinite-row-model —
+          // reassigning documentRequestsData directly (via GetAllDraftDocuments()) doesn't
+          // actually push the change into AG Grid's rendered rows unless it's mid-request.
+          // refresh() forces a real refetch of what's on screen; deselecting clears the now-
+          // submitted row's selection so it can't be selected and submitted again.
+          this.agGridWrapper?.gridApi?.deselectAll();
+          this.agGridWrapper?.refresh();
+          this.selectedDraftRequest = null;
+          this.draftRequestChanged.emit();
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this.loadingSubmit = false;
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
 
-  UpdateDocumentRequests() {
-    // debugger;
+  UpdateDocumentRequests() { 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,
@@ -593,19 +793,32 @@ export class DraftRequestList {
       formData.append('DraftFile', this.draftFile);
     }
 
+    this.loadingDraft = true;
     this._doumentRequestService.UpdateDraftDocumentRequest(formData).subscribe({
       next: (response) => {
+        this.loadingDraft = false;
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
-            'User',
+            'Document Request (Draft)',
             'Document updated successfully!',
           );
-          this.GetAllDraftDocuments();
+          // Same server-side-grid refresh as SubmiteDocumentRequests() — GetAllDraftDocuments()
+          // alone doesn't reach AG Grid's rendered rows. Also clear the selection so the user
+          // has to explicitly pick a row again instead of re-saving the same in-memory form.
+          this.agGridWrapper?.gridApi?.deselectAll();
+          this.agGridWrapper?.refresh();
+          this.selectedDraftRequest = null;
+          this.draftRequestChanged.emit();
         }
       },
       error: (err) => {
-        this._notificationToasService.createNotification('error', 'Error', 'Failed to submit document.');
+        this.loadingDraft = false;
+        this._notificationToasService.createNotification(
+          'error',
+          'Error',
+          'Failed to submit document.',
+        );
       },
     });
   }
@@ -622,11 +835,29 @@ export class DraftRequestList {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
 
     modalRef.afterClose.subscribe((result) => {
       if (!result) return;
+    });
+  }
+
+  openJustificationModal(justificationText: string): void {
+    const text = justificationText || 'No justification provided.';
+    const modalRef = this.modal.create({
+      nzTitle: 'Justification',
+      nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
+      nzClosable: true,
+      nzMaskClosable: true,
+      nzFooter: [
+        {
+          label: 'Close',
+          type: 'primary',
+          onClick: () => modalRef.destroy(),
+        },
+      ],
+      nzWidth: 600,
     });
   }
 }

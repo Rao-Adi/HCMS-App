@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   EditableAgGridWrapper,
@@ -7,7 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
-import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice'; 
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentService } from '@app/shared/services/department.service';
@@ -22,6 +22,8 @@ import { ColDef } from 'ag-grid-community';
   styleUrl: './sub-department-component.css',
 })
 export class SubDepartmentComponent {
+  @Input() level!: number;
+  @Input() levelTitles!: Record<number, string>;
   gridConfig: GridConfig = {} as GridConfig;
 
   // --- PERMISSION FLAGS ---
@@ -35,6 +37,9 @@ export class SubDepartmentComponent {
   totalSubDepartments = 0;
   subDepartmentData: any[] = [];
   departments: any[] = [];
+
+  currentTitle = '';
+  parentTitle = '';
 
   defaultColDef: ColDef = {
     filter: true,
@@ -99,6 +104,9 @@ export class SubDepartmentComponent {
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
+      this.currentTitle = this.levelTitles[this.level]; // Department
+      this.parentTitle = this.levelTitles[this.level - 1]; // Division
+
       this.getAllDepartmeList();
     });
   }
@@ -150,13 +158,20 @@ export class SubDepartmentComponent {
       // ✅ Department
       {
         field: 'Department',
-        headerName: 'Department',
+        headerName: `${this.parentTitle}`,
         type: 'dropdown',
         dropdownOptions: this.departments,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         required: true,
       },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 100,
+      // },
       {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
@@ -164,6 +179,7 @@ export class SubDepartmentComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
       {
         field: 'LastModifiedAt',
@@ -172,28 +188,49 @@ export class SubDepartmentComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
+      // {
+      //   field: 'LastModifiedByName',
+      //   headerName: 'Last Action Performed By',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
+      // {
+      //   field: 'LastModifiedAt',
+      //   headerName: 'Last Action Performed On',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
     ];
   }
 
-  loadSubDepartments(): void { 
+  loadSubDepartments(): void {
     this._masterCacheService
       .getMasterData({
         cacheKey: MASTER_CACHE_KEYS.SUB_DEPARTMENTS,
         getCount$: () => this._subDepartmentServices.getSubDepartmentCount(),
         getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+          this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Department: item.Department || item.Department || '',
           DepartmentCode: item.DepartmentCode || item.DepartmentCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -244,7 +281,7 @@ export class SubDepartmentComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments('', 'ASC', 'Name', true, 1, 1000),
+          this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'CreatedAt', true, 1, 1000),
         // The cache service uses this mapFn to unwrap the items from the response
         mapFn: (item) => ({
           Id: item.Id || item.id,
@@ -252,11 +289,13 @@ export class SubDepartmentComponent {
           Name: item.Name || item.name,
           Department: item.Department || item.department || '',
           DepartmentCode: item.DepartmentCode || item.departmentCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -277,13 +316,14 @@ export class SubDepartmentComponent {
     const payLoad = {
       Name: rowData.Name,
       DepartmentCode: rowData.Department,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
 
     this._subDepartmentServices.create(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
@@ -292,7 +332,7 @@ export class SubDepartmentComponent {
         this.loadSubDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Sub-Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -304,7 +344,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Sub-Department', message);
       },
     });
   }
@@ -315,14 +355,15 @@ export class SubDepartmentComponent {
     const payLoad = {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
-      DepartmentCode: event.rowData.Department,
-      IsActive: true,
+      DepartmentCode: event.rowData.DepartmentCode,
+      IsActive: event.rowData.IsActive,
       // IsDeleted: false,
     };
 
     this._subDepartmentServices.update(payLoad).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
@@ -331,7 +372,7 @@ export class SubDepartmentComponent {
         this.loadSubDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Sub-Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -343,7 +384,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Sub-Department', message);
       },
     });
   }
@@ -354,15 +395,16 @@ export class SubDepartmentComponent {
     this._subDepartmentServices.delete(row.Code).subscribe({
       next: () => {
         this._masterCacheService.clear(MASTER_CACHE_KEYS.SUB_DEPARTMENTS);
+        this._masterCacheService.clear(MASTER_CACHE_KEYS.BUSINESS_DOMAIN);
         this._notificationToastService.createNotification(
           'success',
           'Sub-Department',
-          'Sub-Department updated successfully!',
+          'Sub-Department deleted successfully!',
         );
         this.loadSubDepartments();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Sub-Department failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -374,7 +416,7 @@ export class SubDepartmentComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Sub-Department', message);
       },
     });
   }

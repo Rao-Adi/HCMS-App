@@ -53,33 +53,37 @@
   <!-- Top Level Key Metrics -->
   <div class="row g-3 mb-4">
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateToWidget('total-documents')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-primary bg-opacity-10 text-primary rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-files fs-4"></i>
           </div>
           <div>
-            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Total Documents</h6>
+            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">
+              {{ isApprover ? 'My Approvals - Documents' : 'Total Approved Documents' }}
+            </h6>
             <h3 class="mb-0 fw-bold">{{ summary.MyTotalDocuments || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateToWidget('pending-approvals')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-warning bg-opacity-10 text-warning rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-clock-history fs-4"></i>
           </div>
           <div>
-            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Pending Approvals</h6>
+            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">
+              {{ isApprover ? 'My Approvals - Document Requests' : 'My Requests Pending Approval' }}
+            </h6>
             <h3 class="mb-0 fw-bold">{{ summary.PendingApprovals || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateTo('/documents/sop-training')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-info bg-opacity-10 text-info rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-book fs-4"></i>
@@ -89,10 +93,10 @@
             <h3 class="mb-0 fw-bold">{{ summary.PendingTrainings || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-3 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm h-100">
+      <a (click)="navigateTo('/documents/trainingauthorization')" class="card-link"> <div class="card border-0 shadow-sm h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-danger bg-opacity-10 text-danger rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
             <i class="bi bi-shield-lock fs-4"></i>
@@ -102,59 +106,59 @@
             <h3 class="mb-0 fw-bold">{{ summary.PendingAuthorizations || 0 }}</h3>
           </div>
         </div>
-      </div>
+      </div></a>
     </div>
   </div>
 
   <!-- Secondary Metrics: Requests & Approvals History -->
   <div class="row g-3 mb-4">
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
+      <a (click)="navigateTo('/documents/request-for-document-creation-update')" class="card-link"> <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Total Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyTotalRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
+      <a (click)="navigateTo('/documents/request-for-document-creation-update', { tab: 'MyRequestPendingApproval' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Pending Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyPendingRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
+      <a (click)="navigateToWidget('approved-requests')" class="card-link"> <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Approved Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyApprovedRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
     <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
+      <a (click)="navigateToWidget('rejected-requests')" class="card-link"> <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Rejected Requests</p>
           <h4 class="mb-0 fw-bold">{{ summary.MyRejectedRequests || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
+    <div class="col-xl-2 col-lg-4 col-sm-6" *ngIf="isApprover">
+      <a (click)="navigateToWidget('approved-by-me')" class="card-link"> <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Approved By Me</p>
           <h4 class="mb-0 fw-bold">{{ summary.ApprovedByMe || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6">
-      <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
+    <div class="col-xl-2 col-lg-4 col-sm-6" *ngIf="isApprover">
+      <a (click)="navigateToWidget('rejected-by-me')" class="card-link"> <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
         <div class="card-body">
           <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Rejected By Me</p>
           <h4 class="mb-0 fw-bold">{{ summary.RejectedByMe || 0 }}</h4>
         </div>
-      </div>
+      </div></a>
     </div>
   </div>
 
@@ -167,7 +171,7 @@
           <h5 class="fw-bold mb-0">Document Distribution</h5>
           <i class="bi bi-pie-chart text-muted"></i>
         </div>
-        <div class="card-body mt-2">
+        <div class="card-body mt-2" style="max-height: 300px; overflow-y: auto;">
           <div *ngIf="documentDistribution.length === 0" class="text-muted text-center py-5">
             <i class="bi bi-inbox fs-1 text-light"></i>
             <p class="mt-2">No documents available.</p>
@@ -198,7 +202,7 @@
           <h5 class="fw-bold mb-0">Immediate Pending Tasks</h5>
           <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">{{ pendingTasks.length }} Tasks</span>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
           <div *ngIf="pendingTasks.length === 0" class="text-muted text-center py-5">
             <i class="bi bi-check2-circle fs-1 text-success opacity-50"></i>
             <p class="mt-2">You're all caught up! No pending tasks.</p>
@@ -213,15 +217,58 @@
                   <h6 class="mb-1 text-dark">{{ task.TaskName || 'Pending Action Required' }}</h6>
                   <div class="d-flex align-items-center text-muted" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-event me-1"></i>
-                    <span>{{ (task.DueDate | date: 'mediumDate') || 'No due date' }}</span>
+                    <span>{{ (task.DueDate | date: 'mediumDate') || 'No due date' }}</span> 
                   </div>
                 </div>
                 <div>
-                  <button class="btn btn-sm btn-outline-primary px-3 rounded-pill" (click)="onActionClick(task.EntityType)">View</button>
+                  <button
+                    class="btn btn-sm btn-outline-primary px-3 rounded-pill"
+                    (click)="onActionClick(task.EntityType)"
+                  >
+                    View
+                  </button>
                 </div>
               </div>
             </li>
           </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documents Approaching Review -->
+  <div class="row g-4 mt-2" >
+    <div class="col-12">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-4 pb-2 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0">Documents Approaching Review (Next 60 Days)</h5>
+          <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill"
+            >{{ documentsApproachingReview.length }} Documents</span
+          >
+        </div>
+        <div class="card-body" *ngIf="documentsApproachingReview.length > 0" style="max-height: 300px; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Document #</th>
+                  <th>Title</th>
+                  <th>Next Review Date</th>
+                  <th>Days Until Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let doc of documentsApproachingReview">
+                  <td>{{ doc.DocumentNumber }}</td>
+                  <td>{{ doc.Title }}</td>
+                  <td>{{ doc.NextReviewDate | date: 'mediumDate' }}</td>
+                  <td>
+                    <span class="badge rounded-pill" [ngClass]="doc.DaysUntilReview < 15 ? 'bg-danger' : 'bg-warning'">{{ doc.DaysUntilReview }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

@@ -4,12 +4,14 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common'; 
-import { PeoplePartnersService } from '@app/shared/services/people-partners.service'; 
+import { CommonModule } from '@angular/common';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -69,37 +71,69 @@ export class PendingRequestForApproval {
     { value: DocumentRequestStatus.Rejected, label: 'Rejected' },
   ];
 
-  documentColumnDefs = [
+  // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  // Columns before the cabinet (Division/Department/...) columns
+  private readonly leadingColumnDefs: ColDef[] = [
     {
       field: 'requestId',
       headerName: 'RequestId',
-    },
-
-    {
-      field: 'division',
-      headerName: 'Division',
+      hide: true,
     },
     {
-      field: 'department',
-      headerName: 'Department',
+      field: 'requestNumber',
+      headerName: 'Request Number',
+      minWidth: 80,
+      flex: 1,
     },
-    {
-      field: 'subdepartment',
-      headerName: 'Sub-Department',
-    },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentName', headerName: 'Document Title' },
-    { field: 'justification', headerName: 'Justification' },
-    { field: 'createdOn', headerName: 'Last Saved On' },
-    { field: 'pendingWith', headerName: 'Pending with' },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true },
   ];
+
+  // Columns after the cabinet (Division/Department/...) columns
+  private readonly trailingColumnDefs: ColDef[] = [
+    { field: 'documentType', headerName: 'Document Type', minWidth: 150, flex: 1 },
+    { field: 'documentName', headerName: 'Document Title', minWidth: 200 },
+    {
+      field: 'justification',
+      headerName: 'Justification',
+      minWidth: 150,
+      editable: false,
+      cellRenderer: (params: any) => {
+        const val = params.value || (params.data && params.data.justification) || '';
+        if (!val) return '<span>-</span>';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-justification"
+          >
+            Justification
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        const val = event.value || (event.data && event.data.justification);
+        if (val) {
+          this.openJustificationModal(val);
+        }
+      },
+    },
+    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell' },
+    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell' },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell' },
+  ];
+
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
 
   columnToggles?: ColumnToggle[] = [
     { field: 'requestId', label: 'Request ID', visible: true },
-    { field: 'division', label: 'Division', visible: true },
-    { field: 'department', label: 'Department', visible: true },
-    { field: 'subdepartment', label: 'Sub-Department', visible: true },
+    { field: 'requestNumber', label: 'Request Number', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -112,6 +146,8 @@ export class PendingRequestForApproval {
     private _notificationToastService: NotificationToastService,
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
+    private modal: NzModalService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
 
   ngOnInit() {
@@ -119,9 +155,43 @@ export class PendingRequestForApproval {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       // this.getAllUsersList();
       this.GetAllPendingRequests('');
+    });
+
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({
+          field: def.field,
+          headerName: def.title,
+          minWidth: 150,
+          flex: 1,
+        })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        { field: 'requestId', label: 'Request ID', visible: true },
+        { field: 'requestNumber', label: 'Request Number', visible: true },
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        { field: 'documentType', label: 'Document Type', visible: true },
+        { field: 'documentName', label: 'Document Title', visible: true },
+        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'createdOn', label: 'Last Saved On', visible: true },
+        { field: 'pendingWith', label: 'Pending with', visible: true },
+      ];
     });
   }
 
@@ -133,9 +203,7 @@ export class PendingRequestForApproval {
   }
 
   GetAllPendingRequests(query?: any) {
-      
     const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
-
 
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -159,7 +227,7 @@ export class PendingRequestForApproval {
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {}, 
+      filterModel: this.currentGridQuery.filterModel || {},
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: searchText || '',
@@ -175,6 +243,7 @@ export class PendingRequestForApproval {
           this.documentRequestsData = items.map((item: any) => ({
             Id: item.id || item.Id,
             requestId: item.RequestId || item.requestId,
+            requestNumber: item.requestNumber || item.RequestNumber,
             documentType: item.DocumentType || item.documentType,
             proposedDocumentNumber: item.RequestNumber || item.requestNumber,
             stepId: item.StepId || item.stepId,
@@ -187,7 +256,9 @@ export class PendingRequestForApproval {
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
-            justification: item.Justification,
+            justification:
+              item.Justification || item.justification || item.Reason || item.reason || '',
+            businessdomain: item.BusinessDomain || item.businessDomain || item.businessdomain,
             businessdomainId: item.BusinessDomainCode,
             pendingWith: item.CurrentAssignedUser,
             sumbittedby: item.CreatedBy,
@@ -197,9 +268,6 @@ export class PendingRequestForApproval {
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.createdAt || item.CreatedAt || '',
             ),
-            previousVersionCreatedOn:
-              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-            proposedVersionNumber: item.RowVersion || item.rowVersion,
           }));
         } else {
           this.documentRequestsData = [];
@@ -256,4 +324,22 @@ export class PendingRequestForApproval {
       }
     });
   };
+
+  openJustificationModal(justificationText: string): void {
+    const text = justificationText || 'No justification provided.';
+    const modalRef = this.modal.create({
+      nzTitle: 'Justification',
+      nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
+      nzClosable: true,
+      nzMaskClosable: true,
+      nzFooter: [
+        {
+          label: 'Close',
+          type: 'primary',
+          onClick: () => modalRef.destroy(),
+        },
+      ],
+      nzWidth: 600,
+    });
+  }
 }

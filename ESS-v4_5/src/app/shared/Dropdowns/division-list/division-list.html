@@ -7,10 +7,9 @@
   [nzDisabled]="disabled"
   (ngModelChange)="onSelectionChange($event)"
 >
-<nz-option
-  *ngFor="let item of divisionData"
-  [nzValue]="item.CODE"
-  [nzLabel]="item.NAME"
-></nz-option>
-
+  <nz-option
+    *ngFor="let item of divisionData"
+    [nzValue]="item.CODE"
+    [nzLabel]="item.NAME"
+  ></nz-option>
 </nz-select>

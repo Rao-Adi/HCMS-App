@@ -10,7 +10,10 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DivisionCacheService {
   private readonly CACHE_KEY = MASTER_CACHE_KEYS.DIVISIONS;
 
-  constructor(private masterCache: Mastercacheservice, private divisionService: DivisionService) {}
+  constructor(
+    private masterCache: Mastercacheservice,
+    private divisionService: DivisionService,
+  ) {}
 
   getDivisions(): Observable<Division[]> {
     return this.masterCache.getMasterData<any>({
@@ -21,14 +24,22 @@ export class DivisionCacheService {
         Id: item.Id || item.id,
         Code: item.Code || item.code,
         Name: item.Name || item.name,
+        IsActive: item.isActive || item.IsActive || false,
+        IsDeleted: item.isDeleted || item.IsDeleted || false,
         CreatedBy: item.CreatedBy || item.createdBy || '',
-        CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+        CreatedByName:
+          item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
         CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
         LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
-        LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || item.LastModifiedBy || item.lastModifiedBy || '',
+        LastModifiedByName:
+          item.LastModifiedByName ||
+          item.lastModifiedByName ||
+          item.LastModifiedBy ||
+          item.lastModifiedBy ||
+          '',
         LastModifiedAt: new CustomDateFormatPipe().transform(
           item.LastModifiedAt || item.lastModifiedAt || '',
-        )
+        ),
       }),
     });
   }

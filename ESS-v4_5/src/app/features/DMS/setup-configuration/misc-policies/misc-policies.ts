@@ -7,8 +7,12 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
+import { DocumentTrainingAuthorizationService } from '@app/shared/services/document-training-authorization.service';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
@@ -25,6 +29,7 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
     AgGridWrapper,
     NzModalModule,
     EditableAgGridWrapper,
+    SpinnerComponent,
   ],
   templateUrl: './misc-policies.html',
   styleUrl: './misc-policies.css',
@@ -37,25 +42,47 @@ export class MiscPolicies {
   formId = 'trainingpolicy';
 
   gridConfig: GridConfig = {} as GridConfig;
+  authGridConfig: GridConfig = {} as GridConfig;
+  documentReviewGridConfig: GridConfig = {} as GridConfig;
   selectedTab: string = 'TrainingPoliciy';
-  // 🔹 API endpoints
-  uploadApiUrl = '/api/documents/upload-grid';
-  uploadedApiUrl = '/api/documents/uploaded-grid';
   value!: boolean;
   pageSize = 10;
   trainingPolicesData: any[] = [];
-  documentAttributeData: any[] = [];
   documentTypesList: any[] = [];
+  documentReviewRowData: any[] = [];
+  authorizationPolicyData: any[] = [];
 
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
   // add more as needed...
   selectedPageSize = 10; // default value
 
   totalDocumentReview = 0;
   totalTrainingPolicies = 0;
-  public noRowsOverlay: string = '';
+
+  // Shown over the grid while its add/update request is in flight
+  savingTrainingPolicy = false;
+  savingDocumentReview = false;
+  savingAuthorizationPolicy = false;
+
+  pinnedTopRowDataAuthorization: any[] = [
+    {
+      documentTypeCode: '',
+      authorizationRequired: false,
+      authorizingAuthority: '',
+      createdByName: '',
+      requestCreatedOn: '',
+    },
+  ];
+
+  documentsColumnDefs = [
+    { field: 'documentTypeCode', headerName: 'Document Type' },
+    { field: 'authorizationRequired', headerName: 'Authorization Required' },
+    { field: 'authorizingAuthority', headerName: 'Authorizing Authority' },
+    { field: 'createdByName', headerName: 'Request Created By', cellClass: 'audit-cell' },
+    { field: 'createdAt', headerName: 'Request Created On', cellClass: 'audit-cell' },
+  ];
+
+  AuthorizationPolicyList: any[] = [];
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: false,
@@ -63,22 +90,9 @@ export class MiscPolicies {
     editable: true,
   };
 
-  documentReviewColumnDef = [
-    { field: 'documentType', headerName: 'Document Types', flex: 1 },
-    { field: 'reviewAfter', headerName: 'Review After (in years)', flex: 1 },
-  ];
-
-  documentReviewRowData: any[] = [
+  pinnedTopRowDataDocumentReview: any[] = [
     {
-      documentType: 'SOP',
-      reviewAfter: 0,
-    },
-    {
-      documentType: 'Playbooks',
-      reviewAfter: 0,
-    },
-    {
-      documentType: 'Policies',
+      documentType: '',
       reviewAfter: 0,
     },
   ];
@@ -88,6 +102,8 @@ export class MiscPolicies {
       documentTypeCode: '',
       traningRequired: false,
       minimumscoreforpassing: 0,
+      createdByName: '',
+      requestCreatedOn: '',
     },
   ];
 
@@ -96,6 +112,9 @@ export class MiscPolicies {
     private _documentTypes: DocumentTypeService,
     private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
+    private _documentTrainingAuthorizationService: DocumentTrainingAuthorizationService,
+    private _peoplePartnerService: PeoplePartnersService,
+    private _documentReviewPolicyService: DocumentReviewPolicyService,
   ) {}
 
   ngOnInit() {
@@ -108,9 +127,20 @@ export class MiscPolicies {
     });
   }
 
-  private buildGrid(): void {
+  onTabChange(tab: string) {
+    this.selectedTab = tab;
+    if (tab === 'TrainingPoliciy') {
+      this.buildTrainingPolicyGrid();
+    } else if (tab === 'DocumentReview') {
+      this.buildDocumentReviewGrid();
+    } else {
+      this.buildAuthorizationPolicyGrid();
+    }
+  }
+
+  private buildTrainingPolicyGrid(): void {
     this.gridConfig = {
-      columns: this.getColumns(),
+      columns: this.getTrainingPolicyColumns(),
       enablePagination: true,
       pageSize: 10,
       pageSizeOptions: [10, 20, 50, 100],
@@ -135,7 +165,7 @@ export class MiscPolicies {
     });
   }
 
-  private getColumns(): GridColumn[] {
+  private getTrainingPolicyColumns(): GridColumn[] {
     return [
       {
         field: 'documentTypeCode',
@@ -148,19 +178,186 @@ export class MiscPolicies {
       },
       {
         field: 'traningRequired',
-        headerName: 'Traning Required',
+        headerName: 'Training Period',
         type: 'switch',
         required: false,
         minWidth: 150,
-        pinned: 'left',
       },
       {
         field: 'minimumscoreforpassing',
         headerName: 'Minimum Score for Passing',
         type: 'number',
         minWidth: 150,
-        pinned: 'left',
         required: false,
+        suffix: "%"
+      },
+      {
+        field: 'createdByName',
+        headerName: 'Last Saved By',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Last Saved On',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+    ];
+  }
+
+  private buildDocumentReviewGrid(): void {
+    this.documentReviewGridConfig = {
+      columns: this.getDocumentReviewColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+
+    this.GetAllDocumentReviewPolicies({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
+  }
+
+  private getDocumentReviewColumns(): GridColumn[] {
+    return [
+      {
+        field: 'documentType',
+        headerName: 'Document Type',
+        type: 'dropdown',
+        dropdownOptions: this.documentTypesList,
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        required: true,
+      },
+      {
+        field: 'reviewAfter',
+        headerName: 'Review After (in years)',
+        type: 'number',
+        required: false,
+      },
+      {
+        field: 'createdByName',
+        headerName: 'Last Saved By',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Last Saved On',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+    ];
+  }
+
+  private buildAuthorizationPolicyGrid(): void {
+    this.authGridConfig = {
+      columns: this.getAuthorizationPolicyColumns(),
+      enablePagination: true,
+      pageSize: 10,
+      pageSizeOptions: [10, 20, 50, 100],
+      enableSorting: true,
+      enableFiltering: true,
+      enableSelection: true,
+      enableInlineAdd: this.canAdd,
+      enableInlineEdit: this.canEdit,
+      enableInlineDelete: this.canDelete,
+      rowHeight: 47,
+      headerHeight: 40,
+      domLayout: 'autoHeight',
+      theme: 'ag-theme-alpine',
+      suppressCellFocus: true,
+    };
+
+    this.getAllUsersList();
+
+    this.GetDocumentTrainingAuthorization({
+      pageNumber: 1,
+      pageSize: this.pageSize,
+      sortModel: [],
+      filterModel: {},
+    });
+  }
+
+  // documentTypesList only holds active document types (it's also the "add new" source
+  // list). A policy row can reference a document type that's since been deleted — without a
+  // matching dropdown option, the grid's valueFormatter falls back to the raw code (e.g.
+  // "DT-0003"), which reads like real data instead of flagging that it's gone.
+  private getAuthorizationPolicyDocumentTypeOptions(): any[] {
+    const knownCodes = new Set(this.documentTypesList.map((d) => d.id));
+    const deletedTypeOptions = (this.authorizationPolicyData || [])
+      .map((row) => row.documentTypeCode)
+      .filter((code) => code && !knownCodes.has(code))
+      .filter((code, index, codes) => codes.indexOf(code) === index)
+      .map((code) => ({ id: code, text: `${code} (Deleted)` }));
+
+    return [...this.documentTypesList, ...deletedTypeOptions];
+  }
+
+  private getAuthorizationPolicyColumns(): GridColumn[] {
+    return [
+      {
+        field: 'documentTypeCode',
+        headerName: 'Document Type',
+        type: 'dropdown',
+        dropdownOptions: this.getAuthorizationPolicyDocumentTypeOptions(),
+        dropdownValueField: 'id',
+        dropdownDisplayField: 'text',
+        required: true,
+      },
+      {
+        field: 'authorizationRequired',
+        headerName: 'Authorization Required',
+        type: 'switch',
+        required: false,
+      },
+      {
+        field: 'authorizingAuthority',
+        headerName: 'Authorizing Authority',
+        type: 'dropdown',
+        dropdownOptions: this.AuthorizationPolicyList,
+        dropdownValueField: 'value',
+        dropdownDisplayField: 'label',
+        required: true,
+      },
+      {
+        field: 'createdByName',
+        headerName: 'Last Saved By',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Last Saved On',
+        type: 'text',
+        required: false,
+        editable: false,
+        cellClass: 'audit-cell',
       },
     ];
   }
@@ -169,12 +366,112 @@ export class MiscPolicies {
     return Date.now();
   }
 
+  // EditableAgGridWrapper.resetPinnedRow() only clears its own internal copy of
+  // pinnedTopRowData and pushes that straight into ag-grid — it never touches the array these
+  // components are bound from via [pinnedTopRowData]. Since that binding is re-evaluated on
+  // every change detection cycle (e.g. right after the Get...() refresh below runs), the stale
+  // parent-owned array — still holding whatever was typed/selected before Add — gets pushed
+  // back down and overwrites the wrapper's reset, so the dropdown reappears "selected" after a
+  // successful add. Resetting the parent-owned array here closes that gap.
+  private resetTrainingPolicyPinnedRow(): void {
+    this.pinnedTopRowDataPlanning = [
+      {
+        documentTypeCode: '',
+        traningRequired: false,
+        minimumscoreforpassing: 0,
+        createdByName: '',
+        requestCreatedOn: '',
+      },
+    ];
+  }
+
+  private resetAuthorizationPolicyPinnedRow(): void {
+    this.pinnedTopRowDataAuthorization = [
+      {
+        documentTypeCode: '',
+        authorizationRequired: false,
+        authorizingAuthority: '',
+        createdByName: '',
+        requestCreatedOn: '',
+      },
+    ];
+  }
+
+  private resetDocumentReviewPinnedRow(): void {
+    this.pinnedTopRowDataDocumentReview = [
+      {
+        documentType: '',
+        reviewAfter: 0,
+      },
+    ];
+  }
+
   private getDisplayName(options: any[], id: any): string {
     const option = options.find((opt) => opt.id == id);
     return option ? option.text : '';
   }
 
-  GetAllDocumentReview(query: any) {}
+  GetAllDocumentReviewPolicies(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._documentReviewPolicyService
+      .GetAllDocumentReviewPolicies(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        const items = res?.Data?.Items || res?.Items;
+        if (items) {
+          this.documentReviewRowData = items.map((item: any) => {
+            const authorName =
+              item.createdByName ||
+              item.CreatedByName ||
+              item.createdbyname ||
+              item.createdBy ||
+              item.CreatedBy ||
+              item.createdByEmpCode ||
+              '';
+            const authorDate = new CustomDateFormatPipe().transform(
+              item.createdAt ||
+                item.CreatedAt ||
+                item.createdOn ||
+                item.CreatedOn ||
+                item.createdat ||
+                '',
+            );
+
+            return {
+              Id: item.id || item.Id,
+              documentType: item.documentTypeCode || item.DocumentTypeCode,
+              reviewAfter: item.reviewPeriodYears || item.ReviewPeriodYears,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              createdByName: authorName,
+              CreatedByName: authorName,
+              createdBy: authorName,
+              CreatedBy: authorName,
+              createdAt: authorDate,
+              CreatedAt: authorDate,
+              createdOn: authorDate,
+              CreatedOn: authorDate,
+              LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+              LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                item.lastModifiedAt || item.LastModifiedAt || '',
+              ),
+            };
+          });
+        } else {
+          this.documentReviewRowData = [];
+        }
+      });
+  }
 
   GetAllTrainingPolicy(query: any) {
     const sort = query.sortModel?.[0];
@@ -191,22 +488,125 @@ export class MiscPolicies {
         pageSize,
       )
       .subscribe((res) => {
-        if (res?.Success && res.Data?.Items) {
-          this.trainingPolicesData = res.Data.Items.map((item: any) => ({
-            Id: item.id || item.Id,
-            documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
-            traningRequired: item.trainingRequired || item.TrainingRequired,
-            minimumscoreforpassing: item.minimumScore || item.MinimumScore,
-            IsActive: item.isActive || item.IsActive,
-            IsDeleted: item.isDeleted || item.IsDeleted,
-            CreatedBy: item.createdBy || item.CreatedBy || '',
-            CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
-          }));
-          //console.log('Mapped documentTypeData:', this.documentTypeData);
+        const items = res?.Data?.Items || res?.Items;
+        if (items) {
+          this.trainingPolicesData = items.map((item: any) => {
+            const authorName =
+              item.createdByName ||
+              item.CreatedByName ||
+              item.createdbyname ||
+              item.createdBy ||
+              item.CreatedBy ||
+              item.createdByEmpCode ||
+              '';
+            const authorDate = new CustomDateFormatPipe().transform(
+              item.createdAt ||
+                item.CreatedAt ||
+                item.createdOn ||
+                item.CreatedOn ||
+                item.createdat ||
+                '',
+            );
+
+            return {
+              Id: item.id || item.Id,
+              documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
+              traningRequired: item.trainingRequired || item.TrainingRequired,
+              minimumscoreforpassing: Number(item.minimumScore) || Number(item.MinimumScore) || 0,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              createdByName: authorName,
+              CreatedByName: authorName,
+              createdBy: authorName,
+              CreatedBy: authorName,
+              createdAt: authorDate,
+              CreatedAt: authorDate,
+              createdOn: authorDate,
+              CreatedOn: authorDate,
+              LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+              LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                item.lastModifiedAt || item.LastModifiedAt || '',
+              ),
+            };
+          });
         } else {
           this.trainingPolicesData = [];
         }
-        //this.cdr.detectChanges(); // force update
+      });
+  }
+
+  GetDocumentTrainingAuthorization(query: any) {
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || 10;
+
+    this._documentTrainingAuthorizationService
+      .GetAllDocumentTrainingAuthorizations(
+        query?.filterModel?.Name?.filter || '',
+        sort?.sort?.toUpperCase() || 'ASC',
+        sort?.colId || 'Name',
+        true,
+        pageNumber,
+        pageSize,
+      )
+      .subscribe((res) => {
+        const items = res?.Data?.Items || res?.Items;
+        if (items) {
+          this.authorizationPolicyData = items.map((item: any) => {
+            const authorName =
+              item.createdByName ||
+              item.CreatedByName ||
+              item.createdbyname ||
+              item.createdBy ||
+              item.CreatedBy ||
+              item.createdByEmpCode ||
+              item.requestCreatedBy ||
+              '';
+            const authorDate = new CustomDateFormatPipe().transform(
+              item.createdAt ||
+                item.CreatedAt ||
+                item.createdOn ||
+                item.CreatedOn ||
+                item.createdat ||
+                item.requestCreatedOn ||
+                '',
+            );
+
+            return {
+              Id: item.id || item.Id,
+              documentTypeCode: item.documentTypeCode || item.DocumentTypeCode,
+              authorizationRequired: item.authorizationRequired || item.AuthorizationRequired,
+              authorizingAuthority: item.authorizingUser || item.AuthorizingUser,
+              IsActive: item.isActive || item.IsActive,
+              IsDeleted: item.isDeleted || item.IsDeleted,
+              createdByName: authorName,
+              CreatedByName: authorName,
+              createdBy: authorName,
+              CreatedBy: authorName,
+              createdAt: authorDate,
+              CreatedAt: authorDate,
+              createdOn: authorDate,
+              CreatedOn: authorDate,
+              LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
+              LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                item.lastModifiedAt || item.LastModifiedAt || '',
+              ),
+            };
+          });
+        } else {
+          this.authorizationPolicyData = [];
+        }
+
+        // Rebuild the Document Type dropdown options so any deleted-but-still-referenced
+        // codes in the rows just loaded get a "(Deleted)" label instead of showing raw.
+        if (this.selectedTab === 'AuthorizationPolicy') {
+          this.authGridConfig = {
+            ...this.authGridConfig,
+            columns: this.getAuthorizationPolicyColumns(),
+          };
+        }
       });
   }
 
@@ -221,62 +621,527 @@ export class MiscPolicies {
         this.documentTypesList = [];
       }
 
-      // ✅ build grid AFTER dropdown data is ready
-      this.buildGrid();
+      // ✅ Load only the current active tab on initial load
+      this.onTabChange(this.selectedTab);
+    });
+  };
+
+  getAllUsersList = () => {
+    this._peoplePartnerService.GetEmployeeList().subscribe((res) => {
+      if (res?.Data) {
+        this.AuthorizationPolicyList = (res.Data ?? []).map((d: any) => ({
+          value: d.Code || d.code,
+          label: d.Value + ' (' + d.Code + ')' || d.value,
+        }));
+      } else {
+        this.AuthorizationPolicyList = [];
+      }
+
+      // ✅ Update grid columns after dropdown data is ready
+      if (this.selectedTab === 'AuthorizationPolicy') {
+        this.authGridConfig = {
+          ...this.authGridConfig,
+          columns: this.getAuthorizationPolicyColumns(),
+        };
+      }
     });
   };
 
   onGridReady(gridApi: any): void {
-    //console.log('Grid ready:', gridApi);
     // Store grid API if needed for external operations
   }
 
-  onRowAdded(event: { rowData: any }): void {
+  onTrainingPoliciyRowAdded(event: { rowData: any }): void {
     const { rowData } = event;
-    // Add logic to generate IDs, validate, etc.
     const payLoad = {
       documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,
       trainingRequired: rowData.traningRequired || rowData.traningRequired,
       minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
     };
-
-    this._trainingPolicyService.create(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'sucess',
-        'Distribution List',
-        'Distribution list added successfully!',
-      );
+    this.savingTrainingPolicy = true;
+    this._trainingPolicyService.create(payLoad).subscribe({
+      next: (res: any) => {
+        this.savingTrainingPolicy = false;
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Training Policy',
+            res.Message || res.message || 'Failed to add training policy.'
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Training Policy',
+          'Training policy added successfully!',
+        );
+        this.resetTrainingPolicyPinnedRow();
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this.savingTrainingPolicy = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Training Policy',
+          'Failed to add training policy.'
+        );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
     });
-    const rowWithId = {
-      ...rowData,
-      id: this.generateId(),
-      documentType: rowData.documentType,
-      traningRequired: rowData.traningRequired,
-      minimumscoreforpassing: rowData.minimumscoreforpassing,
+  }
+
+  onAuthPolicyRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
+    if (!rowData.authorizingAuthority) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Authorization Policy',
+        'Authorizing Authority is required!',
+      );
+      return;
+    }
+    const payLoad = {
+      documentTypeCode: rowData.documentTypeCode,
+      authorizationRequired: rowData.authorizationRequired,
+      authorizingUserId: rowData.authorizingAuthority,
     };
 
-    this.documentAttributeData = [rowWithId, ...this.documentAttributeData];
+    this.savingAuthorizationPolicy = true;
+    this._documentTrainingAuthorizationService.create(payLoad).subscribe({
+      next: (res: any) => {
+        this.savingAuthorizationPolicy = false;
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Authorization Policy',
+            res.Message || res.message || 'Failed to add authorization policy.'
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Authorization Policy',
+          'Authorization policy added successfully!',
+        );
+        this.resetAuthorizationPolicyPinnedRow();
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this.savingAuthorizationPolicy = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Authorization Policy',
+          'Failed to add authorization policy.'
+        );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
   }
 
-  onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event);
+  onAuthPolicyRowUpdated(event: { rowData: any; index: number }): void {
+    const { rowData } = event;
+    if (!rowData.authorizingAuthority) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Authorization Policy',
+        'Authorizing Authority is required!',
+      );
+      return;
+    }
+    const payLoad = {
+      id: rowData.Id,
+      documentTypeCode: rowData.documentTypeCode,
+      authorizationRequired: rowData.authorizationRequired,
+      authorizingUserId: rowData.authorizingAuthority,
+    };
 
-    // Update display names
-    // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    // event.rowData.departmentName = this.getDisplayName(
-    //   this.departments,
-    //   event.rowData.departmentId,
-    // );
-    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
-
-    this.documentAttributeData[event.index] = { ...event.rowData };
-    this.documentAttributeData = [...this.documentAttributeData]; // Trigger change detection
+    this.savingAuthorizationPolicy = true;
+    this._documentTrainingAuthorizationService.update(payLoad).subscribe({
+      next: (res: any) => {
+        this.savingAuthorizationPolicy = false;
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Authorization Policy',
+            res.Message || res.message || 'Failed to update authorization policy.'
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Authorization Policy',
+          'Authorization policy updated successfully!',
+        );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this.savingAuthorizationPolicy = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Authorization Policy',
+          'Failed to update authorization policy.'
+        );
+        this.GetDocumentTrainingAuthorization({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
   }
 
-  onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
-    this.documentAttributeData.splice(rowIndex, 1);
-    this.documentAttributeData = [...this.documentAttributeData];
+  onAuthPolicyRowDeleted(rowIndex: number): void {
+    const row = this.authorizationPolicyData[rowIndex];
+    if (row && row.Id) {
+      this._documentTrainingAuthorizationService.delete(row.Id).subscribe({
+        next: (res: any) => {
+          if (res && (res.Success === false || res.success === false)) {
+            this._notificationToastService.createNotification(
+              'error',
+              'Authorization Policy',
+              res.Message || res.message || 'Failed to delete authorization policy.'
+            );
+            this.GetDocumentTrainingAuthorization({
+              pageNumber: 1,
+              pageSize: this.pageSize,
+              sortModel: [],
+              filterModel: {},
+            });
+            return;
+          }
+          this._notificationToastService.createNotification(
+            'success',
+            'Authorization Policy',
+            'Authorization policy deleted successfully!',
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        },
+        error: (err: any) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Authorization Policy',
+            'Failed to delete authorization policy.'
+          );
+          this.GetDocumentTrainingAuthorization({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        }
+      });
+    }
+  }
+
+  onDocReviewRowAdded(event: { rowData: any }): void {
+    const { rowData } = event;
+    const payLoad = {
+      documentTypeCode: rowData.documentType,
+      reviewPeriodYears: rowData.reviewAfter,
+    };
+
+    this.savingDocumentReview = true;
+    this._documentReviewPolicyService.create(payLoad).subscribe({
+      next: (res: any) => {
+        this.savingDocumentReview = false;
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Document Review',
+            res.Message || res.message || 'Failed to add document review policy.'
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Document Review',
+          'Document review policy added successfully!',
+        );
+        this.resetDocumentReviewPinnedRow();
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this.savingDocumentReview = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Document Review',
+          'Failed to add document review policy.'
+        );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
+  }
+
+  onDocReviewRowUpdated(event: { rowData: any; index: number }): void {
+    const { rowData } = event;
+    const payLoad = {
+      id: rowData.Id,
+      documentTypeCode: rowData.documentType,
+      reviewPeriodYears: rowData.reviewAfter,
+    };
+
+    this.savingDocumentReview = true;
+    this._documentReviewPolicyService.update(payLoad).subscribe({
+      next: (res: any) => {
+        this.savingDocumentReview = false;
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Document Review',
+            res.Message || res.message || 'Failed to update document review policy.'
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Document Review',
+          'Document review policy updated successfully!',
+        );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this.savingDocumentReview = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Document Review',
+          'Failed to update document review policy.'
+        );
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
+  }
+
+  onDocReviewRowDeleted(rowIndex: number): void {
+    const row = this.documentReviewRowData[rowIndex];
+    if (row && row.Id) {
+      this._documentReviewPolicyService.delete(row.Id).subscribe({
+        next: (res: any) => {
+          if (res && (res.Success === false || res.success === false)) {
+            this._notificationToastService.createNotification(
+              'error',
+              'Document Review',
+              res.Message || res.message || 'Failed to delete document review policy.'
+            );
+            this.GetAllDocumentReviewPolicies({
+              pageNumber: 1,
+              pageSize: this.pageSize,
+              sortModel: [],
+              filterModel: {},
+            });
+            return;
+          }
+          this._notificationToastService.createNotification(
+            'success',
+            'Document Review',
+            'Document review policy deleted successfully!',
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        },
+        error: (err: any) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Document Review',
+            'Failed to delete document review policy.'
+          );
+          this.GetAllDocumentReviewPolicies({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        }
+      });
+    }
+  }
+
+  onTrainingPoliciyRowUpdated(event: { rowData: any; index: number }): void {
+    const { rowData } = event;
+    const payLoad = {
+      id: rowData.Id,
+      documentTypeCode: rowData.documentTypeCode || rowData.DocumentTypeCode,
+      trainingRequired: rowData.traningRequired || rowData.traningRequired,
+      minimumScore: rowData.minimumscoreforpassing || rowData.minimumscoreforpassing,
+    };
+
+    this.savingTrainingPolicy = true;
+    this._trainingPolicyService.update(payLoad).subscribe({
+      next: (res: any) => {
+        this.savingTrainingPolicy = false;
+        if (res && (res.Success === false || res.success === false)) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Training Policy',
+            res.Message || res.message || 'Failed to update training policy.'
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+          return;
+        }
+        this._notificationToastService.createNotification(
+          'success',
+          'Training Policy',
+          'Training policy updated successfully!',
+        );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      },
+      error: (err: any) => {
+        this.savingTrainingPolicy = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Training Policy',
+          'Failed to update training policy.'
+        );
+        this.GetAllTrainingPolicy({
+          pageNumber: 1,
+          pageSize: this.pageSize,
+          sortModel: [],
+          filterModel: {},
+        });
+      }
+    });
+  }
+
+  onTrainingPoliciyRowDeleted(rowIndex: number): void {
+    const row = this.trainingPolicesData[rowIndex];
+    if (row && row.Id) {
+      this._trainingPolicyService.delete(row.Id).subscribe({
+        next: (res: any) => {
+          if (res && (res.Success === false || res.success === false)) {
+            this._notificationToastService.createNotification(
+              'error',
+              'Training Policy',
+              res.Message || res.message || 'Failed to delete training policy.'
+            );
+            this.GetAllTrainingPolicy({
+              pageNumber: 1,
+              pageSize: this.pageSize,
+              sortModel: [],
+              filterModel: {},
+            });
+            return;
+          }
+          this._notificationToastService.createNotification(
+            'success',
+            'Training Policy',
+            'Training policy deleted successfully!',
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        },
+        error: (err: any) => {
+          this._notificationToastService.createNotification(
+            'error',
+            'Training Policy',
+            'Failed to delete training policy.'
+          );
+          this.GetAllTrainingPolicy({
+            pageNumber: 1,
+            pageSize: this.pageSize,
+            sortModel: [],
+            filterModel: {},
+          });
+        }
+      });
+    }
   }
 
   onCellValueChanged(event: any): void {
@@ -300,8 +1165,8 @@ export class MiscPolicies {
 
     switch (gridId) {
       case 'TrainingPoliciyGrid':
-        this.divisionPageSize = pageSize;
-        this.GetAllDocumentReview({
+        this.selectedPageSize = pageSize;
+        this.GetAllTrainingPolicy({
           pageNumber: 1,
           pageSize: this.selectedPageSize,
           sortModel: [], // or your current sort/filter model
@@ -309,9 +1174,19 @@ export class MiscPolicies {
         });
         break;
 
-      case 'DocumentReview':
-        this.employeePageSize = pageSize;
-        this.GetAllDocumentReview({
+      case 'DocumentReviewPoliciyGrid':
+        this.selectedPageSize = pageSize;
+        this.GetAllDocumentReviewPolicies({
+          pageNumber: 1,
+          pageSize: this.selectedPageSize,
+          sortModel: [], // or your current sort/filter model
+          filterModel: {},
+        });
+        break;
+
+      case 'AuthorizationPolicyGrid':
+        this.selectedPageSize = pageSize;
+        this.GetDocumentTrainingAuthorization({
           pageNumber: 1,
           pageSize: this.selectedPageSize,
           sortModel: [], // or your current sort/filter model
@@ -328,4 +1203,6 @@ class DocumentAttributeColumns {
   documentTypeCode: string = '';
   traningRequired: boolean = false;
   minimumscoreforpassing: number = 0;
+  createdByName: string = '';
+  requestCreatedOn: string = '';
 }

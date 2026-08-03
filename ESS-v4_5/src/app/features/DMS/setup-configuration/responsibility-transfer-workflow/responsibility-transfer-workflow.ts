@@ -3,16 +3,17 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
-import { BehaviorSubject } from 'rxjs'; 
+import { BehaviorSubject } from 'rxjs';
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { DivisionCacheService } from '@app/shared/services/CacheServices/division-cache-service';
 import { TransferWorkflowPolicyService } from '@app/shared/services/transfer-workflow-policy.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 
 @Component({
   selector: 'app-responsibility-transfer-workflow',
@@ -33,10 +34,8 @@ export class ResponsibilityTransferWorkflow {
 
   pinnedTopRowDataPlanning: AccessLevelColumns[] = [
     {
-      divisionId: null,
-      departmentId: null,
-      subDepartmentId: null,
-      documentTypeId: null,
+      divisionCode: null,
+      approvalAuthority: null,
       isNewRow: true,
     },
   ];
@@ -48,27 +47,14 @@ export class ResponsibilityTransferWorkflow {
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
   optionList: string[] = [];
-  selectedUser?: string;
-  selectedDivisions?: string = '';
-  selectedDepartment?: string = '';
-  selectedSubDepartment?: string = '';
-  selectedDocumentType?: string = '';
-  selectedDesignation?: string = '';
-  selectedRole?: string = '';
-  radioValue = '';
   // single state
-  activeMode: 'manual' | 'integration' | null = null;
 
   pageSize = 10;
   rowData: any[] = [];
   totalRows = 0;
   divisions: any[] = [];
 
-  approvalAuthority: any[] = [
-    { id: '1', text: 'Director Of Board' },
-    { id: '2', text: 'Quality Director' },
-    { id: '3', text: 'Bizex Manager' },
-  ];
+  approvalAuthority: any[] = [];
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -79,7 +65,7 @@ export class ResponsibilityTransferWorkflow {
   constructor(
     private _notificationToastService: NotificationToastService,
     private _permissionService: PermissionService,
-    private _divisionServices: DivisionCacheService,
+    private _peoplePartnersService: PeoplePartnersService,
     private _transferWorkflowPolicyService: TransferWorkflowPolicyService,
   ) {}
 
@@ -90,6 +76,7 @@ export class ResponsibilityTransferWorkflow {
       this.canDelete = permissions.canDelete;
 
       this.getAllDivisionList();
+      this.buildGrid();
       this.GetAllResponsibilityTransferWorkflows();
     });
   }
@@ -98,7 +85,7 @@ export class ResponsibilityTransferWorkflow {
     return [
       // ✅ DIVISION
       {
-        field: 'divisionName',
+        field: 'divisionCode',
         headerName: 'Division',
         type: 'dropdown',
         dropdownOptions: this.divisions,
@@ -108,7 +95,7 @@ export class ResponsibilityTransferWorkflow {
         required: true,
       },
 
-      // ✅ DEPARTMENT
+      // ✅ APPROVAL AUTHORITY
       {
         field: 'approvalAuthority',
         headerName: 'Approval Authority',
@@ -153,52 +140,113 @@ export class ResponsibilityTransferWorkflow {
   }
 
   onRowAdded(event: { rowData: any }): void {
-    const { rowData } = event; 
+    const { rowData } = event;
     // Add logic to generate IDs, validate, etc.
     const payLoad = {
-      divisionCode: rowData.divisionName || rowData.divisionName,
-      approvalroleid: 1,
-      approvaluserid: 1,
+      divisionCode: rowData.divisionCode,
+      ApproverEmpCode: rowData.approvalAuthority,
+      approvalroleid: rowData.approvalAuthority,
+      approvaluserid: rowData.approvalAuthority,
     };
 
-    this._transferWorkflowPolicyService.create(payLoad).subscribe(() => {
-      this._notificationToastService.createNotification(
-        'success',
-        'Access Level',
-        'Access Level created successfully!',
-      );
-    });
+    // Keep approvalAuthority as the employee code (matches what the server stores and
+    // returns as ApprovalUserId) — the grid's dropdown valueFormatter resolves it to a
+    // friendly name via dropdownOptions, which already has this division's employees loaded
+    // since that's where this selection came from.
     const rowWithId = {
       ...rowData,
       id: this.generateId(),
-      // divisionName: this.getDisplayName(this.divisions, rowData.level1Id),
-      // departmentName: this.getDisplayName(this.departments, rowData.level2Id),
-      // subDepartmentName: this.getDisplayName(this.subDepartments, rowData.level3Id),
-      // businessDomainName: this.getDisplayName(this.subDepartments, rowData.level4Id),
-      // documentTypeId: this.getDisplayName(this.documentTypes, rowData.documentTypeId),
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];
+
+    this._transferWorkflowPolicyService.create(payLoad).subscribe({
+      next: () => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Success',
+          'Record added successfully!',
+        );
+        this.GetAllResponsibilityTransferWorkflows();
+      },
+      error: (err) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to add record.',
+        );
+        // Revert: Remove the optimistically added record from the grid
+        this.manualUserData = this.manualUserData.filter((row) => row.id !== rowWithId.id);
+      },
+    });
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
-    console.log('Row updated:', event); 
-    // Update display names
-    // event.rowData.divisionName = this.getDisplayName(this.divisions, event.rowData.divisionId);
-    // event.rowData.departmentName = this.getDisplayName(
-    //   this.departments,
-    //   event.rowData.departmentId,
-    // );
-    // event.rowData.roleName = this.getDisplayName(this.roles, event.rowData.roleId);
+    const { rowData } = event;
 
-    this.manualUserData[event.index] = { ...event.rowData };
+    // Reflect the edit immediately in the grid
+    this.manualUserData[event.index] = { ...rowData };
     this.manualUserData = [...this.manualUserData]; // Trigger change detection
+
+    // Only persisted rows have an Id — the pinned "add new row" is handled by onRowAdded
+    if (!rowData.id) return;
+
+    const payLoad = {
+      id: rowData.id,
+      divisionCode: rowData.divisionCode,
+      ApproverEmpCode: rowData.approvalAuthority,
+      approvalroleid: rowData.approvalAuthority,
+      approvaluserid: rowData.approvalAuthority,
+    };
+
+    this._transferWorkflowPolicyService.update(payLoad).subscribe({
+      next: () => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Success',
+          'Record updated successfully!',
+        );
+        this.GetAllResponsibilityTransferWorkflows();
+      },
+      error: (err) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to update record.',
+        );
+        // Revert: reload from the server so the grid doesn't keep showing the unsaved edit
+        this.GetAllResponsibilityTransferWorkflows();
+      },
+    });
   }
 
   onRowDeleted(rowIndex: number): void {
-    console.log('Row deleted at index:', rowIndex);
-    this.manualUserData.splice(rowIndex, 1);
-    this.manualUserData = [...this.manualUserData];
+    const row = this.manualUserData[rowIndex];
+    const previousData = this.manualUserData;
+
+    // Remove optimistically so the grid updates immediately
+    this.manualUserData = this.manualUserData.filter((_, i) => i !== rowIndex);
+
+    if (!row?.id) return;
+
+    this._transferWorkflowPolicyService.delete(row.id).subscribe({
+      next: () => {
+        this._notificationToastService.createNotification(
+          'success',
+          'Success',
+          'Record deleted successfully!',
+        );
+      },
+      error: (err) => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          err?.error?.Message || err?.Message || 'Failed to delete record.',
+        );
+        // Revert: restore the optimistically removed record
+        this.manualUserData = previousData;
+      },
+    });
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
@@ -217,6 +265,23 @@ export class ResponsibilityTransferWorkflow {
     if (event.field === 'file-preview') {
       // Handle file preview
       // this.previewFile(event.value);
+    } else if (event.field === 'divisionCode') {
+      if (event.value) {
+        this.GetEmployeesByDivisionId(event.value);
+      }
+      // Note: approvalAuthority (the dropdown option pool) is intentionally left alone here
+      // even when the division is cleared — it now accumulates every division touched across
+      // the whole grid (see GetEmployeesByDivisionId), so wiping it would blank out the
+      // dropdown/valueFormatter for every other row too, not just this one.
+      event.rowData.approvalAuthority = null;
+      if (event.rowIndex !== undefined && event.rowIndex !== null && event.rowIndex >= 0) {
+        this.manualUserData[event.rowIndex] = { ...event.rowData };
+        this.manualUserData = [...this.manualUserData];
+      } else {
+        // Apply changes to the Pinned Top Row (New Row)
+        this.pinnedTopRowDataPlanning[0] = { ...event.rowData };
+        this.pinnedTopRowDataPlanning = [...this.pinnedTopRowDataPlanning];
+      }
     } else {
       // Handle regular value changes
       //console.log('Cell value changed:', event);
@@ -252,38 +317,96 @@ export class ResponsibilityTransferWorkflow {
         if (res?.Success && res.Data?.Items) {
           this.manualUserData = res.Data.Items.map((item: any) => ({
             id: item.Id,
-            divisionName: item.DivisionCode,
-            approvalAuthority: item.ApprovalRoleId ? item.ApprovalRoleId.toString() : null,
-          }));
+            divisionCode: item.DivisionCode,
+            // The actually-saved approver — NOT item.DivisionHeadName/DivisionHeadDesignation,
+            // which describe the division's separate HR-configured head. Mapping from those
+            // was the bug: no matter who got saved as approver, the grid always showed the
+            // division head instead.
+            approvalAuthority: item.ApprovalUserId || item.approvaluserid || null,
+          })).sort((a: any, b: any) => {
+            const divA = this.getDisplayName(this.divisions, a.divisionCode).toLowerCase();
+            const divB = this.getDisplayName(this.divisions, b.divisionCode).toLowerCase();
+            return divA.localeCompare(divB);
+          });
+
+          // Resolve every row's approver code to a friendly name for the read-only view.
+          // dropdownOptions is shared by the editor AND the valueFormatter, so without this
+          // sweep only whichever division was most recently edited would show a name instead
+          // of a bare code.
+          this.loadApprovalAuthorityForAllDivisions();
         } else {
           this.manualUserData = [];
         }
       });
   }
 
+  private loadApprovalAuthorityForAllDivisions(): void {
+    const divisionCodes = Array.from(
+      new Set(this.manualUserData.map((row) => row.divisionCode).filter((code) => !!code)),
+    );
+    divisionCodes.forEach((code) => this.GetEmployeesByDivisionId(code));
+  }
+
   getAllDivisionList = () => {
-    this._divisionServices.getDivisions().subscribe((res) => {
-      if (res) {
-        this.divisions = (res ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Name,
-        }));
+    this._peoplePartnersService.GetAllDivisions().subscribe((res) => {
+      if (res?.Data) {
+        this.divisions = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Id || d.id,
+            text: d.Value || d.value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
       } else {
         this.divisions = [];
       }
-      // ✅ build grid ONLY after divisions are ready
       this.buildGrid();
+      //this.cdr.detectChanges(); // force update
     });
   };
+
+  GetEmployeesByDivisionId = (divId: string, onLoaded?: () => void) => {
+    this._peoplePartnersService.GetEmployeesByDivisionId(divId).subscribe((res) => {
+      const employees = res?.Data
+        ? (res.Data ?? []).map((d: any) => ({
+            id: d.EmployeeCode || d.employeecode,
+            text:
+              d.employeecode +
+              ' - ' +
+              (d.FullName || d.fullname) +
+              ' (' +
+              (d.Designation || d.designation) +
+              ')',
+            rawName: d.FullName || d.fullname || '',
+          }))
+        : [];
+
+      // Merge rather than overwrite — approvalAuthority backs the dropdown for whichever
+      // row is being edited/added AND the read-only valueFormatter for every other row, so
+      // employees loaded for other divisions must stay available.
+      const existingIds = new Set(this.approvalAuthority.map((o) => o.id));
+      this.approvalAuthority = [
+        ...this.approvalAuthority,
+        ...employees.filter((e: any) => !existingIds.has(e.id)),
+      ].sort((a: any, b: any) => (a.rawName || '').localeCompare(b.rawName || ''));
+
+      this.buildGrid();
+      onLoaded?.();
+      //this.cdr.detectChanges(); // force update
+    });
+  };
+
+  onRowEditingStarted(event: { rowData: any; index: number }): void {
+    const { rowData } = event;
+    // approvalAuthority now accumulates every division touched so far (initial load sweep,
+    // prior edits) — this is just a safety net for a division that hasn't been loaded yet.
+    if (rowData?.divisionCode) {
+      this.GetEmployeesByDivisionId(rowData.divisionCode);
+    }
+  }
 }
 
 class AccessLevelColumns {
-  divisionId: string | null = null;
-  //division: string | null = null;
-  departmentId: string | null = null;
-  //department: string | null = null;
-  subDepartmentId: string | null = null;
-  //subDepartment: string | null = null;
-  documentTypeId: string | null = null;
+  divisionCode: string | null = null;
+  approvalAuthority: string | null = null;
   isNewRow: boolean = false;
 }

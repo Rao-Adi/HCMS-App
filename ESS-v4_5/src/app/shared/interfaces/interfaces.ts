@@ -35,14 +35,19 @@ export interface CabinetTabVM {
   level: number;
   title: string;
   createdBy: string | null;
+  createdByName: string | null;
   createdAt: string | null;
   lastModifiedBy: string | null;
+  lastModifiedByName: string | null;
   lastModifiedAt: string | null;
+  isActive: boolean;
 }
 
 export interface CabinetLevel {
   level: number;
   title: string;
+  isActive: boolean;
+  isDeleted: boolean;
   createdBy: string | null;
   createdByName: string | null;
   createdAt: string | null;
@@ -167,6 +172,13 @@ export interface AuditableEntity {
   createdAt: string;
   lastModifiedBy: string;
   lastModifiedAt: string;
+}
+
+
+export interface EmployeeDraftObservation {
+  Id: number;
+  EmployeeCode: string;
+  ObservationText: string;
 }
 
 export interface CabinetStructureTabsConfig {
@@ -305,6 +317,22 @@ export interface DocumentTraining extends AuditableEntity {
   validationStatus: number;
   readyForAuthorization: boolean;
 }
+export interface DocumentTrainingAuthorization extends AuditableEntity {
+  id: string;
+  companyId: string;
+  documentTypeCode: string;
+  authorizationRequired: boolean; 
+  authorizingUserId: string | null; 
+}
+
+
+export interface DocumentReviewPolicy extends AuditableEntity {
+  id: string;
+  companyId: string;
+  documentTypeCode: string; 
+  ReviewPeriodYears: number; 
+}
+
 
 export interface DocumentVersion {
   id: string;

@@ -1,12 +1,13 @@
 <app-ag-grid-wrapper
   [gridStyle]="{ width: '100%', height: '450px' }"
-  [columnDefs]="pendingAuthorizationColumnDefs"
+  [columnDefs]="revisionHistoryColumnDefs"
   [defaultColDef]="defaultColDef"
   [isSelectionRequired]="false"
   [showDisplayOption]="false"
-  [rowData]="averateDocumentScoreData"
-  [pageSize]="pageSize"
-  [totalRows]="totalRows"
+  [autoSizeColumns]="true"
+  [rowData]="revisionHistoryData"
   [pageSize]="selectedPageSize"
-  gridId="documentGrid" 
+  [totalRows]="totalRows"
+  [loading]="loading"
+  gridId="documentGrid"
 ></app-ag-grid-wrapper>

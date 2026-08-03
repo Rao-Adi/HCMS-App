@@ -24,7 +24,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 export class DivisionList implements ControlValueAccessor {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
-  @Input() placeholder = 'Select';
+  @Input() placeholder = '--Any--';
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
@@ -84,11 +84,14 @@ export class DivisionList implements ControlValueAccessor {
         getCount$: () => this._divisionServices.getDivisionCount(),
 
         // ✅ RETURN RAW API RESPONSE
-        getData$: () => this._divisionServices.GetAllDivisions('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () =>
+          this._divisionServices.GetAllDivisions('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
           CreatedByName:
             item.CreateByName ||
@@ -105,10 +108,12 @@ export class DivisionList implements ControlValueAccessor {
         }),
       })
       .subscribe((data) => {
-        this.divisionData = (data ?? []).map((d: any) => ({
-          CODE: d.Code,
-          NAME: d.Name,
-        }));
+        this.divisionData = (data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code,
+            NAME: d.Name,
+          }))
+          .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
       });
   };
 }

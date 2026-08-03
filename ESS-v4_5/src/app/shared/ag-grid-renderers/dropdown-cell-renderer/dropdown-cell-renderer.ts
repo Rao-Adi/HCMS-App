@@ -16,8 +16,9 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
       [nzShowSearch]="params?.showSearch"
       [nzFilterOption]="params?.customFilter"
       [nzDisabled]="params?.disabled"
-      nzPlaceHolder="-- Select --"
+      nzPlaceHolder="-- Any --"
       [(ngModel)]="selectedValue"
+      [nzAllowClear]="true"
       (ngModelChange)="onSelectionChange($event)"
       (keydown)="$event.stopPropagation()"
       (keyup)="$event.stopPropagation()"
@@ -66,12 +67,23 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     const field = params.colDef.field as string;
     const rawValue = params.data?.[field];
 
-    this.options = params.options || [];
+    const dispField = this.params.displayField || 'text';
+    this.options = [...(params.options || [])].sort((a: any, b: any) => {
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    });
 
     // 🔥 FORCE type match (number ↔ number)
     if (rawValue !== null && rawValue !== undefined) {
       const valField = this.params.valueField || 'id';
-      const matched = this.options.find((o) => o[valField] == rawValue);
+      let matched = this.options.find((o) => o[valField] == rawValue);
+      if (!matched) {
+        matched = this.options.find((o) => o[dispField] == rawValue);
+        if (matched && params.data) {
+          params.data[field] = matched[valField];
+        }
+      }
       this.selectedValue = matched ? matched[valField] : null;
     } else {
       this.selectedValue = null;
@@ -99,11 +111,22 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     const field = params.colDef.field as string;
     const rawValue = params.data?.[field];
 
-    this.options = params.options || [];
+    const dispField = this.params.displayField || 'text';
+    this.options = [...(params.options || [])].sort((a: any, b: any) => {
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    });
 
     if (rawValue !== null && rawValue !== undefined) {
       const valField = this.params.valueField || 'id';
-      const matched = this.options.find((o) => o[valField] == rawValue);
+      let matched = this.options.find((o) => o[valField] == rawValue);
+      if (!matched) {
+        matched = this.options.find((o) => o[dispField] == rawValue);
+        if (matched && params.data) {
+          params.data[field] = matched[valField];
+        }
+      }
       this.selectedValue = matched ? matched[valField] : null;
     } else {
       this.selectedValue = null;

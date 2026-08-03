@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
@@ -7,22 +7,28 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { SelectList } from '@app/shared/interfaces/interfaces'; 
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ResponsibilityTransferService } from '@app/shared/services/responsibility-transfer.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe'; 
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
-import { NotificationToastService } from '@app/shared/notification/notification.service';
-import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
+import { NotificationToastService } from '@app/shared/notification/notification.service'; 
+import { EditableAgGridWrapper } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { 
+  GetMyResponsibilityTransfersDto, 
+  ResponsibilityTransferItem 
+} from '@app/shared/services/responsibility-transfer.service';
+import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
   selector: 'app-responsibility-transfer-form',
@@ -40,14 +46,16 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
     NzUploadModule,
     NzCheckboxModule,
     NzInputModule,
-    NzModalModule,
-    EmployeeList
+    NzModalModule, 
+    EditableAgGridWrapper
   ],
   templateUrl: './responsibility-transfer-form.html',
   styleUrl: './responsibility-transfer-form.css',
 })
-export class ResponsibilityTransferForm {
+export class ResponsibilityTransferForm implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
+  private subscriptions: Subscription[] = [];
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -58,7 +66,7 @@ export class ResponsibilityTransferForm {
   public noRowsOverlay: string = '';
   footerRender = (): string => 'extra footer';
   dateFormat = 'dd/MMM/yyyy';
-  selectedTab: string = 'Request';
+  selectedTab: string = 'Requests';
   switchValue1 = false;
   switchValue2 = false;
   loading = false;
@@ -79,11 +87,26 @@ export class ResponsibilityTransferForm {
 
   totalPendingApprovals = 0;
 
+  // "Requests pending My Approval" tab badge -- routed through NavigationCountsService (see
+  // ngOnInit) so this page's badge and the "Responsibilities Transfer" sidebar badge never drift.
+  responsibilityTransferApprovalCounts = {
+    pendingCount: 0,
+    approvedCount: 0,
+    rejectedCount: 0,
+    revertedCount: 0,
+    totalCount: 0,
+  };
+
+  // "My Submitted Requests" tab badge -- a separate concern from the above (requests I created,
+  // not requests pending on me as approver), fetched directly since there's no corresponding
+  // sidebar item to keep in sync with.
+  mySubmittedRequestsCount = 0;
+
   // Store page sizes for each grid separately
   divisionPageSize = 10;
   employeePageSize = 10;
   // add more as needed...
-  selectedPageSize = 1; // default value
+  selectedPageSize = 10; // default value
 
   pageSize = 10;
   rowData: any[] = [];
@@ -99,8 +122,8 @@ export class ResponsibilityTransferForm {
 
   uploading = false;
   statues: any[] = [
-    { id: '1', text: 'Pending' },
     { id: '2', text: 'Approved' },
+    { id: '1', text: 'Pending' },
     { id: '3', text: 'Rejected' },
   ];
   reasonForTransfer: SelectList[] = [
@@ -112,14 +135,20 @@ export class ResponsibilityTransferForm {
   selectedStatus: string = '1';
 
   pendingRequestApprovalColumnDefs: ColDef[] = [
-    { field: 'requestor', headerName: 'Requestor', flex: 1 },
+    { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
-    { field: 'reason', headerName: 'Reason', flex: 1 },
-    { field: 'effectiveDateFrom', headerName: 'Effective From', flex: 1 },
-    { field: 'effectiveDateTo', headerName: 'Effective To', flex: 1 },
-    { field: 'remarks', headerName: 'Remarks', flex: 1 },
-    { field: 'actionDate', headerName: 'Action Date', flex: 1 },
+    { field: 'reason', headerName: 'Reason', flex: 1 }, 
+    { field: 'remarks', headerName: 'Remarks', flex: 1 }
+  ]; 
+
+  pendingApprovalData: any[] = [];
+
+  submittedRequestColumnDefs: ColDef[] = [
+    { field: 'id', headerName: 'ID', flex: 1 }, 
+    { field: 'from', headerName: 'From', flex: 1 },
+    { field: 'To', headerName: 'To', flex: 1 },
+    { field: 'reason', headerName: 'Reason', flex: 1 },     
     {
       field: 'status',
       headerName: 'Status',
@@ -130,9 +159,11 @@ export class ResponsibilityTransferForm {
         'rag-red': (params) => params.value === 'Pending',
       },
     },
+    { field: 'remarks', headerName: 'Comments', flex: 1 }, 
   ];
 
-  pendingApprovalData: any[] = [];
+  submittedApprovalData: any[] = [];
+  totalSubmittedApprovals = 0;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -141,11 +172,13 @@ export class ResponsibilityTransferForm {
   };
 
   constructor(
+    private modal: NzModalService,
     private _notificationToastService: NotificationToastService,
     private _responsibilityTransfer: ResponsibilityTransferService,
     private _utilityService: UtilitiesService,
     private _peoplePartnerService: PeoplePartnersService,
-    private _permissionService: PermissionService
+    private _permissionService: PermissionService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -153,11 +186,53 @@ export class ResponsibilityTransferForm {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
-      
+
       this.getAllUsersList();
     });
+
+    // "Requests pending My Approval" tab badge reflects the same shared count state the sidebar
+    // menu uses (see NavigationCountsService), so this page and the "Responsibilities Transfer"
+    // menu item never disagree.
+    this.subscriptions.push(
+      this._navigationCountsService.responsibilityTransferApprovalCounts$.subscribe((counts) => {
+        this.responsibilityTransferApprovalCounts = {
+          pendingCount: counts.pending,
+          approvedCount: counts.approved,
+          rejectedCount: counts.rejectedOrReverted,
+          revertedCount: counts.rejectedOrReverted,
+          totalCount: counts.pending + counts.approved + counts.rejectedOrReverted,
+        };
+      }),
+    );
+
+    this.getMyResponsibilityTransfersApprovalsCount();
+    this.getMySubmittedResponsibilityTransfersCount();
   }
- 
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  getMyResponsibilityTransfersApprovalsCount(): void {
+    // Fetches through the shared service; the ngOnInit subscription above applies the result
+    // to this page's tab badge, and main-layout's own subscription applies the same result
+    // to the "Responsibilities Transfer" sidebar badge.
+    this._navigationCountsService.refreshResponsibilityTransferApprovalCounts();
+  }
+
+  getMySubmittedResponsibilityTransfersCount(): void {
+    this._responsibilityTransfer.GetMySubmittedResponsibilityTransfersCount().subscribe({
+      next: (res: any) => {
+        if (res?.Success && res.Data) {
+          this.mySubmittedRequestsCount = Number(res.Data.PendingCount ?? res.Data.pendingCount) || 0;
+        }
+      },
+      error: () => {
+        // Non-critical -- tab badge just stays at its last known value if this fails.
+      },
+    });
+  }
+
   private getStatusText(statusId: any): string {
     const statusMap: { [key: string]: string } = {
       '1': 'Pending',
@@ -170,8 +245,12 @@ export class ResponsibilityTransferForm {
   }
 
   private getReasonText(reasonId: any): string {
-    const reason = this.reasonForTransfer.find((r) => r.CODE === String(reasonId));
-    return reason ? reason.NAME : 'N/A';
+    if (!reasonId) return 'N/A';
+    const strReason = String(reasonId);
+    const reason = this.reasonForTransfer.find(
+      (r) => r.CODE === strReason || r.NAME?.toLowerCase() === strReason.toLowerCase()
+    );
+    return reason?.NAME ? reason.NAME : strReason;
   }
 
   onTabChange(tab: string) {
@@ -203,54 +282,124 @@ export class ResponsibilityTransferForm {
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     } else {
-      this.GetAllResponsibilityTransferForms();
+      if (this.selectedTab === 'Requests pending My Approval') {
+        this.GetAllResponsibilityTransferForms();
+      } else if (this.selectedTab === 'My Submitted Requests') {
+        this.GetAllSubmittedResponsibilityTransferForms();
+      }
     }
   }
 
-  GetAllResponsibilityTransferForms(query: any = {}) {
+  GetAllSubmittedResponsibilityTransferForms(query: any = {}) {
+    this.loading = true;
     const sort = query.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
     const pageSize = Number(query?.pageSize) || this.divisionPageSize;
     const searchText = query?.searchText || '';
 
-    const payload = {
-      searchtext: searchText,
-      sortby: sort?.sort?.toUpperCase() || 'DESC',
-      sortcolumn: sort?.colId || 'Id',
-      isactive: true,
-      pagenumber: pageNumber,
-      pagesize: pageSize,
-      status: Number(this.selectedStatus),
-      userid: this._utilityService.GetUserEmpId() || '1',
+    const payload: GetMyResponsibilityTransfersDto = {
+      searchText: searchText,
+      sortBy: sort?.sort?.toUpperCase() || 'DESC',
+      sortColumn: sort?.colId || 'Id',
+      isActive: true,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      status: Number(this.selectedStatus), 
+    };
+
+    this._responsibilityTransfer
+      .GetMySubmittedResponsibilityTransfers(payload)
+      .subscribe({
+        next: (res: any) => {
+          this.loading = false;
+          if (res?.Success && res.Data?.Items) {
+            this.totalSubmittedApprovals = res.Data.TotalCount;
+            this.submittedApprovalData = res.Data.Items.map((item: ResponsibilityTransferItem | any) => ({
+              ...item,
+              id: item.id || item.Id,
+              requestor: item.createdby || item.createdBy || item.CreatedBy || 'Unknown',
+              from: item.employeefromname || item.EmployeeFromName || 'Unknown',
+              To: item.employeetoname || item.EmployeeToName || 'Unknown',
+              reason: this.getReasonText(item.reasonfortransfer || item.reasonForTransfer || item.ReasonForTransfer),
+              effectiveDateFrom: new CustomDateFormatPipe().transform(
+                item.effectivedatefrom || item.effectiveDateFrom || item.EffectiveDateFrom || ''
+              ),
+              effectiveDateTo: new CustomDateFormatPipe().transform(
+                item.effectivedateto || item.effectiveDateTo || item.EffectiveDateTo || ''
+              ),
+              remarks: item.remarks || item.Remarks || '',
+              actionDate: new CustomDateFormatPipe().transform(
+                item.actiondate || item.actionDate || item.ActionDate || ''
+              ),
+              status: this.getStatusText(item.status || item.Status),
+            }));
+          } else {
+            this.submittedApprovalData = [];
+            this.totalSubmittedApprovals = 0;
+          }
+        },
+        error: (err: any) => {
+          this.loading = false;
+          this.submittedApprovalData = [];
+          this.totalSubmittedApprovals = 0;
+          this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message);
+        }
+      });
+  }
+
+  GetAllResponsibilityTransferForms(query: any = {}) {
+    this.loading = true;
+    const sort = query.sortModel?.[0];
+    const pageNumber = Number(query?.pageNumber) || 1;
+    const pageSize = Number(query?.pageSize) || this.divisionPageSize;
+    const searchText = query?.searchText || '';
+
+    const payload: GetMyResponsibilityTransfersDto = {
+      searchText: searchText,
+      sortBy: sort?.sort?.toUpperCase() || 'DESC',
+      sortColumn: sort?.colId || 'Id',
+      isActive: true,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      status: Number(this.selectedStatus), 
     };
 
     this._responsibilityTransfer
       .GetMyResponsibilityTransfersApprovals(payload)
-      .subscribe((res: any) => {
-        if (res?.Success && res.Data?.Items) {
-          this.totalPendingApprovals = res.Data.TotalCount;
-          this.pendingApprovalData = res.Data.Items.map((item: any) => ({
-            ...item,
-            id: item.Id || item.id,
-            requestor: item.createdby || item.CreatedBy || 'Unknown',
-            from: item.employeefromname || item.employeefromname || 'Unknown',
-            To: item.employeetoname || item.employeetoname || 'Unknown',
-            reason: this.getReasonText(item.reasonfortransfer || item.ReasonForTransfer),
-            effectiveDateFrom: new CustomDateFormatPipe().transform(
-              item.effectivedatefrom || item.EffectiveDateFrom || '',
-            ),
-            effectiveDateTo: new CustomDateFormatPipe().transform(
-              item.effectivedateto || item.EffectiveDateTo || '',
-            ),
-            remarks: item.remarks || item.Remarks || '',
-            actionDate: new CustomDateFormatPipe().transform(
-              item.actionDate || item.ActionDate || '',
-            ),
-            status: this.getStatusText(item.status || item.Status),
-          }));
-        } else {
+      .subscribe({
+        next: (res: any) => {
+          this.loading = false;
+          if (res?.Success && res.Data?.Items) {
+            this.totalPendingApprovals = res.Data.TotalCount;
+            this.pendingApprovalData = res.Data.Items.map((item: ResponsibilityTransferItem | any) => ({
+              ...item,
+              id: item.id || item.Id,
+              requestor: item.createdby || item.createdBy || item.CreatedBy || 'Unknown',
+              from: item.employeefromname || item.EmployeeFromName || 'Unknown',
+              To: item.employeetoname || item.EmployeeToName || 'Unknown',
+              reason: this.getReasonText(item.reasonfortransfer || item.reasonForTransfer || item.ReasonForTransfer),
+              effectiveDateFrom: new CustomDateFormatPipe().transform(
+                item.effectivedatefrom || item.effectiveDateFrom || item.EffectiveDateFrom || ''
+              ),
+              effectiveDateTo: new CustomDateFormatPipe().transform(
+                item.effectivedateto || item.effectiveDateTo || item.EffectiveDateTo || ''
+              ),
+              remarks: item.remarks || item.Remarks || '',
+              actionDate: new CustomDateFormatPipe().transform(
+                item.actiondate || item.actionDate || item.ActionDate || ''
+              ),
+              status: this.getStatusText(item.status || item.Status),
+            }));
+          } else {
+            this.pendingApprovalData = [];
+            this.totalPendingApprovals = 0;
+          }
+        },
+        error: (err: any) => {
+          this.loading = false;
           this.pendingApprovalData = [];
           this.totalPendingApprovals = 0;
+          this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message);
         }
       });
   }
@@ -271,8 +420,9 @@ export class ResponsibilityTransferForm {
         this.employeeOptions = this.tempEmployees.map(e => ({
           label: e.NAME + ' (' + e.CODE + ')',
           value: e.CODE ,
-          department: e.DEPARTMENT
-        }));
+          department: e.DEPARTMENT,
+          name: e.NAME
+        })).sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
         this.filteredEmployeeToOptions = [...this.employeeOptions];
 
         const currentUserCode = this._utilityService.GetUserEmpId();
@@ -425,13 +575,44 @@ export class ResponsibilityTransferForm {
     this.filteredEmployeeToOptions = [...this.employeeOptions];
   }
 
-  submitWorkflowAction(actionType: string): void {
+  promptAction(action: string) {
     if (!this.selectedRow) {
       this._notificationToastService.createNotification('warning', 'Warning', 'Please select a row first.');
       return;
     }
 
-    if (!this.observation || this.observation.trim() === '') {
+    const modalRef = this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: this.selectedRow.Id || this.selectedRow.id,
+        entityType: 'Transfer',
+        mode: 'input',
+        action: action,
+      },
+      nzFooter: null,
+      nzWidth: 1000,
+    });
+
+    modalRef.afterClose.subscribe((result) => {
+      if (!result) return;
+      const actionStr = (action || '').toUpperCase();
+      const isApprove = actionStr === 'APPROVED' || actionStr === 'APPROVE';
+      if (!isApprove && (!result.observation || result.observation.trim() === '')) {
+        return;
+      }
+      this.submitWorkflowAction(action, result.observation || '');
+    });
+  }
+
+  submitWorkflowAction(actionType: string, observationText?: string): void {
+    if (!this.selectedRow) {
+      this._notificationToastService.createNotification('warning', 'Warning', 'Please select a row first.');
+      return;
+    }
+
+    const finalObservation = observationText || this.observation;
+    if (!finalObservation || finalObservation.trim() === '') {
       this._notificationToastService.createNotification('error', 'Error', 'Observation is required');
       return;
     }
@@ -439,7 +620,7 @@ export class ResponsibilityTransferForm {
     const payload = {
       transferId: this.selectedRow.id || this.selectedRow.Id,
       action: actionType,
-      observation: this.observation.trim(), 
+      observation: finalObservation.trim(), 
     };
 
     this._responsibilityTransfer.takeAction(payload).subscribe({
@@ -451,6 +632,7 @@ export class ResponsibilityTransferForm {
             res?.Message || `Request has been ${actionType.toLowerCase()}d.`,
           );
           this.GetAllResponsibilityTransferForms(); // Automatically refresh Grid
+          this.getMyResponsibilityTransfersApprovalsCount(); // Refresh tab badge
           this.observation = '';
           this.selectedRow = null;
         } else {
@@ -458,7 +640,7 @@ export class ResponsibilityTransferForm {
         }
       },
       error: (err: any) => {
-        this._notificationToastService.createNotification('error', 'Error', err?.Message || 'Action failed.');
+        this._notificationToastService.createNotification('error', 'Error', err?.error?.Message || err?.Message);
       },
     });
   }
@@ -466,10 +648,10 @@ export class ResponsibilityTransferForm {
   export() {}
 
   approveDocument(action: string = 'Approved') {
-    this.submitWorkflowAction('Approve');
+    this.promptAction('Approve');
   }
 
   disapprove(action: string = 'Rejected') {
-    this.submitWorkflowAction('Rejected');
+    this.promptAction('Rejected');
   }
 }

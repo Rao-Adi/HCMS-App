@@ -22,23 +22,25 @@ export class CabinetGridService {
   ) {}
 
   // 🔥 UNIVERSAL column builder
-  buildCabinetColumns(levels: CabinetLevel[]): GridColumn[] {
-    return levels.map((level, index) => {
-      const parentLevel = index > 0 ? levels[index - 1].level : null;
-
-      return {
-        field: `level${level.level}Id`,
-        headerName: level.title,
-        type: 'dropdown',
-        dropdownOptions: this.dropdownDataSources[level.level],
-        dropdownValueField: 'id',
-        dropdownDisplayField: 'text',
-        dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
-        filterKey: parentLevel ? 'parentId' : undefined,
-        minWidth: 200,
-        required: true,
-      } as GridColumn;
-    });
+  buildCabinetColumns(levels: CabinetLevel[]): GridColumn[] { 
+    return levels
+      .filter(level => level.isActive)
+      .map((level, index) => {
+        const parentLevel = index > 0 ? levels[index - 1].level : null;
+        
+        return {
+          field: `level${level.level}Id`,
+          headerName: level.title,
+          type: 'dropdown',
+          dropdownOptions: this.dropdownDataSources[level.level],
+          dropdownValueField: 'id',
+          dropdownDisplayField: 'text',
+          dependsOn: parentLevel ? `level${parentLevel}Id` : undefined,
+          filterKey: parentLevel ? 'parentId' : undefined,
+          minWidth: 230,
+          required: false,
+        } as GridColumn;
+      });
   }
 
   // 🔥 UNIVERSAL dropdown loader

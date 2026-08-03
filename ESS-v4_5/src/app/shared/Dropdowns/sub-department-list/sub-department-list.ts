@@ -48,7 +48,7 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
   disabled = false;
   isLoading = false;
 
-  constructor( 
+  constructor(
     private _subDepartmentServices: SubDepartmentService,
     private _masterCacheService: Mastercacheservice,
   ) {}
@@ -112,14 +112,7 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
         // Main data fetch – assuming your service has (or will have) this method
         // If it doesn't exist yet → implement getDepartmentsByDivisionCodeCached or similar
         getData$: () =>
-          this._subDepartmentServices.GetAllSubDepartments(
-            divisionCode, // filter parameter – adjust according to your real API
-            'ASC',
-            'Name',
-            true,
-            1,
-            1000, // ← or use a higher limit / pagination if needed
-          ),
+          this._subDepartmentServices.GetAllSubDepartments('', 'DESC', 'CreatedAt', true, 1, 1000),
 
         // Same mapping logic as in GetAllSubDepartment
         mapFn: (item) => ({
@@ -128,8 +121,15 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
           Name: item.Name || item.name,
           Department: item.Department || item.department || '',
           DepartmentCode: item.DepartmentCode || item.departmentCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedByName:
+            item.CreateByName ||
+            item.createByName ||
+            item.CreatedByName ||
+            item.createdByName ||
+            '',
           CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
           LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
           LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
@@ -140,17 +140,18 @@ export class SubDepartmentList implements ControlValueAccessor, OnChanges {
       })
       .subscribe({
         next: (mappedData) => {
-        
           // Filter only the departments that match the requested divisionCode
           // (in case the backend returns more than expected or cache is shared)
           const filtered = (mappedData ?? []).filter(
             (d) => d.DepartmentCode?.toUpperCase() === divisionCode.toUpperCase(),
           );
 
-          this.subDepartmentData = filtered.map((d) => ({
-            CODE: d.Code,
-            NAME: d.Name,
-          }));
+          this.subDepartmentData = filtered
+            .map((d) => ({
+              CODE: d.Code,
+              NAME: d.Name,
+            }))
+            .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
 
           this.totalSubDepartments = filtered.length; // optional – if you want to show count
           this.isLoading = false;

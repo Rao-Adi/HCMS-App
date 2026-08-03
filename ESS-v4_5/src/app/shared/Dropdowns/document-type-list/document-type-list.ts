@@ -1,4 +1,11 @@
-import { Component, Input, Output, EventEmitter, forwardRef, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  forwardRef,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -29,6 +36,7 @@ export class DocumentTypeList implements ControlValueAccessor {
   @Input() width = '200px';
   @Input() allowClear = true;
   @Input() showSearch = true;
+  @Input() filterByCode?: string;
   @Output() valueChange = new EventEmitter<any>();
 
   DocTypeData: SelectList[] = [];
@@ -39,7 +47,7 @@ export class DocumentTypeList implements ControlValueAccessor {
   constructor(
     private _documentTypeService: DocumentTypeService,
     private _masterCacheService: Mastercacheservice,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   private onChange = (_: any) => {};
@@ -82,11 +90,14 @@ export class DocumentTypeList implements ControlValueAccessor {
           (this._documentTypeService as any).getDocumentTypeCount
             ? (this._documentTypeService as any).getDocumentTypeCount()
             : of(1000),
-        getData$: () => this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+        getData$: () =>
+          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (d: any) => ({
           Id: d.Id || d.id,
           Code: d.Code || d.code,
           Name: d.Name || d.name,
+          IsActive: d.isActive || d.IsActive || false,
+          IsDeleted: d.isDeleted || d.IsDeleted || false,
           CreatedBy: d.CreatedBy || d.createdBy || '',
           CreatedByName:
             d.CreateByName || d.createByName || d.CreatedByName || d.createdByName || '',
@@ -99,10 +110,17 @@ export class DocumentTypeList implements ControlValueAccessor {
         }),
       })
       .subscribe((data) => {
-        this.DocTypeData = (data ?? []).map((d: any) => ({
-          CODE: d.Code || d.code || d.CODE,
-          NAME: d.Name || d.name || d.NAME,
-        }));
+        this.DocTypeData = (data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code || d.code || d.CODE,
+            NAME: d.Name || d.name || d.NAME,
+          }))
+          .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
+        if (this.filterByCode) {
+          this.DocTypeData = this.DocTypeData.filter(
+            (d) => (d.CODE ?? '').toUpperCase() === this.filterByCode!.toUpperCase()
+          );
+        }
         this.cdr.markForCheck();
       });
   };

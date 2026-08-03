@@ -13,6 +13,7 @@ import { SubDepartmentList } from '../sub-department-list/sub-department-list';
 interface CabinetLevel {
   level: number;
   title: string;
+  isActive: boolean;
 }
 
 @Component({
@@ -41,20 +42,34 @@ export class CabinetStructureList {
   @Output() hierarchyChange = new EventEmitter<CabinetSelection[]>();
 
   selectedValues: Record<number, any> = {};
-  hierarchyLevels$!: Observable<CabinetLevel[]>;
+  levels: CabinetLevel[] = [];
   levelMap: Record<number, string> = {};
 
   constructor(private _cabinetHirarchyService: CabinetHierarchyService) {}
 
   ngOnInit() {
-    this.hierarchyLevels$ = this._cabinetHirarchyService.loadDropdownHierarchy().pipe(
-      tap((levels) => {
+    this._cabinetHirarchyService.loadDropdownHierarchy().subscribe(
+      (allLevels) => {
+        this.levels = allLevels.filter(l => l.isActive);
         this.levelMap = {};
-        levels.forEach((l) => {
+        this.levels.forEach((l) => {
           this.levelMap[l.level] = l.title;
         });
-      }),
+      }
     );
+  }
+
+  getColClass(): string {
+    const count = this.levels.length;
+    if (count <= 1) {
+      return 'col-lg-12 col-md-12 col-sm-12 mb-10';
+    } else if (count === 2) {
+      return 'col-lg-6 col-md-6 col-sm-6 mb-10';
+    } else if (count === 3) {
+      return 'col-lg-4 col-md-4 col-sm-4 mb-10';
+    } else {
+      return 'col-lg-3 col-md-3 col-sm-3 mb-10';
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {

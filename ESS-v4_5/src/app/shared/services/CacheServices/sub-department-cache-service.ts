@@ -25,10 +25,13 @@ export class SubDepartmentCacheService {
         Id: item.Id || item.id,
         Code: item.Code || item.code,
         Name: item.Name || item.name,
+        IsActive: item.isActive || item.IsActive || false,
+        IsDeleted: item.isDeleted || item.IsDeleted || false,
         DepartmentCode: item.DepartmentCode || item.departmentCode,
         Department: item.Department || item.department,
         CreatedBy: item.CreatedBy ?? item.createdBy ?? '',
-        CreatedByName: item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
+        CreatedByName:
+          item.CreateByName ?? item.createByName ?? item.CreatedByName ?? item.createdByName ?? '',
         CreatedAt:
           new CustomDateFormatPipe().transform(item.CreatedAt ?? item.createdAt ?? '') ?? '',
         LastModifiedBy: item.LastModifiedBy ?? item.lastModifiedBy ?? '',

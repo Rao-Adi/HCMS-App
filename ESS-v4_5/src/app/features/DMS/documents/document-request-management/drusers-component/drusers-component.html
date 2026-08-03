@@ -1,8 +1,20 @@
+<div class="row mb-10">
+  <div class="col-12">
+    <div class="alert alert-info d-flex align-items-center mb-0 shadow-sm" style="font-size: 14px; border-left: 4px solid #0dcaf0;">
+      <i class="bi bi-info-circle-fill me-3 fs-5 text-info"></i>
+      <div>
+        <strong>Instructions:</strong> Tag specific individuals to the Document, assigned for mandatory training or access.
+      </div>
+    </div>
+  </div>
+</div>
+
 <app-editable-ag-grid-wrapper
   [showSearchBar]="false"
   [gridStyle]="{ width: '100%', height: '250px' }"
   class="ag-theme-alpine"
   [gridId]="'employee-planning-grid'"
+  [autoSizeColumns]="true"
   [config]="gridConfig"
   [rowData]="manualUserData"
   [divisionList]="divisions"
@@ -21,7 +33,7 @@
 </app-editable-ag-grid-wrapper>
 
 <!-- SELECTED USERS TABLE -->
-<div class="mt-4" *ngIf="selectedEmployeeList && selectedEmployeeList.length > 0">
+<div class="" *ngIf="selectedEmployeeList && selectedEmployeeList.length > 0">
   <h5 class="mb-3 PnlHeader" style="font-size: 15px; font-weight: 600">
     Selected Employees (Drafted)
   </h5>

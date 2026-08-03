@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.alert-config-container {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+  padding: 32px; 
+  margin: 0 auto;
+  color: #1e293b;
+}
+
+/* Header UI Elements */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.header-bar h2 { margin: 0; font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; }
+.subtitle { color: #64748b; margin: 4px 0 0 0; font-size: 14px; }
+
+.action-buttons { display: flex; gap: 12px; }
+.btn-cancel { background: #ffffff; border: 1px solid #cbd5e1; padding: 10px 10px; border-radius: 8px; font-weight: 400; color: #334155; cursor: pointer; transition: all 0.2s; }
+.btn-cancel:hover { background: #f1f5f9; }
+.btn-save { background: #4f46e5; color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 400; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); transition: all 0.2s; }
+.btn-save:hover { background: #4338ca; }
+
+/* Structural Content Panels */
+.section-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.section-title { font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+.step-num { background: #e0e7ff; color: #4f46e5; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.section-desc { color: #64748b; font-size: 13.5px; margin-top: 0; margin-bottom: 20px; }
+
+/* Form Field Sizing & Constraints */
+.form-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+.form-group label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0f172a;
+  background-color: #ffffff;
+  transition: all 0.2s;
+}
+.form-control:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+.text-area-editor { resize: vertical; min-height: 120px; font-family: inherit; }
+
+/* Layout Grid Mechanics */
+.grid-4-col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.grid-2-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+
+/* Width Boundary Helpers to prevent horizontal stretching */
+.max-w-xs { max-width: 160px; }
+.max-w-sm { max-width: 320px; }
+.max-w-md { max-width: 480px; }
+.max-w-2xl { max-width: 640px; }
+
+/* Inner Processing Panels */
+.sub-panel { border: 1px solid #f1f5f9; background: #f8fafc; border-radius: 10px; padding: 20px; }
+.panel-header { font-size: 12px; font-weight: 700; margin-top: 0; margin-bottom: 20px; letter-spacing: 0.5px; }
+.text-orange { color: #ea580c; }
+.text-blue { color: #2563eb; }
+
+.inline-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: #334155; line-height: 2; }
+.sm-select { width: auto; min-width: 130px; padding: 6px 12px; height: 36px; }
+.xs-input { width: 56px; text-align: center; padding: 6px; height: 36px; }
+
+/* Custom Micro-Tile Checkboxes for Recipients */
+.panel-subheading { font-size: 13px; font-weight: 600; color: #475569; margin-top: 0; margin-bottom: 12px; }
+.flex-row { display: flex; }
+.radio-container { cursor: pointer; position: relative; }
+.radio-container input { position: absolute; opacity: 0; }
+.radio-tile { display: block; padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; font-size: 13.5px; color: #334155; transition: all 0.2s; font-weight: 500; }
+.radio-container input:checked + .radio-tile { background: #eeebff; border-color: #4f46e5; color: #4f46e5; }
+
+/* Token Injection Architecture */
+.token-container { background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px dashed #e2e8f0; }
+.token-label { font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 10px; }
+.token-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.token-chip { background: #ffffff; border: 1px solid #cbd5e1; color: #4f46e5; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-family: monospace; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.token-chip:hover { background: #e0e7ff; border-color: #4f46e5; }
+.token-help-text { font-size: 12px; color: #64748b; margin: 12px 0 0 0; }
+
+/* Container framework matching Figma card specifications */
+.grid-card-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  margin: 16px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Core Data Table Elements */
+.dms-responsive-grid {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.dms-responsive-grid th {
+  background-color: #fafafa;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #edf2f7;
+  text-transform: uppercase;
+}
+
+.dms-responsive-grid td {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+/* Specific Column Sizing logic controls */
+.col-status { width: 80px; }
+.col-name { min-width: 240px; color: #0f172a; }
+.col-schedule { min-width: 220px; }
+.col-author { color: #475569; }
+.col-date { color: #64748b; white-space: nowrap; }
+.col-actions { width: 100px; text-align: center; }
+
+/* Custom Helper Utilities */
+.text-bold { font-weight: 500; }
+.schedule-main { font-weight: 500; color: #1e293b; margin-bottom: 2px; }
+.schedule-sub { color: #64748b; font-size: 13px; }
+
+/* Dynamic Status Toggle Switch Custom Build CSS */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-round {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: .25s ease-in-out;
+  border-radius: 24px;
+}
+
+.slider-round:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .25s ease-in-out;
+  border-radius: 50%;
+}
+
+input:checked + .slider-round {
+  background-color: #4f46e5; /* Primary purple color context shown in Figma */
+}
+
+input:checked + .slider-round:before {
+  transform: translateX(20px);
+}
+
+/* Action Utility Button Group Styles */
+.action-btn-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.action-icon-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.edit-btn {
+  color: #6366f1; /* Indigo color theme link representation */
+}
+.edit-btn:hover {
+  color: #4338ca;
+}
+
+.delete-btn {
+  color: #ef4444; /* Light warning red shade icon */
+}
+.delete-btn:hover {
+  color: #b91c1c;
+}

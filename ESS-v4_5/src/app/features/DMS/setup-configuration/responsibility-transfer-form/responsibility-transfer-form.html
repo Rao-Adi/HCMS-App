@@ -8,228 +8,273 @@
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Request' }"
-                (click)="onTabChange('Request')"
+                [ngClass]="{ 'active-tab': selectedTab === 'Requests' }"
+                (click)="onTabChange('Requests')"
               >
-                Request
+                Approval Rights
               </button>
               <button
                 class="tab-button"
                 tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Approvals' }"
-                (click)="onTabChange('Approvals')"
+                [ngClass]="{ 'active-tab': selectedTab === 'Requests pending My Approval' }"
+                (click)="onTabChange('Requests pending My Approval')"
               >
-                Approvals
+                Requests pending My Approval
+                <span
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1"
+                  *ngIf="responsibilityTransferApprovalCounts.pendingCount > 0"
+                  >{{ responsibilityTransferApprovalCounts.pendingCount }}</span
+                >
+              </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'My Submitted Requests' }"
+                (click)="onTabChange('My Submitted Requests')"
+              >
+                My Submitted Requests
+                <span
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1"
+                  *ngIf="mySubmittedRequestsCount > 0"
+                  >{{ mySubmittedRequestsCount }}</span
+                >
               </button>
             </div>
-            <div class="row row-space" *ngIf="selectedTab === 'Request'">
-              <div class="row row-space">
-                <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                  <div class="status-box-leftColmd6-standard">
-                    <div class="row">
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label
-                            >{{ 'labels.Employee (From)' | safeTranslate }}
-                            <span class="text-danger ml-1">*</span></label
-                          >
+            <div class="row row-space" *ngIf="selectedTab === 'Requests'">
+              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="status-box-leftColmd6-standard">
+                  <div class="row mb-10 mb-2">
+                    <div class="col-12">
+                      <div
+                        class="alert alert-info d-flex align-items-center mb-0 shadow-sm"
+                        style="font-size: 14px; border-left: 4px solid #0dcaf0"
+                      >
+                        <i class="bi bi-info-circle-fill me-3 fs-5 text-info"></i>
+                        <div>
+                          <strong>Instructions:</strong> Initiate the transfer of responsibilities
+                          related to the Document Management System (DMS). This includes
+                          transferring document approvals and access rights from one employee to
+                          another. A formal request will be generated and routed to the appropriate
+                          approver for authorization.
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label
+                          >{{ 'labels.Employee (From)' | safeTranslate }}
+                          <span class="text-danger ml-1">*</span></label
+                        >
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 300px"
+                          [nzPlaceHolder]="'Select Employee(From)'"
+                          [(ngModel)]="selectedEmployeeFrom"
+                          (ngModelChange)="onEmployeeFromChange($event)"
+                          nzAllowClear
+                          nzShowSearch
+                          nzVirtualHeight="300px"
+                          nzVirtualItemSize="32"
+                          [nzOptions]="employeeOptions"
+                        >
+                        </nz-select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label
+                          >{{ 'labels.Employee (To)' | safeTranslate }}
+                          <span class="text-danger ml-1">*</span></label
+                        >
+                      </div>
+                      <div class="Divtxtemployeeschright" style="width: 250px">
                         <div>
                           <nz-select
                             style="width: 300px"
-                            [nzPlaceHolder]="'Select Employee(From)'"
-                            [(ngModel)]="selectedEmployeeFrom"
-                            (ngModelChange)="onEmployeeFromChange($event)"
+                            [nzPlaceHolder]="'Select Employee(To)'"
+                            [(ngModel)]="selectedEmployeeTo"
                             nzAllowClear
                             nzShowSearch
                             nzVirtualHeight="300px"
                             nzVirtualItemSize="32"
-                            [nzOptions]="employeeOptions"
+                            [nzOptions]="filteredEmployeeToOptions"
                           >
-                          </nz-select>
-                        </div>
-                      </div>
-
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label
-                            >{{ 'labels.Employee (To)' | safeTranslate }}
-                            <span class="text-danger ml-1">*</span></label
-                          >
-                        </div>
-                        <div class="Divtxtemployeeschright" style="width: 250px">
-                          <div>
-                            <nz-select
-                              style="width: 300px"
-                              [nzPlaceHolder]="'Select Employee(To)'"
-                              [(ngModel)]="selectedEmployeeTo"
-                              nzAllowClear
-                              nzShowSearch
-                              nzVirtualHeight="300px"
-                              nzVirtualItemSize="32"
-                              [nzOptions]="filteredEmployeeToOptions"
-                            >
-                            </nz-select>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label
-                            >{{ 'labels.Reason For Transfer' | safeTranslate
-                            }}<span class="text-danger ml-1">*</span></label
-                          >
-                        </div>
-                        <div>
-                          <nz-select
-                            style="width: 300px"
-                            [nzPlaceHolder]="'Select Reason For Transfer'"
-                            [(ngModel)]="selectedReasonForTransfer"
-                            nzAllowClear
-                            nzShowSearch
-                          >
-                            <nz-option
-                              *ngFor="let dep of reasonForTransfer"
-                              [nzValue]="dep.CODE"
-                              [nzLabel]="dep.NAME"
-                            >
-                            </nz-option>
                           </nz-select>
                         </div>
                       </div>
                     </div>
-                    <div class="row pt-4">
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <span class="d-flex"
-                          >Effective Date (From)<span class="text-danger ml-1">*</span></span
-                        >
-                        <nz-date-picker
-                          [nzPlaceHolder]="'Select Date'"
-                          [(ngModel)]="selectedEffectiveDateFrom"
-                          style="width: 50%"
-                          [nzFormat]="'dd/MMM/yyyy'"
-                        >
-                        </nz-date-picker>
-                      </div>
 
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                        <span class="d-flex"
-                          >Effective Date (To)<span class="text-danger ml-1">*</span></span
-                        >
-                        <nz-date-picker
-                          [nzPlaceHolder]="'Select Date'"
-                          [(ngModel)]="selectedEffectiveDateTo"
-                          [nzDisabled]="isPermanentTransfer"
-                          style="width: 50%"
-                          [nzFormat]="'dd/MMM/yyyy'"
-                        >
-                        </nz-date-picker>
-                      </div>
-
-                      <div class="col-lg-3 col-md-3 col-sm-6 mb-10 pt-4">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
                         <label
-                          nz-checkbox
-                          [(ngModel)]="isPermanentTransfer"
-                          (ngModelChange)="onPermanentTransferChange($event)"
+                          >{{ 'labels.Reason For Transfer' | safeTranslate
+                          }}<span class="text-danger ml-1">*</span></label
                         >
-                          Permanent Transfer
+                      </div>
+                      <div>
+                        <nz-select
+                          style="width: 300px"
+                          [nzPlaceHolder]="'Select Reason For Transfer'"
+                          [(ngModel)]="selectedReasonForTransfer"
+                          nzAllowClear
+                          nzShowSearch
+                        >
+                          <nz-option
+                            *ngFor="let dep of reasonForTransfer"
+                            [nzValue]="dep.CODE"
+                            [nzLabel]="dep.NAME"
+                          >
+                          </nz-option>
+                        </nz-select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row pt-4">
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label
+                          >{{ 'Effective Date (From)' | safeTranslate }}
+                          <span class="text-danger ml-1">*</span>
+                          <i
+                            class="bi bi-info-circle text-info ml-2"
+                            title="All the approvals and access from the selected employee will be transferred on the selected data."
+                          ></i>
                         </label>
                       </div>
+                      <nz-date-picker
+                        [nzPlaceHolder]="'Select Date'"
+                        [(ngModel)]="selectedEffectiveDateFrom"
+                        style="width: 50%"
+                        [nzFormat]="'dd/MMM/yyyy'"
+                      >
+                      </nz-date-picker>
                     </div>
-                    <div class="row pt-4">
-                      <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                        <div class="PnlHeading">
-                          <label
-                            >Upload Document (DOCX/PDF/PNG/JPG)<span class="text-danger ml-1"
-                              >*</span
-                            ></label
-                          >
-                        </div>
-                        <input
-                          type="file"
-                          #fileInput
-                          class="form-control input-sm mt-2"
-                          (change)="onFileSelected($event)"
-                          accept=".pdf,.doc,.docx,.png,.jpg"
-                          style="width: 350px"
-                        />
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label
+                          >{{ 'Effective Date (To)' | safeTranslate }}
+                          <span class="text-danger ml-1">*</span>
+                        </label>
                       </div>
+                      <nz-date-picker
+                        [nzPlaceHolder]="'Select Date'"
+                        [(ngModel)]="selectedEffectiveDateTo"
+                        [nzDisabled]="isPermanentTransfer"
+                        style="width: 50%"
+                        [nzFormat]="'dd/MMM/yyyy'"
+                      >
+                      </nz-date-picker>
                     </div>
-                    <div class="row pt-4">
-                      <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
-                        <span class="d-flex">Remarks <span class="text-danger ml-1">*</span></span>
-                        <textarea
-                          style="width: 50%"
-                          rows="4"
-                          nz-input
-                          [(ngModel)]="remarks"
-                        ></textarea>
-                      </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10 pt-4">
+                      <label
+                        nz-checkbox
+                        [(ngModel)]="isPermanentTransfer"
+                        (ngModelChange)="onPermanentTransferChange($event)"
+                      >
+                        Permanent Transfer
+                      </label>
                     </div>
                   </div>
-                </div>
-              </div>
-              <br />
-              <div class="row mt-4 btn-stick">
-                <div
-                  class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
-                >
-                  <div class="col-sm-1">
-                    <button
-                      type="button"
-                      tabindex="0"
-                      class="btn btn-sm btn-outline-secondary shadow-sm"
-                      (click)="submitRequest($event)"
-                    >
-                      <i class="bi bi-file-earmark-text me-2"></i>
-                      Submit
-                    </button>
+                  <div class="row pt-4">
+                    <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label
+                          >Upload Document (DOCX/PDF/PNG/JPG)<span class="text-danger ml-1"
+                            >*</span
+                          ></label
+                        >
+                      </div>
+                      <input
+                        type="file"
+                        #fileInput
+                        class="form-control input-sm mt-2"
+                        (change)="onFileSelected($event)"
+                        accept=".pdf,.doc,.docx,.png,.jpg"
+                        style="width: 350px"
+                      />
+                    </div>
                   </div>
-                  <div class="col-sm-1">
-                    <button
-                      type="button"
-                      tabindex="0"
-                      class="btn btn-sm btn-primary shadow-sm"
-                      (click)="cancel()"
+                  <div class="row pt-4">
+                    <div class="col-lg-12 col-md-12 col-sm-6 mb-10">
+                      <div class="PnlHeading">
+                        <label
+                          >{{ 'Remarks' | safeTranslate }}
+                          <span class="text-danger ml-1">*</span>
+                        </label>
+                      </div>
+                      <textarea
+                        style="width: 50%; resize: both;"
+                        rows="4"
+                        nz-input
+                        [(ngModel)]="remarks"
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4 btn-stick">
+                    <div
+                      class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4"
                     >
-                      <i class="bi bi-cancel me-2"></i>
-                      Cancel
-                    </button>
+                      <div class="col-sm-1">
+                        <button
+                          type="button"
+                          tabindex="0"
+                          class="btn btn-primary shadow-sm"
+                          style="min-width: 120px; height: 35px"
+                          (click)="submitRequest($event)"
+                        >
+                          <i class="bi bi-file-earmark-text me-2"></i>
+                          Submit
+                        </button>
+                      </div>
+                      <div class="col-sm-1">
+                        <button
+                          type="button"
+                          tabindex="0"
+                          class="btn btn-secondary shadow-sm"
+                          style="min-width: 120px; height: 35px"
+                          (click)="cancel()"
+                        >
+                          <i class="bi bi-x-circle me-2"></i>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="row row-space" *ngIf="selectedTab === 'Approvals'">
-              <div class="row">
-                <div class="col-lg-12 col-md-12 col-sm-12 mb-4">
-                  <div class="PnlHeading">
-                    <label>{{ 'labels.Pending Approvals On My End' | safeTranslate }} </label>
-                  </div>
-                </div>
-              </div>
+            <div class="row row-space" *ngIf="selectedTab === 'Requests pending My Approval'">
               <div class="row mb-4">
-                <div class="col-lg-3 col-md-3 col-sm-6">
-                  <div class="PnlHeading">
-                    <label>Status</label>
+                <div class="Master-box mb-4">
+                  <div class="col-lg-3 col-md-3 col-sm-6">
+                    <div class="PnlHeading">
+                      <label>Status</label>
+                    </div>
+                    <nz-select
+                      style="width: 100%"
+                      [(ngModel)]="selectedStatus"
+                      (ngModelChange)="selectStatus($event)"
+                      nzPlaceHolder="Select Status"
+                    >
+                      <nz-option
+                        *ngFor="let s of statues"
+                        [nzValue]="s.id"
+                        [nzLabel]="s.text"
+                      ></nz-option>
+                    </nz-select>
                   </div>
-                  <nz-select
-                    style="width: 100%"
-                    [(ngModel)]="selectedStatus"
-                    (ngModelChange)="selectStatus($event)"
-                    nzPlaceHolder="Select Status"
-                  >
-                    <nz-option
-                      *ngFor="let s of statues"
-                      [nzValue]="s.id"
-                      [nzLabel]="s.text"
-                    ></nz-option>
-                  </nz-select>
                 </div>
               </div>
               <div class="row">
-                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-4">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                   <app-ag-grid-wrapper
                     [gridStyle]="{ width: '100%', height: '350px' }"
                     [columnDefs]="pendingRequestApprovalColumnDefs"
@@ -237,6 +282,7 @@
                     [rowData]="pendingApprovalData"
                     [isSelectionRequired]="selectedStatus === '1'"
                     [showDisplayOption]="true"
+                    [autoSizeColumns]="true"
                     [totalRows]="totalPendingApprovals"
                     [pageSize]="selectedPageSize"
                     gridId="myRequestPendingApprovalGrid"
@@ -268,6 +314,50 @@
                         <i class="bi bi-reply"></i>
                       </button> -->
                     </div>
+                  </app-ag-grid-wrapper>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-space" *ngIf="selectedTab === 'My Submitted Requests'">
+              <div class="row mb-4">
+                <div class="Master-box mb-4">
+                  <div class="col-lg-3 col-md-3 col-sm-6">
+                    <div class="PnlHeading">
+                      <label>Status</label>
+                    </div>
+                    <nz-select
+                      style="width: 100%"
+                      [(ngModel)]="selectedStatus"
+                      (ngModelChange)="selectStatus($event)"
+                      nzPlaceHolder="Select Status"
+                    >
+                      <nz-option
+                        *ngFor="let s of statues"
+                        [nzValue]="s.id"
+                        [nzLabel]="s.text"
+                      ></nz-option>
+                    </nz-select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                  <app-ag-grid-wrapper
+                    [gridStyle]="{ width: '100%', height: '350px' }"
+                    [columnDefs]="submittedRequestColumnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [rowData]="submittedApprovalData"
+                    [isSelectionRequired]="false"
+                    [showDisplayOption]="true"
+                    [autoSizeColumns]="true"
+                    [totalRows]="totalSubmittedApprovals"
+                    [pageSize]="selectedPageSize"
+                    gridId="mySubmittedRequestsGrid"
+                    (pageSizeChange)="onPageSizeChanged($event)"
+                    (serverQuery)="GetAllSubmittedResponsibilityTransferForms($event)"
+                    (selectionChange)="onSelectionChange($event)"
+                  >
                   </app-ag-grid-wrapper>
                 </div>
               </div>

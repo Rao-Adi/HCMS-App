@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
-import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
+import { map, Observable, ReplaySubject, Subject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, DocumentRequest } from '../interfaces/interfaces';
 import { AppConfigService } from '@app/core/services/app-config';
 
@@ -10,6 +10,7 @@ import { AppConfigService } from '@app/core/services/app-config';
 })
 export class DocumentRequestService {
   private _cabietStructureConfig = new ReplaySubject<DocumentRequest[]>(1);
+  public refreshCounts$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
@@ -44,6 +45,26 @@ export class DocumentRequestService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetMyRequestCounts(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-request-counts`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getDraftDocumentCount(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-draft-documents-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getMyDocumentRequestForApprovalCount(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-document-requests-for-approval-count`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetRequestCreatedByUserListAsync(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-request-created-by-user-list`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   getDocumentRequestById(Id: string): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-request-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
@@ -69,6 +90,14 @@ export class DocumentRequestService {
     );
   }
 
+  exportMyPendingDocumentRequest(payload: any): Observable<Blob> {
+    return this.http.post(
+      `${this.apiUrl}/DMSDocumentRequest/export-my-pending-document-request`,
+      payload,
+      { responseType: 'blob' },
+    );
+  }
+
   getMyDraftDocumentRequest(payload: any): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-draft-request`;
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
@@ -82,16 +111,13 @@ export class DocumentRequestService {
   }
 
   GetEffectiveDocumentDetailsForRevisionByIdAsync(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-details-by-id/${Id}`;
-    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });  
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-details-by-id`;
+    return this.http.get<GenericResponse<any>>(uri, {
+      headers: this.getHeaders(),
+      params: new HttpParams().set('documentId', Id),
+    });
   }
-  
-   GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocumentRequest/get-effective-documents-for-revision`,
-      payload,
-    );
-  }
+ 
 
   UpdateDraftDocumentRequest(payload: any) {
     return this.http.post<ApiResponse<any>>(
@@ -170,5 +196,27 @@ export class DocumentRequestService {
     return this.http.delete<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/delete-document-request/${code}`,
     );
+  }
+
+  SubmitRivisionDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocumentRequest/submit-revision-document-request`,
+      payload,
+    );
+  }
+
+  CreateAndSubmitRevisionDocumentRequest(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocumentRequest/create-and-submit-revision-document-request`,
+      payload,
+    );
+  }
+
+  GetDocumentRevisionHistory(documentId: number | string): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-document-revision-history`;
+    return this.http.get<GenericResponse<any>>(uri, {
+      headers: this.getHeaders(),
+      params: new HttpParams().set('documentId', documentId),
+    });
   }
 }

@@ -123,6 +123,7 @@
   overflow: hidden;
   opacity: 0;
   transition: all 0.25s ease;
+  width: auto;
 }
 
 .display-options-panel.open {

@@ -565,6 +565,21 @@ ul {
   color: #fff;
 }
 
+/* Simple pending indicator on the root folder icon — no number, just a dot. */
+.menu-count-dot {
+  background-color: #dc3545;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.menu-item.activepage > .menu-link .menu-count-dot {
+  background: #fff;
+}
+
 .submenu-indicator {
   margin-left: auto;
   font-size: 16px;
@@ -694,6 +709,17 @@ ul {
   height: 16px;
   line-height: 16px;
   font-size: 10px;
+  border: 1px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.modern-menu:not(.expanded) .root-item .menu-count-dot {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  margin-left: 0;
+  width: 8px;
+  height: 8px;
   border: 1px solid #fff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

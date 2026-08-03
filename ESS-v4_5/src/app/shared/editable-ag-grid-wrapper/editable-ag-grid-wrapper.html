@@ -1,12 +1,17 @@
 <div class="row mb-2" *ngIf="showSearchBar">
   <div class="col-sm-3">
     <div class="example-header">
-      <span>Search</span>
+      <div class="PnlHeading">
+        <label>{{ 'labels.Search' | safeTranslate }}</label>
+      </div>
       <input
         nz-input
+        style="border-radius: 5px"
         placeholder="Search"
-        [(ngModel)]="value"
-        (input)="onFilterTextBoxChanged()"
+        [value]="value()"
+        (input)="onFilterTextBoxChanged($event)"
+        [value]="value()"
+        (input)="onFilterTextBoxChanged($event)"
       />
     </div>
   </div>
@@ -19,6 +24,7 @@
   [rowData]="rowData"
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
+  [localeText]="{ noRowsToShow: 'No rows to show' }"
   [rowHeight]="config.rowHeight"
   [headerHeight]="config.headerHeight"
   [pagination]="config.enablePagination"
@@ -35,6 +41,8 @@
   (selectionChanged)="onSelectionChanged($event)"
   (filterChanged)="refreshGrid()"
   (onCellValueChanged)="onCellValueChanged($event)"
+  (firstDataRendered)="onFirstDataRendered($event)"
+  (rowDataUpdated)="onRowDataUpdated($event)"
 >
 </ag-grid-angular>
 

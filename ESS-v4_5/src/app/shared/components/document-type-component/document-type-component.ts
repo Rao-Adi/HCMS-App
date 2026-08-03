@@ -7,7 +7,7 @@ import {
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { MASTER_CACHE_KEYS } from '@app/shared/interfaces/const';
-import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice'; 
+import { Mastercacheservice } from '@app/shared/localStorages/mastercacheservice';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
 import { ColDef } from 'ag-grid-community';
@@ -113,6 +113,13 @@ export class DocumentTypeComponent {
         required: false,
         minWidth: 200,
       },
+      // {
+      //   field: 'IsActive',
+      //   headerName: 'Enable/Disable',
+      //   type: 'switch',
+      //   required: false,
+      //   minWidth: 150,
+      // },
       {
         field: 'LastModifiedByName',
         headerName: 'Last Saved By',
@@ -120,6 +127,7 @@ export class DocumentTypeComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
       {
         field: 'LastModifiedAt',
@@ -128,7 +136,26 @@ export class DocumentTypeComponent {
         minWidth: 150,
         pinned: 'left',
         required: false,
+        cellClass: 'audit-cell',
       },
+      // {
+      //   field: 'LastModifiedByName',
+      //   headerName: 'Last Action Performed By',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
+      // {
+      //   field: 'LastModifiedAt',
+      //   headerName: 'Last Action Performed On',
+      //   type: 'readonly',
+      //   minWidth: 150,
+      //   pinned: 'left',
+      //   required: false,
+      //   cellClass: 'audit-cell',
+      // },
     ];
   }
 
@@ -138,17 +165,19 @@ export class DocumentTypeComponent {
         cacheKey: MASTER_CACHE_KEYS.DOCUMENT_TYPES,
         getCount$: () => this._documentTypeService.getDocumentTypeCount(),
         getData$: () =>
-          this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 10000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Description: item.description || item.Description,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -169,17 +198,19 @@ export class DocumentTypeComponent {
 
         // ✅ RETURN RAW API RESPONSE
         getData$: () =>
-          this._documentTypeService.GetAllDocumentTypes('', 'ASC', 'Name', true, 1, 1000),
+          this._documentTypeService.GetAllDocumentTypes('', 'DESC', 'CreatedAt', true, 1, 1000),
         mapFn: (item) => ({
           Id: item.Id || item.id,
           Code: item.code || item.Code,
           Name: item.name || item.Name,
           Description: item.description || item.Description,
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName : item.CreatedByName || item.createdByName || '',
+          CreatedByName: item.CreatedByName || item.createdByName || '',
           CreatedAt: new CustomDateFormatPipe().transform(item.createdAt || item.CreatedAt || ''),
           LastModifiedBy: item.lastModifiedBy || item.LastModifiedBy || '',
-          LastModifiedByName : item.LastModifiedByName || item.lastModifiedByName || '',
+          LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
           LastModifiedAt: new CustomDateFormatPipe().transform(
             item.lastModifiedAt || item.LastModifiedAt || '',
           ),
@@ -228,7 +259,7 @@ export class DocumentTypeComponent {
         this.loadDocumentTypes();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Create Document Type failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -240,7 +271,7 @@ export class DocumentTypeComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Type', message);
       },
     });
   }
@@ -251,7 +282,7 @@ export class DocumentTypeComponent {
       Code: event.rowData.Code,
       Name: event.rowData.Name,
       Description: event.rowData.Description,
-      IsActive: true,
+      IsActive: event.rowData.IsActive,
       IsDeleted: false,
     };
     this._documentTypeService.update(payLoad).subscribe({
@@ -265,7 +296,7 @@ export class DocumentTypeComponent {
         this.loadDocumentTypes();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Update Document Type failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -277,7 +308,7 @@ export class DocumentTypeComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Type', message);
       },
     });
   }
@@ -296,7 +327,7 @@ export class DocumentTypeComponent {
         this.loadDocumentTypes();
       },
       error: (err) => {
-        console.error('Create Document Attribute failed:', err);
+        console.error('Delete Document Type failed:', err);
 
         // Default fallback message
         let message = 'Something went wrong. Please try again.';
@@ -308,7 +339,7 @@ export class DocumentTypeComponent {
           message = err.error;
         }
 
-        this._notificationToastService.createNotification('error', 'Document Attribute', message);
+        this._notificationToastService.createNotification('error', 'Document Type', message);
       },
     });
   }

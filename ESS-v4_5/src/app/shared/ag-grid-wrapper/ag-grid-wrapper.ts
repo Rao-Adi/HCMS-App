@@ -6,10 +6,12 @@ import {
   input,
   Input,
   OnInit,
+  OnChanges,
   Output,
   signal,
   SimpleChanges,
   NgZone,
+  ElementRef,
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -29,7 +31,10 @@ import {
 import { GridConfig } from '../editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { FormsModule } from '@angular/forms';
-import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
+import { SettingOutline } from '@ant-design/icons-angular/icons';
+
+import { SpinnerComponent } from '../spinner/spinner.component';
 
 interface ColumnToggle {
   field: string;
@@ -47,14 +52,18 @@ interface ColumnToggle {
     NzAlertModule,
     NzSpinModule,
     NzSwitchModule,
-    NzIconModule    
+    NzIconModule,
+    SpinnerComponent
   ],
   templateUrl: './ag-grid-wrapper.html',
   styleUrl: './ag-grid-wrapper.css',
 })
-export class AgGridWrapper implements OnInit {
+export class AgGridWrapper implements OnInit, OnChanges {
   @Input() columnDefs: ColDef[] = [];
+  @Input() autoSizeColumns: boolean = true;
   @Input() rowData: any[] = [];
+  @Input() loading: boolean | null = null;
+  isLoading = false;
   @Input() pageSize = 10;
   @Input() defaultColDef!: ColDef;
   @Input() totalRows = 0;
@@ -96,6 +105,7 @@ export class AgGridWrapper implements OnInit {
     sortModel: any;
     filterModel: any;
     searchText?: string;
+    searchTerm?: string;
   }>();
 
   @Output() gridReady = new EventEmitter<GridReadyEvent>();
@@ -117,9 +127,20 @@ export class AgGridWrapper implements OnInit {
   constructor(
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-  ) {}
+    private el: ElementRef,
+    private iconService: NzIconService,
+  ) {
+    this.iconService.addIcon(SettingOutline);
+    this.iconService.addIcon({ ...SettingOutline, name: 'setting-o' });
+  }
 
   ngOnInit(): void {
+    if (this.loading !== null) {
+      this.isLoading = this.loading;
+    } else {
+      this.isLoading = true;
+    }
+
     this.isServerSide = this.serverQuery.observed;
     this.buildFinalColumnDefs();
   }
@@ -134,6 +155,78 @@ export class AgGridWrapper implements OnInit {
 
     // ✅ Append parent columns AS-IS
     cols.push(...this.columnDefs);
+
+    // ✅ Apply audit styling to all audit trail columns (header + cell) and wrap cellRenderer for highlighting
+    cols.forEach((col: ColDef) => {
+      const isAuditCell =
+        (typeof col.cellClass === 'string' && col.cellClass.includes('audit-cell')) ||
+        (Array.isArray(col.cellClass) && col.cellClass.includes('audit-cell')) ||
+        (col.headerName && /last saved|created|modified|requested|audit/i.test(col.headerName)) ||
+        (col.field && /created|modified|saved|requested|audit/i.test(col.field));
+
+      if (isAuditCell) {
+        if (typeof col.headerClass === 'string') {
+          if (!col.headerClass.includes('audit-cell')) {
+            col.headerClass = `${col.headerClass} audit-cell`;
+          }
+        } else if (!col.headerClass) {
+          col.headerClass = 'audit-cell';
+        }
+
+        if (typeof col.cellClass === 'string') {
+          if (!col.cellClass.includes('audit-cell')) {
+            col.cellClass = `${col.cellClass} audit-cell`;
+          }
+        } else if (!col.cellClass) {
+          col.cellClass = 'audit-cell';
+        }
+      }
+
+      // Wrap cell renderer for highlighting
+      if (col.checkboxSelection) {
+        return;
+      }
+
+      const originalCellRenderer = col.cellRenderer;
+      const isFn = typeof originalCellRenderer === 'function';
+      const isAngularComponent = isFn && 
+        (!!(originalCellRenderer as any).ɵcmp || 
+         !!(originalCellRenderer as any).ɵfac || 
+         (originalCellRenderer.prototype && typeof originalCellRenderer.prototype.agInit === 'function'));
+
+      // Only wrap if it's a function or if there is no custom renderer
+      if (!originalCellRenderer || (isFn && !isAngularComponent)) {
+        col.cellRenderer = (params: any) => {
+          let content: any = null;
+          if (originalCellRenderer) {
+            content = originalCellRenderer(params);
+          } else {
+            if (col.valueFormatter && typeof col.valueFormatter === 'function') {
+              content = col.valueFormatter(params);
+            } else {
+              content = params.value;
+            }
+          }
+
+          if (content == null || content === '') {
+            return '';
+          }
+
+          const searchTerm = this.searchValue ? this.searchValue.trim() : '';
+
+          if (content instanceof HTMLElement) {
+            this.highlightTextInElement(content, searchTerm);
+            return content;
+          }
+
+          const contentStr = content.toString();
+          const container = document.createElement('span');
+          container.innerHTML = contentStr;
+          this.highlightTextInElement(container, searchTerm);
+          return container;
+        };
+      }
+    });
 
     this.finalColumnDefs = cols;
   }
@@ -166,12 +259,28 @@ export class AgGridWrapper implements OnInit {
   };
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['loading'] && this.loading !== null) {
+      this.isLoading = this.loading;
+    }
+    if (changes['rowData']) {
+      if (this.loading === null) {
+        this.isLoading = false;
+      }
+    }
+    if (changes['columnDefs']) {
+      this.buildFinalColumnDefs();
+    }
     if (this.isServerSide && this.getRowsParams) {
       if (changes['rowData'] || changes['totalRows']) {
         const rows = this.rowData || [];
         this.getRowsParams.successCallback(rows, this.totalRows);
         this.getRowsParams = null; // Consume it so we don't double call
       }
+    }
+    if (changes['rowData'] && this.autoSizeColumns && this.gridApi) {
+      setTimeout(() => {
+        this.autoSizeGridColumns();
+      }, 50);
     }
   }
 
@@ -186,13 +295,18 @@ export class AgGridWrapper implements OnInit {
           this.getRowsParams = params;
           this.pageNumber = Math.floor(params.startRow / this.pageSize) + 1;
 
+          if (this.loading === null) {
+            this.isLoading = true;
+          }
+
           this.ngZone.run(() => {
             this.serverQuery.emit({
               pageNumber: this.pageNumber,
               pageSize: this.pageSize,
               sortModel: params.sortModel.map((c: any) => ({ colId: c.colId, sort: c.sort })),
               filterModel: params.filterModel,
-              searchText: this.searchValue(),
+              searchText: this.searchValue,
+              searchTerm: this.searchValue,
             });
           });
         },
@@ -209,6 +323,46 @@ export class AgGridWrapper implements OnInit {
     setTimeout(() => {
       this.isGridInitialized = true;
     });
+  }
+
+  autoSizeGridColumns(): void {
+    if (!this.gridApi) return;
+    const columns = this.gridApi.getColumns();
+    if (!columns || columns.length === 0) return;
+
+    const allColumnIds = columns.map((col: any) => col.getId());
+    this.gridApi.autoSizeColumns(allColumnIds);
+
+    // Delay calculation to let AG Grid calculate and apply auto-sized column widths first
+    setTimeout(() => {
+      if (!this.gridApi) return;
+      const cols = this.gridApi.getColumns();
+      if (!cols || cols.length === 0) return;
+
+      let totalColumnWidth = 0;
+      cols.forEach((col: any) => {
+        totalColumnWidth += col.getActualWidth();
+      });
+
+      const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
+      const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
+
+      if (totalColumnWidth < gridWidth) {
+        this.gridApi.sizeColumnsToFit();
+      }
+    }, 150);
+  }
+
+  onFirstDataRendered(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
+  }
+
+  onRowDataUpdated(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
   }
 
   onSelectionChanged() {
@@ -261,6 +415,10 @@ export class AgGridWrapper implements OnInit {
     if (!this.gridApi) return;
     if (!this.pageSize || !this.pageNumber) return;
 
+    if (this.loading === null) {
+      this.isLoading = true;
+    }
+
     this.serverQuery.emit({
       pageNumber: this.pageNumber,
       pageSize: this.pageSize,
@@ -269,7 +427,8 @@ export class AgGridWrapper implements OnInit {
         .filter((c) => c.sort)
         .map((c) => ({ colId: c.colId, sort: c.sort })),
       filterModel: this.gridApi.getFilterModel(),
-      searchText: this.searchValue(),
+      searchText: this.searchValue,
+      searchTerm: this.searchValue,
     });
   }
 
@@ -329,13 +488,21 @@ export class AgGridWrapper implements OnInit {
     this.gridApi.setColumnsVisible(fields, checked);
   }
 
-  readonly searchValue = signal('');
+  searchValue = '';
+  onSearchModelChange(value: string) {
+    this.searchValue = value;
+    this.refresh();
+  }
+
   onSearchEnter() {
     this.refresh();
   }
 
   refresh() {
     this.pageNumber = 1;
+    if (this.gridApi) {
+      this.gridApi.redrawRows();
+    }
     if (this.isServerSide && this.gridApi) {
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
       this.gridApi.refreshInfiniteCache();
@@ -354,6 +521,52 @@ export class AgGridWrapper implements OnInit {
 
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
       this.gridApi.refreshInfiniteCache();
+    }
+  }
+
+  highlightTextInElement(element: Node, searchTerm: string): void {
+    if (!searchTerm) return;
+    const lowerSearch = searchTerm.toLowerCase();
+    const children = Array.from(element.childNodes);
+
+    for (const child of children) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.nodeValue || '';
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes(lowerSearch)) {
+          const fragment = document.createDocumentFragment();
+          let lastIndex = 0;
+          const escapedSearch = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`(${escapedSearch})`, 'gi');
+
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            const matchIndex = match.index;
+            const matchText = match[0];
+
+            if (matchIndex > lastIndex) {
+              fragment.appendChild(document.createTextNode(text.substring(lastIndex, matchIndex)));
+            }
+
+            const mark = document.createElement('mark');
+            mark.style.backgroundColor = '#ffeb3b';
+            mark.style.padding = '0 2px';
+            mark.style.borderRadius = '2px';
+            mark.textContent = matchText;
+            fragment.appendChild(mark);
+
+            lastIndex = regex.lastIndex;
+          }
+
+          if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+          }
+
+          child.replaceWith(fragment);
+        }
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        this.highlightTextInElement(child, searchTerm);
+      }
     }
   }
 }

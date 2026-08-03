@@ -8,6 +8,7 @@ import {
   ViewChild,
   OnInit,
   signal,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -37,6 +38,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
+import { SafeTranslatePipe } from '../pipes/filter-label/safeTranslate.pipe';
 
 export interface GridColumn<T = any> {
   field: string;
@@ -97,6 +99,7 @@ export interface GridColumn<T = any> {
 
   // Validation
   required?: boolean;
+  cellClass?: string | string[];
 
   // Custom renderer
   customRenderer?: any;
@@ -114,6 +117,7 @@ export interface GridConfig {
   enableInlineAdd?: boolean;
   enableInlineEdit?: boolean;
   enableInlineDelete?: boolean;
+  serverSide?: boolean;
   rowHeight?: number;
   headerHeight?: number;
   domLayout?: 'normal' | 'autoHeight' | 'print';
@@ -134,6 +138,7 @@ export interface GridConfig {
     NzSpinModule,
     NzInputModule,
     NzIconModule,
+    SafeTranslatePipe
   ],
   templateUrl: './editable-ag-grid-wrapper.html',
   styleUrl: './editable-ag-grid-wrapper.css',
@@ -142,6 +147,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
   @Input() isSelectionRequired: boolean = true;
   @Input() showSearchBar: Boolean = true;
+  @Input() autoSizeColumns: boolean = true;
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -151,6 +157,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     rowData: any;
     file?: File;
   }>();
+  @Output() dataRequest = new EventEmitter<any>();
 
   @Input() gridId: string = 'grid-' + Math.random().toString(36).substr(2, 9);
   @Input() config: GridConfig = {
@@ -186,6 +193,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   // @Output() rowAdded = new EventEmitter<any>();
   @Output() rowUpdated = new EventEmitter<{ rowData: any; index: number }>();
   @Output() rowDeleted = new EventEmitter<number>();
+  // Fired the moment a row enters edit mode — lets the parent lazily load anything a
+  // dropdown column's options depend on (e.g. a cascading dropdown's options for the row's
+  // existing selection), since dropdownOptions is only ever populated on-demand.
+  @Output() rowEditingStarted = new EventEmitter<{ rowData: any; index: number }>();
   @Output() cellValueChanged = new EventEmitter<{
     field: string;
     value: any;
@@ -201,10 +212,12 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   editingRowId: any = null;
   editingRowData: any = null;
   editingRowIndex: number = -1;
+  private currentPage = 1;
+  private isUpdatingRowData = false;
 
   gridContext: any;
 
-  constructor() {
+  constructor(private el: ElementRef) {
     this.defaultColDef = {
       sortable: this.config.enableSorting,
       filter: this.config.enableFiltering,
@@ -213,6 +226,14 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       minWidth: 100,
       wrapHeaderText: true,
       autoHeaderHeight: true,
+      suppressKeyboardEvent: (params: any) => {
+        const event = params.event;
+        const key = event.key;
+        if (key === 'Backspace' || key === 'Delete') {
+          return true; // Suppress AG Grid keyboard clearing
+        }
+        return false;
+      },
       cellRenderer: (p: ICellRendererParams) => this.highlightByFilter(p),
       cellStyle: { display: 'flex', alignItems: 'center' },
     };
@@ -231,6 +252,16 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.gridContext = this.getContextData();
     if (changes['config'] || changes['isSelectionRequired']) {
       this.buildColumnDefs();
+    }
+    // Temporarily pause pagination loops while rowData is replacing
+    if (changes['rowData']) {
+      this.isUpdatingRowData = true;
+      setTimeout(() => {
+        this.isUpdatingRowData = false;
+        if (this.autoSizeColumns && this.gridApi) {
+          this.autoSizeGridColumns();
+        }
+      }, 50);
     }
   }
 
@@ -252,6 +283,33 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.config?.columns?.forEach((column) => {
       this.columnDefs.push(this.createColumnDef(column));
     });
+
+    // Apply audit styling to all audit trail columns (header + cell)
+    this.columnDefs.forEach((col: ColDef) => {
+      const isAuditCell =
+        (typeof col.cellClass === 'string' && col.cellClass.includes('audit-cell')) ||
+        (Array.isArray(col.cellClass) && col.cellClass.includes('audit-cell')) ||
+        (col.headerName && /last saved|created|modified|requested|audit/i.test(col.headerName)) ||
+        (col.field && /created|modified|saved|requested|audit/i.test(col.field));
+
+      if (isAuditCell) {
+        if (typeof col.headerClass === 'string') {
+          if (!col.headerClass.includes('audit-cell')) {
+            col.headerClass = `${col.headerClass} audit-cell`;
+          }
+        } else if (!col.headerClass) {
+          col.headerClass = 'audit-cell';
+        }
+
+        if (typeof col.cellClass === 'string') {
+          if (!col.cellClass.includes('audit-cell')) {
+            col.cellClass = `${col.cellClass} audit-cell`;
+          }
+        } else if (!col.cellClass) {
+          col.cellClass = 'audit-cell';
+        }
+      }
+    });
     //console.log(JSON.stringify(this.columnDefs));
   }
 
@@ -259,6 +317,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     return {
       headerName: 'Actions',
       field: 'actions',
+      cellClass: 'actions-cell',
       //pinned: 'left',
       minWidth: 100,
       maxWidth: 120,
@@ -271,9 +330,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
           if (!this.config.enableInlineAdd) return '';
           return `
             <div style="display: flex; gap: 10px; align-items: center;">
-              <svg style="width: 16px; height: 16px; cursor: pointer; fill: #28a745;" viewBox="0 0 448 512" title="Add" data-action-type="add">
-                <path data-action-type="add" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
-              </svg>
+              <span class="grid-action-btn-container" data-tooltip="Add" title="Add" data-action-type="add">
+                <svg style="width: 16px; height: 16px; cursor: pointer; fill: #28a745;" viewBox="0 0 448 512" data-action-type="add">
+                  <path data-action-type="add" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
+                </svg>
+              </span>
             </div>
           `;
         }
@@ -286,15 +347,19 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
               ${
                 this.config.enableInlineEdit
                   ? `
-              <svg style="width: 16px; height: 16px; cursor: pointer; fill: #28a745;" viewBox="0 0 448 512" title="Update" data-action-type="update">
-                <path data-action-type="update" d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/>
-              </svg>`
+              <span class="grid-action-btn-container" data-tooltip="Update" title="Update"  data-action-type="update">
+                <svg style="width: 16px; height: 16px; cursor: pointer; fill: #28a745;" viewBox="0 0 448 512" data-action-type="update">
+                  <path data-action-type="update" d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/>
+                </svg>
+              </span>`
                   : ''
               }
               
-              <svg style="width: 14px; height: 14px; cursor: pointer; fill: #6c757d;" viewBox="0 0 384 512" title="Cancel" data-action-type="cancel">
-                <path data-action-type="cancel" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
-              </svg>
+              <span class="grid-action-btn-container" data-tooltip="Cancel" title="Discard Changes" data-action-type="cancel">
+                <svg style="width: 14px; height: 14px; cursor: pointer; fill: #6c757d;" viewBox="0 0 384 512" data-action-type="cancel">
+                  <path data-action-type="cancel" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+                </svg>
+              </span>
             </div>
           `;
         } else {
@@ -303,18 +368,22 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
               ${
                 this.config.enableInlineEdit
                   ? `
-              <svg style="width: 14px; height: 14px; cursor: pointer; fill: #555;" viewBox="0 0 512 512" title="Edit" data-action-type="edit">
-                <path data-action-type="edit" d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z"/>
-              </svg>`
+              <span class="grid-action-btn-container" data-tooltip="Edit" title="Edit" data-action-type="edit">
+                <svg style="width: 14px; height: 14px; cursor: pointer; fill: #1677ff;" viewBox="0 0 512 512" data-action-type="edit">
+                  <path data-action-type="edit" d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z"/>
+                </svg>
+              </span>`
                   : ''
               }
               
               ${
                 this.config.enableInlineDelete
                   ? `
-              <svg style="width: 14px; height: 14px; cursor: pointer; fill: #555;" viewBox="0 0 448 512" title="Delete" data-action-type="delete">
-                <path data-action-type="delete" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
-              </svg>`
+              <span class="grid-action-btn-container" data-tooltip="Delete" title="Delete" data-action-type="delete">
+                <svg style="width: 14px; height: 14px; cursor: pointer; fill: #ff4d4f;" viewBox="0 0 448 512" data-action-type="delete">
+                  <path data-action-type="delete" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
+                </svg>
+              </span>`
                   : ''
               }
             </div>
@@ -325,6 +394,14 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   private createColumnDef(column: GridColumn): ColDef {
+    const isAuditField =
+      (typeof column.cellClass === 'string' && column.cellClass.includes('audit-cell')) ||
+      (Array.isArray(column.cellClass) && column.cellClass.includes('audit-cell')) ||
+      (column.headerName && /last saved|created|modified|requested|audit/i.test(column.headerName)) ||
+      (column.field && /created|modified|saved|requested|audit/i.test(column.field));
+
+    const isColumnEditable = column.editable !== false && !isAuditField;
+
     const colDef: ColDef = {
       field: column.field,
       headerName: column.headerName,
@@ -334,7 +411,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       //pinned: column.pinned,
       sortable: column.sortable ?? this.config.enableSorting,
       filter: column.filter ?? this.config.enableFiltering,
-      editable: column.editable ?? false,
+      editable: isColumnEditable,
+      cellClass: column.cellClass,
     };
 
     // Set cell renderer based on column type
@@ -344,7 +422,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         const isCascade = !!column.dependsOn;
 
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             const rendererComponent = isCascade
               ? CascadeDropdownCellRenderer
               : DropdownCellRenderer;
@@ -352,22 +430,16 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
             return {
               component: column.customRenderer || rendererComponent,
               params: {
-                // 🔥 ALWAYS pass options (for root dropdown)
-                //options: column.dropdownOptions || [],
-
                 options: column.dropdownOptions || [],
                 value: params.data?.[column.field], // ← ID (1)
                 valueField: column.dropdownValueField, // 'id'
                 displayField: column.dropdownDisplayField, // 'text'
 
-                // 🔥 ALWAYS read value from rowData
-                //value: params.data?.[column.field],
-                //value: params.data?.[column.dropdownValueField || column.field],
-
                 disabled: params.data?.disabled,
-                placeholder: column.placeholder || '--Select--',
+                placeholder: column.placeholder || '--any--',
                 emptyValue: 0,
 
+                allowClear: true, // Allow clearing selection
                 // Enable search by default, but allow override via GridColumn config
                 showSearch: column.showSearch !== false,
                 customFilter: (input: string, option: any) => {
@@ -384,7 +456,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 context: this.getContextData(),
 
                 onValueChange: (value: any, data: any) => {
-                  //debugger;
                   // 1️⃣ Set value
                   data[column.field] = value;
 
@@ -399,7 +470,6 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
                   // 4️⃣ Pinned row handling
                   if (params.node.rowPinned === 'top') {
-                    // this.pinnedTopRowData[0][column.field] = value;
                     this.pinnedTopRowData = [{ ...data }];
                     this.gridApi.setGridOption('pinnedTopRowData', this.pinnedTopRowData);
                   }
@@ -435,18 +505,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
           const match = options.find((opt) => opt.id == params.value);
 
           return match ? match.text : params.value;
-          // if (column.dropdownDisplayField && params.data) {
-          //   return params.data[column.dropdownDisplayField];
-          // }
-          // return this.getOptionText(
-          //   column,
-          //   params.data?.[column.dropdownValueField || column.field]
-          // );
         };
         break;
       case 'number':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || InputCellRenderer,
               params: {
@@ -466,8 +529,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         };
 
         colDef.valueFormatter = (params) => {
-          if (params.value == null) return '';
-          let formatted = parseFloat(params.value).toFixed(column.decimalPlaces || 0);
+          if (params.value == null || params.value === '') return '';
+          const parsed = parseFloat(params.value);
+          if (isNaN(parsed)) return '';
+          let formatted = parsed.toFixed(column.decimalPlaces || 0);
           if (column.prefix) formatted = column.prefix + ' ' + formatted;
           if (column.suffix) formatted = formatted + ' ' + column.suffix;
           return formatted;
@@ -476,7 +541,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'text':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || TextCellRenderer,
               params: {
@@ -497,7 +562,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'date':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || DatePickerCellRenderer,
               params: {
@@ -550,7 +615,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'file':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || FileUploadCellRenderer,
               params: {
@@ -560,26 +625,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 multiple: column.multiple || false,
                 maxSize: column.maxSize || 5, // MB
                 onValueChange: (value: any, data: any) => {
-                  // data[column.field] = value;
-                  // this.emitCellValueChanged(column.field, value, data, params.rowIndex);
-
                   if (!(value instanceof File)) {
                     console.error('Expected File, got:', value);
                     return;
                   }
 
-                  // DO NOT spread or clone
                   (params.node as any).__uploadedFile = value;
                   data[column.field] = value; // optional, for display
                 },
                 onFilePreview: (fileInfo: any) => {
-                  // Emit custom event for file preview
                   this.cellValueChanged.emit({
                     field: column.field,
                     value: fileInfo,
                     rowData: params.data,
                     rowIndex: params.rowIndex,
-                    //type: 'file-preview',
                   });
                 },
                 ...column.customRendererParams,
@@ -604,7 +663,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
       case 'checkbox':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
+          if (isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id)) {
             return {
               component: column.customRenderer || Checkboxrenderer,
               params: {
@@ -646,21 +705,19 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         break;
       case 'switch':
         colDef.cellRendererSelector = (params: any) => {
-          if (params.node.rowPinned === 'top' || this.editingRowId === params.node.id) {
-            return {
-              component: column.customRenderer || SwitchRenderer,
-              params: {
-                value: params.data?.[column.field],
-                onValueChange: (value: any, data: any) => {
-                  // debugger;
-                  data[column.field] = value;
-                  this.emitCellValueChanged(column.field, value, data, params.rowIndex);
-                },
-                ...column.customRendererParams,
+          const isEditing = isColumnEditable && (params.node.rowPinned === 'top' || this.editingRowId === params.node.id);
+          return {
+            component: column.customRenderer || SwitchRenderer,
+            params: {
+              value: params.value,
+              disabled: !isEditing,
+              onValueChange: (value: any, data: any) => {
+                data[column.field] = value;
+                this.emitCellValueChanged(column.field, value, data, params.rowIndex);
               },
-            };
-          }
-          return { component: HighlightCellRenderer };
+              ...column.customRendererParams,
+            },
+          };
         };
 
         colDef.valueFormatter = (params) => {
@@ -678,6 +735,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   private getContextData(): any {
     // Return data that can be accessed by renderers via context
     return {
+      componentParent: this,
       documentTypes: this.documentTypeList,
       divisions: this.divisionList,
       departments: this.departmentList,
@@ -783,25 +841,30 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       params.colDef?.colId ||
       (params.colDef?.field as string | undefined) ||
       '';
-    const fm = api.getFilterModel?.() || {};
+    const fm = api?.getFilterModel?.() || {};
     const m = colId ? (fm as any)[colId] : undefined;
 
-    if (!m) {
-      span.textContent = text;
-      return span;
+    const terms: string[] = [];
+
+    // Collect column-specific filter model terms
+    if (m) {
+      const collect = (c: any) => {
+        const t = (c?.filter ?? '').toString().trim();
+        if (t) terms.push(t);
+      };
+
+      if (m.operator) {
+        collect(m.condition1);
+        collect(m.condition2);
+      } else {
+        collect(m);
+      }
     }
 
-    const terms: string[] = [];
-    const collect = (c: any) => {
-      const t = (c?.filter ?? '').toString().trim();
-      if (t) terms.push(t);
-    };
-
-    if (m.operator) {
-      collect(m.condition1);
-      collect(m.condition2);
-    } else {
-      collect(m);
+    // Collect global Quick Filter / search term
+    const quickFilterText = this.value().trim();
+    if (quickFilterText) {
+      terms.push(quickFilterText);
     }
 
     if (!terms.length) {
@@ -813,25 +876,128 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     const uniq = Array.from(new Set(terms.map(escapeRegExp)));
     const re = new RegExp(`(${uniq.join('|')})`, 'gi');
 
-    span.innerHTML = escapeHtml(text).replace(re, '<mark class="ag-hl">$1</mark>');
+    span.innerHTML = escapeHtml(text).replace(re, '<mark class="ag-hl" style="background-color: #ffeb3b; padding: 0 2px; border-radius: 2px;">$1</mark>');
     return span;
   }
 
-  onFilterTextBoxChanged() {
-    this.gridApi.setGridOption(
-      'quickFilterText',
-      (document.getElementById('filter-text-box') as HTMLInputElement).value,
-    );
+  onFilterTextBoxChanged(event?: any) {
+    const val = event?.target?.value ?? '';
+
+    this.value.set(val);
+
+    if (this.config.serverSide) {
+      if (this.currentPage !== 1) {
+        this.gridApi?.paginationGoToPage(0);
+      } else {
+        this.emitDataRequest();
+      }
+    } else {
+      this.gridApi?.setGridOption('quickFilterText', val);
+    }
+
+    // Force redraw of cells to apply/update quick search highlights instantly
+    this.gridApi?.refreshCells({ force: true });
   }
 
   readonly value = signal('');
+  
   onSearch(event: any): void {
-    console.log(event);
+    this.onFilterTextBoxChanged(event);
   }
 
   onGridReady(event: GridReadyEvent): void {
     this.gridApi = event.api;
+    
+    // Register listeners for server-side features
+    this.gridApi.addEventListener('sortChanged', this.onSortOrFilterChanged.bind(this));
+    this.gridApi.addEventListener('filterChanged', this.onSortOrFilterChanged.bind(this));
+    this.gridApi.addEventListener('paginationChanged', this.onPaginationChanged.bind(this));
+
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
+
     this.gridReady.emit(this.gridApi);
+  }
+
+  autoSizeGridColumns(): void {
+    if (!this.gridApi) return;
+    const columns = this.gridApi.getColumns();
+    if (!columns || columns.length === 0) return;
+
+    const allColumnIds = columns.map((col: any) => col.getId());
+    this.gridApi.autoSizeColumns(allColumnIds);
+
+    // Delay calculation to let AG Grid calculate and apply auto-sized column widths first
+    setTimeout(() => {
+      if (!this.gridApi) return;
+      const cols = this.gridApi.getColumns();
+      if (!cols || cols.length === 0) return;
+
+      let totalColumnWidth = 0;
+      cols.forEach((col: any) => {
+        totalColumnWidth += col.getActualWidth();
+      });
+
+      const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
+      const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
+
+      if (totalColumnWidth < gridWidth) {
+        this.gridApi.sizeColumnsToFit();
+      }
+    }, 150);
+  }
+
+  onFirstDataRendered(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
+  }
+
+  onRowDataUpdated(event: any): void {
+    if (this.autoSizeColumns) {
+      this.autoSizeGridColumns();
+    }
+  }
+
+  private onSortOrFilterChanged() {
+    if (this.config.serverSide) {
+      if (this.currentPage !== 1) {
+        this.gridApi?.paginationGoToPage(0);
+      } else {
+        this.emitDataRequest();
+      }
+    }
+  }
+
+  private onPaginationChanged(event: any) {
+    if (this.isUpdatingRowData || !this.config.serverSide) return;
+    
+    const newPage = (this.gridApi?.paginationGetCurrentPage() || 0) + 1;
+    if (event.newPage && newPage !== this.currentPage) {
+        this.currentPage = newPage;
+        this.emitDataRequest();
+    } else if (event.newPageSize) {
+        this.currentPage = 1;
+        this.emitDataRequest();
+    }
+  }
+
+  private emitDataRequest() {
+    if (!this.gridApi) return;
+    const sortModel = this.gridApi.getColumnState()
+      .filter((s: any) => s.sort != null)
+      .sort((a: any, b: any) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0));
+    const filterModel = this.gridApi.getFilterModel();
+    const pageSize = this.gridApi.paginationGetPageSize() || this.config.pageSize || 10;
+
+    this.dataRequest.emit({
+        pageNumber: this.currentPage,
+        pageSize,
+        sortModel,
+        filterModel,
+        searchText: this.value()
+    });
   }
 
   onCellClicked(event: CellClickedEvent): void {
@@ -886,17 +1052,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.editingRowData = { ...event.data };
     this.editingRowIndex = event.rowIndex!;
     this.gridApi?.refreshCells({ force: true });
+    this.rowEditingStarted.emit({ rowData: event.data, index: event.rowIndex! });
   }
 
   updateRow(event: CellClickedEvent): void {
-    this.rowUpdated.emit({
-      rowData: event.data,
-      index: event.rowIndex!,
-    });
-    this.editingRowId = null;
-    this.editingRowData = null;
-    this.editingRowIndex = -1;
-    this.gridApi?.refreshCells({ force: true });
+    if (confirm('Are you sure you want to update this record?')) {
+      this.rowUpdated.emit({
+        rowData: event.data,
+        index: event.rowIndex!,
+      });
+      this.editingRowId = null;
+      this.editingRowData = null;
+      this.editingRowIndex = -1;
+      this.gridApi?.refreshCells({ force: true });
+    }
   }
 
   cancelEdit(event: CellClickedEvent): void {
@@ -947,36 +1116,15 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       file: uploadedFile,
     });
 
-    //this.resetPinnedRow();
-    // const pinnedData = this.pinnedTopRowData?.[0];
-    // if (!pinnedData) return;
-
-    // //console.log('pinnedData:', JSON.stringify(pinnedData));
-
-    // // Validate required fields
-    // const requiredColumns = this.config.columns.filter((col) => col.required);
-    // const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
-
-    // //console.log('Missing Fields:', missingFields);
-    // if (missingFields.length > 0) {
-    //   alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
-    //   return;
-    // }
-
-    // const newRow = { ...pinnedData, isNewRow: false };
-    // this.rowAdded.emit(newRow);
-    // this.resetPinnedRow();
+    // After emitting, reset the pinned row to clear the input fields.
+    this.resetPinnedRow();
   }
 
   resetPinnedRow(): void {
     if (this.pinnedTopRowData?.length > 0) {
       const emptyRow: any = {};
       this.config.columns.forEach((col) => {
-        if (col.type === 'dropdown' && col.dropdownOptions) {
-          emptyRow[col.field] = col.dropdownOptions[0]?.id || '';
-        } else {
-          emptyRow[col.field] = '';
-        }
+        emptyRow[col.field] = '';
       });
       this.pinnedTopRowData = [emptyRow];
       this.gridApi?.setGridOption('pinnedTopRowData', this.pinnedTopRowData);

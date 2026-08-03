@@ -1,23 +1,26 @@
 <div *ngIf="attributes.length > 0">
   <form *ngIf="form" [formGroup]="form">
     <div class="status-box-leftColmd6-standard">
-      <div class="PnlHeading pb-3">
+      <div class="PnlHeading">
         <h3 class="PnlHeader">Document Attributes</h3>
       </div>
       <div class="row">
-        <div *ngFor="let attr of attributes" class="col-12 col-md-6 col-lg-4 mb-3">
-          <div class="row">
-            <div class="col-sm-4 col-md-4 col-lg-4 align-items-center">
-              <!-- LABEL -->
-              <label class="form-label fw-semibold">
+        <div *ngFor="let attr of attributes" class="col-12 col-md-6 col-lg-4 mb-4 px-3">
+          <div class="form-group">
+            <!-- LABEL -->
+            <div class="PnlHeading">
+              <label class="ctrllbl text-uppercase">
                 {{ attr.ControlLabel }}
                 <span *ngIf="attr.IsMandatory && mode === 'create'" class="text-danger">*</span>
               </label>
+            </div>
 
+            <div class="w-100 mt-2">
               <ng-container [ngSwitch]="attr.ControlType">
                 <!-- DATE -->
                 <nz-date-picker
                   *ngSwitchCase="'date'"
+                  style="width: 50%"
                   [formControlName]="'ctrl_' + attr.Id"
                   [nzDisabled]="mode === 'view'"
                 ></nz-date-picker>
@@ -29,6 +32,7 @@
                   [ngClass]="{
                     'form-control': true,
                     'input-sm': true,
+                    'w-50': true
                   }"
                   [formControlName]="'ctrl_' + attr.Id"
                   [readonly]="mode === 'view'"
@@ -41,6 +45,7 @@
                   [ngClass]="{
                     'form-control': true,
                     'input-sm': true,
+                    'w-50': true
                   }"
                   [formControlName]="'ctrl_' + attr.Id"
                   [readonly]="mode === 'view'"
@@ -53,6 +58,7 @@
                   [ngClass]="{
                     'form-control': true,
                     'input-sm': true,
+                    'w-50': true
                   }"
                   [formControlName]="'ctrl_' + attr.Id"
                   [readonly]="mode === 'view'"
@@ -60,10 +66,9 @@
                 </textarea>
 
                 <!-- DROPDOWN -->
-
                 <nz-select
                   *ngSwitchCase="'list'"
-                  style="width: 100%"
+                  style="width: 50%"
                   nzPlaceHolder="Select"
                   nzAllowClear
                   nzShowSearch

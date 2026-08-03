@@ -54,8 +54,7 @@ export class BusinessDomainList implements ControlValueAccessor {
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
-  ngOnInit() { 
-  }
+  ngOnInit() {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['subDepartment']) {
@@ -113,14 +112,7 @@ export class BusinessDomainList implements ControlValueAccessor {
         // Main domains fetch – assuming your service has (or will have) this method
         // If it doesn't exist yet → implement getDepartmentsBysubdepartmentCodeCached or similar
         getData$: () =>
-          this._businessDomainService.GetAllBusinessDomains(
-            subdepartmentCode, // filter parameter – adjust according to your real API
-            'ASC',
-            'Name',
-            true,
-            1,
-            1000, // ← or use a higher limit / pagination if needed
-          ),
+          this._businessDomainService.GetAllBusinessDomains('', 'DESC', 'CreatedAt', true, 1, 1000),
 
         // Same mapping logic as in GetAllDepartments
         mapFn: (item) => ({
@@ -129,8 +121,15 @@ export class BusinessDomainList implements ControlValueAccessor {
           Name: item.Name || item.name,
           SubDepartment: item.SubDepartment || item.subDepartment || '',
           SubDepartmentCode: item.SubDepartmentCode || item.subDepartmentCode || '',
+          IsActive: item.isActive || item.IsActive || false,
+          IsDeleted: item.isDeleted || item.IsDeleted || false,
           CreatedBy: item.CreatedBy || item.createdBy || '',
-          CreatedByName: item.CreateByName || item.createByName || item.CreatedByName || item.createdByName || '',
+          CreatedByName:
+            item.CreateByName ||
+            item.createByName ||
+            item.CreatedByName ||
+            item.createdByName ||
+            '',
           CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
           LastModifiedBy: item.LastModifiedBy || item.lastModifiedBy || '',
           LastModifiedByName: item.LastModifiedByName || item.lastModifiedByName || '',
@@ -147,10 +146,12 @@ export class BusinessDomainList implements ControlValueAccessor {
             (d) => d.SubDepartmentCode?.toUpperCase() === subdepartmentCode.toUpperCase(),
           );
 
-          this.domains = filtered.map((d) => ({
-            CODE: d.Code,
-            NAME: d.Name,
-          }));
+          this.domains = filtered
+            .map((d) => ({
+              CODE: d.Code,
+              NAME: d.Name,
+            }))
+            .sort((a, b) => (a.NAME || '').localeCompare(b.NAME || ''));
 
           this.totalDepartments = filtered.length; // optional – if you want to show count
           this.isLoading = false;
@@ -164,5 +165,4 @@ export class BusinessDomainList implements ControlValueAccessor {
         },
       });
   };
- 
 }

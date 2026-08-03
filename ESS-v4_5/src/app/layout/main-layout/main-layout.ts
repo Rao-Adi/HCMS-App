@@ -7,6 +7,7 @@ import {
   HostListener,
   inject,
   Signal,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -27,6 +28,8 @@ import {
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 interface HeaderDetailsResponse {
   formName: string;
@@ -52,17 +55,18 @@ interface DisplayNotification extends AppNotification {
     RouterModule,
     MenuComponent,
     SpinnerComponent,
-    SkeletonComponent
+    SkeletonComponent,
   ],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css'],
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   readonly dialog = inject(MatDialog);
+  @ViewChild(MenuComponent) menuComponent!: MenuComponent;
 
   // --- UI & State Properties ---
   formName: string = '';
-  currentFormId: string = ''; 
+  currentFormId: string = '';
   formdescription: string = '';
   showdesc: boolean = false;
   showfavourite: boolean = false;
@@ -77,11 +81,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   CompanyName: string = 'Your Company';
   EmpName: string = 'Employee Name';
   EmployeePic: string = '/assets/images/pro.png';
-  strBreadCrumb: string = 'Home / Dashboard';
-  
+  strBreadCrumb: string = 'Dashboard';
+
   @HostBinding('class.sidebar-open')
   isSidebarOpen: boolean = false;
-  
+
   haveDashboardRights: boolean = true;
   onlineEvent$: Observable<Event> | undefined;
   offlineEvent$: Observable<Event> | undefined;
@@ -90,7 +94,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   connectionStatus: string = 'online';
   showStatusMessage: boolean = false;
   isSidebarHovering = false;
-  
+
   // --- Notification Properties ---
   notifications: DisplayNotification[] = [];
   unreadNotificationCount: number = 0;
@@ -101,13 +105,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   activeNotificationTab: 'unread' | 'read' = 'unread';
 
   get filteredNotifications(): DisplayNotification[] {
-
     return this.notifications.filter((n) =>
-
       this.activeNotificationTab === 'unread' ? !n.isRead : n.isRead,
-
     );
-
   }
 
   // --- Menu Context Properties ---
@@ -126,8 +126,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     return this._config.baseUrl.replace(/\/$/, '');
   }
 
-  
-
   constructor(
     private _utilityService: UtilitiesService,
     private _dataService: DataService,
@@ -137,6 +135,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private notificationSignalrService: NotificationSignalrService,
     private notificationHttpService: NotificationService,
+    private _documentRequestService: DocumentRequestService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit(): void {
@@ -148,7 +148,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.onlineEvent$ = fromEvent(window, 'online');
       this.offlineEvent$ = fromEvent(window, 'offline');
       this.subscriptions.push(this.onlineEvent$.subscribe(() => this.updateConnectionStatus(true)));
-      this.subscriptions.push(this.offlineEvent$.subscribe(() => this.updateConnectionStatus(false)));
+      this.subscriptions.push(
+        this.offlineEvent$.subscribe(() => this.updateConnectionStatus(false)),
+      );
       this.updateConnectionStatus(navigator.onLine);
     }
 
@@ -162,8 +164,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     let token = '';
     if (typeof window !== 'undefined' && localStorage) {
       // Check multiple common keys in case the token is stored under a different name
-      token = localStorage.getItem('token') || localStorage.getItem('Token') || localStorage.getItem('access_token') || '';
-      
+      token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('Token') ||
+        localStorage.getItem('access_token') ||
+        '';
+
       // Prevent "Bearer Bearer eyJ..." errors:
       // SignalR's accessTokenFactory automatically prepends "Bearer " in the header.
       // If the stored token already contains "Bearer ", we must strip it.
@@ -173,17 +179,59 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
 
     console.log(`[SignalR Init] Connecting to: ${hubUrl} | Token Present: ${!!token}`);
-    this.notificationSignalrService.startConnection(hubUrl, token);
+    this.notificationSignalrService.startConnection(hubUrl, token, this.LoginEmpId);
 
     this.subscriptions.push(
       this.notificationSignalrService.notification$.subscribe((notification: AppNotification) => {
-        this.notifications.unshift({ 
-          ...notification, 
+        this.notifications.unshift({
+          ...notification,
           isRead: false,
-          relatedEntityType: (notification as any).RelatedEntityType || (notification as any).relatedEntityType 
+          relatedEntityType:
+            (notification as any).RelatedEntityType || (notification as any).relatedEntityType,
         });
         this.unreadNotificationCount++;
         this.cdRef.detectChanges();
+      }),
+    );
+
+    this.subscriptions.push(
+      this._documentRequestService.refreshCounts$.subscribe(() => {
+        this.updateNavigationCounts();
+      }),
+    );
+
+    // Subscribe once to the shared count state. Whoever triggers a refresh — this
+    // component on navigation, or my-approval-request.ts / my-approval-document.ts
+    // after an approve/reject/revert action — every subscriber (including this menu)
+    // picks up the same result, so the sidebar badge can never drift from the page.
+    this.subscriptions.push(
+      this._navigationCountsService.documentCreationRequestCount$.subscribe((count) => {
+        this.applyCountToMenu('request-for-document-creation-update', count);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.myDocumentApprovalCounts$.subscribe((counts) => {
+        this.applyCountToMenu('my-approvals-documents', counts.pending);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.myRequestApprovalCounts$.subscribe((counts) => {
+        this.applyCountToMenu('my-approvals-request', counts.pending);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.trainingAuthorizationCount$.subscribe((count) => {
+        this.applyCountToMenu('trainingauthorization', count);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.documentsPendingTrainingCounts$.subscribe((counts) => {
+        this.applyCountToMenu('documents-pending-training', counts.total);
+      }),
+    );
+    this.subscriptions.push(
+      this._navigationCountsService.responsibilityTransferApprovalCounts$.subscribe((counts) => {
+        this.applyCountToMenu('responsibility-transfer-form', counts.pending);
       }),
     );
 
@@ -196,7 +244,31 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   GetLoginEmpId() {
-    this.LoginEmpId = localStorage.getItem('HRISEmpId') || '';
+    // 1. Read the unique session key from the 'login' cookie
+    let sessionKey = '';
+    if (typeof document !== 'undefined') {
+      const nameEQ = 'login=';
+      const ca = document.cookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) {
+          sessionKey = decodeURIComponent(c.substring(nameEQ.length, c.length));
+          break;
+        }
+      }
+    }
+
+    const cleanSessionKey =
+      sessionKey && sessionKey !== 'null' && sessionKey !== 'undefined' ? sessionKey.trim() : '';
+    const userid = localStorage.getItem('HRISUserid');
+    const empid = localStorage.getItem('HRISEmpId');
+
+    // Sanitize to avoid literal strings 'null' or 'undefined'
+    const cleanUserid = userid && userid !== 'null' && userid !== 'undefined' ? userid.trim() : '';
+    const cleanEmpid = empid && empid !== 'null' && empid !== 'undefined' ? empid.trim() : '';
+
+    this.LoginEmpId = cleanSessionKey || cleanUserid || cleanEmpid;
   }
 
   GetRouterUrl(): string {
@@ -214,14 +286,17 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       UserId: '',
       UserEmpId: 0,
       EntTerminal: '',
-      EntTerminalIP: ''
+      EntTerminalIP: '',
     };
 
-    console.log(`%c [ACCESS EVENT] Source: ${source} | Form: ${formName}`, 'color: #007bff; font-weight: bold;');
-    
+    console.log(
+      `%c [ACCESS EVENT] Source: ${source} | Form: ${formName}`,
+      'color: #007bff; font-weight: bold;',
+    );
+
     this._dataService.post('Security/SaveApplicationAccessLog', payload).subscribe({
       next: () => {},
-      error: (err) => console.error('Logging failed:', err)
+      error: (err) => console.error('Logging failed:', err),
     });
   }
 
@@ -233,7 +308,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.showdesc = false;
       this.showfavourite = false;
       this.showfavouriteicon = false;
-      this.strBreadCrumb = 'Home / Dashboard';
+      this.strBreadCrumb = 'Dashboard';
       this.cdRef.detectChanges();
       this.logFormAccess(this.formName, this.currentFormId, Url, 'Direct/Default');
       return;
@@ -265,6 +340,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   onActivate() {
+    this.updateNavigationCounts();
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
     const url = this.GetRouterUrl();
     const isDashboard = url.toLowerCase().includes('dashboard') || url === '/' || url === '';
@@ -296,6 +372,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   onMenuLoaded(items: MenuItem[]): void {
     this._menuItems = items;
+    this.updateNavigationCounts();
     const url = this.GetRouterUrl();
     if (url.toLowerCase().includes('dashboard') || url === '/') return;
 
@@ -307,6 +384,76 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.cdRef.detectChanges();
       this.logFormAccess(this.formName, this.currentFormId, url, 'Direct URL (Data Loaded)');
     }
+  }
+
+  updateNavigationCounts(): void {
+    if (!this._menuItems || this._menuItems.length === 0) return;
+
+    // Counts are fetched through NavigationCountsService and applied to the menu via the
+    // subscriptions set up in ngOnInit, so every subscriber (this menu, and any page that
+    // also subscribes) reacts to the same fetch instead of racing independent copies.
+    this._navigationCountsService.refreshAll();
+  }
+
+  private applyCountToMenu(navigateUrl: string, count: number): void {
+    const updateCount = (menuList: MenuItem[]) => {
+      for (const item of menuList) {
+        const matchesUrl = !!(
+          item.NavigateUrl && item.NavigateUrl.toLowerCase().includes(navigateUrl.toLowerCase())
+        );
+
+        let matchesText = false;
+        if (item.Text) {
+          const textLower = item.Text.toLowerCase().trim();
+          if (navigateUrl === 'request-for-document-creation-update') {
+            matchesText =
+              textLower.includes('request for document creation') ||
+              textLower.includes('my approvals - request for document creation');
+          } else if (navigateUrl === 'my-approvals-documents') {
+            matchesText =
+              textLower === 'my approvals - documents' ||
+              textLower === 'documents' ||
+              textLower.includes('my approvals - documents');
+          } else if (navigateUrl === 'my-approvals-request') {
+            matchesText =
+              textLower === 'my approvals - request' ||
+              textLower === 'request' ||
+              textLower.includes('my approvals - request');
+          } else if (navigateUrl === 'trainingauthorization') {
+            matchesText =
+              textLower.includes('post training') ||
+              textLower.includes('post-training') ||
+              textLower.includes('training authorization') ||
+              textLower.includes('trainingauthorization');
+          } else if (navigateUrl === 'documents-pending-training') {
+            matchesText =
+              textLower.includes('training for sop') ||
+              textLower.includes('sop documents') ||
+              textLower.includes('sop-training');
+          }
+        }
+
+        if (matchesUrl || matchesText) {
+          item.count = count;
+          console.log(
+            `[MainLayout] Matched menu: text="${item.Text}" url="${item.NavigateUrl}" -> assigned count=${count}`,
+          );
+        }
+
+        if (item.child && item.child.length > 0) {
+          updateCount(item.child);
+        }
+        if (item.subChild && item.subChild.length > 0) {
+          updateCount(item.subChild);
+        }
+      }
+    };
+    updateCount(this._menuItems);
+
+    if (this.menuComponent) {
+      this.menuComponent.RootItems = [...this._menuItems];
+    }
+    this.cdRef.detectChanges();
   }
 
   private findMenuItemByUrl(url: string): MenuItem | null {
@@ -358,13 +505,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           return;
         }
         const reader = new FileReader();
-        reader.onload = () => { this.EmployeePic = reader.result as string; };
+        reader.onload = () => {
+          this.EmployeePic = reader.result as string;
+        };
         reader.readAsDataURL(blob);
       },
       error: (error) => {
         console.error('Failed to load image from API:', error);
         this.EmployeePic = './assets/images/pro.png';
-      }
+      },
     });
   }
 
@@ -384,7 +533,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.updateFavouriteStatus(formData.formId);
     this.strBreadCrumb = this.generateBreadcrumb(this.router.url, formData.formName);
     this._pendingFormId = formData.formId;
-    
+
     if (typeof window !== 'undefined' && window.innerWidth <= 992) {
       this.closeSidebar();
     }
@@ -392,15 +541,19 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   generateBreadcrumb(url: string, currentFormName?: string): string {
     const segments = url.split('/').filter((s) => s && s.toLowerCase() !== 'dashboard');
-    let breadcrumb = 'Home';
+    let breadcrumb = '';
     if (segments.length > 0) {
       const pathParts = segments.map(
         (s) => s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' '),
       );
-      if (currentFormName && pathParts.length > 0 && currentFormName.toLowerCase() !== 'dashboard') {
+      if (
+        currentFormName &&
+        pathParts.length > 0 &&
+        currentFormName.toLowerCase() !== 'dashboard'
+      ) {
         pathParts[pathParts.length - 1] = currentFormName;
       }
-      breadcrumb += ' / ' + pathParts.join(' / ');
+      breadcrumb +=  pathParts.join(' / ');
     } else {
       breadcrumb += ' / Dashboard';
     }
@@ -436,8 +589,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  openDashboard(): void { this.router.navigate(['/dashboard']); }
-  openReportDialog(): void { alert('Report Problem functionality not implemented yet.'); }
+  openDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+  openReportDialog(): void {
+    alert('Report Problem functionality not implemented yet.');
+  }
 
   toggleNotifications(event: Event): void {
     event.stopPropagation();
@@ -465,7 +622,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       localStorage.clear();
     }
     if (typeof document !== 'undefined') {
-      document.cookie = encodeURIComponent('login') + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie =
+        encodeURIComponent('login') + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     }
     this.router.navigate(['/security']);
   }
@@ -485,7 +643,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             id: n.id || n.Id,
             title: n.title || n.Title,
             message: n.message || n.Message,
-            type: n.type || n.Type || (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
+            type:
+              n.type ||
+              n.Type ||
+              (n.NotificationType != null ? n.NotificationType.toString() : 'info'),
             isRead: n.IsRead !== undefined ? n.IsRead : n.isRead !== undefined ? n.isRead : false,
             createdAt: n.createdAt || n.CreatedAt,
             relatedEntityType: n.RelatedEntityType || n.relatedEntityType,
@@ -499,7 +660,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         }
         this.cdRef.detectChanges();
       },
-      error: (err: any) => console.error('Failed to fetch notifications', err),
+      error: (err: any) =>
+        console.error('Failed to fetch notifications', err?.error?.Message || err?.Message),
     });
   }
 
@@ -510,7 +672,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.cdRef.detectChanges();
       if (notification.id) this.notificationHttpService.markAsRead(notification.id).subscribe();
     }
-    
+
     if (notification.relatedEntityType === 'Request') {
       this.router.navigate(['/documents/my-approvals-request']);
     } else {
@@ -528,19 +690,27 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   getNotificationIcon(type?: string): string {
     switch (type?.toLowerCase()) {
-      case 'success': return 'bi-check-circle-fill';
-      case 'warning': return 'bi-exclamation-triangle-fill';
-      case 'error': return 'bi-x-circle-fill';
-      default: return 'bi-bell-fill';
+      case 'success':
+        return 'bi-check-circle-fill';
+      case 'warning':
+        return 'bi-exclamation-triangle-fill';
+      case 'error':
+        return 'bi-x-circle-fill';
+      default:
+        return 'bi-bell-fill';
     }
   }
 
   getNotificationColor(type?: string): string {
     switch (type?.toLowerCase()) {
-      case 'success': return 'text-success';
-      case 'warning': return 'text-warning';
-      case 'error': return 'text-danger';
-      default: return 'text-primary';
+      case 'success':
+        return 'text-success';
+      case 'warning':
+        return 'text-warning';
+      case 'error':
+        return 'text-danger';
+      default:
+        return 'text-primary';
     }
   }
 
@@ -549,7 +719,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       width: '480px',
       maxWidth: '90vw',
       panelClass: 'custom-dialog-container',
-      autoFocus: false
+      autoFocus: false,
     });
   }
 }

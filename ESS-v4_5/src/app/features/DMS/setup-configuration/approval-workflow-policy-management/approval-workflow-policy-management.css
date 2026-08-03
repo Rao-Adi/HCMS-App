@@ -37,8 +37,8 @@ table td:last-child {
 }
 
 .grid-icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 27px;
+  height: 27px;
   border-radius: 8px;               /* softer corners */
   border: 1px solid #e0e0e0;
   background-color: #ffffff;

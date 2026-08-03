@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -41,6 +41,10 @@ import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-ap
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
+import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 
 // Define interface for request types
 interface RequestType {
@@ -67,6 +71,7 @@ interface RequestType {
     ReactiveFormsModule,
     DynamicFormByDocumentAttribute,
     NzModalModule,
+    RoleList,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -80,11 +85,13 @@ interface RequestType {
   ],
 })
 export class CreateUpdateDocument {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
   canDelete = false;
   formId = 'uploadorcreate';
+  submitting: boolean = false;
 
   // 🔹 API endpoints
   uploadApiUrl = '/api/documents/upload-grid';
@@ -104,13 +111,18 @@ export class CreateUpdateDocument {
   selectedRequestId: string = '';
   templateHtml: string = '';
   draftFileUrl: string = '';
-  trainingContent: boolean = false;
+  templateFileUrl: string = '';
+  trainingRequired: boolean = false;
   showDocumentContent: boolean = false;
   documentId: string = '';
   documentName: string = '';
   requestId: number = 0;
   loginEmpId: string = '';
+  selectedTemplateType: string = '';
+  draftFile: File | null = null;
+  reviewYear: number = 0;
 
+  selectedEntityType: string = 'Document';
   selectedRequestType: string = '';
   cabinetHierarchy: CabinetSelection[] = [];
 
@@ -139,18 +151,27 @@ export class CreateUpdateDocument {
   totalDistribution = 0;
   totalDocuments = 0;
 
+  // Store page sizes for each grid separately
+  divisionPageSize = 10;
+  employeePageSize = 10;
+  // add more as needed...
+  selectedPageSize = 10; // default value
+
   public noRowsOverlay: string = '';
 
   attributes: DocumentAttribute[] = [];
   dynamicForm!: FormGroup;
 
-  trainers: SelectList[] = [];
+  selectedRole?: string = '';
+  selectedUser: string[] = [];
 
-  users: SelectList[] = [
-    { CODE: '1', NAME: 'Digital Marketing' },
-    { CODE: '2', NAME: 'Software Marketing' },
+  trainingModes: SelectList[] = [
+    { CODE: 'Classroom', NAME: 'Classroom' },
+    { CODE: 'Online', NAME: 'Online' },
   ];
 
+  trainers: SelectList[] = [];
+  users: any[] = [];
   requestTypes: any[] = [];
   requestIds: any[] = [];
   // Map to store the display values
@@ -159,11 +180,13 @@ export class CreateUpdateDocument {
   documentRevisionData: [] = [];
   documentRevisionColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
+    { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-
+    { field: 'businessDomain', headerName: 'Business Domain' },
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
     { field: 'requestCreatedOn', headerName: 'Request Created On' },
     { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
@@ -178,7 +201,7 @@ export class CreateUpdateDocument {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          ${params.value ? 'View' : 'View'}
+          ${params.value ? 'Approval History' : 'Approval History'}
         </span>
       `;
       },
@@ -196,22 +219,25 @@ export class CreateUpdateDocument {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          ${params.value ? 'View' : 'View'}
+          ${params.value ? 'Revision History' : 'Revision History'}
         </span>
       `;
       },
       onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
+        this.openRevisionHistoryModal(event.data);
       },
     },
   ];
 
   DocumentObsoletionGridColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
+    { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
+    { field: 'businessDomain', headerName: 'Business Domain' },
 
     { field: 'requestCreatedBy', headerName: 'Request Created By' },
     { field: 'requestCreatedOn', headerName: 'Request Created On' },
@@ -224,7 +250,7 @@ export class CreateUpdateDocument {
       cellRendererSelector: () => ({
         component: LinkRenderer,
         params: {
-          label: 'View',
+          label: 'Approval History',
           onClick: (rowData: any) => {
             this.openWorkflowDeatilsModal(rowData);
           },
@@ -237,7 +263,7 @@ export class CreateUpdateDocument {
       cellRendererSelector: () => ({
         component: LinkRenderer,
         params: {
-          label: 'View',
+          label: 'Revision History',
           onClick: (rowData: any) => {
             this.openRevisionHistoryModal(rowData);
           },
@@ -258,6 +284,9 @@ export class CreateUpdateDocument {
     private documentTemplateService: TemplateService,
     private _documentRequestService: DocumentRequestService,
     private _permissionService: PermissionService,
+    private _trainingPolicyService: TrainingPolicyService,
+    private _peoplePartnerService: PeoplePartnersService,
+    private _documentReviewPolicyService: DocumentReviewPolicyService,
   ) {}
 
   ngOnInit() {
@@ -279,10 +308,12 @@ export class CreateUpdateDocument {
     // Assuming you have a service that fetches this data
     this._documentRequestTypeService.getDocumentTypeList().subscribe((res) => {
       if (res) {
-        this.requestTypes = (res.Data ?? []).map((d: any) => ({
-          id: d.Code,
-          text: d.Value,
-        }));
+        this.requestTypes = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.Code,
+            text: d.Value,
+          }))
+          .sort((a: any, b: any) => (a.text || '').localeCompare(b.text || ''));
 
         // Create a map for easy lookup of display values
         this.requestTypeMap = new Map(res.Data.map((item: any) => [item.Code, item.Value]));
@@ -293,6 +324,9 @@ export class CreateUpdateDocument {
   }
 
   get isSubmitDisabled(): boolean {
+    if (this.submitting) {
+      return true;
+    }
     if (!this.selectedRequestType || !this.selectedDocumentType) {
       return true;
     }
@@ -301,18 +335,49 @@ export class CreateUpdateDocument {
       if (!this.selectedRequestId) {
         return true;
       }
+    }
 
+    // Document file is mandatory for file-based templates (types 1 & 2) if not already uploaded
+    if (this.selectedRequestType === 'DRT-0001' || this.selectedRequestType === 'DRT-0002') {
+      if (this.selectedTemplateType !== '3') {
+        if (!this.draftFileUrl && !this.draftFile) {
+          return true;
+        }
+      }
+    }
+
+    if (this.selectedRequestType === 'DRT-0001') {
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return true;
         }
       }
 
-      if (this.trainingContent && !this.selectedTrainingMode) {
-        return true;
+      if (this.trainingRequired) {
+        if (!this.selectedTrainingMode) {
+          return true;
+        }
+        if (!this.trainingUsersData || this.trainingUsersData.length === 0) {
+          return true;
+        }
       }
     }
     return false;
+  }
+
+  // The actual file extension a drafted upload must match. Derived straight from the
+  // template/existing-document URL rather than the TemplateType code, since TemplateType
+  // is an unreliable classification (e.g. TemplateType 1 has been seen pointing at a .docx).
+  get expectedTemplateExtension(): string {
+    const url = this.templateFileUrl || this.draftFileUrl || '';
+    if (!url) return '';
+    try {
+      const clean = decodeURIComponent(url).split('?')[0].split('#')[0];
+      const parts = clean.split('.');
+      return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
+    } catch {
+      return '';
+    }
   }
 
   onRequestTypeChange(code: string): void {
@@ -323,20 +388,24 @@ export class CreateUpdateDocument {
     // Control visibility of conditional sections based on request type
     switch (code) {
       case 'DRT-0001': // Creation of new document
-        this.trainingContent = false;
+        //this.trainingRequired = false;
         this.showExclusionTable = true;
+        this.selectedEntityType = 'Document';
         break;
       case 'DRT-0002': // Revision of existing document
-        this.trainingContent = false;
+        //this.trainingRequired = false;
+        this.selectedEntityType = 'Revision';
         this.showExclusionTable = false;
         this.GetEffectiveDocumentsForRevision('');
         break;
       case 'DRT-0003': // Obsoletion of existing document
-        this.trainingContent = false;
-        this.showExclusionTable = true;
+        //this.trainingRequired = false;
+        this.selectedEntityType = 'Revision';
+        this.showExclusionTable = false;
         break;
       default:
-        this.trainingContent = false;
+        this.selectedEntityType = 'Document';
+        //this.trainingRequired = false;
         this.showExclusionTable = false;
         break;
     }
@@ -346,11 +415,21 @@ export class CreateUpdateDocument {
   }
 
   onCellClicked(event: any): void {
-    this.templateHtml = event.data?.proposedContent || '';
-    this.draftFileUrl = event.data?.draftFileUrl || '';
-    this.requestId = event.data?.requestId || event.data?.Id || event.data?.id || 0;
-    this.documentName = event.data?.documentName || '';
+    const data = event.data;
+    this.templateHtml = data?.proposedContent || '';
+    this.draftFileUrl = data?.draftFileUrl || '';
+    this.requestId = data?.requestId || data?.Id || data?.id || 0;
+    this.documentName = data?.documentName || '';
+    this.selectedDocumentType = data?.documentTypeCode || '';
+    this.selectedTemplateType = data?.templateType?.toString() || '';
     this.showDocumentContent = true;
+
+    if (this.selectedDocumentType) {
+      this.CheckTrainingPolicy(this.selectedDocumentType);
+      this.GetDocumentAttributes(this.selectedDocumentType);
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+      this.GetDocumentReviewPolicy();
+    }
   }
 
   loadRequestSpecificData(code: string) {
@@ -380,8 +459,11 @@ export class CreateUpdateDocument {
   }
 
   loadObsoletionData() {
-    // Load data for obsoletion (e.g., documents grid)
-    //this.loadDocumentsForObsoletion();
+    // This grid (like the Revision one) has no (serverQuery) binding — it's a plain
+    // client-side grid that only ever shows whatever rowData it's given. Without this call,
+    // DocumentObseletionData never gets assigned, AgGridWrapper's rowData input never
+    // changes, and its loading spinner never clears.
+    this.GetAllApprovedDocuments('');
   }
 
   // Helper method to get display text
@@ -405,52 +487,119 @@ export class CreateUpdateDocument {
 
   onDocumentTypeChange(value: string): void {
     this.selectedDocumentType = value;
-    if (value === 'SOP') {
-      this.trainingContent = true;
-    } else {
-      this.trainingContent = false;
+    this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.draftFile = null;
+    this.templateFileUrl = '';
+    this.selectedRequestId = '';
+    this.showDocumentContent = false;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
     }
-    //Get the Document Type's template
-    this.GetDocumentAttributes(value);
-    this.GetAllApprovedRequests();
-    this.GetDocumentTemplate();
+
+    if (value) {
+      this.CheckTrainingPolicy(value);
+      this.GetDocumentAttributes(value);
+      this.GetAllApprovedRequests();
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+      this.GetDocumentReviewPolicy();
+      this.GetTemplate(this.selectedDocumentType);
+    } else {
+      this.emptyFields();
+    } 
+  }
+
+  loadWorkflowAuthorities(documentType: string) {
+    if (!documentType) {
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+      return;
+    }
 
     const payLoad = {
-      EntityType: 'Document',
-      documentTypeCode: this.selectedDocumentType,
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
+      EntityType: this.selectedEntityType || 'Document',
+      documentTypeCode: documentType,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
     };
-
-    this._workflowStepService
-      .getWorkflowPolicyByDocumentTypeCode(
-        payLoad,
-        // value,
-        // this.selectedRequestType === '1' ? 1 : this.selectedRequestType === '2' ? 2 : 3,
-      )
-      .subscribe((res) => {
-        // console.log('User Details:', res);
-        this.showExclusionTable = true;
-        // this.totalDistribution = res?.Data ? res.Data.length : 0;
-        this.approvalSequenceData = res?.Data ? res.Data : [];
-      });
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
+      this.showExclusionTable = true;
+      this.approvalSequenceData = res?.Data ? res.Data : [];
+    });
   }
 
   GetDocumentAttributes(value: string) {
-    this._documentAttributeService.getDocumentAttributeByDocumentType(value).subscribe((res) => {
-      if (res) {
-        if (!res?.Data) return;
-        this.attributes = res.Data.map((attr: any) => ({
-          ...attr,
-          ControlType: attr.ControlType.toLowerCase() as ControlTypes,
-          options: attr.ListValues ? attr.ListValues.split(',').map((v: string) => v.trim()) : [],
-        }));
-        //this.attributes = res.Data;
-      } else {
+    this._documentAttributeService.getDocumentAttributeByDocumentType(value).subscribe({
+      next: (res) => {
+        if (res) {
+          if (!res?.Data) return;
+          this.attributes = res.Data.map((attr: any) => ({
+            ...attr,
+            ControlType: attr.ControlType.toLowerCase() as ControlTypes,
+            options: attr.ListValues ? attr.ListValues.split(',').map((v: string) => v.trim()) : [],
+          }));
+          //this.attributes = res.Data;
+        } else {
+          this.attributes = [];
+        }
+      },
+      error: () => {
         this.attributes = [];
-      }
+      },
+    });
+  }
+
+  GetTemplate(value: string) {
+    this.documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
+      next: (response: any) => {
+        if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
+          this.selectedTemplateType = '';
+          this.templateFileUrl = '';
+          this.templateHtml = '';
+          this.draftFileUrl = '';
+          this._notificationToastService.createNotification(
+            'warning',
+            'Template Missing',
+            'Please first upload the template against this Document Type. Document request cannot be created.',
+          );
+          return;
+        }
+
+        this.selectedTemplateType =
+          response.Data?.TemplateType?.toString() || response.Data?.templateType?.toString() || '';
+        this.templateFileUrl =
+          response.Data?.TemplateFileUrl ||
+          response.Data?.TemplateFileURL ||
+          response.Data?.templateFileUrl ||
+          '';
+      },
+      error: (err) => {
+        this.selectedTemplateType = '';
+        this.templateFileUrl = '';
+        this.templateHtml = '';
+        this.draftFileUrl = '';
+        console.error(err);
+      },
+    });
+  }
+
+  CheckTrainingPolicy(value: string) {
+    this._trainingPolicyService.GetTrainingPolicyByDocumentType(value).subscribe({
+      next: (res) => {
+        if (res && res.Data) {
+          const data = res.Data;
+
+          // 1. Assign the TrainingRequired value safely
+          this.trainingRequired = !!data.TrainingRequired;
+        } else {
+          this.trainingRequired = false;
+        }
+      },
+      error: () => {
+        this.trainingRequired = false;
+      },
     });
   }
 
@@ -467,10 +616,11 @@ export class CreateUpdateDocument {
     };
     this._documentService.GetApprovedRequestForDocumentCreation(payLoad).subscribe((res) => {
       if (res) {
-        this.requestIds = (res.Data ?? []).map((d: any) => ({
-          id: d.id,
-          text: d.requestnumber,
-        }));
+        this.requestIds = (res.Data ?? [])
+          .map((d: any) => ({
+            id: d.id,
+            text: d.requestnumber,
+          }));
       } else {
         this.requestIds = [];
       }
@@ -485,7 +635,10 @@ export class CreateUpdateDocument {
         if (!res?.Data) return;
         this.documentId = res.Data[0].documentid;
         this.templateHtml = res.Data[0].content || '';
-        this.draftFileUrl = res.Data[0].draftfileurl || res.Data[0].draftFileUrl || '';
+        this.draftFileUrl =
+          res.Data[0].draftfileurl ||
+          res.Data[0].draftFileUrl ||
+          '';
         this.documentName = res.Data[0].title || '';
       } else {
         this.templateHtml = '';
@@ -499,14 +652,6 @@ export class CreateUpdateDocument {
     // this.loading = true;
     this.selectedTrainingMode = value;
   }
-
-  GetAllDistribution(query: any) {}
-
-  // Store page sizes for each grid separately
-  divisionPageSize = 10;
-  employeePageSize = 10;
-  // add more as needed...
-  selectedPageSize = 1; // default value
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     const { gridId, pageSize } = event;
@@ -562,6 +707,10 @@ export class CreateUpdateDocument {
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
     this.GetAllApprovedRequests();
+
+    if (this.selectedDocumentType) {
+      this.loadWorkflowAuthorities(this.selectedDocumentType);
+    }
   }
 
   submitDynamicForm() {
@@ -587,67 +736,93 @@ export class CreateUpdateDocument {
   }
 
   AddTrainingUsers() {
-    this.showTrainingUserTable = this.showTrainingUserTable == true ? false : true;
-    // if (!this.approvalPolicy) {
-    //   this._notificationToastService.createNotification(
-    //     'warning',
-    //     'Validation',
-    //     'Please select an approval policy.',
-    //   );
-    //   return;
-    // }
+    if (!this.selectedTrainingMode) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Training Mode.',
+      );
+      return;
+    }
+    if (!this.selectedRole) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Trainer.',
+      );
+      return;
+    }
+    if (!this.selectedUser || this.selectedUser.length === 0) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select at least one User.',
+      );
+      return;
+    }
 
-    // const payLoad = {
-    //   companyId: MASTER_DEFAULT_KEYS.COMPANYID,
-    //   // EntityType: this.selectedPolicyId == PolicyId.RequestForDocumentCreation
-    //   //             ? 'Request'
-    //   //             : this.selectedPolicyId == PolicyId.DocumentCreation
-    //   //               ? 'Document'
-    //   //               : 'Revision',
-    //   StepType: 'Review', // this will be discussed and sent from frontend, for now we are hardcoding it
-    //   documentTypeCode: this.selectedDocumentType,
-    //   divisionCode: this.selectedDivisions,
-    //   departmentCode: this.selectedDepartment,
-    //   subDepartmentCode: this.selectedSubDepartment,
-    //   businessDomainCode: this.selectedBusinessDomain,
-    //   // designationCodes: this.getDesignationCodes(),
-    //   // roles: this.getRoleCodes(),
-    //   // employeeCodes: this.getEmployeeCodes(),
-    //   // CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
-    //   RequireCrossFunctionalHead: false,
-    //   IsParallelApproval: false,
-    // };
+    this.showTrainingUserTable = true;
 
-    // this._workflowStepService.create(payLoad).subscribe({
-    //   next: (response) => {
-    //     if (response?.Success) {
-    //       this.trainingUsersData = [...response.Data];
+    const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
 
-    //       this._notificationToastService.createNotification('success', 'Workflow', response.Message);
-    //     }
-    //   },
-    //   error: (err) => {
-    //     this._notificationToastService.createNotification('error', 'Error', 'Failed to create workflow step.');
-    //   },
-    // });
+    this.selectedUser.forEach((userCode) => {
+      const user = this.users.find((u) => u.CODE === userCode);
+      this.trainingUsersData.push({
+        TrainingMode: mode?.NAME,
+        TrainerName: user?.role, // valueKey="NAME" bounds the actual role name
+        UserName: user?.NAME,
+        TrainerCode: this.selectedRole,
+        UserCode: user?.CODE,
+      });
+    });
+
+    this.selectedRole = '';
+    this.selectedUser = [];
   }
 
-  SubmiteDocumentRequests() {
+  SubmiteDocument() {
+    this.submitting = true;
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
+    const trainingUsers = (this.trainingUsersData || []).map((user: any) => {
+      const modeVal = user.TrainingMode === 'Classroom' ? 1 : (user.TrainingMode === 'Online' ? 2 : 0);
+      return {
+        trainingmode: modeVal,
+        employeecode: user.UserCode || '',
+      };
+    });
+
     const payLoad = {
       documentid: this.documentId,
-      userid: this.loginEmpId,
       attributes: attributeValues,
+      trainingusers: trainingUsers,
     };
 
-    this._documentService.submitDocument(payLoad).subscribe({
+    // Append the new draft file if it exists
+    const formData = new FormData();
+    Object.keys(payLoad).forEach((key) => {
+      if (key === 'trainingusers' || key === 'TrainingUsers' || key === 'attributes') {
+        formData.append(key, JSON.stringify((payLoad as any)[key]));
+      } else {
+        formData.append(key, (payLoad as any)[key]);
+      }
+    });
+    // Template attachment for documents that didn't get one at Document Request creation time.
+    // Which one applies depends on the DocumentType's configured Template: a file (PDF/Word) or
+    // HTML content edited in the template editor -- never both.
+    if (this.draftFile) {
+      formData.append('DocumentFile', this.draftFile, this.draftFile.name);
+    } else if (this.templateHtml) {
+      formData.append('ProposedContent', this.templateHtml);
+    }
+
+    this._documentService.submitDocument(formData).subscribe({
       next: (response) => {
         if (response?.Success) {
           this._notificationToastService.createNotification(
             'success',
-            'Document',
+            'Document Create',
             response.Message,
           );
           this.emptyFields();
@@ -656,16 +831,91 @@ export class CreateUpdateDocument {
           if (this.dynamicForm) {
             this.dynamicForm.reset();
           }
+          setTimeout(() => {
+            this.submitting = false;
+            window.location.reload();
+          }, 1000);
+        } else {
+          this.submitting = false;
         }
       },
       error: (err) => {
+        this.submitting = false;
+        // Default fallback message
+        let message = 'Something went wrong. Please try again.';
+
+        // Handle backend error message (common patterns)
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+
         this._notificationToastService.createNotification(
           'error',
-          'Error',
-          'Failed to approve document.',
+          'Document Create/Update',
+          message,
         );
       },
     });
+  }
+
+  onDraftFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) {
+      this.draftFile = null;
+      return;
+    }
+
+    const file = input.files[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const expectedExt = this.expectedTemplateExtension;
+
+    if (expectedExt && ext !== expectedExt) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Invalid File',
+        `The document template is a .${expectedExt} file. Please upload a matching .${expectedExt} file.`,
+      );
+      input.value = '';
+      this.draftFile = null;
+      return;
+    }
+
+    this.draftFile = file;
+  }
+
+  reviewDraftedFile(): void {
+    if (this.draftFile) {
+      const fileURL = URL.createObjectURL(this.draftFile);
+      window.open(fileURL, '_blank');
+      setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+    }
+  }
+
+  getDraftFileName(): string {
+    if (this.draftFile) {
+      return this.draftFile.name;
+    }
+    if (this.draftFileUrl) {
+      try {
+        const decoded = decodeURIComponent(this.draftFileUrl);
+        const parts = decoded.split('/');
+        return parts[parts.length - 1].split('?')[0];
+      } catch (e) {
+        const parts = this.draftFileUrl.split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return '';
+  }
+
+  removeDraftedFile(): void {
+    this.draftFile = null;
+    this.draftFileUrl = '';
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 
   private buildAttributePayload(): any[] {
@@ -720,15 +970,17 @@ export class CreateUpdateDocument {
     return result;
   }
 
-  GetDocumentTemplate() {
-    this.documentTemplateService
-      .getTemplateByDocumentTypeCode(this.selectedDocumentType)
+  GetDocumentReviewPolicy() {
+    const DocTypeCode = this.selectedDocumentType;
+    this._documentReviewPolicyService
+      .getDocumentReviewPolicyByDocumentTypeCode(DocTypeCode)
       .subscribe({
         next: (response) => {
-          this.templateHtml = response.Data.TemplateContent;
-          // Promise.resolve().then(() => {
-          //   this.templateHtml = response.Data.TemplateContent;
-          // });
+          if (response?.Success || response?.Data) {
+            this.reviewYear = response?.Data.ReviewPeriodYears;
+          } else {
+            this.reviewYear = 0;
+          }
         },
         error: (err) => console.error(err),
       });
@@ -742,7 +994,7 @@ export class CreateUpdateDocument {
         data: row, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1200,
+      nzWidth: 1000,
     });
   }
 
@@ -754,7 +1006,7 @@ export class CreateUpdateDocument {
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,
-        entityType: 'Document',
+        entityType: this.selectedEntityType || 'Document',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: 1000,
@@ -793,7 +1045,7 @@ export class CreateUpdateDocument {
       searchText: searchText || '',
     };
 
-    this._documentRequestService.GetEffectiveDocumentsForRevision(payload).subscribe({
+    this._documentService.GetEffectiveDocumentsForRevision(payload).subscribe({
       next: (response) => {
         if (response?.Success || response?.Data) {
           const data = response?.Data;
@@ -809,35 +1061,38 @@ export class CreateUpdateDocument {
             stepId: item.StepId || item.stepId,
             stepOrder: item.StepOrder || item.stepOrder,
             startedAt: item.StartedAt || item.startedAt,
+            version: item.Version,
             division: item.Division,
-            documentId: item.DocumentNumber,
+            documentId: item.Id || item.id,
+            documentNumber: item.documentNumber || item.DocumentNumber,
             documentName: item.DocumentName,
             proposedContent: item.ProposedContent,
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
             justification: item.Justification,
-            businessdomainId: item.BusinessDomainCode,
+            businessdomain: item.BusinessDomain,
+            businessDomainCode: item.BusinessDomainCode,
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
-            sumbittedby: item.CreatedBy,
+            requestCreatedBy: item.LastModifiedByName,
             status: item.IsReworked ? 'Reworked' : 'Draft',
-            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
             requestCreatedOn: new CustomDateFormatPipe().transform(
-              item.createdAt || item.CreatedAt || '',
+              item.CreatedAt || item.CreatedAt || '',
             ),
-            previousVersionCreatedOn:
-              item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '',
-            proposedVersionNumber: item.RowVersion || item.rowVersion,
+            // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+            //   item.createdAt || item.CreatedAt || '',
+            // ),
+            // previousVersionCreatedOn:
+            //   item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '', 
             templateType: item.TemplateType || item.templateType,
-            templateFileUrl: item.TemplateFileURL || item.templateFileUrl,
+            templateFileUrl:
+              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
             draftFileUrl:
               item.DraftFileUrl ||
+              item.draftfileurl ||
               item.draftFileUrl ||
-              (String(item.TemplateType || item.templateType) === '1' ||
-              String(item.TemplateType || item.templateType) === '2'
-                ? item.ProposedContent
-                : ''),
+              '',
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({
               ...x,
@@ -869,32 +1124,46 @@ export class CreateUpdateDocument {
   }
 
   GetAllApprovedDocuments(query: any) {
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC'; // Default sort order
+    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
     const payLoad = {
       divisionCode: this.selectedDivisions,
       departmentCode: this.selectedDepartment,
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
       documentTypeCode: this.selectedDocumentType,
-      employeeCode: 'EMP-0001',
       RequestStatus: 'Approved',
 
-      // pageNumber: this.currentGridQuery.pageNumber,
-      // pageSize: this.currentGridQuery.pageSize,
-      // sortModel: this.currentGridQuery.sortModel || [],
-      // filterModel: this.currentGridQuery.filterModel || {},
-      // searchTerm: this.currentGridQuery.searchTerm || '',
-      // // Map to satisfy backend validation
-      // sortBy: sortBy,
-      // sortColumn: sortColumn,
-      // searchText: this.currentGridQuery.searchTerm || '',
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize || this.selectedPageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      searchTerm: this.currentGridQuery.searchTerm || '',
+      // Map to satisfy backend validation
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: this.currentGridQuery.searchTerm || '',
       empid: this.loginEmpId,
     };
 
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this.totalRows = response.Data.TotalCount;
-          this.documentRevisionData = response.Data.map((item: any) => {
+          // response.Data is { Items: [...], TotalCount } like every other list endpoint in
+          // this app — it is NOT itself an array. Calling .map() on it directly (as this used
+          // to) throws a TypeError before DocumentObseletionData is ever reassigned, which
+          // RxJS routes to the error handler below and leaves the grid's rowData untouched —
+          // so AgGridWrapper's loading spinner never clears.
+          const data = response?.Data;
+          const items = data?.Items || (Array.isArray(data) ? data : []);
+          this.totalRows = data?.TotalCount ?? items.length;
+          this.DocumentObseletionData = items.map((item: any) => {
             // Helper to get value with case-insensitive fallback
             const get = (keys: string[], defaultValue: any = ''): any => {
               for (const key of keys) {
@@ -924,10 +1193,9 @@ export class CreateUpdateDocument {
               // ──────────────────────────────────────────────
               documentType: get(['DocumentType', 'documentType']),
               documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
+              documentNumber: get(['DocumentNumber', 'documentNumber','documentnumber']),
               documentName: get(['Title', 'title']),
-              company: get(['Company', 'company'], ''),
-              proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
-              proposedVersionNumber: get(['ProposedVersionNumber', 'proposedVersionNumber'], '1.0'), // fallback
+              company: get(['Company', 'company'], ''),  
 
               // ──────────────────────────────────────────────
               // Organizational context
@@ -936,9 +1204,9 @@ export class CreateUpdateDocument {
               department: get(['Department']),
               departmentId: get(['DepartmentCode', 'departmentCode']),
               subDepartment: get(['SubDepartment', 'SubDepartment']),
-              businessdomain: get(['BusinessDomain', 'businessDomain']),
-              businessdomainId: get(['BusinessDomainCode', 'businessDomainCode']),
-              version: get(['ProposedVersionNumber', 'proposedVersionNumber']),
+              businessDomain: get(['BusinessDomain', 'businessDomain']),
+              businessDomainCode: get(['BusinessDomainCode', 'businessDomainCode']),
+              version: get(['Version', 'version']),
               // ──────────────────────────────────────────────
               // Content / Justification
               // ──────────────────────────────────────────────
@@ -949,16 +1217,16 @@ export class CreateUpdateDocument {
               // ──────────────────────────────────────────────
               // Audit / History fields
               // ──────────────────────────────────────────────
-              requestCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              requestCreatedBy: get(['LastModifiedByName', 'lastModifiedByName'], ''),
               dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
               requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
               startedAt: this.formatDate(startedAtRaw),
 
               // Previous version info (only if present in real payloads)
-              previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              previousVersionCreatedOn: this.formatDate(
-                get(['RequestCreatedAt', 'requestCreatedAt']),
-              ),
+              //previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
+              // previousVersionCreatedOn: this.formatDate(
+              //   get(['RequestCreatedAt', 'requestCreatedAt']),
+              // ),
 
               // ──────────────────────────────────────────────
               // Placeholder / missing fields from your original
@@ -970,13 +1238,20 @@ export class CreateUpdateDocument {
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
             };
           });
+        } else {
+          // A falsy Success must still clear the grid's rowData — otherwise it's left
+          // showing stale data (or none) while the loading spinner never turns off.
+          this.DocumentObseletionData = [];
+          this.totalRows = 0;
         }
       },
       error: (err) => {
+        this.DocumentObseletionData = [];
+        this.totalRows = 0;
         this._notificationToastService.createNotification(
           'error',
           'Error',
-          'Failed to submit document.',
+          err?.error?.Message || err?.Message || 'Failed to fetch documents for obsoletion.',
         );
       },
     });
@@ -1009,12 +1284,44 @@ export class CreateUpdateDocument {
     this.selectedBusinessDomain = '';
     this.templateHtml = '';
     this.draftFileUrl = '';
+    this.templateFileUrl = '';
     this.documentName = '';
     this.requestId = 0;
+    this.draftFile = null;
     this.selectedRequestId = '';
     this.approvalSequenceData = [];
     this.trainingUsersData = [];
     this.selectedTrainingMode = '';
+    this.selectedRole = '';
+    this.selectedUser = [];
+  }
+
+  getFileIconClass(filename: string | null | undefined): string {
+    if (!filename) return 'bi-file-earmark-text text-primary';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'bi-file-earmark-pdf text-danger';
+      case 'doc':
+      case 'docx':
+        return 'bi-file-earmark-word text-primary';
+      case 'xls':
+      case 'xlsx':
+        return 'bi-file-earmark-excel text-success';
+      case 'ppt':
+      case 'pptx':
+        return 'bi-file-earmark-ppt text-warning';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return 'bi-file-earmark-image text-info';
+      case 'zip':
+      case 'rar':
+        return 'bi-file-earmark-zip text-warning';
+      default:
+        return 'bi-file-earmark-text text-secondary';
+    }
   }
 
   downloadDraft(): void {
@@ -1118,6 +1425,84 @@ export class CreateUpdateDocument {
           );
         }
       },
+    });
+  }
+
+  loadUsersWhenRoleIdChanges(query: any = {}) {
+    const roleId = this.selectedRole;
+    if (!roleId) {
+      this.users = [];
+      this.totalRows = 0;
+      this.selectedUser = []; // Clear selected user
+      return;
+    }
+    const sort = query.sortModel?.[0];
+    const payload = {
+      searchtext: query.searchTerm || query.searchText || '',
+      sortby: sort?.sort?.toUpperCase() || 'ASC',
+      sortcolumn: sort?.colId || 'empid', // Fallback to ensure query works smoothly
+      isactive: true,
+      pagenumber: Number(query.pageNumber) || 1,
+      pagesize: Number(query.pageSize) || this.pageSize,
+      divisionCode: null,
+      departmentCode: null,
+      subDepartmentCode: null,
+      businessDomainCode: null,
+      documentTypeCode: this.selectedDocumentType,
+    };
+
+    this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe((res) => {
+      if (res?.Success && res.Data) {
+        const data = res.Data;
+        const users = (Array.isArray(data) ? data : data.Items || []).filter((u: any) => u != null);
+
+        if (users.length > 0) {
+          this.totalRows = data.TotalCount ?? users.length;
+          this.users = users.map((u: any) => {
+            // Ensure we never receive undefined codes/names by exhausting all possible API casing variants
+            const code =
+              u.empcode ||
+              u.empCode ||
+              u.EmployeeCode ||
+              u.employeeCode ||
+              u.empid ||
+              u.empId ||
+              u.EmployeeId ||
+              u.id ||
+              u.Id ||
+              u.UserId ||
+              u.userId ||
+              u.UserCode ||
+              u.userCode ||
+              u.CODE;
+            const name = u.firstname
+              ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
+              : u.EmployeeName ||
+                u.employeeName ||
+                u.empName ||
+                u.EmpName ||
+                u.UserName ||
+                u.userName ||
+                u.Name ||
+                u.name ||
+                u.NAME ||
+                code;
+
+            return {
+              ...u,
+              CODE: code,
+              NAME: '(' + code + ') ' + name,
+              RAW_NAME: name,
+            };
+          }).sort((a: any, b: any) => (a.RAW_NAME || '').localeCompare(b.RAW_NAME || ''));
+        } else {
+          this.users = [];
+          this.totalRows = 0;
+        }
+      } else {
+        this.users = [];
+        this.totalRows = 0;
+      }
     });
   }
 }

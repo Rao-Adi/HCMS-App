@@ -116,7 +116,7 @@ export const routes: Routes = [
         path: 'reports',
         children: [
           {
-            path: 'view-document',
+            path: 'viewapproved',
             loadComponent: () =>
               import('@app/features/DMS/reports/approval-documents/approval-documents').then(
                 (m) => m.ApprovalDocuments
@@ -135,7 +135,7 @@ export const routes: Routes = [
               import('@app/features/DMS/reports/aireport/aireport').then((m) => m.AIReport),
           },
           {
-            path: 'pending-approval',
+            path: 'pendingapproval',
             loadComponent: () =>
               import(
                 '@app/features/DMS/reports/view-document-pending-approval/view-document-pending-approval'
@@ -189,7 +189,7 @@ export const routes: Routes = [
               ).then((m) => m.ApprovalWorkflowPolicyExternalUsers),
           },
           {
-            path: 'misc-policies',
+            path: 'trainingpolicy',
             loadComponent: () =>
               import('@app/features/DMS/setup-configuration/misc-policies/misc-policies').then(
                 (m) => m.MiscPolicies

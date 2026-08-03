@@ -1,158 +1,129 @@
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-lg-12 col-md-12 col-sm-12">
-      <div class="card-custom">
-        <div class="clearfix">
+  <!-- <div class="clearfix">
           <div class="pull-left">
             <h3 class="mt-0">View Document (Approved)</h3>
             <small class="text-muted">View Document (Approved)</small>
           </div>
         </div>
         <br />
-        <hr />
-        <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="main-content d-flex flex-column min-vw-0">
-            <div class="row row-space">
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <h3 class="PnlHeader">
-                    {{ 'labels.Cabinet' | safeTranslate }}
-                  </h3>
+        <hr /> -->
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+      <div class="Master-box mb-4">
+        <h3 class="PnlHeader">
+          {{ 'labels.Cabinet' | safeTranslate }}
+        </h3>
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+            <div class="PnlHeading">
+              <label>{{ 'labels.Document Type' | safeTranslate }} </label>
+            </div>
+            <div>
+              <app-document-type-list
+                valueKey="CODE"
+                labelKey="NAME"
+                placeholder="Select Document Type"
+                [(ngModel)]="selectedDocumentType"
+                (valueChange)="onDocumentTypeChange($event)"
+                width="250px"
+              >
+              </app-document-type-list>
+            </div>
+          </div>
+          <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
+            <app-cabinet-structure-list
+              [divisionCode]="selectedDivisions"
+              [departmentCode]="selectedDepartment"
+              [subDepartmentCode]="selectedSubDepartment"
+              [businessDomainCode]="selectedBusinessDomain"
+              (hierarchyChange)="onHierarchyChange($event)"
+            >
+            </app-cabinet-structure-list>
+          </div>
+        </div>
+        <br />
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
+            <div class="PnlHeading">
+              <label>{{ 'labels.Request Created by' | safeTranslate }}</label>
+            </div>
+            <div>
+              <nz-select
+                style="width: 250px"
+                [(ngModel)]="selectedRequestCreator"
+                nzPlaceHolder="Select"
+                (ngModelChange)="onRequestCreatorChange($event)"
+                nzAllowClear
+                nzShowSearch
+              >
+                <nz-option
+                  *ngFor="let dep of requestCreators"
+                  [nzValue]="dep.CODE"
+                  [nzLabel]="dep.NAME"
+                >
+                </nz-option>
+              </nz-select>
+            </div>
+          </div>
+        </div>
+        <br />
+        <div class="row">
+          <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            <h3 class="PnlHeader">Document Approved Between</h3>
+            <!-- Authority Type -->
+            <div class="row">
+              <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                <div class="d-flex flex-column">
+                  <span>From Date</span>
                   <br />
-                  <div class="row">
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Document Type' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <app-document-type-list
-                          valueKey="CODE"
-                          labelKey="NAME"
-                          placeholder="Select Document Type"
-                          [(ngModel)]="selectedDocumentType"
-                          (valueChange)="onDocumentTypeChange($event)"
-                          width="250px"
-                        >
-                        </app-document-type-list>
-                      </div>
-                    </div>
-                    <div class="col-lg-9 col-md-9 col-sm-9 mb-10">
-                      <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
-                      </app-cabinet-structure-list>
-                    </div>
-                  </div>
-                  <br />
-                  <div class="row">
-                    <div class="col-lg-3 col-md-3 col-sm-6 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Request Created by' | safeTranslate }}</label>
-                      </div>
-                      <div>
-                        <nz-select
-                          style="width: 250px"
-                          [(ngModel)]="selectedAuthorityType"
-                          nzPlaceHolder="Select"
-                          (ngModelChange)="onAuthorityTypeChange($event)"
-                          nzAllowClear
-                          nzShowSearch
-                        >
-                          <nz-option
-                            *ngFor="let dep of requestCreators"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
-                      </div>
-                    </div>
-                  </div>
-                  <br />
-                  <div class="row">
-                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                      <h3 class="PnlHeader">Document Approved Between</h3>
-                      <br />
-                      <!-- Authority Type -->
-                      <div class="row">
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                          <div class="d-flex flex-column">
-                            <span>From Date</span>
-                            <br />
-                            <nz-date-picker
-                              [nzRenderExtraFooter]="footerRender"
-                              [nzFormat]="dateFormat"
-                            ></nz-date-picker>
-                          </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                          <div class="d-flex flex-column">
-                            <span>To Date</span>
-                            <br />
-                            <nz-date-picker
-                              [nzRenderExtraFooter]="footerRender"
-                              [nzFormat]="dateFormat"
-                            ></nz-date-picker>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                      <h3 class="PnlHeader">Request Created Between</h3>
-                      <br />
-                      <div class="row">
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                          <div class="d-flex flex-column">
-                            <span>From Date</span>
-                            <br />
-                            <nz-date-picker
-                              [nzRenderExtraFooter]="footerRender"
-                              [nzFormat]="dateFormat"
-                            ></nz-date-picker>
-                          </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                          <div class="d-flex flex-column">
-                            <span>To Date</span>
-                            <br />
-                            <nz-date-picker
-                              [nzRenderExtraFooter]="footerRender"
-                              [nzFormat]="dateFormat"
-                            ></nz-date-picker>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <nz-date-picker
+                    [(ngModel)]="approvedFromDate"
+                    (ngModelChange)="onFilterChange()"
+                    [nzRenderExtraFooter]="footerRender"
+                    [nzFormat]="dateFormat"
+                  ></nz-date-picker>
                 </div>
               </div>
+              <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                <div class="d-flex flex-column">
+                  <span>To Date</span>
+                  <br />
+                  <nz-date-picker
+                    [(ngModel)]="approvedToDate"
+                    (ngModelChange)="onFilterChange()"
+                    [nzRenderExtraFooter]="footerRender"
+                    [nzFormat]="dateFormat"
+                  ></nz-date-picker>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="status-box-leftColmd6-standard">
-                  <div class="row">
-                    <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                      <div class="PnlHeading">
-                        <h3 class="PnlHeader">Documents</h3>
-                      </div>
-                      <br />
-                      <div class="col-lg-12 col-md-12 col-sm-12">
-                        <app-my-pending-request-for-approval> </app-my-pending-request-for-approval>
-                        <!-- <app-ag-grid-wrapper
-                          [gridStyle]="{ width: '100%', height: '250px' }"
-                          [columnDefs]="documentsColumnDefs"
-                          [defaultColDef]="defaultColDef"
-                          [rowData]="documentTypeData"
-                          [pageSize]="selectedPageSize"
-                          [isSelectionRequired]="false"
-                          [showDisplayOption]="false"
-                          gridId="documentGrid"
-                          (pageSizeChange)="onPageSizeChanged($event)"
-                          [totalRows]="totalDocuments"
-                          (serverQuery)="GetAllDocuments($event)"
-                        >
-                        </app-ag-grid-wrapper> -->
-                      </div>
-                    </div>
-                  </div>
+          <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            <h3 class="PnlHeader">Request Created Between</h3>
+            <div class="row">
+              <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                <div class="d-flex flex-column">
+                  <span>From Date</span>
+                  <br />
+                  <nz-date-picker
+                    [(ngModel)]="requestCreatedFromDate"
+                    (ngModelChange)="onFilterChange()"
+                    [nzRenderExtraFooter]="footerRender"
+                    [nzFormat]="dateFormat"
+                  ></nz-date-picker>
+                </div>
+              </div>
+              <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                <div class="d-flex flex-column">
+                  <span>To Date</span>
+                  <br />
+                  <nz-date-picker
+                    [(ngModel)]="requestCreatedToDate"
+                    (ngModelChange)="onFilterChange()"
+                    [nzRenderExtraFooter]="footerRender"
+                    [nzFormat]="dateFormat"
+                  ></nz-date-picker>
                 </div>
               </div>
             </div>
@@ -161,4 +132,141 @@
       </div>
     </div>
   </div>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+      <div class="status-box-leftColmd6-standard">
+        <div class="row">
+          <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="PnlHeading">
+              <h3 class="PnlHeader">Documents</h3>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <app-ag-grid-wrapper
+                [gridStyle]="{ width: '100%', height: '450px' }"
+                [columnToggles]="columnToggles"
+                [columnDefs]="documentsColumnDefs"
+                [defaultColDef]="defaultColDef"
+                [isSelectionRequired]="false"
+                [showDisplayOption]="true"
+                [autoSizeColumns]="true"
+                [rowData]="documentRequestsData"
+                [pageSize]="pageSize"
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                [totalRows]="totalRows"
+                gridId="documentGridPending"
+                (gridReady)="onGridReady($event)"
+                (pageSizeChange)="onPageSizeChanged($event)"
+                (serverQuery)="GetAllPendingDocuments($event)"
+                (cellClicked)="onCellClicked($event)"
+              >
+                <!-- <div grid-actions class="grid-action-icons">
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Approve"
+                              (click)="promptAction('APPROVE')"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-check2-square"></i>
+                            </button>
+
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Disapprove"
+                              (click)="promptAction('Rejected')"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-x-square"></i>
+                            </button>
+
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Revert"
+                              (click)="promptAction('Rework')"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-reply"></i>
+                            </button>
+
+                            <button
+                              class="grid-icon-btn"
+                              [class.disabled]="!hasSelectedRows"
+                              title="Export"
+                              (click)="export()"
+                              [disabled]="hasSelectedRows === false"
+                            >
+                              <i class="bi bi-filetype-xls"></i>
+                            </button>
+                          </div> -->
+              </app-ag-grid-wrapper>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<ng-template #distributionListModalTpl>
+  <div style="max-height: 400px; overflow-y: auto">
+    <table
+      class="table table-bordered table-striped"
+      style="width: 100%; border-collapse: collapse"
+    >
+      <thead style="position: sticky; top: 0; background: #fafafa">
+        <tr>
+          <th style="padding: 8px; text-align: left; border: 1px solid #f0f0f0">Employee Code</th>
+          <th style="padding: 8px; text-align: left; border: 1px solid #f0f0f0">Employee Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of selectedUserDistributions">
+          <td style="padding: 8px; border: 1px solid #f0f0f0">
+            {{ user.employeecode || user.EmployeeCode || user.employeeCode }}
+          </td>
+          <td style="padding: 8px; border: 1px solid #f0f0f0">
+            {{ user.employeename || user.EmployeeName || user.employeeName }}
+          </td>
+        </tr>
+        <tr *ngIf="!selectedUserDistributions || selectedUserDistributions.length === 0">
+          <td colspan="2" style="padding: 8px; text-align: center; border: 1px solid #f0f0f0">
+            No user distributions found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ng-template>
+
+<!-- Document Content Modal Template -->
+<ng-template #documentModalTpl>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+      <!-- Download Button (If URL exists) -->
+      <ng-container *ngIf="draftFileUrl">
+        <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+          <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+          <div>
+            <strong>Instructions:</strong> Please download the attached document to view it.
+          </div>
+        </div>
+        <div class="d-flex justify-content-center mt-4 mb-4">
+          <button nz-button nzType="primary" (click)="downloadDraft()">
+            <span nz-icon nzType="download"></span> Download Document
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Rich Text Box (If no URL exists) -->
+      <ng-container *ngIf="!draftFileUrl">
+        <app-dmsrich-text-edit
+          [editorStyle]="{ width: '100%', height: '500px' }"
+          [contentHtml]="templateHtml"
+          (contentHtmlChange)="templateHtml = $event"
+        ></app-dmsrich-text-edit>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>

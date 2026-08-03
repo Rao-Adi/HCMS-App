@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { GenericResponse } from '@app/core/models/response';
 import { map, Observable, ReplaySubject, switchMap, take, tap } from 'rxjs';
 import { ApiResponse, TrainingPolicy } from '../interfaces/interfaces';
@@ -11,15 +11,16 @@ import { AppConfigService } from '@app/core/services/app-config';
 export class TrainingPolicyService {
   private _cabietStructureConfig = new ReplaySubject<TrainingPolicy[]>(1);
 
-  constructor(private http: HttpClient,
-    private _config: AppConfigService
+  constructor(
+    private http: HttpClient,
+    private _config: AppConfigService,
   ) {}
 
   get cabietStructureConfig$(): Observable<TrainingPolicy[]> {
     return this._cabietStructureConfig.asObservable();
   }
 
-   // We make apiUrl a getter. It's only called when needed.
+  // We make apiUrl a getter. It's only called when needed.
   private get apiUrl(): string {
     if (!this._config.baseUrl) {
       console.error('CRITICAL: AppConfigService has no apiUrl. Config might not be loaded.');
@@ -27,7 +28,6 @@ export class TrainingPolicyService {
     }
     return this._config.baseUrl;
   }
-
 
   private getHeaders(): HttpHeaders {
     // Customize headers as needed (e.g., authorization token, content type)
@@ -45,7 +45,12 @@ export class TrainingPolicyService {
   }
 
   GetTrainingPolicyById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSTrainingPolicies/get-training-policy-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSTrainingPolicies/get-training-policy-by-id/${Id}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetTrainingPolicyByDocumentType(Id: string): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSTrainingPolicies/get-training-policy-by-document-type/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -55,7 +60,7 @@ export class TrainingPolicyService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
   ): Observable<any> {
     const body = {
       searchText,
@@ -76,20 +81,20 @@ export class TrainingPolicyService {
   create(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSTrainingPolicies/create-training-policy`,
-      payload
+      payload,
     );
   }
 
   update(payload: any) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.put<ApiResponse<any>>(
       `${this.apiUrl}/DMSTrainingPolicies/update-training-policy`,
-      payload
+      payload,
     );
   }
 
   delete(code: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSTrainingPolicies/delete-training-policy/${code}`
+      `${this.apiUrl}/DMSTrainingPolicies/delete-training-policy/${code}`,
     );
   }
 }

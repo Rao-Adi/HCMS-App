@@ -45,7 +45,12 @@ export class WorkflowPolicyService {
   }
 
   getWorkflowPolicyById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-workflow-policy-by-id/id=${Id}`;
+    const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-workflow-policy-by-id/${Id}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  GetWorkflowPoliciesByEntityType(entityType: string): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-policies-by-entity-type/${entityType}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
@@ -55,9 +60,10 @@ export class WorkflowPolicyService {
     sortColumn: string,
     isActive: boolean,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    entityType?: string
   ): Observable<any> {
-    const body = {
+    const body: any = {
       searchText,
       sortBy,
       sortColumn,
@@ -65,6 +71,10 @@ export class WorkflowPolicyService {
       pageNumber,
       pageSize,
     };
+
+    if (entityType) {
+      body.EntityType = entityType;
+    }
 
     const uri = `${this.apiUrl}/DMSWorkflowPolicy/get-all-workflow-policy`;
 
@@ -87,9 +97,9 @@ export class WorkflowPolicyService {
     );
   }
 
-  delete(code: string) {
+  delete(id: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSWorkflowPolicy/delete-workflow-policy/${code}`
+      `${this.apiUrl}/DMSWorkflowPolicy/delete-workflow-policy/${id}`
     );
   }
 }

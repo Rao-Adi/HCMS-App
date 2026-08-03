@@ -522,7 +522,7 @@ export class MedicalReimbursement implements OnInit {
         }
       },
       error: (err: any) => {
-        console.error('Error fetching record for edit:', err);
+        console.error('Error fetching record for edit:', err?.error?.Message || err?.Message);
         this.isSaveDisabled = false;
       },
     });
@@ -1227,8 +1227,7 @@ export class MedicalReimbursement implements OnInit {
     let realExt = parts[parts.length - 1];
     return '.' + realExt;
   }
-  downloadGridAttachment(row: MedicalTypeSetup): void {
-    debugger;
+  downloadGridAttachment(row: MedicalTypeSetup): void { 
     if (!row || row.MEDID == null || row.MEDID <= 0) {
       console.log('Cannot download file: Invalid record ID.');
       alert('Cannot download file: Invalid record ID.'); // V7 style alert

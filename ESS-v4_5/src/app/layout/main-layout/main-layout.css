@@ -151,6 +151,7 @@
   transition: padding-left var(--sidebar-transition-speed) ease;
   position: relative;
   z-index: 1;
+  background-color: #fbfbfb !important;
 }
 
 .layout-wrapper:not(.sidebar-open) .main-content {
@@ -684,4 +685,17 @@
   background: rgba(0,0,0,0.5);
   z-index: 900;
   display: none;
+}
+
+/* Global style for AG-Grid audit cells and headers */
+.audit-cell,
+.audit-header,
+.ag-header-cell.audit-cell,
+.ag-header-cell.audit-header,
+.ag-header-cell.audit-cell .ag-header-cell-text,
+.ag-header-cell.audit-header .ag-header-cell-text,
+.ag-header-cell.audit-cell .ag-header-cell-label,
+.ag-header-cell.audit-header .ag-header-cell-label {
+  color: #888888 !important; /* A light grey color */
+  font-style: italic !important;
 }
