@@ -140,6 +140,7 @@
                       <button
                         class="btn btn-success btn-sm btn-action"
                         title="Export"
+                        [disabled]="totalRows === 0"
                         (click)="exportDocumentRequests()"
                       >
                         <i class="bi bi-file-earmark-excel"></i> Export
@@ -176,6 +177,7 @@
                       <button
                         class="btn btn-success btn-sm btn-action"
                         title="Export"
+                        [disabled]="totalRows === 0"
                         (click)="exportDocumentRequests()"
                       >
                         <i class="bi bi-file-earmark-excel"></i> Export
@@ -212,6 +214,7 @@
                       <button
                         class="btn btn-success btn-sm btn-action"
                         title="Export"
+                        [disabled]="totalRows === 0"
                         (click)="exportDocumentRequests()"
                       >
                         <i class="bi bi-file-earmark-excel"></i> Export

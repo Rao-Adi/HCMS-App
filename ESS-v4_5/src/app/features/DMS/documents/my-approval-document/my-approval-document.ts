@@ -723,11 +723,14 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
 
     this._documentService.exportDocuments(payload).subscribe({
       next: (response: any) => {
-        const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        // Backend (ExportMyDocumentsAsync) returns plain comma-separated, quote-escaped CSV bytes
+        // with a text/csv content type -- wrapping it in the xlsx MIME type and a .xlsx extension
+        // here just produced a CSV file mislabeled as Excel.
+        const blob = new Blob([response], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Documents_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.download = `Documents_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
