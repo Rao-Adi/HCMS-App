@@ -30,6 +30,7 @@ import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 interface HeaderDetailsResponse {
   formName: string;
@@ -56,6 +57,7 @@ interface DisplayNotification extends AppNotification {
     MenuComponent,
     SpinnerComponent,
     SkeletonComponent,
+    NzModalModule,
   ],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css'],
@@ -137,6 +139,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private notificationHttpService: NotificationService,
     private _documentRequestService: DocumentRequestService,
     private _navigationCountsService: NavigationCountsService,
+    private modal: NzModalService,
   ) {}
 
   ngOnInit(): void {
@@ -593,7 +596,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard']);
   }
   openReportDialog(): void {
-    alert('Report Problem functionality not implemented yet.');
+    this.modal.info({
+      nzTitle: 'Report a Problem',
+      nzContent: 'Report Problem functionality not implemented yet.',
+    });
   }
 
   toggleNotifications(event: Event): void {

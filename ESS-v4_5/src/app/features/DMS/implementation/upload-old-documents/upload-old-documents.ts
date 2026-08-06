@@ -35,7 +35,10 @@ export class UploadOldDocuments {
       next: (response: any) => {
         const blob = response.body;
         if (!blob) {
-          alert('Failed to download template: Empty response body.');
+          this.modalService.error({
+            nzTitle: 'Download Failed',
+            nzContent: 'Failed to download template: Empty response body.',
+          });
           return;
         }
 
@@ -61,7 +64,10 @@ export class UploadOldDocuments {
       },
       error: (err) => {
         console.error('Error downloading template:', err);
-        alert('Failed to download template. Please check with your administrator.');
+        this.modalService.error({
+          nzTitle: 'Download Failed',
+          nzContent: 'Failed to download template. Please check with your administrator.',
+        });
       },
     });
   }

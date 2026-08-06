@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -6,14 +6,16 @@ import {
   GridColumn,
   GridConfig,
 } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-editable-upload-document',
-  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper, NzModalModule],
   templateUrl: './editable-upload-document.html',
   styleUrl: './editable-upload-document.css',
 })
 export class EditableUploadDocument {
+  private modal = inject(NzModalService);
 
   gridConfig: GridConfig;
 
@@ -328,9 +330,15 @@ export class EditableUploadDocument {
   }
 
   clearAll(): void {
-    if (confirm('Clear all data?')) {
-      this.employeeData = [];
-    }
+    this.modal.confirm({
+      nzTitle: 'Clear All Data',
+      nzContent: 'Clear all data?',
+      nzOkText: 'Clear',
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.employeeData = [];
+      },
+    });
   }
 }
 

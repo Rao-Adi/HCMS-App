@@ -37,6 +37,7 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
 import { SafeTranslatePipe } from '../pipes/filter-label/safeTranslate.pipe';
 
@@ -138,7 +139,8 @@ export interface GridConfig {
     NzSpinModule,
     NzInputModule,
     NzIconModule,
-    SafeTranslatePipe
+    SafeTranslatePipe,
+    NzModalModule,
   ],
   templateUrl: './editable-ag-grid-wrapper.html',
   styleUrl: './editable-ag-grid-wrapper.css',
@@ -148,6 +150,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() isSelectionRequired: boolean = true;
   @Input() showSearchBar: Boolean = true;
   @Input() autoSizeColumns: boolean = true;
+  // Lets a consumer show something more specific than the generic message below -- e.g. a
+  // screen whose rows cascade into other data (like Document Type, which every Policy/
+  // Document/Request references) can warn about that before the row is actually deleted.
+  @Input() deleteConfirmMessage: string = 'Are you sure you want to delete this record?';
   @Output() actionClicked = new EventEmitter<{
     action: string;
     rowData: any;
@@ -217,7 +223,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
   gridContext: any;
 
-  constructor(private el: ElementRef) {
+  constructor(
+    private el: ElementRef,
+    private modal: NzModalService,
+  ) {
     this.defaultColDef = {
       sortable: this.config.enableSorting,
       filter: this.config.enableFiltering,
@@ -1056,16 +1065,21 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   updateRow(event: CellClickedEvent): void {
-    if (confirm('Are you sure you want to update this record?')) {
-      this.rowUpdated.emit({
-        rowData: event.data,
-        index: event.rowIndex!,
-      });
-      this.editingRowId = null;
-      this.editingRowData = null;
-      this.editingRowIndex = -1;
-      this.gridApi?.refreshCells({ force: true });
-    }
+    this.modal.confirm({
+      nzTitle: 'Confirm Update',
+      nzContent: 'Are you sure you want to update this record?',
+      nzOkText: 'Update',
+      nzOnOk: () => {
+        this.rowUpdated.emit({
+          rowData: event.data,
+          index: event.rowIndex!,
+        });
+        this.editingRowId = null;
+        this.editingRowData = null;
+        this.editingRowIndex = -1;
+        this.gridApi?.refreshCells({ force: true });
+      },
+    });
   }
 
   cancelEdit(event: CellClickedEvent): void {
@@ -1085,9 +1099,15 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   deleteRow(rowIndex: number): void {
-    if (confirm('Are you sure you want to delete this record?')) {
-      this.rowDeleted.emit(rowIndex);
-    }
+    this.modal.confirm({
+      nzTitle: 'Confirm Delete',
+      nzContent: this.deleteConfirmMessage,
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.rowDeleted.emit(rowIndex);
+      },
+    });
   }
 
   addFromPinnedRow(): void {
@@ -1098,7 +1118,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
 
     if (missingFields.length > 0) {
-      alert(`Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`);
+      this.modal.warning({
+        nzTitle: 'Missing Required Fields',
+        nzContent: `Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`,
+      });
       return;
     }
 

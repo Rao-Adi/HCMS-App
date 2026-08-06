@@ -19,6 +19,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CustomizeEmailAlertService } from '@app/shared/services/customize-email-alerts.service';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 interface AlertGridItem {
   id: number;
@@ -47,6 +48,7 @@ interface AlertGridItem {
     DocumentTypeList,
     ReactiveFormsModule,
     AgGridWrapper,
+    NzModalModule,
   ],
   templateUrl: './personalized-email-alerts.html',
   styleUrl: './personalized-email-alerts.css',
@@ -129,6 +131,7 @@ export class PersonalizedEmailAlerts implements OnInit {
     private fb: FormBuilder,
     private _notificationToastService: NotificationToastService,
     private _customizeEmailAlertService: CustomizeEmailAlertService,
+    private modal: NzModalService,
   ) {}
 
   ngOnInit(): void {
@@ -345,11 +348,16 @@ export class PersonalizedEmailAlerts implements OnInit {
   }
 
   onDeleteAlert(alert: AlertGridItem): void {
-    const confirmation = confirm(`Are you sure you want to delete "${alert.alertName}"?`);
-    if (confirmation) {
-      this.alertsList = this.alertsList.filter((item) => item.id !== alert.id);
-      console.log('Alert Configuration deleted successfully from index logic');
-    }
+    this.modal.confirm({
+      nzTitle: 'Confirm Delete',
+      nzContent: `Are you sure you want to delete "${alert.alertName}"?`,
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.alertsList = this.alertsList.filter((item) => item.id !== alert.id);
+        console.log('Alert Configuration deleted successfully from index logic');
+      },
+    });
   }
 
   onHierarchyChange(values: CabinetSelection[]) {

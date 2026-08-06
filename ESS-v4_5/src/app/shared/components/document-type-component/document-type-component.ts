@@ -38,6 +38,12 @@ export class DocumentTypeComponent {
     cellDataType: false,
   };
 
+  // Shown by EditableAgGridWrapper's delete-confirm dialog (see deleteConfirmMessage input) —
+  // a Document Type is referenced by Policies, Documents and Requests across the app, so
+  // deleting it makes all of that data disappear from view, not just this one row.
+  readonly deleteConfirmMessage =
+    'Deleting this Document Type will make all related data — Policies, Documents, Requests, etc. — no longer visible anywhere in the application. Are you sure you want to continue?';
+
   pinnedTopRowDataPlanning: DocumentTypeColumns[] = [
     {
       Code: '',

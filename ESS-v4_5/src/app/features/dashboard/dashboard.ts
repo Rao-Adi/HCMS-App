@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // <-- 1. Import FormsModule
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { DashboardService } from '@app/shared/services/dashboard.service';
-import { Router } from '@angular/router';
+import { Router } from '@angular/router'; 
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,6 +12,7 @@ import { Router } from '@angular/router';
   imports: [
     CommonModule,
     FormsModule, // <-- 2. Add FormsModule here
+    NzModalModule,
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -32,7 +34,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private _utilityService: UtilitiesService,
     private _dashboardService: DashboardService,
-    private router: Router
+    private router: Router,
+    private modal: NzModalService,
   ) {}
 
   ngOnInit(): void {
@@ -121,7 +124,10 @@ export class DashboardComponent implements OnInit {
   }
 
   onLinkClick(linkName: string) {
-    alert('This would navigate to the "' + linkName + '" page.');
+    this.modal.info({
+      nzTitle: 'Not Available',
+      nzContent: 'This would navigate to the "' + linkName + '" page.',
+    });
   }
 
   navigateTo(url: string, queryParams?: any): void {
