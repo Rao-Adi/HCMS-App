@@ -45,6 +45,11 @@ export class RevisionHistoryModal {
     { field: 'version', headerName: 'Version' },
     { field: 'status', headerName: 'Status' },
     {
+      field: 'isCurrentVersion',
+      headerName: 'Current Version',
+      cellRenderer: (p: any) => (p.value ? 'Yes' : ''),
+    },
+    {
       field: 'requestedBy',
       headerName: 'Requested By',
       flex: 1,
@@ -79,11 +84,6 @@ export class RevisionHistoryModal {
       headerName: 'Effective On',
       flex: 1,
       cellClass: 'audit-cell',
-    },
-    {
-      field: 'isCurrentVersion',
-      headerName: 'Current Version',
-      cellRenderer: (p: any) => (p.value ? 'Yes' : ''),
     },
   ];
 

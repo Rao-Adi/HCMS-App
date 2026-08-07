@@ -425,7 +425,7 @@ export class DocumentAuthorizationPostTraining {
             this.pendingAuthorizationData = items.map((item: any) => ({
               ...item,
               Id: item.id || item.Id,
-              trainingMode: item.trainingmode == 1 ? 'Class Room' : 'Online', //item.TrainingMode || item.trainingMode || (item.LmsStatus ? 'Online' : 'Class Room'),
+              trainingMode: item.TrainingMode || item.trainingMode || item.trainingmode,
               averageDocumentScore: item.averagescore || item.averagescore || 0,
               userAssigned: item.totalassigned || item.totalassigned,
               companyId: item.companyId || item.CompanyId,

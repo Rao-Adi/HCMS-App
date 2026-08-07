@@ -85,8 +85,9 @@ export class DashboardComponent implements OnInit {
   }
 
   calculatePercentage(count: number): number {
-    if (!this.summary?.MyTotalDocuments || this.summary.MyTotalDocuments === 0) return 0;
-    return (count / this.summary.MyTotalDocuments) * 100;
+    const total = this.documentDistribution.reduce((sum, d) => sum + (d?.Count || 0), 0);
+    if (!total) return 0;
+    return (count / total) * 100;
   }
 
   // --- Hardcoded data for your presentation ---

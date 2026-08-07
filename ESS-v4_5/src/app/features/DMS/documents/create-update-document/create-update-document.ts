@@ -982,7 +982,10 @@ export class CreateUpdateDocument {
             this.reviewYear = 0;
           }
         },
-        error: (err) => console.error(err),
+        error: (err) => {
+          this.reviewYear = 0;
+          console.error(err);
+        },
       });
   }
 
