@@ -440,7 +440,12 @@ export class DocumentAuthorizationPostTraining {
               divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
               documentId: item.DocumentNumber || item.documentid,
               documentName: item.DocumentName || item.documentname || item.title,
-              proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+              proposedContent:
+                item.ProposedContent ||
+                item.proposedcontent ||
+                item.VersionContent ||
+                item.versioncontent ||
+                item.content,
               department: item.Department || item.department,
               departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
               subDepartment: item.subdepartment || item.subdepartment,
@@ -559,7 +564,7 @@ export class DocumentAuthorizationPostTraining {
         trainingMode: '0',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
   }
 
@@ -645,7 +650,7 @@ export class DocumentAuthorizationPostTraining {
         trainingMode: '0',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
   }
 
@@ -658,7 +663,7 @@ export class DocumentAuthorizationPostTraining {
         entityType: 'Document',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -674,7 +679,7 @@ export class DocumentAuthorizationPostTraining {
         data: row, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
   }
 
@@ -718,8 +723,21 @@ export class DocumentAuthorizationPostTraining {
   }
 
   openDocumentModal(rowData: any) {
+    // rowData.url / rowData.proposedContent come from the API's documenturl / versioncontent
+    // fields (see GetAllDocuments' mapping) -- when both are null, there's no template to show.
+    const hasFileUrl = !!(rowData.url && rowData.url.toString().trim());
+    const hasContent = !!(rowData.proposedContent && rowData.proposedContent.toString().trim());
+    if (!hasFileUrl && !hasContent) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Document Content',
+        'No template uploaded',
+      );
+      return;
+    }
+
     this.templateHtml = rowData.proposedContent || '';
-    this.documentId = rowData.Id; 
+    this.documentId = rowData.Id;
     this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
     let fileUrl = rowData.url || '';
 
@@ -744,7 +762,7 @@ export class DocumentAuthorizationPostTraining {
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,
       nzFooter: null,
-      nzWidth: '50%',
+      nzWidth: '70%', // set at 70% for the HTML template view
       nzStyle: { top: '20px' },
     });
   }

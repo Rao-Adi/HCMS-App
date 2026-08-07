@@ -835,7 +835,7 @@ export class DraftRequestList {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {

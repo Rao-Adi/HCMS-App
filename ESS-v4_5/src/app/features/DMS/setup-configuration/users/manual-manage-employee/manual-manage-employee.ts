@@ -557,7 +557,7 @@ export class ManualManageEmployee {
         employeeCode: rowData.employeeCode || rowData.EmployeeCode,
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {

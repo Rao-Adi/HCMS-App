@@ -323,7 +323,7 @@ export class DocumentAttributes {
         data: rowData.Id, // 👈 this is what we’ll read inside modal
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {

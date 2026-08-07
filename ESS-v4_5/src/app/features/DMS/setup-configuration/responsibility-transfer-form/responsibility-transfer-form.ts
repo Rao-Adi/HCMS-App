@@ -591,7 +591,7 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
         action: action,
       },
       nzFooter: null,
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {

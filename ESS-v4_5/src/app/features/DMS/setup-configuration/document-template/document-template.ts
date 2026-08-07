@@ -222,7 +222,7 @@ export class DocumentTemplate {
 
     if (!this.isDefaultTemplate) {
       if (this.selectedDepartment === undefined || this.selectedDepartment === '') {
-        this._notificationToastService.createNotification('warning', 'Department', 'Department required');
+        this._notificationToastService.createNotification('warning', 'Default Template', 'Default Template required');
         return;
       }
     }

@@ -612,7 +612,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         action: action,
       },
       nzFooter: null,
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -784,7 +784,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         action: 'Approver',
       },
       nzFooter: null,
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {
@@ -829,7 +829,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         entityType: 'Document',
       },
       nzFooter: null, // custom footer handled inside component
-      nzWidth: 1000,
+      nzWidth: '70%',
     });
 
     modalRef.afterClose.subscribe((result) => {

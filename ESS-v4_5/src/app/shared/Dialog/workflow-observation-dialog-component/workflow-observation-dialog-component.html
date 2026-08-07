@@ -7,8 +7,8 @@
         <tr>
           <th>Name</th>
           <th>Role</th>
-          <th>Department</th>
-          <th>Division</th>
+          <th>Designation</th>
+          <!-- <th>Division</th> -->
           <th>Observation</th>
           <th>Last Action Performed</th>
           <th>Last Action Performed On</th>
@@ -18,8 +18,8 @@
         <tr *ngFor="let o of observations">
           <td class="emp">{{ o.EmployeeName }}</td>
           <td>{{ o.roleName }}</td>
-          <td class="obs">{{ o.Department }}</td>
-          <td class="obs">{{ o.Division }}</td>
+          <td class="obs">{{ o.Designation }}</td>
+          <!-- <td class="obs">{{ o.Division }}</td> -->
           <td class="obs" [innerHTML]="o.Observation"></td>
           <td>
             <span
