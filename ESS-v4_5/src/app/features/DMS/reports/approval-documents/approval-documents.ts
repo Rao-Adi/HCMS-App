@@ -579,6 +579,19 @@ export class ApprovalDocuments {
   }
 
   openDocumentModal(rowData: any) {
+    // rowData.url / rowData.proposedContent come from the API's documenturl / versioncontent
+    // fields (see GetAllPendingDocuments' mapping) -- when both are null, there's no template to show.
+    const hasFileUrl = !!(rowData.url && rowData.url.toString().trim());
+    const hasContent = !!(rowData.proposedContent && rowData.proposedContent.toString().trim());
+    if (!hasFileUrl && !hasContent) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Document Content',
+        'No template uploaded',
+      );
+      return;
+    }
+
     this.templateHtml = rowData.proposedContent || '';
     this.documentId = rowData.Id || rowData.id;
     this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
