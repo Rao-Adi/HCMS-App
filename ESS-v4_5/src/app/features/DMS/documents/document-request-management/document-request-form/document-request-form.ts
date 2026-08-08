@@ -1590,6 +1590,7 @@ export class DocumentRequestForm {
       nzData: {
         id: rowData.Id,
         entityType: 'Request',
+        decision:''
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',

@@ -38,7 +38,10 @@ export class WorkflowApprovalHistoryComponent {
     this.loading = true;
     const entityId = this.modalData.id;
     const entityType = this.modalData.entityType;
-    this._doumentRequestService.getWorkflowDeatils(entityId, entityType).subscribe({
+    // Segregates the returned steps by the tab (Pending/Approved/Rejected/Reworked) the caller
+    // opened this modal from -- see each caller's openWorkflowDeatilsModal/openApprovalHistoryModal.
+    const decision = this.modalData.decision;
+    this._doumentRequestService.getWorkflowDeatils(entityId, entityType, decision).subscribe({
       next: (response) => {
         if (response && response.Data) { 
           this.workflowHistory = response.Data.map((item: any) => ({

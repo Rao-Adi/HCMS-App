@@ -66,18 +66,7 @@
                   class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
                   >{{ disapprovedDocumentCount }}</span
                 >
-              </button>
-              <!-- <button
-                class="tab-button"
-                tabindex="0"
-                [ngClass]="{ 'active-tab': selectedTab === 'Disapproved' }"
-                (click)="onTabChange('Disapproved')"
-              >
-                Disapproved
-                <span *ngIf="disapprovedDocumentCount > 0" class="badge bg-danger ms-1">{{
-                  disapprovedDocumentCount
-                }}</span>
-              </button> -->
+              </button> 
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'Pending'">
@@ -238,7 +227,7 @@
         </div>
         <div class="row" *ngIf="documentId && (templateHtml || draftFileUrl)">
           <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="status-box-leftColmd6-standard">
+            <div class="">
               <h3 class="PnlHeader">Document Content</h3> 
 
               <!-- HTML Template Editor -->
@@ -318,7 +307,7 @@
                         {{ item.status }}
                       </span>
 
-                      <span class="date">
+                      <span class="audit-cell">
                         {{ item.date | date: 'MMM dd, yyyy HH:mm:ss' }}
                       </span>
                     </div>

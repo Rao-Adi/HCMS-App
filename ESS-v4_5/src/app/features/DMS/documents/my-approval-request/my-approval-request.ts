@@ -657,6 +657,9 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       nzData: {
         id: rowData.id,
         entityType: 'Request',
+        // Backend segregates workflow steps by decision -- values line up 1:1 with this
+        // screen's tabs ('Pending' | 'Approved' | 'Rejected').
+        decision: this.selectedTab,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',
@@ -690,7 +693,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       this.observationData = [];
       return;
     }
-    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request').subscribe({
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request', this.selectedTab).subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observationData = response.Data.map((item: any) => ({

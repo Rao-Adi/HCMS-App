@@ -697,6 +697,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
       nzData: {
         id: rowData.requestid || rowData.RequestId,
         entityType: 'Request',
+        decision:'Approved'
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',

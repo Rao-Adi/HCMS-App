@@ -661,6 +661,9 @@ export class DocumentAuthorizationPostTraining {
       nzData: {
         id: row.id,
         entityType: 'Document',
+        // Backend segregates workflow steps by decision, which expects 'Approved'/'Pending'
+        // rather than this screen's 'Authorized'/'Pending Authorization' tab labels.
+        decision:'Approved'
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',

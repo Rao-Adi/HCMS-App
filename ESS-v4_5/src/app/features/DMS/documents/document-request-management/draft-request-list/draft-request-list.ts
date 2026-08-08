@@ -694,17 +694,41 @@ export class DraftRequestList {
       .filter((code) => code != null && code !== '')
       .map(String);
 
-    // Reverted back to JSON to resolve 415 Unsupported Media Type
-    const payload = {
-      CompanyId: this.selectedCompany,
-      RequestId: this.requestId,
-      DistributionList: cleanDistributionList,
-      UserIds: userids,
-      DocumentRequestType: 'Request',
-    };
+    // FormData so the user can update the Template file or HTML content at submit time,
+    // same as UpdateDocumentRequests() below -- the backend endpoint now accepts multipart.
+    const formData = new FormData();
+    formData.append('CompanyId', this.selectedCompany?.toString() || '');
+    formData.append('RequestId', this.requestId?.toString() || '');
+    formData.append('DocumentRequestType', 'Request');
+    formData.append('ProposedContent', this.templateHtml || '');
+
+    cleanDistributionList.forEach((item: any, index: number) => {
+      if (item.divisionCode)
+        formData.append(`DistributionList[${index}].divisionCode`, item.divisionCode);
+      if (item.departmentCode)
+        formData.append(`DistributionList[${index}].departmentCode`, item.departmentCode);
+      if (item.subDepartmentCode)
+        formData.append(`DistributionList[${index}].subDepartmentCode`, item.subDepartmentCode);
+      if (item.businessDomainCode)
+        formData.append(`DistributionList[${index}].businessDomainCode`, item.businessDomainCode);
+      if (item.roleId) formData.append(`DistributionList[${index}].roleId`, item.roleId.toString());
+      if (item.distributionTypeId)
+        formData.append(
+          `DistributionList[${index}].distributionTypeId`,
+          item.distributionTypeId.toString(),
+        );
+    });
+
+    userids.forEach((id: string, index: number) => {
+      formData.append(`UserIds[${index}]`, id);
+    });
+
+    if (this.draftFile) {
+      formData.append('DraftFile', this.draftFile);
+    }
 
     this.loadingSubmit = true;
-    this._doumentRequestService.SubmitDraftDocumentRequest(payload).subscribe({
+    this._doumentRequestService.SubmitDraftDocumentRequest(formData).subscribe({
       next: (response) => {
         this.loadingSubmit = false;
         if (response?.Success) {

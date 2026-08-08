@@ -385,7 +385,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
       documentTypeCode: this.selectedDocumentType,
-      RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
+      RequestStatus: this.selectedTab,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.selectedPageSize || 10,
       sortModel: this.currentGridQuery.sortModel || [],
@@ -708,7 +708,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       subDepartmentCode: this.selectedSubDepartment,
       businessDomainCode: this.selectedBusinessDomain,
       documentTypeCode: this.selectedDocumentType,
-      RequestStatus: this.selectedTab == 'Disapproved' ? 'Rejected' : this.selectedTab,
+      RequestStatus: this.selectedTab,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: 1000000,
       sortModel: this.currentGridQuery.sortModel || [],
@@ -798,7 +798,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       this.observationData = [];
       return;
     }
-    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Document').subscribe({
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Document', this.selectedTab).subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observationData = response.Data.map((item: any) => ({
@@ -827,6 +827,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       nzData: {
         id: rowData.Id,
         entityType: 'Document',
+        // Backend segregates workflow steps by decision, which expects 'Rejected' rather than
+        // this screen's 'Disapproved' tab label -- same mapping used for RequestStatus above.
+        decision: this.selectedTab,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',

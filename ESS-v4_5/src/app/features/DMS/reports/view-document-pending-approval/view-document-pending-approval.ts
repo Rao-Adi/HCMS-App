@@ -468,6 +468,7 @@ export class ViewDocumentPendingApproval {
       nzData: {
         id: rowData.Id,
         entityType: 'Document',
+        decision:'Approved'
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',
