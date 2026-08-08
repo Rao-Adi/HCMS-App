@@ -857,6 +857,7 @@ export class DraftRequestList {
         entityType: 'Request',
         mode: 'view',
         action: 'Approver',
+        decision:'Reworked'
       },
       nzFooter: null,
       nzWidth: '70%',

@@ -589,6 +589,7 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
         entityType: 'Transfer',
         mode: 'input',
         action: action,
+        decision: action
       },
       nzFooter: null,
       nzWidth: '70%',

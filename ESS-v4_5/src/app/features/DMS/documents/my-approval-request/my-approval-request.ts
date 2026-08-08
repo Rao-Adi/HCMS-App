@@ -724,6 +724,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         entityType: 'Request',
         mode: 'input',
         action: action,
+        decision: this.selectedTab
       },
       nzFooter: null,
       nzWidth: 800,
@@ -839,6 +840,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         entityType: 'Request',
         mode: 'view',
         action: 'Approver',
+        decision: this.selectedTab
       },
       nzFooter: null,
       nzWidth: '70%',

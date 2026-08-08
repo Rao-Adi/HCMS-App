@@ -103,7 +103,8 @@ export class WorkflowObservationDialogComponent implements OnInit {
     this.loading = true;
     const entityId = this.modalData.id || this.modalData.Id;
     const entityType = this.modalData.entityType;
-    this._doumentRequestService.GetWorkflowObservationDetails(entityId, entityType).subscribe({
+    const decision = this.modalData.decision;
+    this._doumentRequestService.GetWorkflowObservationDetails(entityId, entityType, decision).subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observations = response.Data.map((item: any) => ({

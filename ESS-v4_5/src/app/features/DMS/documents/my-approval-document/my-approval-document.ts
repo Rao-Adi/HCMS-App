@@ -610,6 +610,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         entityType: 'Document',
         mode: 'input',
         action: action,
+        decision: this.selectedTab
       },
       nzFooter: null,
       nzWidth: '70%',
@@ -782,6 +783,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         entityType: 'Document',
         mode: 'view',
         action: 'Approver',
+        decision: this.selectedTab
       },
       nzFooter: null,
       nzWidth: '70%',
