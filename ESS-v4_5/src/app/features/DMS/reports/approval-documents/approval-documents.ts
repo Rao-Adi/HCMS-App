@@ -443,7 +443,9 @@ export class ApprovalDocuments {
                   'PreviousVersionCreatedBy',
                 ]),
                 previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-                  get(['previousversioncreatedon', 'lastmodifiedat', 'previousversioncreatedon']),
+                  get(['previousversioncreatedon',
+                  'previousversioncreatedon',
+                  'PreviousVersionCreatedOn',]),
                 ),
 
                 // ──────────────────────────────────────────────

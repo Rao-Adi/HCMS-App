@@ -221,7 +221,25 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
   private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentId', headerName: 'Document ID', hide: true },
     { field: 'documentNumber', headerName: 'Document Number' },
-    { field: 'documentName', headerName: 'Document Name' },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+                ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'version', headerName: 'Version' },
     { field: 'trainingMode', headerName: 'Training Mode' },
@@ -419,7 +437,12 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
             documentId: item.documentid || item.documentid,
             documentNumber: item.DocumentNumber || item.documentnumber,
             documentName: item.DocumentName || item.documentname || item.title,
-            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+            proposedContent:
+              item.ProposedContent ||
+              item.proposedcontent ||
+              item.VersionContent ||
+              item.versioncontent ||
+              item.content,
             department: item.Department || item.department,
             departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
             subDepartment: item.subdepartment || item.subdepartment,
@@ -522,7 +545,12 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
             documentId: item.DocumentNumber || item.documentid,
             documentNumber: item.DocumentNumber || item.documentnumber,
             documentName: item.DocumentName || item.documentname || item.title,
-            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+            proposedContent:
+              item.ProposedContent ||
+              item.proposedcontent ||
+              item.VersionContent ||
+              item.versioncontent ||
+              item.content,
             department: item.Department || item.department,
             departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
             subDepartment: item.subdepartment || item.subdepartment,

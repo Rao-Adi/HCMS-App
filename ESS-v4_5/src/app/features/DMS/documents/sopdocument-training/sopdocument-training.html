@@ -170,13 +170,20 @@
         </div>
       </ng-container>
 
-      <!-- Rich Text Box (If no URL exists) -->
-      <ng-container *ngIf="!draftFileUrl">
+      <!-- Rich Text Box (If no URL but content exists) -->
+      <ng-container *ngIf="!draftFileUrl && templateHtml">
         <app-dmsrich-text-edit
           [editorStyle]="{ width: '100%', height: '500px' }"
           [contentHtml]="templateHtml"
           (contentHtmlChange)="templateHtml = $event"
         ></app-dmsrich-text-edit>
+      </ng-container>
+
+      <!-- Neither a file nor HTML content is available -->
+      <ng-container *ngIf="!draftFileUrl && !templateHtml">
+        <div class="alert alert-warning text-center mb-0" style="font-size: 14px">
+          No template found.
+        </div>
       </ng-container>
     </div>
   </div>
