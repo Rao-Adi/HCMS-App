@@ -125,12 +125,29 @@ export class DynamicFormByDocumentAttribute {
 
     this.attributeValues.forEach((val) => {
       const controlName = 'ctrl_' + val.DocumentAttributeId; // ⚠ make sure casing matches API
+      if (!this.form.contains(controlName)) return;
 
-      const value = val.ValueText ?? val.ValueNumber ?? val.ValueDate ?? val.ValueBoolean;
-
-      if (this.form.contains(controlName)) {
-        this.form.get(controlName)?.setValue(value);
+      // The API always returns ValueText/ValueNumber/ValueDate/ValueBoolean together (unused
+      // ones default to '' / 0 / '' / false rather than null), so picking the first non-null
+      // via `??` doesn't work -- a numeric attribute's ValueNumber: 0 is non-null and wins over
+      // a real ValueDate on other rows. Select the field by the attribute's own ControlType.
+      const attr = this.attributes?.find((a) => a.Id === val.DocumentAttributeId);
+      let value: any;
+      switch (attr?.ControlType) {
+        case 'date':
+          value = val.ValueDate ? new Date(val.ValueDate) : null;
+          break;
+        case 'numeric':
+          value = val.ValueNumber;
+          break;
+        case 'checkbox':
+          value = val.ValueBoolean;
+          break;
+        default:
+          value = val.ValueText;
       }
+
+      this.form.get(controlName)?.setValue(value);
     });
 
     this.form.disable();
