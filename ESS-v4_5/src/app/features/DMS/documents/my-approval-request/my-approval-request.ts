@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, TemplateRef, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
@@ -49,6 +49,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 })
 export class MyApprovalRequest implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
   private subscriptions: Subscription[] = [];
 
   selectedTab: string = 'Pending';
@@ -133,6 +134,20 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     {
       field: 'documentName',
       headerName: 'Document Name',
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+            ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
     },
     {
       field: 'proposedContent',
@@ -634,6 +649,33 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       this.stepId = 0;
       this.selectedRow = null;
     }
+  }
+
+  openDocumentModal(rowData: any): void {
+    const proposedContent = rowData?.proposedContent || '';
+    const fileUrl = rowData?.draftFileUrl || '';
+
+    if (!proposedContent && !fileUrl) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Document',
+        'No template found for this document.',
+      );
+      return;
+    }
+
+    this.templateHtml = proposedContent;
+    this.draftFileUrl = fileUrl;
+    this.requestId = rowData?.requestId || rowData?.Id || rowData?.id;
+    this.currentDocumentName = rowData?.documentName || '';
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '50%',
+      nzStyle: { top: '20px' },
+    });
   }
 
   onCellClicked(event: any): void {

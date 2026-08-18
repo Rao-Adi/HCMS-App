@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, TemplateRef, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -57,6 +57,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 })
 export class MyApprovalDocument implements OnInit, OnDestroy {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+  @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
   private subscriptions: Subscription[] = [];
 
   // --- PERMISSION FLAGS ---
@@ -165,7 +166,24 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'documentType', headerName: 'Document Type', minWidth: 130, flex: 1 },
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
     { field: 'documentId', headerName: 'Document ID', minWidth: 120, flex: 1 },
-    { field: 'documentName', headerName: 'Document Name' },
+    {
+      field: 'documentName',
+      headerName: 'Document Name',
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open"
+          >
+            ${params.value || 'View'}
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        this.openDocumentModal(event.data);
+      },
+    },
     {
       field: 'justification',
       headerName: 'Justification',
@@ -541,6 +559,33 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     }
   }
 
+  openDocumentModal(rowData: any): void {
+    const proposedContent = rowData?.proposedContent || '';
+    const fileUrl = rowData?.draftFileUrl || '';
+
+    if (!proposedContent && !fileUrl) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Document',
+        'No template found for this document.',
+      );
+      return;
+    }
+
+    this.templateHtml = proposedContent;
+    this.draftFileUrl = fileUrl;
+    this.documentName = rowData?.documentName || '';
+    this.documentId = rowData?.Id;
+
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '50%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
   onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';
     this.draftFileUrl = event.data?.draftFileUrl || '';
@@ -686,8 +731,8 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       });
     }
   }
- 
-  
+
+
   exportDocuments(query?: any) {
     if (query && typeof query === 'object') {
       this.currentGridQuery = query;
@@ -744,8 +789,8 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       }
     });
   }
- 
-  
+
+
 
   GetDocumentAttributeByDocumentId = (documentId: any) => {
     this._documentAttribute.getDocumentAttributeByDocumentId(documentId).subscribe((res) => {

@@ -273,6 +273,41 @@
         </div>
       </div>
 
+      <!-- Document Content Modal (opened via the Document Name hyperlink in the grid) -->
+      <ng-template #documentModalTpl>
+        <div class="row">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <!-- Word/PDF File Download -->
+            <ng-container *ngIf="draftFileUrl">
+              <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
+                <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                <div>
+                  <strong>Instructions:</strong> Please download the attached document to view it.
+                </div>
+              </div>
+              <div class="d-flex justify-content-center mt-4 mb-4">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-lg shadow-sm"
+                  (click)="downloadDraft()"
+                >
+                  <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Document
+                </button>
+              </div>
+            </ng-container>
+
+            <!-- HTML Template Content -->
+            <ng-container *ngIf="!draftFileUrl">
+              <app-dmsrich-text-edit
+                [editorStyle]="{ width: '100%', height: '500px' }"
+                [contentHtml]="templateHtml"
+                (contentHtmlChange)="templateHtml = $event"
+              ></app-dmsrich-text-edit>
+            </ng-container>
+          </div>
+        </div>
+      </ng-template>
+
       <!-- Historical Observation logs Card -->
       <div class="status-box-leftColmd6-standard" *ngIf="observationData.length > 0">
         <h3 class="PnlHeader" style="margin-top: 0">Observation History</h3>
