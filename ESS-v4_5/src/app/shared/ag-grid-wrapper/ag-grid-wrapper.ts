@@ -69,6 +69,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
 
   get finalDefaultColDef(): ColDef {
     return {
+      // wrapHeaderText only breaks at word boundaries if the column is wide enough for
+      // the longest word -- without a floor here, columns without their own minWidth
+      // (e.g. flex-only columns) can shrink enough that headers wrap character-by-character.
+      minWidth: 120,
       ...this.defaultColDef,
       wrapHeaderText: true,
       autoHeaderHeight: true,
@@ -243,6 +247,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
     return {
       headerName: '',
       width: 50,
+      minWidth: 50,
       pinned: 'left',
       lockPosition: true,
       sortable: false,
