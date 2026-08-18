@@ -165,6 +165,7 @@ export class WorkflowObservationDialogComponent implements OnInit {
             'Draft Observation',
             res.Message || res.message || 'Observation saved successfully as draft.',
           );
+          this.modalRef.close();
         } else {
           this._notificationToastService.createNotification(
             'error',

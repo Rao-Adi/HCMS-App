@@ -29,7 +29,7 @@
                 reject: o.Decision === 'Rejected' || o.Decision === 'Reworked',
               }"
             >
-              {{ o.Decision }}
+              {{ o.Decision === 'Reworked' ? 'Reverted' : o.Decision }}
             </span>
           </td>
           <td class="audit-cell">{{ o.ActionAt }}</td>

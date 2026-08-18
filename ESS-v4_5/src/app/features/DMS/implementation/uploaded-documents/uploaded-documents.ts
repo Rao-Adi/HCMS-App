@@ -128,6 +128,7 @@ export class UploadedDocuments {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
+      this.buildGrid();
     });
 
     // Only show Division/Department/Sub-Department/Business Domain columns for

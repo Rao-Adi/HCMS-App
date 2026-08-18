@@ -115,18 +115,8 @@
                         [disabled]="hasSelectedRows === false"
                       >
                         <i class="bi bi-check-circle"></i> Approve
-                      </button>
-
-                      <button
-                        class="btn btn-danger btn-sm btn-action"
-                        [class.disabled]="!hasSelectedRows"
-                        title="Disapprove"
-                        (click)="promptAction('REJECTED')"
-                        [disabled]="hasSelectedRows === false"
-                      >
-                        <i class="bi bi-x-circle"></i> Reject
-                      </button>
-
+                      </button> 
+                     
                       <button
                         class="btn btn-warning btn-sm btn-action"
                         [class.disabled]="!hasSelectedRows"
@@ -137,8 +127,19 @@
                         <i class="bi bi-arrow-return-left"></i> Revert
                       </button>
 
+                       <button
+                        class="btn btn-danger btn-sm btn-action"
+                        [class.disabled]="!hasSelectedRows"
+                        title="Disapprove"
+                        (click)="promptAction('REJECTED')"
+                        [disabled]="hasSelectedRows === false"
+                      >
+                        <i class="bi bi-x-circle"></i> Reject
+                      </button>
+
+
                       <button
-                        class="btn btn-success btn-sm btn-action"
+                        class="btn btn-success btn-sm btn-action btn-export"
                         title="Export"
                         [disabled]="totalRows === 0"
                         (click)="exportDocumentRequests()"
@@ -175,7 +176,7 @@
                   >
                     <div grid-actions class="grid-action-icons">
                       <button
-                        class="btn btn-success btn-sm btn-action"
+                        class="btn btn-success btn-sm btn-action btn-export"
                         title="Export"
                         [disabled]="totalRows === 0"
                         (click)="exportDocumentRequests()"
@@ -212,7 +213,7 @@
                   >
                     <div grid-actions class="grid-action-icons">
                       <button
-                        class="btn btn-success btn-sm btn-action"
+                        class="btn btn-success btn-sm btn-action btn-export"
                         title="Export"
                         [disabled]="totalRows === 0"
                         (click)="exportDocumentRequests()"
@@ -301,7 +302,7 @@
                           'badge-approved': item.status == 'Approved',
                         }"
                       >
-                        {{ item.status }}
+                        {{ item.status === 'Reworked' ? 'Reverted' : item.status }}
                       </span>
                       <span class="audit-cell">
                         {{ item.date | date: 'MMM dd, yyyy HH:mm:ss' }}

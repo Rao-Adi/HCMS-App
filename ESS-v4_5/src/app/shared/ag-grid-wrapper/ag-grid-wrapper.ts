@@ -66,6 +66,14 @@ export class AgGridWrapper implements OnInit, OnChanges {
   isLoading = false;
   @Input() pageSize = 10;
   @Input() defaultColDef!: ColDef;
+
+  get finalDefaultColDef(): ColDef {
+    return {
+      ...this.defaultColDef,
+      wrapHeaderText: true,
+      autoHeaderHeight: true,
+    };
+  }
   @Input() totalRows = 0;
   @Input() gridStyle: any = {};
   @Input() gridId!: string;
@@ -189,9 +197,9 @@ export class AgGridWrapper implements OnInit, OnChanges {
 
       const originalCellRenderer = col.cellRenderer;
       const isFn = typeof originalCellRenderer === 'function';
-      const isAngularComponent = isFn && 
-        (!!(originalCellRenderer as any).ɵcmp || 
-         !!(originalCellRenderer as any).ɵfac || 
+      const isAngularComponent = isFn &&
+        (!!(originalCellRenderer as any).ɵcmp ||
+         !!(originalCellRenderer as any).ɵfac ||
          (originalCellRenderer.prototype && typeof originalCellRenderer.prototype.agInit === 'function'));
 
       // Only wrap if it's a function or if there is no custom renderer
@@ -275,6 +283,15 @@ export class AgGridWrapper implements OnInit, OnChanges {
         const rows = this.rowData || [];
         this.getRowsParams.successCallback(rows, this.totalRows);
         this.getRowsParams = null; // Consume it so we don't double call
+
+        // Infinite row model doesn't auto-show the no-rows overlay like clientSide does.
+        if (this.gridApi) {
+          if (this.totalRows === 0) {
+            this.gridApi.showNoRowsOverlay();
+          } else {
+            this.gridApi.hideOverlay();
+          }
+        }
       }
     }
     if (changes['rowData'] && this.autoSizeColumns && this.gridApi) {

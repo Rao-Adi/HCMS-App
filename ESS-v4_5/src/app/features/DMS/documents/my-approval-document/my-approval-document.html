@@ -41,9 +41,11 @@
                 (click)="onTabChange('Pending')"
               >
                 Pending
-                <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
-                  pendingDocumentCount
-                }}</span>
+                <span
+                  class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1"
+                  style="font-size: 11px"
+                  >{{ pendingDocumentCount }}</span
+                >
               </button>
               <button
                 class="tab-button"
@@ -52,9 +54,11 @@
                 (click)="onTabChange('Approved')"
               >
                 Approved
-                <span class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
-                  approvedDocumentCount
-                }}</span>
+                <span
+                  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1"
+                  style="font-size: 11px"
+                  >{{ approvedDocumentCount }}</span
+                >
               </button>
               <button
                 class="tab-button"
@@ -62,11 +66,12 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Reverted/Rejected<span 
-                  class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+                Reverted/Rejected<span
+                  class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1"
+                  style="font-size: 11px"
                   >{{ disapprovedDocumentCount }}</span
                 >
-              </button> 
+              </button>
             </div>
 
             <div class="row row-space" *ngIf="selectedTab === 'Pending'">
@@ -105,16 +110,6 @@
                           </button>
 
                           <button
-                            class="btn btn-danger btn-sm btn-action"
-                            [class.disabled]="!hasSelectedRows"
-                            title="Disapprove"
-                            (click)="promptAction('Rejected')"
-                            [disabled]="hasSelectedRows === false"
-                          >
-                            <i class="bi bi-x-circle"></i> Reject
-                          </button>
-
-                          <button
                             class="btn btn-warning btn-sm btn-action"
                             [class.disabled]="!hasSelectedRows"
                             title="Revert"
@@ -125,7 +120,17 @@
                           </button>
 
                           <button
-                            class="btn btn-success btn-sm btn-action"
+                            class="btn btn-danger btn-sm btn-action"
+                            [class.disabled]="!hasSelectedRows"
+                            title="Disapprove"
+                            (click)="promptAction('Rejected')"
+                            [disabled]="hasSelectedRows === false"
+                          >
+                            <i class="bi bi-x-circle"></i> Reject
+                          </button>
+
+                          <button
+                            class="btn btn-success btn-sm btn-action btn-export"
                             title="Export"
                             [disabled]="totalRows === 0"
                             (click)="exportDocuments()"
@@ -164,7 +169,7 @@
                   >
                     <div grid-actions class="grid-action-icons">
                       <button
-                        class="btn btn-success btn-sm btn-action"
+                        class="btn btn-success btn-sm btn-action btn-export"
                         title="Export"
                         [disabled]="totalRows === 0"
                         (click)="exportDocuments()"
@@ -201,7 +206,7 @@
                   >
                     <div grid-actions class="grid-action-icons">
                       <button
-                        class="btn btn-success btn-sm btn-action"
+                        class="btn btn-success btn-sm btn-action btn-export"
                         title="Export"
                         [disabled]="totalRows === 0"
                         (click)="exportDocuments()"
@@ -228,7 +233,7 @@
         <div class="row" *ngIf="documentId && (templateHtml || draftFileUrl)">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="">
-              <h3 class="PnlHeader">Document Content</h3> 
+              <h3 class="PnlHeader">Document Content</h3>
 
               <!-- HTML Template Editor -->
               <ng-container *ngIf="!draftFileUrl">
@@ -304,7 +309,7 @@
                           'badge-approved': item.status == 'Approved',
                         }"
                       >
-                        {{ item.status }}
+                        {{ item.status === 'Reworked' ? 'Reverted' : item.status }}
                       </span>
 
                       <span class="audit-cell">

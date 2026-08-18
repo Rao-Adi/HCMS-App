@@ -6997,7 +6997,7 @@ html.ant-scrolling-effect {
 
 /* Global style for AG-Grid audit cells */
 .audit-cell {
-  color: #888 !important; /* A light grey color */
+  color: #999 !important; /* Slightly dimmer grey, still readable */
   font-style: italic !important;
 }
 
@@ -7112,6 +7112,10 @@ html.ant-scrolling-effect {
 .ag-header-cell.audit-header *,
 .ag-cell.audit-cell,
 .ag-cell.audit-cell * {
-  color: #888888 !important; /* light grey color */
+  color: #999999 !important; /* Slightly dimmer grey, still readable */
   font-style: italic !important;
+}
+
+.btn-export {
+      border-radius: unset !important;
 }

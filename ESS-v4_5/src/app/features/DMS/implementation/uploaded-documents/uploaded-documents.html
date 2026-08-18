@@ -9,6 +9,8 @@
   [pageSize]="selectedPageSize"
   [totalRows]="totalUplodedDocument"
   gridId="userListGrid"
+  class="ag-theme-alpine"
+  [config]="gridConfig"
   (pageSizeChange)="onPageSizeChanged($event)"
   (serverQuery)="GetAllUploadedDocuments($event)"
 >

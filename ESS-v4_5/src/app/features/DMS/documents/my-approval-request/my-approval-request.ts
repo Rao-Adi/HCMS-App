@@ -758,10 +758,20 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       observation: observation,
     };
 
+    const actionMessages: Record<string, string> = {
+      APPROVED: 'Document approved successfully.',
+      REJECTED: 'Document rejected successfully.',
+      REWORKED: 'Document sent for rework successfully.',
+    };
+
     this._documentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
-          this._notificationToastService.createNotification('success', 'Request', response.Message);
+          this._notificationToastService.createNotification(
+            'success',
+            'Request',
+            actionMessages[action] || response.Message,
+          );
           this.clearSelection();
           this.getRequestCounts();
           if (this.agGridWrapper) {
@@ -800,10 +810,8 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     };
 
     this._documentRequestService.exportMyPendingDocumentRequest(payload).subscribe({
-      next: (response: any) => {
-        // Backend (ExportMyInboxRequestsAsync) returns plain comma-separated, quote-escaped CSV
-        // bytes with a text/csv content type -- wrapping it in the xlsx MIME type and a .xlsx
-        // extension here just produced a CSV file mislabeled as Excel.
+      next: (response: Blob) => {
+        // Backend (ExportMyInboxRequestsAsync) returns plain comma-separated, quote-escaped CSV bytes.
         const blob = new Blob([response], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

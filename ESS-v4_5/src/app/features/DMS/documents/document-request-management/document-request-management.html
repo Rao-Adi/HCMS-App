@@ -19,7 +19,7 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'DraftRequest' }"
                 (click)="selectedTab = 'DraftRequest'"
               >
-                Draft Request
+                Draft/Reverted Requests
                 <span *ngIf="draftDocumentCounts > 0" class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   draftDocumentCounts
                 }}</span>

@@ -33,7 +33,7 @@
                 reject: h.Decision === 'Rejected' || h.Decision === 'Reworked'
             }"
           >
-            {{ h.Decision || 'Pending' }}
+            {{ h.Decision === 'Reworked' ? 'Reverted' : (h.Decision || 'Pending') }}
           </span>
         </td>
       </tr>
