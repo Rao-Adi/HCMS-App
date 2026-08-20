@@ -159,8 +159,9 @@ export class DocumentService {
     );
   }
 
-  exportDocuments(payload: any): Observable<Blob> {
+  exportDocuments(payload: any) {
     return this.http.post(`${this.apiUrl}/DMSDocument/export-my-documents`, payload, {
+      observe: 'response',
       responseType: 'blob',
     });
   }

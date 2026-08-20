@@ -768,15 +768,31 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     };
 
     this._documentService.exportDocuments(payload).subscribe({
-      next: (response: any) => {
-        // Backend (ExportMyDocumentsAsync) returns plain comma-separated, quote-escaped CSV bytes
-        // with a text/csv content type -- wrapping it in the xlsx MIME type and a .xlsx extension
-        // here just produced a CSV file mislabeled as Excel.
-        const blob = new Blob([response], { type: 'text/csv' });
+      next: (response) => {
+        // Backend (ExportMyDocumentsAsync) now returns a real .xlsx workbook. Use the blob exactly
+        // as the server sent it instead of re-wrapping it in a hardcoded MIME type -- a mismatched
+        // type here (declaring text/csv over real xlsx bytes) is what produced a file Excel refused
+        // to open, which is why this was reverted to CSV in the first place.
+        const blob = response.body as Blob;
+        if (!blob) {
+          this._notificationToastService.createNotification('error', 'Export', 'Failed to export document list.');
+          return;
+        }
+
+        let filename = `Documents_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        const contentDisposition =
+          response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Documents_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

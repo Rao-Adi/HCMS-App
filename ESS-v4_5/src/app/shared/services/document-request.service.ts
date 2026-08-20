@@ -91,11 +91,11 @@ export class DocumentRequestService {
     );
   }
 
-  exportMyPendingDocumentRequest(payload: any): Observable<Blob> {
+  exportMyPendingDocumentRequest(payload: any) {
     return this.http.post(
       `${this.apiUrl}/DMSDocumentRequest/export-my-pending-document-request`,
       payload,
-      { responseType: 'blob' },
+      { observe: 'response', responseType: 'blob' },
     );
   }
 

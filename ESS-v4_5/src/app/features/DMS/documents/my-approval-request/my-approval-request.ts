@@ -852,13 +852,39 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     };
 
     this._documentRequestService.exportMyPendingDocumentRequest(payload).subscribe({
-      next: (response: Blob) => {
-        // Backend (ExportMyInboxRequestsAsync) returns plain comma-separated, quote-escaped CSV bytes.
-        const blob = new Blob([response], { type: 'text/csv' });
+      next: (response) => {
+        // Backend (ExportMyInboxRequestsAsync) now returns a real .xlsx workbook. Use the blob
+        // exactly as the server sent it (response.body already carries the server's actual
+        // Content-Type) instead of re-wrapping it in a hardcoded MIME type -- forcing a
+        // mismatched type here (e.g. declaring text/csv over real xlsx bytes, as a previous
+        // version of this code did) is what produced a file Excel refused to open.
+        const blob = response.body as Blob;
+        if (!blob) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Export',
+            'Failed to export document request list.',
+          );
+          return;
+        }
+
+        // Filename comes from the backend's own naming convention (Content-Disposition), e.g.
+        // "Requests Approved by Me - (Aug 21, 2026).xlsx" -- fall back to a local name only if
+        // that header is missing for some reason.
+        let filename = `My_Approval_Requests_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        const contentDisposition =
+          response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `My_Approval_Requests_${this.selectedTab}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
