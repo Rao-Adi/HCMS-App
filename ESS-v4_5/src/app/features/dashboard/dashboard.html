@@ -50,116 +50,179 @@
     </div>
   </div>
 
-  <!-- Top Level Key Metrics -->
-  <div class="row g-3 mb-4">
-    <div class="col-xl-3 col-lg-4 col-sm-6">
-      <a (click)="navigateToWidget('total-documents')" class="card-link"> <div class="card border-0 shadow-sm h-100">
+  <!-- Key Metrics: every card is gated to the role(s) it's actually relevant to. A dual-role
+       user sees both Initiator and Approver cards together; nothing swaps in place of anything
+       else anymore, and nothing company-wide (Pending Auth.) shows to someone with no stake in it. -->
+  <div class="metrics-grid mb-4">
+    <a (click)="navigateTo('/documents/sop-training')" class="card-link">
+      <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
         <div class="card-body d-flex align-items-center">
-          <div class="bg-primary bg-opacity-10 text-primary rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-            <i class="bi bi-files fs-4"></i>
+          <div class="bg-info bg-opacity-10 text-info rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-book fs-5"></i>
           </div>
           <div>
-            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">
-              {{ isApprover ? 'My Approvals - Documents' : 'Total Approved Documents' }}
-            </h6>
-            <h3 class="mb-0 fw-bold">{{ (isApprover ? summary.PendingDocumentApprovals : summary.MyTotalDocuments) || 0 }}</h3>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Pending Trainings</p>
+            <h4 class="mb-0 fw-bold">{{ summary.PendingTrainings || 0 }}</h4>
           </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-3 col-lg-4 col-sm-6">
-      <a (click)="navigateToWidget('pending-approvals')" class="card-link"> <div class="card border-0 shadow-sm h-100">
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/trainingauthorization')" class="card-link" *ngIf="isAuthorizer">
+      <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
         <div class="card-body d-flex align-items-center">
-          <div class="bg-warning bg-opacity-10 text-warning rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-            <i class="bi bi-clock-history fs-4"></i>
+          <div class="bg-danger bg-opacity-10 text-danger rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-shield-lock fs-5"></i>
           </div>
           <div>
-            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">
-              {{ isApprover ? 'My Approvals - Document Requests' : 'My Requests Pending Approval' }}
-            </h6>
-            <h3 class="mb-0 fw-bold">{{ (isApprover ? summary.PendingRequestApprovals : summary.MyPendingRequests) || 0 }}</h3>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Pending Auth.</p>
+            <h4 class="mb-0 fw-bold">{{ summary.PendingAuthorizations || 0 }}</h4>
           </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-3 col-lg-4 col-sm-6">
-      <a (click)="navigateTo('/documents/sop-training')" class="card-link"> <div class="card border-0 shadow-sm h-100">
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/my-approvals-documents')" class="card-link" *ngIf="isApprover">
+      <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
         <div class="card-body d-flex align-items-center">
-          <div class="bg-info bg-opacity-10 text-info rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-            <i class="bi bi-book fs-4"></i>
+          <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-files fs-5"></i>
           </div>
           <div>
-            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Pending Trainings</h6>
-            <h3 class="mb-0 fw-bold">{{ summary.PendingTrainings || 0 }}</h3>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">My Approvals - Documents</p>
+            <h4 class="mb-0 fw-bold">{{ summary.PendingDocumentApprovals || 0 }}</h4>
           </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-3 col-lg-4 col-sm-6">
-      <a (click)="navigateTo('/documents/trainingauthorization')" class="card-link"> <div class="card border-0 shadow-sm h-100">
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/my-approvals-request')" class="card-link" *ngIf="isApprover">
+      <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
         <div class="card-body d-flex align-items-center">
-          <div class="bg-danger bg-opacity-10 text-danger rounded p-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-            <i class="bi bi-shield-lock fs-4"></i>
+          <div class="bg-warning bg-opacity-10 text-warning rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-clock-history fs-5"></i>
           </div>
           <div>
-            <h6 class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Pending Auth.</h6>
-            <h3 class="mb-0 fw-bold">{{ summary.PendingAuthorizations || 0 }}</h3>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">My Approvals - Document Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.PendingRequestApprovals || 0 }}</h4>
           </div>
         </div>
-      </div></a>
-    </div>
-  </div>
-
-  <!-- Secondary Metrics: Requests & Approvals History -->
-  <div class="row g-3 mb-4">
-    <div class="col-xl-2 col-lg-4 col-sm-6">
-      <a (click)="navigateTo('/documents/request-for-document-creation-update')" class="card-link"> <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
-        <div class="card-body">
-          <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Total Requests</p>
-          <h4 class="mb-0 fw-bold">{{ summary.MyTotalRequests || 0 }}</h4>
+      </div>
+    </a>
+    <a (click)="navigateToWidget('approved-by-me')" class="card-link" *ngIf="isApprover">
+      <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-info bg-opacity-10 text-info rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-check2-square fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Approved By Me</p>
+            <h4 class="mb-0 fw-bold">{{ summary.ApprovedByMe || 0 }}</h4>
+          </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6">
-      <a (click)="navigateTo('/documents/request-for-document-creation-update', { tab: 'MyRequestPendingApproval' })" class="card-link"> <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
-        <div class="card-body">
-          <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Pending Requests</p>
-          <h4 class="mb-0 fw-bold">{{ summary.MyPendingRequests || 0 }}</h4>
+      </div>
+    </a>
+    <a (click)="navigateToWidget('rejected-by-me')" class="card-link" *ngIf="isApprover">
+      <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-secondary bg-opacity-10 text-secondary rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-x-square fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Rejected By Me</p>
+            <h4 class="mb-0 fw-bold">{{ summary.RejectedByMe || 0 }}</h4>
+          </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6">
-      <a (click)="navigateToWidget('approved-requests')" class="card-link"> <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
-        <div class="card-body">
-          <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Approved Requests</p>
-          <h4 class="mb-0 fw-bold">{{ summary.MyApprovedRequests || 0 }}</h4>
+      </div>
+    </a>
+    <a (click)="navigateTo('/reports/viewapproved')" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-files fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Total Approved Documents</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyApprovedDocuments || 0 }}</h4>
+          </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6">
-      <a (click)="navigateToWidget('rejected-requests')" class="card-link"> <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
-        <div class="card-body">
-          <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Rejected Requests</p>
-          <h4 class="mb-0 fw-bold">{{ summary.MyRejectedRequests || 0 }}</h4>
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/request-for-document-creation-update')" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-collection fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Total Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyTotalRequests || 0 }}</h4>
+          </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6" *ngIf="isApprover">
-      <a (click)="navigateToWidget('approved-by-me')" class="card-link"> <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
-        <div class="card-body">
-          <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Approved By Me</p>
-          <h4 class="mb-0 fw-bold">{{ summary.ApprovedByMe || 0 }}</h4>
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/request-for-document-creation-update', { tab: 'MyRequestPendingApproval' })" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-warning border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-warning bg-opacity-10 text-warning rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-hourglass-split fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Pending Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyPendingRequests || 0 }}</h4>
+          </div>
         </div>
-      </div></a>
-    </div>
-    <div class="col-xl-2 col-lg-4 col-sm-6" *ngIf="isApprover">
-      <a (click)="navigateToWidget('rejected-by-me')" class="card-link"> <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
-        <div class="card-body">
-          <p class="text-muted mb-1 fw-semibold" style="font-size: 0.8rem;">Rejected By Me</p>
-          <h4 class="mb-0 fw-bold">{{ summary.RejectedByMe || 0 }}</h4>
+      </div>
+    </a>
+    <a (click)="navigateToWidget('approved-requests')" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-success bg-opacity-10 text-success rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-check-circle fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Approved Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyApprovedRequests || 0 }}</h4>
+          </div>
         </div>
-      </div></a>
-    </div>
+      </div>
+    </a>
+    <a (click)="navigateToWidget('rejected-requests')" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-danger bg-opacity-10 text-danger rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-x-circle fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Rejected Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyRejectedRequests || 0 }}</h4>
+          </div>
+        </div>
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/request-for-document-creation-update', { tab: 'DraftRequest' })" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-secondary border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-secondary bg-opacity-10 text-secondary rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-file-earmark-text fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Draft Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyDraftRequests || 0 }}</h4>
+          </div>
+        </div>
+      </div>
+    </a>
+    <a (click)="navigateTo('/documents/request-for-document-creation-update', { tab: 'DraftRequest' })" class="card-link" *ngIf="isInitiator">
+      <div class="card border-0 shadow-sm border-start border-dark border-4 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="bg-dark bg-opacity-10 text-dark rounded d-flex align-items-center justify-content-center metric-icon me-3">
+            <i class="bi bi-arrow-counterclockwise fs-5"></i>
+          </div>
+          <div>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Reverted Requests</p>
+            <h4 class="mb-0 fw-bold">{{ summary.MyRevertedRequests || 0 }}</h4>
+          </div>
+        </div>
+      </div>
+    </a>
   </div>
 
   <!-- Details Section -->

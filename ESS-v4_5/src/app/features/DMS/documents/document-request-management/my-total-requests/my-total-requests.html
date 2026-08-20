@@ -1,0 +1,21 @@
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12 mb-4">
+    <app-ag-grid-wrapper
+      [gridStyle]="{ width: '100%', height: '450px' }"
+      [columnToggles]="columnToggles"
+      [columnDefs]="documentColumnDefs"
+      [defaultColDef]="defaultColDef"
+      [isSelectionRequired]="false"
+      [showDisplayOption]="true"
+      [autoSizeColumns]="true"
+      [rowData]="documentRequestsData"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      [totalRows]="totalRows"
+      gridId="myTotalRequestsGrid"
+      (serverQuery)="GetAllMyTotalRequests($event)"
+      (pageSizeChange)="onPageSizeChanged($event)"
+    >
+    </app-ag-grid-wrapper>
+  </div>
+</div>

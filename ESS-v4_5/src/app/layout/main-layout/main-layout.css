@@ -112,13 +112,16 @@
 /* Logos swap when collapsed */
 .brand-logo-icon {
   display: none;
-  object-fit: contain;
+  object-fit: fill;
+  max-width:60px;
 }
 
 .brand-logo-full {
   display: block;
-  max-width: 100%;
-  object-fit: contain;
+  width: 100%;
+  max-width: 170px;
+  /* max-width: 100%; */
+  object-fit: fill;
 }
 .layout-wrapper:not(.sidebar-open) .brand-logo-full { display: none; }
 .layout-wrapper:not(.sidebar-open) .brand-logo-icon { display: block; }

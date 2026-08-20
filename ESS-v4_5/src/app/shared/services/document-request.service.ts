@@ -104,6 +104,11 @@ export class DocumentRequestService {
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
   }
 
+  getMyTotalRequests(payload: any): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-total-request`;
+    return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
+  }
+
   GetMyRequestsPendingApproval(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/get-my-document-requests-for-approval`,

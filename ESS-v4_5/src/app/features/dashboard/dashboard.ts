@@ -30,6 +30,7 @@ export class DashboardComponent implements OnInit {
   isLoading: boolean = true;
   isApprover: boolean = false;
   isInitiator: boolean = false;
+  isAuthorizer: boolean = false;
 
   constructor(
     private _utilityService: UtilitiesService,
@@ -51,6 +52,13 @@ export class DashboardComponent implements OnInit {
     });
     this._utilityService.CanView('requestdocumentcreation').subscribe((res) => {
       this.isInitiator = res;
+    });
+    // Gates the "Pending Auth." card -- same formId as the Training Authorization page
+    // (document-authorization-post-training.ts) it links to. Previously this card had no
+    // role gate at all, so it showed the same company-wide number to every user regardless
+    // of whether they have any authorization responsibility.
+    this._utilityService.CanView('trainingauthorization').subscribe((res) => {
+      this.isAuthorizer = res;
     });
   }
 

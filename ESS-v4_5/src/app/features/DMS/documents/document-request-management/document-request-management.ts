@@ -12,6 +12,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { PendingRequestForApproval } from './pending-request-for-approval/pending-request-for-approval';
 import { DocumentRequestForm } from './document-request-form/document-request-form';
 import { DraftRequestList } from './draft-request-list/draft-request-list';
+import { MyTotalRequests } from './my-total-requests/my-total-requests';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 @Component({
   selector: 'app-document-request-management',
@@ -28,6 +29,7 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
     PendingRequestForApproval,
     DocumentRequestForm,
     DraftRequestList,
+    MyTotalRequests,
   ],
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
