@@ -44,6 +44,12 @@ export class ESignatureService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  // Whatever signature the current user already has saved (null if they haven't saved one yet).
+  getMySignature(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSESignature/get-my-esignature`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetAllESignatures(
     searchText: string,
     sortBy: 'ASC' | 'DESC',

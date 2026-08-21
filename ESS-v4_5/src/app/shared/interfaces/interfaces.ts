@@ -352,9 +352,8 @@ export interface DocumentVersion {
 export interface ESignature extends AuditableEntity {
   id: string;
   userId: string;
-  signatureData: string;
+  signatureURL: string;
   signatureType: number;
-  fileType: string | null;
 }
 
 export interface Notification {

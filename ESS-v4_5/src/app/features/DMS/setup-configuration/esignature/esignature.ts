@@ -12,6 +12,7 @@ import SignaturePad from 'signature_pad';
 import { HttpClient } from '@angular/common/http';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { ESignatureService } from '@app/shared/services/esignature.service';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Component({
   selector: 'app-esignature',
@@ -51,6 +52,11 @@ export class ESignature implements AfterViewInit {
 
   penColor = '#000000';
 
+  // Id of the signature already saved for the current user, if any (fetched in
+  // loadMySignature()). Drives whether the next Save is a create or an update.
+  signatureId: number | null = null;
+  loadingSignature = false;
+
   private undoStack: string[] = [];
   private redoStack: string[] = [];
 
@@ -58,7 +64,8 @@ export class ESignature implements AfterViewInit {
     private http: HttpClient,
     private messageService: NzMessageService,
     private _utilities: UtilitiesService,
-    private _esignatureService : ESignatureService
+    private _esignatureService : ESignatureService,
+    private _config: AppConfigService
   ) {}
 
   ngOnInit() {
@@ -74,6 +81,40 @@ export class ESignature implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initSignaturePad();
+    this.loadMySignature();
+  }
+
+  // Loads whatever signature the current user already saved (if any) into the pad, so landing
+  // on this page shows their existing signature instead of a blank canvas. Silently leaves the
+  // pad blank if they haven't saved one yet -- that's the normal first-time state, not an error.
+  private loadMySignature(): void {
+    this.loadingSignature = true;
+    this._esignatureService.getMySignature().subscribe({
+      next: (res: any) => {
+        this.loadingSignature = false;
+        const data = res?.Data ?? res?.data;
+        if (!data) return;
+
+        this.signatureId = data.Id ?? data.id;
+
+        const relativeUrl = data.SignatureURL ?? data.signatureURL ?? data.signatureUrl;
+        if (!relativeUrl) return;
+
+        let fileUrl = relativeUrl as string;
+        if (!fileUrl.startsWith('http')) {
+          const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+          fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
+        }
+
+        this.restore(fileUrl);
+        this.undoStack = [];
+        this.redoStack = [];
+      },
+      error: (err) => {
+        this.loadingSignature = false;
+        console.error('Failed to load existing signature:', err);
+      },
+    });
   }
 
   private initSignaturePad(): void {
@@ -156,14 +197,37 @@ export class ESignature implements AfterViewInit {
   }
 
   upload(base64: string): void {
+    // A signature already loaded (loadMySignature) means this user has one on file -- Create
+    // rejects that with a 409 ("use update instead"), so route there directly instead of
+    // round-tripping through an error.
+    if (this.signatureId) {
+      const payload = {
+        Id: this.signatureId,
+        SignatureBase64: base64,
+        IsActive: true,
+      };
+
+      this._esignatureService.update(payload).subscribe({
+        next: () => {
+          this.messageService.success('Signature updated successfully!');
+        },
+        error: (err) => {
+          console.error('Failed to update signature:', err);
+          this.messageService.error(err?.error?.Message || 'Something went wrong. Please try again.');
+        },
+      });
+      return;
+    }
+
     const payload = {
-      // Note: You may need to adjust "SignatureBase64" to match your exact C# backend DTO property
       SignatureBase64: base64,
       IsActive: true,
     };
 
     this._esignatureService.create(payload).subscribe({
-      next: (res) => {
+      next: (res: any) => {
+        const data = res?.Data ?? res?.data;
+        this.signatureId = data?.Id ?? data?.id ?? this.signatureId;
         this.messageService.success('Signature saved successfully!');
       },
       error: (err) => {
