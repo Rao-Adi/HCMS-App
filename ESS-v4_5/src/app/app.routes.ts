@@ -75,6 +75,13 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'uncontrolled-documents',
+            loadComponent: () =>
+              import(
+                '@app/features/DMS/documents/uncontrolled-documents/uncontrolled-documents'
+              ).then((m) => m.UncontrolledDocuments),
+          },
+          {
             path: 'trainingauthorization',
             loadComponent: () =>
               import(

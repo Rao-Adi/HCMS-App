@@ -102,7 +102,13 @@ export class ESignature implements AfterViewInit {
 
         let fileUrl = relativeUrl as string;
         if (!fileUrl.startsWith('http')) {
-          const baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+          // SignatureURL is a static file path served from the API host's root, not under
+          // the "/api" prefix used for REST calls -- strip it before appending, same as the
+          // SignalR hub URL in main-layout.ts.
+          let baseUrl = this._config.baseUrl ? this._config.baseUrl.replace(/\/$/, '') : '';
+          if (baseUrl.endsWith('/api')) {
+            baseUrl = baseUrl.substring(0, baseUrl.length - 4);
+          }
           fileUrl = baseUrl + (fileUrl.startsWith('/') ? '' : '/') + fileUrl;
         }
 

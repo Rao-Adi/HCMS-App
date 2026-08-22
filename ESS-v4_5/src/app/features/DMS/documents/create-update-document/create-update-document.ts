@@ -45,6 +45,7 @@ import { TrainingPolicyService } from '@app/shared/services/training-policy-serv
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
+import { MyDocuments } from './my-documents/my-documents';
 
 // Define interface for request types
 interface RequestType {
@@ -72,6 +73,7 @@ interface RequestType {
     DynamicFormByDocumentAttribute,
     NzModalModule,
     RoleList,
+    MyDocuments,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -86,6 +88,9 @@ interface RequestType {
 })
 export class CreateUpdateDocument {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  selectedTab: string = 'CreateUpdate';
+
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;

@@ -152,6 +152,15 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  // Every Document the current user has created, any status.
+  getMyDocuments(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-my-documents`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
   GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-effective-documents-for-revision`,

@@ -1,0 +1,33 @@
+<div *ngIf="loading" class="text-center py-4 text-muted">Loading...</div>
+
+<div *ngIf="!loading && history.length === 0" class="text-center py-4 text-muted">
+  No review history yet — this document hasn't been re-reviewed since it was uploaded.
+</div>
+
+<table class="table table-sm table-bordered" *ngIf="!loading && history.length > 0">
+  <thead class="table-light">
+    <tr>
+      <th>Reviewed By</th>
+      <th>Reviewed On</th>
+      <th>Previous Review Date</th>
+      <th>New Review Date</th>
+      <th>Previous File</th>
+      <th>New File</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let h of history">
+      <td>{{ h.reviewedByName }}</td>
+      <td>{{ h.reviewedAt }}</td>
+      <td>{{ h.previousReviewDate }}</td>
+      <td>{{ h.newReviewDate }}</td>
+      <td>
+        <a [href]="h.previousDocumentURL" target="_blank" *ngIf="h.previousDocumentURL">View</a>
+        <span *ngIf="!h.previousDocumentURL">-</span>
+      </td>
+      <td>
+        <a [href]="h.newDocumentURL" target="_blank" *ngIf="h.newDocumentURL">View</a>
+      </td>
+    </tr>
+  </tbody>
+</table>

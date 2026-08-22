@@ -1,53 +1,41 @@
 import { CommonModule } from '@angular/common';
 import { Component, TemplateRef, ViewChild } from '@angular/core';
-import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
+import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
+import { DocumentService } from '@app/shared/services/document.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { FormsModule } from '@angular/forms';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { CabinetSelection } from '@app/shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
-// Status badge styling per DocumentRequestStatus (0-4) plus the Reverted case, which shares
-// Status 0 (Draft) with a genuinely new draft -- the backend tells them apart via IsReworked
-// (see DocumentRequestComponent.GetMyTotalRequestsAsync), the same distinction already used by
-// the dashboard's Draft/Reverted split and by my-approval-request.ts's status badge.
-const STATUS_BADGES: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  Draft: { label: 'Draft', color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' },
-  Reverted: { label: 'Reverted', color: '#6366f1', bg: '#f5f3ff', border: '#ddd6fe' },
-  Submitted: { label: 'Submitted', color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' },
-  'In Approval': { label: 'In Approval', color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' },
-  Approved: { label: 'Approved', color: '#10b981', bg: '#ecfdf5', border: '#d1fae5' },
-  Rejected: { label: 'Rejected', color: '#ef4444', bg: '#fef2f2', border: '#fee2e2' },
-};
-
-function statusLabel(status: number, isReworked: boolean): string {
-  switch (status) {
-    case 0:
-      return isReworked ? 'Reverted' : 'Draft';
-    case 1:
-      return 'Submitted';
-    case 2:
-      return 'In Approval';
-    case 3:
-      return 'Approved';
-    case 4:
-      return 'Rejected';
-    default:
-      return 'Unknown';
+// Status badge styling for a Document's lifecycle CurrentStatus (Draft / Pending Approval /
+// Authorization Pending / Training Pending / Approved / Authorized / Effective / Rejected --
+// see DocumentComponent.GetMyDocumentsAsync). Matched by keyword rather than an exact-string
+// dictionary since CurrentStatus is a free-text state Name, not a fixed code, so this stays
+// correct even if the exact wording of a state's Name changes -- mirrors the same
+// pending/approved/rejected color convention used by my-total-requests.ts and my-approval-request.ts.
+function documentStatusBadge(status: string): { color: string; bg: string; border: string } {
+  const s = (status || '').toLowerCase();
+  if (s.includes('reject')) return { color: '#ef4444', bg: '#fef2f2', border: '#fee2e2' };
+  if (s.includes('draft')) return { color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' };
+  if (s.includes('pending') || s.includes('progress') || s.includes('rework') || s.includes('revert')) {
+    return { color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' };
   }
+  if (s.includes('approv') || s.includes('effective') || s.includes('authoriz')) {
+    return { color: '#10b981', bg: '#ecfdf5', border: '#d1fae5' };
+  }
+  return { color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' };
 }
 
 @Component({
-  selector: 'app-my-total-requests',
+  selector: 'app-my-documents',
   imports: [
     CommonModule,
     FormsModule,
@@ -60,16 +48,16 @@ function statusLabel(status: number, isReworked: boolean): string {
     NzButtonModule,
     NzIconModule,
   ],
-  templateUrl: './my-total-requests.html',
-  styleUrl: './my-total-requests.css',
+  templateUrl: './my-documents.html',
+  styleUrl: './my-documents.css',
 })
-export class MyTotalRequests {
+export class MyDocuments {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
   @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
 
   pageSize = 10;
   totalRows = 0;
-  documentRequestsData: any[] = [];
+  documentsData: any[] = [];
 
   documentId: number = 0;
   currentDocumentName: string = '';
@@ -99,19 +87,11 @@ export class MyTotalRequests {
     minWidth: 100,
   };
 
-  // field name each cabinet level maps to in the row data, keyed by level number
-  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
-    1: { field: 'division', label: 'Division' },
-    2: { field: 'department', label: 'Department' },
-    3: { field: 'subdepartment', label: 'Sub-Department' },
-    4: { field: 'businessdomain', label: 'Business Domain' },
-  };
-
-  private readonly leadingColumnDefs: ColDef[] = [
-    { field: 'requestNumber', headerName: 'Request Number', minWidth: 140 },
+  documentColumnDefs: ColDef[] = [
+    { field: 'documentNumber', headerName: 'Document Number', minWidth: 150 },
     { field: 'documentType', headerName: 'Document Type', minWidth: 150 },
     {
-      field: 'documentName',
+      field: 'title',
       headerName: 'Document Title',
       minWidth: 200,
       editable: false,
@@ -130,39 +110,17 @@ export class MyTotalRequests {
         this.openDocumentModal(event.data);
       },
     },
-    {
-      field: 'justification',
-      headerName: 'Justification',
-      minWidth: 130,
-      editable: false,
-      cellRenderer: (params: any) => {
-        const val = params.value || (params.data && params.data.justification) || '';
-        if (!val) return '<span>-</span>';
-        return `
-          <span
-            style="color:#1976d2; cursor:pointer; text-decoration:underline"
-            data-action="open-justification"
-          >
-            Justification
-          </span>
-        `;
-      },
-      onCellClicked: (event: any) => {
-        const val = event.value || (event.data && event.data.justification);
-        if (val) {
-          this.openJustificationModal(val);
-        }
-      },
-    },
-  ];
-
-  private readonly trailingColumnDefs: ColDef[] = [
+    { field: 'version', headerName: 'Version', minWidth: 100 },
+    { field: 'division', headerName: 'Division', minWidth: 130 },
+    { field: 'department', headerName: 'Department', minWidth: 130 },
+    { field: 'subDepartment', headerName: 'Sub-Department', minWidth: 140 },
+    { field: 'businessDomain', headerName: 'Business Domain', minWidth: 140 },
     {
       field: 'status',
       headerName: 'Status',
       minWidth: 140,
       cellRenderer: (params: any) => {
-        const badge = STATUS_BADGES[params.value] || STATUS_BADGES['Draft'];
+        const badge = documentStatusBadge(params.value);
         return `
           <span style="
             display: inline-flex;
@@ -177,7 +135,7 @@ export class MyTotalRequests {
             border: 1px solid ${badge.border};
             border-radius: 9999px;
           ">
-            ${badge.label}
+            ${params.value || 'Draft'}
           </span>
         `;
       },
@@ -188,61 +146,17 @@ export class MyTotalRequests {
     { field: 'lastModifiedBy', headerName: 'Last Modified By', minWidth: 150, cellClass: 'audit-cell' },
   ];
 
-  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
-  // showing just the fixed columns until we know which levels are enabled.
-  documentColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
-
-  columnToggles?: ColumnToggle[] = [
-    { field: 'requestNumber', label: 'Request Number', visible: true },
-    { field: 'documentType', label: 'Document Type', visible: true },
-    { field: 'documentName', label: 'Document Title', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
-    { field: 'status', label: 'Status', visible: true },
-    { field: 'createdOn', label: 'Created On', visible: true },
-    { field: 'createdBy', label: 'Created By', visible: true },
-    { field: 'lastModifiedOn', label: 'Last Modified On', visible: true },
-    { field: 'lastModifiedBy', label: 'Last Modified By', visible: true },
-  ];
+  columnToggles = this.documentColumnDefs.map((c) => ({
+    field: c.field as string,
+    label: c.headerName as string,
+    visible: true,
+  }));
 
   constructor(
-    private _documentRequestService: DocumentRequestService,
+    private _documentService: DocumentService,
     private _notificationToastService: NotificationToastService,
     private modal: NzModalService,
-    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
-
-  ngOnInit() {
-    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
-    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
-    // title is configured for that level.
-    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
-      const activeLevelDefs = levels
-        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
-        .map((level) => ({
-          ...this.cabinetLevelFields[level.level],
-          title: level.title,
-        }));
-
-      this.documentColumnDefs = [
-        ...this.leadingColumnDefs,
-        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title, minWidth: 150 })),
-        ...this.trailingColumnDefs,
-      ];
-
-      this.columnToggles = [
-        { field: 'requestNumber', label: 'Request Number', visible: true },
-        { field: 'documentType', label: 'Document Type', visible: true },
-        { field: 'documentName', label: 'Document Title', visible: true },
-        { field: 'justification', label: 'Justification', visible: true },
-        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
-        { field: 'status', label: 'Status', visible: true },
-        { field: 'createdOn', label: 'Created On', visible: true },
-        { field: 'createdBy', label: 'Created By', visible: true },
-        { field: 'lastModifiedOn', label: 'Last Modified On', visible: true },
-        { field: 'lastModifiedBy', label: 'Last Modified By', visible: true },
-      ];
-    });
-  }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     if (event && event.pageSize) {
@@ -266,19 +180,19 @@ export class MyTotalRequests {
   }
 
   // This grid binds (serverQuery), so it's server-side/infinite-row-model -- calling
-  // GetAllMyTotalRequests() directly only reassigns documentRequestsData, which AG Grid's
-  // infinite cache doesn't pick up on its own. refresh() (-> gridApi.refreshInfiniteCache())
-  // is what actually re-fetches with the new filters and re-renders, which is why filter
-  // changes weren't reflected even though the backend was already returning updated records.
+  // GetAllMyDocuments() directly only reassigns documentsData, which AG Grid's infinite cache
+  // doesn't pick up on its own. refresh() (-> gridApi.refreshInfiniteCache()) is what actually
+  // re-fetches with the new filters and re-renders, which is why filter changes weren't
+  // reflected even though the backend was already returning the updated records.
   private refreshGrid(): void {
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     } else {
-      this.GetAllMyTotalRequests();
+      this.GetAllMyDocuments();
     }
   }
 
-  GetAllMyTotalRequests(query?: any) {
+  GetAllMyDocuments(query?: any) {
     const searchText = query?.searchText || query?.filterModel?.fname?.filter || '';
 
     if (query && typeof query === 'object') {
@@ -310,57 +224,54 @@ export class MyTotalRequests {
       documentTypeCode: this.selectedDocumentType || '',
     };
 
-    this._documentRequestService.getMyTotalRequests(payload).subscribe({
+    this._documentService.getMyDocuments(payload).subscribe({
       next: (response) => {
         if (response?.Success) {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);
 
           this.totalRows = data?.TotalCount ?? items.length;
-          this.documentRequestsData = items.map((item: any) => {
-            const status = item.Status ?? item.status ?? 0;
-            const isReworked = item.IsReworked ?? item.isReworked ?? false;
-            return {
-              id: item.Id || item.id,
-              requestNumber: item.RequestNumber || item.requestNumber,
-              documentType: item.DocumentType || item.documentType,
-              documentName: item.DocumentName || item.documentName,
-              justification: item.Justification || item.justification || '',
-              division: item.Division,
-              department: item.Department,
-              subdepartment: item.SubDepartment,
-              businessdomain: item.BusinessDomain,
-              status: statusLabel(status, isReworked),
-              url: item.DraftFileUrl || item.draftFileUrl || item.draftfileurl || item.DraftFileURL,
-              proposedContent:
-                item.ProposedContent ||
-                item.proposedContent ||
-                item.VersionContent ||
-                item.versionContent ||
-                item.versioncontent ||
-                item.Content ||
-                item.content,
-              createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdAt || ''),
-              createdBy: item.CreatedByName || item.createdByName || item.CreatedBy || item.createdBy,
-              lastModifiedOn: new CustomDateFormatPipe().transform(
-                item.LastModifiedAt || item.lastModifiedAt || '',
-              ),
-              lastModifiedBy:
-                item.LastModifiedByName || item.lastModifiedByName || item.LastModifiedBy || item.lastModifiedBy,
-            };
-          });
+          this.documentsData = items.map((item: any) => ({
+            id: item.Id || item.id,
+            documentNumber: item.DocumentNumber || item.documentnumber,
+            documentType: item.DocumentType || item.documenttype,
+            title: item.Title || item.title,
+            version: item.Version || item.version,
+            division: item.Division || item.division,
+            department: item.Department || item.department,
+            subDepartment: item.SubDepartment || item.subdepartment,
+            businessDomain: item.BusinessDomain || item.businessdomain,
+            status: item.CurrentStatus || item.currentstatus || 'Draft',
+            url: item.DocumentURL || item.documenturl,
+            proposedContent:
+              item.ProposedContent ||
+              item.proposedcontent ||
+              item.VersionContent ||
+              item.versioncontent ||
+              item.content,
+            createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
+            createdBy: item.CreatedByName || item.createdbyname || item.CreatedBy || item.createdby,
+            lastModifiedOn: new CustomDateFormatPipe().transform(
+              item.LastModifiedAt || item.lastmodifiedat || '',
+            ),
+            lastModifiedBy:
+              item.LastModifiedByName ||
+              item.lastmodifiedbyname ||
+              item.LastModifiedBy ||
+              item.lastmodifiedby,
+          }));
         } else {
-          this.documentRequestsData = [];
+          this.documentsData = [];
           this.totalRows = 0;
         }
       },
       error: (err) => {
-        this.documentRequestsData = [];
+        this.documentsData = [];
         this.totalRows = 0;
         this._notificationToastService.createNotification(
           'error',
           'Error',
-          err?.Message || 'Failed to fetch total requests.',
+          err?.error?.Message || err?.Message || 'Failed to fetch your documents.',
         );
       },
     });
@@ -369,7 +280,7 @@ export class MyTotalRequests {
   openDocumentModal(rowData: any) {
     this.templateHtml = rowData.proposedContent || '';
     this.documentId = rowData.id || rowData.Id;
-    this.currentDocumentName = rowData.documentName || rowData.DocumentName || '';
+    this.currentDocumentName = rowData.title || rowData.Title || '';
     let fileUrl = rowData.url || '';
 
     if (fileUrl && fileUrl.trim()) {
@@ -394,7 +305,7 @@ export class MyTotalRequests {
 
   downloadDraft(): void {
     const idToDownload = this.documentId;
-    this._documentRequestService.DownloadDraftDocument(idToDownload).subscribe({
+    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
       next: (response: any) => {
         const body = response?.body || response;
         let blob: Blob | null = null;
@@ -483,24 +394,6 @@ export class MyTotalRequests {
           );
         }
       },
-    });
-  }
-
-  openJustificationModal(justificationText: string): void {
-    const text = justificationText || 'No justification provided.';
-    const modalRef = this.modal.create({
-      nzTitle: 'Justification',
-      nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
-      nzClosable: true,
-      nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
-      nzWidth: 600,
     });
   }
 }

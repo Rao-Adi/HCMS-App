@@ -3,20 +3,22 @@
     <h3 class="PnlHeader">
       {{ 'labels.Filters' | safeTranslate }}
     </h3>
-    <div class="row">
+    <div class="row">      
       <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
         <div class="PnlHeading">
           <label>{{ 'labels.Document Type' | safeTranslate }} </label>
         </div>
-        <app-document-type-list
-          valueKey="CODE"
-          labelKey="NAME"
-          placeholder="Select Document Type"
-          [(ngModel)]="selectedDocumentType"
-          (valueChange)="onDocumentTypeChange($event)"
-          width="100%"
-        >
-        </app-document-type-list>
+        <div>
+          <app-document-type-list
+            valueKey="CODE"
+            labelKey="NAME"
+            placeholder="Select Document Type"
+            [(ngModel)]="selectedDocumentType"
+            (valueChange)="onDocumentTypeChange($event)"
+            width="100%"
+          >
+          </app-document-type-list>
+        </div>
       </div>
       <div class="col-lg-9 col-md-8 col-sm-12 mb-10">
         <app-cabinet-structure-list
@@ -39,12 +41,12 @@
       [isSelectionRequired]="false"
       [showDisplayOption]="true"
       [autoSizeColumns]="true"
-      [rowData]="documentRequestsData"
+      [rowData]="documentsData"
       [pageSize]="pageSize"
       [pageSizeOptions]="[10, 20, 50, 100]"
       [totalRows]="totalRows"
-      gridId="myTotalRequestsGrid"
-      (serverQuery)="GetAllMyTotalRequests($event)"
+      gridId="myDocumentsGrid"
+      (serverQuery)="GetAllMyDocuments($event)"
       (pageSizeChange)="onPageSizeChanged($event)"
     >
     </app-ag-grid-wrapper>
