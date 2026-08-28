@@ -38,6 +38,7 @@ export class DocumentRequestManagement implements OnInit {
   selectedTab: string = 'NewRequest';
   draftDocumentCounts: number = 0;
   myDocumentRequestPendingForApprovalCount: number = 0;
+  myTotalRequestCount: number = 0;
 
   
   constructor(
@@ -53,6 +54,7 @@ export class DocumentRequestManagement implements OnInit {
     });
     this.getDocumentRequestCounts();
     this.getMyDocumentRequestForApprovalCount();
+    this.getMyTotalRequestCount();
   }
 
   getDocumentRequestCounts() {
@@ -77,8 +79,25 @@ export class DocumentRequestManagement implements OnInit {
     });
   }
 
+  getMyTotalRequestCount() {
+    this._documentRequestService.getMyTotalRequestCount().subscribe({
+      next: (response) => {
+        if (response && response.Success) {
+          this.myTotalRequestCount = response.Data ?? 0;
+        }
+      },
+      error: (err) => console.error('Failed to get request counts', err),
+    });
+  }
+
   onRequestCreated(): void {
     this.getDocumentRequestCounts();
     this.getMyDocumentRequestForApprovalCount();
+    this.getMyTotalRequestCount();
+  }
+
+  // Keeps the pill-shaped tab badges from stretching wide for large counts.
+  formatBadgeCount(count: number): string {
+    return count > 999 ? '999+' : String(count);
   }
 }

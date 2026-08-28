@@ -72,6 +72,8 @@ export class DraftRequestList {
   };
 
   selectedDraftRequest: any;
+  revertedObservations: any[] = [];
+  loadingObservations = false;
   showExclusionTable = false;
   employees: any[] = [];
   selectedEmployee?: string = '';
@@ -313,7 +315,7 @@ export class DraftRequestList {
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
             sumbittedby: item.CreatedBy,
-            status: item.IsReworked ? 'Reworked' : 'Draft',
+            status: item.IsReworked ? 'Reverted' : 'Draft',
             createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.CreatedAt || ''),
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.createdAt || item.CreatedAt || '',
@@ -443,6 +445,40 @@ export class DraftRequestList {
 
     // console.log('Distribution:', this.distributionListPayload);
     // console.log('Users:', this.distributionUserList);
+
+    this.loadRevertedObservations(row);
+  }
+
+  // Shown ahead of the Document Justification panel so the user sees why the request was
+  // reverted before reviewing/editing the document details -- previously this same data was
+  // only reachable via the "Reverted" status cell's popup (openObservationModal below).
+  loadRevertedObservations(row: any): void {
+    this.revertedObservations = [];
+
+    if (!row || row.status !== 'Reverted') {
+      return;
+    }
+
+    this.loadingObservations = true;
+    this._doumentRequestService
+      .GetWorkflowObservationDetails(row.Id, 'Request', 'Reworked')
+      .subscribe({
+        next: (response) => {
+          this.loadingObservations = false;
+          this.revertedObservations = (response?.Data || []).map((item: any) => ({
+            EmployeeName: item.EmployeeName,
+            RoleName: item.RoleName,
+            Designation: item.Designation,
+            Observation: item.Observation,
+            Decision: item.Decision,
+            ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
+          }));
+        },
+        error: () => {
+          this.loadingObservations = false;
+          this.revertedObservations = [];
+        },
+      });
   }
 
   downloadDraft(): void {

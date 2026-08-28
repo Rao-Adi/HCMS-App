@@ -21,7 +21,7 @@
               >
                 Draft/Reverted Requests
                 <span *ngIf="draftDocumentCounts > 0" class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
-                  draftDocumentCounts
+                  formatBadgeCount(draftDocumentCounts)
                 }}</span>
               </button>
               <button
@@ -34,7 +34,7 @@
                 <span
                   *ngIf="myDocumentRequestPendingForApprovalCount > 0"
                   class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
-                  >{{ myDocumentRequestPendingForApprovalCount }}</span>
+                  >{{ formatBadgeCount(myDocumentRequestPendingForApprovalCount) }}</span>
               </button>
               <button
                 class="tab-button"
@@ -42,7 +42,11 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'MyDocumentRequests' }"
                 (click)="selectedTab = 'MyDocumentRequests'"
               >
-                My Document Requests
+                Approved/Rejected Requests
+                <span
+                  *ngIf="myTotalRequestCount > 0"
+                  class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+                  >{{ formatBadgeCount(myTotalRequestCount) }}</span>
               </button>
             </div>
 

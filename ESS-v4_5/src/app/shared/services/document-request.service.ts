@@ -109,6 +109,18 @@ export class DocumentRequestService {
     return this.http.post<ApiResponse<any>>(uri, payload, { headers: this.getHeaders() });
   }
 
+  getMyTotalRequestCount(): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocumentRequest/get-my-total-request-count`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  exportMyTotalRequests(payload: any) {
+    return this.http.post(`${this.apiUrl}/DMSDocumentRequest/export-my-total-requests`, payload, {
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+
   GetMyRequestsPendingApproval(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocumentRequest/get-my-document-requests-for-approval`,

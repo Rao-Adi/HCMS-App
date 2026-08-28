@@ -90,6 +90,7 @@ export class CreateUpdateDocument {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   selectedTab: string = 'CreateUpdate';
+  myDocumentsCount: number = 0;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -303,6 +304,23 @@ export class CreateUpdateDocument {
       // this.getAllDocumentRequestTypes();
       this.loadRequestTypes();
     });
+    this.getMyDocumentsCount();
+  }
+
+  getMyDocumentsCount() {
+    this._documentService.getMyDocumentsTotalCount().subscribe({
+      next: (response) => {
+        if (response && response.Success) {
+          this.myDocumentsCount = response.Data ?? 0;
+        }
+      },
+      error: (err) => console.error('Failed to get my documents count', err),
+    });
+  }
+
+  // Keeps the pill-shaped tab badge from stretching wide for large counts.
+  formatBadgeCount(count: number): string {
+    return count > 999 ? '999+' : String(count);
   }
 
   GetLoginEmpId() {
@@ -1084,7 +1102,7 @@ export class CreateUpdateDocument {
             documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
             pendingWith: item.CurrentAssignedUser,
             requestCreatedBy: item.LastModifiedByName,
-            status: item.IsReworked ? 'Reworked' : 'Draft',
+            status: item.IsReworked ? 'Reverted' : 'Draft',
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.CreatedAt || item.CreatedAt || '',
             ),

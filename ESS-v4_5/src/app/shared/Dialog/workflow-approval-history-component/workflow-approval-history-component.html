@@ -30,10 +30,10 @@
             class="badge"
             [ngClass]="{
               approve: h.Decision === 'Approved',
-                reject: h.Decision === 'Rejected' || h.Decision === 'Reworked'
+                reject: h.Decision === 'Rejected' || h.Decision === 'Reverted'
             }"
           >
-            {{ h.Decision === 'Reworked' ? 'Reverted' : (h.Decision || 'Pending') }}
+            {{ h.Decision === 'Reverted' ? 'Reverted' : (h.Decision || 'Pending') }}
           </span>
         </td>
       </tr>

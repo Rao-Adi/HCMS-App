@@ -340,12 +340,12 @@
                       <span
                         class="status-badge"
                         [ngClass]="{
-                          'badge-rework': item.status == 'Reworked',
+                          'badge-rework': item.status == 'Reverted',
                           'badge-rejected': item.status == 'Rejected',
                           'badge-approved': item.status == 'Approved',
                         }"
                       >
-                        {{ item.status === 'Reworked' ? 'Reverted' : item.status }}
+                        {{ item.status === 'Reverted' ? 'Reverted' : item.status }}
                       </span>
 
                       <span class="audit-cell">

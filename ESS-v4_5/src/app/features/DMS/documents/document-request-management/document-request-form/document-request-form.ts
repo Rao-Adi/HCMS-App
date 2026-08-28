@@ -1446,7 +1446,7 @@ export class DocumentRequestForm {
               item.BusinessDomainCode || item.businessDomainCode || item.businessdomaincode,
             pendingWith: item.CurrentAssignedUser || item.currentassigneduser,
             sumbittedby: item.CreatedBy || item.createdby,
-            status: item.IsReworked ? 'Reworked' : 'Draft',
+            status: item.IsReworked ? 'Reverted' : 'Draft',
             createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
             requestCreatedOn: new CustomDateFormatPipe().transform(
               item.CreatedAt || item.createdat || '',

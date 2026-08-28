@@ -17,6 +17,10 @@
           (click)="selectedTab = 'MyDocuments'"
         >
           My Documents
+          <span
+            *ngIf="myDocumentsCount > 0"
+            class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+            >{{ formatBadgeCount(myDocumentsCount) }}</span>
         </button>
       </div>
 

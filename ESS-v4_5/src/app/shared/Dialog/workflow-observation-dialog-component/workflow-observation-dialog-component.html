@@ -26,10 +26,10 @@
               class="badge"
               [ngClass]="{
                 approve: o.Decision === 'Approved',
-                reject: o.Decision === 'Rejected' || o.Decision === 'Reworked',
+                reject: o.Decision === 'Rejected' || o.Decision === 'Reverted',
               }"
             >
-              {{ o.Decision === 'Reworked' ? 'Reverted' : o.Decision }}
+              {{ o.Decision === 'Reverted' ? 'Reverted' : o.Decision }}
             </span>
           </td>
           <td class="audit-cell">{{ o.ActionAt }}</td>

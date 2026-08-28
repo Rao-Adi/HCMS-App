@@ -49,6 +49,16 @@
       (serverQuery)="GetAllMyDocuments($event)"
       (pageSizeChange)="onPageSizeChanged($event)"
     >
+      <div grid-actions class="grid-action-icons">
+        <button
+          class="btn btn-success btn-sm btn-action btn-export"
+          title="Export"
+          [disabled]="totalRows === 0"
+          (click)="exportDocuments()"
+        >
+          <i class="bi bi-file-earmark-excel"></i> Export
+        </button>
+      </div>
     </app-ag-grid-wrapper>
   </div>
 </div>

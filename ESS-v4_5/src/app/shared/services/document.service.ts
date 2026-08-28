@@ -161,6 +161,18 @@ export class DocumentService {
     );
   }
 
+  getMyDocumentsTotalCount(): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-my-documents-total-count`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  exportMyDocumentsList(payload: any) {
+    return this.http.post(`${this.apiUrl}/DMSDocument/export-my-documents-list`, payload, {
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+
   GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-effective-documents-for-revision`,

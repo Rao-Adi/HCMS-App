@@ -366,6 +366,77 @@ export class MyTotalRequests {
     });
   }
 
+  // Follows the same pattern as my-approval-document.ts's exportDocuments() -- backend returns
+  // a real .xlsx workbook (see DocumentRequestComponent.ExportMyTotalRequestsAsync), so the blob
+  // is used exactly as the server sent it rather than re-wrapped in a hardcoded MIME type.
+  exportRequests(): void {
+    const searchText = this.currentGridQuery?.searchText || this.currentGridQuery?.filterModel?.fname?.filter || '';
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC';
+    let sortColumn = 'CreatedAt';
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      sortBy: sortBy,
+      sortColumn: sortColumn,
+      searchText: searchText || '',
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
+      documentTypeCode: this.selectedDocumentType || '',
+    };
+
+    this._documentRequestService.exportMyTotalRequests(payload).subscribe({
+      next: (response) => {
+        const blob = response.body as Blob;
+        if (!blob || blob.size === 0) {
+          this._notificationToastService.createNotification(
+            'warning',
+            'Export',
+            'No data available to export.',
+          );
+          return;
+        }
+
+        let filename = `My Document Requests - (${new Date().toISOString().split('T')[0]}).xlsx`;
+        const contentDisposition =
+          response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this._notificationToastService.createNotification(
+          'success',
+          'Export',
+          'Request list exported successfully!',
+        );
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        this._notificationToastService.createNotification(
+          'error',
+          'Export',
+          'Failed to export request list.',
+        );
+      },
+    });
+  }
+
   openDocumentModal(rowData: any) {
     this.templateHtml = rowData.proposedContent || '';
     this.documentId = rowData.id || rowData.Id;
