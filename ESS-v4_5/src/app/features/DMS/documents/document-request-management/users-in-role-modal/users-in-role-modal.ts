@@ -18,6 +18,7 @@ export class UsersInRoleModal {
   totalRows = 0;
   totalUsers = 0;
   selectedRows: any[] = [];
+  private gridApi: any;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -75,6 +76,28 @@ export class UsersInRoleModal {
     this.selectedRows = selectedRows;
   }
 
+  onGridReady(event: any): void {
+    this.gridApi = event.api;
+  }
+
+  // Checks off everyone already selected for this Role/Cabinet row (see
+  // DRUsersComponent.openCabinetModal's preSelectedEmployeeCodes) so the user can see who's
+  // already in the distribution instead of starting from a blank grid every time. Runs after
+  // every loadData() (initial load, search, sort, page change) so it stays accurate as the
+  // grid's rows change.
+  private preselectRows(): void {
+    const codes: string[] = this.modalData?.preSelectedEmployeeCodes || [];
+    if (!codes.length || !this.gridApi) return;
+
+    setTimeout(() => {
+      this.gridApi.forEachNode((node: any) => {
+        if (node.data?.employeeCode && codes.includes(node.data.employeeCode)) {
+          node.setSelected(true);
+        }
+      });
+    }, 50);
+  }
+
   loadData(query: any = {}) {
     const roleId = this.modalData?.data;
     if (!roleId) return; 
@@ -111,6 +134,7 @@ export class UsersInRoleModal {
             designation:
               u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
           }));
+          this.preselectRows();
         } else {
           this.workflowAuthoritiesData = [];
           this.totalRows = 0;

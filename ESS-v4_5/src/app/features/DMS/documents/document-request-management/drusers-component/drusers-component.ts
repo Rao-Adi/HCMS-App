@@ -20,6 +20,16 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
 import { forkJoin } from 'rxjs';
 
+// Identifies which "Document Users" grid row (Role + Cabinet scope) a selectedEmployeeList
+// entry belongs to -- mirrors DocumentRequestUserDistribution's RoleId/*Code columns.
+interface DistributionRule {
+  roleId: any;
+  divisionCode: any;
+  departmentCode: any;
+  subDepartmentCode: any;
+  businessDomainCode: any;
+}
+
 @Component({
   selector: 'app-drusers-component',
   imports: [CommonModule, FormsModule, EditableAgGridWrapper],
@@ -117,6 +127,10 @@ export class DRUsersComponent {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['selectedUsers']) {
       this.selectedEmployeeList = [...this.selectedUsers];
+      // No-op until userRoles/cabinet dropdowns are loaded (guarded inside) -- on the very
+      // first row click in a session this fires before loadDropdownsAndGrid() resolves, so
+      // that method retries the reconstruction itself once it's ready.
+      this.reconstructManualUserData();
     }
   }
 
@@ -138,6 +152,13 @@ export class DRUsersComponent {
         clickable: true,
         showSearch: true,
         clickAction: 'userId', // triggers handleGridAction for 'userId'
+      },
+      {
+        field: 'employeeSelectionStatus',
+        headerName: 'Employee Selection Status',
+        type: 'readonly',
+        editable: false,
+        minWidth: 220,
       },
     ];
   }
@@ -238,6 +259,22 @@ export class DRUsersComponent {
     );
     const roleId = selectedRole ? selectedRole.id : rowData.userId;
 
+    const rule = {
+      roleId,
+      divisionCode: rowData.level1Id || rowData.divisionCode || null,
+      departmentCode: rowData.level2Id || rowData.departmentCode || null,
+      subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode || null,
+      businessDomainCode: rowData.level4Id || rowData.businessDomainCode || null,
+    };
+
+    // Lets the modal check off everyone already selected for this row (auto-selected on add,
+    // or picked in a previous visit to this modal) so the user can see who's in/out at a
+    // glance instead of starting from a blank grid.
+    const preSelectedEmployeeCodes = this.selectedEmployeeList
+      .filter((emp) => this.employeeMatchesRule(emp, rule))
+      .map((emp) => emp.employeeCode || emp.EmployeeCode || emp.empcode || emp.empid)
+      .filter((code) => code != null);
+
     const modalRef = this.modal.create({
       nzTitle: 'Users in Role',
       nzContent: UsersInRoleModal,
@@ -248,27 +285,268 @@ export class DRUsersComponent {
         subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode,
         businessDomainCode: rowData.level4Id || rowData.businessDomainCode,
         documentTypeCode: this.documentTypeCode,
+        preSelectedEmployeeCodes,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',
     });
 
-    modalRef.afterClose.subscribe((selectedUsers: any[]) => {
-      if (selectedUsers && selectedUsers.length > 0) {
-        // Accumulate selected users and avoid duplicates
-        selectedUsers.forEach((user) => {
+    modalRef.afterClose.subscribe((selectedUsers: any[] | undefined) => {
+      // save() always calls modalRef.destroy(this.selectedRows) -- an array, even an empty one
+      // when the user unchecked everyone. undefined only happens if the modal was dismissed
+      // via the mask/Esc/X without clicking Save, which should leave the selection untouched.
+      if (!selectedUsers) return;
+
+      const selectedCodes = new Set(
+        selectedUsers
+          .map((user) => user.employeeCode || user.EmployeeCode || user.empcode || user.empid)
+          .filter((code) => code != null),
+      );
+
+      // Replace this row's slice of selectedEmployeeList with exactly what the modal now
+      // says is checked -- both newly-checked AND unchecked employees need to take effect,
+      // not just additions, otherwise deselecting someone here never sticks.
+      this.selectedEmployeeList = this.selectedEmployeeList.filter((emp) => {
+        if (!this.employeeMatchesRule(emp, rule)) return true;
+        const code = emp.employeeCode || emp.EmployeeCode || emp.empcode || emp.empid;
+        return selectedCodes.has(code);
+      });
+
+      // Tagged with the same rule fields onRowDeleted filters on, so anyone added here still
+      // gets cleaned up correctly if the distribution row is later deleted. Scoped to THIS
+      // row's rule, not just employeeCode -- someone who holds two roles (e.g. both "Team
+      // Head" and "Accountant") must be trackable under both rows independently, otherwise
+      // whichever row claims them first silently blocks the other row from ever selecting them.
+      selectedUsers.forEach((user) => {
+        const code = user.employeeCode || user.EmployeeCode || user.empcode || user.empid;
+        const exists = this.selectedEmployeeList.some(
+          (u) =>
+            (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code &&
+            this.employeeMatchesRule(u, rule),
+        );
+        if (!exists) {
+          this.selectedEmployeeList.push({ ...user, ...rule });
+        }
+      });
+
+      // Keep the grid's "Employee Selection Status" column in sync with any manual changes
+      // made here.
+      const totalMatching = rowData.totalMatchingEmployees ?? selectedUsers.length;
+      this.updateSelectionStatus(rowData, rule, totalMatching);
+
+      // Emit the updated list to the parent component (document-request-management.ts)
+      this.usersChanged.emit(this.selectedEmployeeList);
+    });
+  }
+
+  // Shared by onRowDeleted's cleanup filter and the "Employee Selection Status" column's
+  // selected-count computation -- both need to identify which selectedEmployeeList entries
+  // belong to a given distribution row (Role + Cabinet scope).
+  //
+  // Reads both casings: entries created live in this session are tagged with camelCase (via
+  // `{...rule}`), but entries reloaded from the backend come back PascalCase (RoleId,
+  // DivisionCode, ...) -- the API's actual wire format, since AddNewtonsoftJson's
+  // DefaultContractResolver (Program.cs) preserves C# property casing as-is, overriding the
+  // camelCase System.Text.Json policy configured just above it. Without this fallback, every
+  // reloaded employee silently failed to match its row, showing "0 of N selected" even though
+  // they truly were selected.
+  private employeeMatchesRule(
+    emp: any,
+    rule: {
+      roleId: any;
+      divisionCode: any;
+      departmentCode: any;
+      subDepartmentCode: any;
+      businessDomainCode: any;
+    },
+  ): boolean {
+    const roleId = emp.roleId ?? emp.RoleId;
+    const divisionCode = emp.divisionCode ?? emp.DivisionCode ?? null;
+    const departmentCode = emp.departmentCode ?? emp.DepartmentCode ?? null;
+    const subDepartmentCode = emp.subDepartmentCode ?? emp.SubDepartmentCode ?? null;
+    const businessDomainCode = emp.businessDomainCode ?? emp.BusinessDomainCode ?? null;
+
+    return (
+      roleId === rule.roleId &&
+      divisionCode === (rule.divisionCode || null) &&
+      departmentCode === (rule.departmentCode || null) &&
+      subDepartmentCode === (rule.subDepartmentCode || null) &&
+      businessDomainCode === (rule.businessDomainCode || null)
+    );
+  }
+
+  // Recomputes and writes the "N of M selected" text for one grid row, then replaces
+  // manualUserData so the grid picks up the change.
+  private updateSelectionStatus(
+    rowData: any,
+    rule: {
+      roleId: any;
+      divisionCode: any;
+      departmentCode: any;
+      subDepartmentCode: any;
+      businessDomainCode: any;
+    },
+    totalMatching: number,
+  ): void {
+    const selectedCount = this.selectedEmployeeList.filter((emp) =>
+      this.employeeMatchesRule(emp, rule),
+    ).length;
+
+    rowData.totalMatchingEmployees = totalMatching;
+    rowData.employeeSelectionStatus = `${selectedCount} of ${totalMatching} selected`;
+
+    this.manualUserData = this.manualUserData.map((row) =>
+      row.id === rowData.id ? { ...rowData } : row,
+    );
+  }
+
+  // Fetches every employee in the row's Role + Cabinet scope and selects all of them by
+  // default -- the "User Role" hyperlink (openCabinetModal) still lets the user narrow this
+  // down afterwards, same as before.
+  private autoSelectEmployeesForRow(rowData: any, roleId: any): void {
+    const rule = {
+      roleId,
+      divisionCode: rowData.level1Id || rowData.divisionCode || null,
+      departmentCode: rowData.level2Id || rowData.departmentCode || null,
+      subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode || null,
+      businessDomainCode: rowData.level4Id || rowData.businessDomainCode || null,
+    };
+
+    const payload = {
+      searchtext: '',
+      sortby: 'ASC',
+      sortcolumn: 'empid',
+      isactive: true,
+      pagenumber: 1,
+      // Large enough to fetch every matching employee in one page rather than the modal's
+      // default 10-per-page -- this is a "select all", not a browsable list.
+      pagesize: 1000000,
+      divisionCode: rule.divisionCode,
+      departmentCode: rule.departmentCode,
+      subDepartmentCode: rule.subDepartmentCode,
+      businessDomainCode: rule.businessDomainCode,
+      documentTypeCode: this.documentTypeCode || null,
+    };
+
+    this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe({
+      next: (res) => {
+        const data = res?.Data;
+        const users = (Array.isArray(data) ? data : data?.Items || []).filter(
+          (u: any) => u != null,
+        );
+
+        const mappedUsers = users.map((u: any) => ({
+          ...u, // Preserves raw backend properties like 'empid' for the parent to use
+          employeeCode: u.empcode || u.EmployeeCode || u.employeeCode,
+          employeeName: u.firstname
+            ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
+            : u.EmployeeName || u.employeeName || u.UserName || u.userName,
+          designation:
+            u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
+          role: this.getDisplayName(this.userRoles, roleId),
+          ...rule,
+        }));
+
+        // Scoped to THIS row's rule, not just employeeCode -- someone who holds two roles
+        // (e.g. both "Team Head" and "Accountant") must be trackable under both rows
+        // independently, otherwise whichever row is added first silently blocks the other
+        // row from ever selecting them (they'd already "exist" globally), which made the
+        // second row look like it never got any employees.
+        mappedUsers.forEach((user: any) => {
           const code = user.employeeCode || user.EmployeeCode || user.empcode || user.empid;
           const exists = this.selectedEmployeeList.some(
-            (u) => (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code,
+            (u) =>
+              (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code &&
+              this.employeeMatchesRule(u, rule),
           );
           if (!exists) {
             this.selectedEmployeeList.push(user);
           }
         });
 
-        // Emit the updated list to the parent component (document-request-management.ts)
+        this.updateSelectionStatus(rowData, rule, mappedUsers.length);
         this.usersChanged.emit(this.selectedEmployeeList);
+      },
+      error: () => {
+        this.updateSelectionStatus(rowData, rule, 0);
+      },
+    });
+  }
+
+  // Rebuilds the "Document Users" grid rows (manualUserData) from selectedEmployeeList --
+  // needed whenever a different draft/request is loaded (selectedUsers input changes), since
+  // the grid rows themselves are never persisted, only the flat employee selection is (see
+  // DocumentRequestUserDistribution.RoleId/*Code -- this is what makes reconstruction possible
+  // at all). Groups selectedEmployeeList by (RoleId, Cabinet); entries with no RoleId are
+  // untagged (auto-expanded from the separate Distribution List/Role section) and are
+  // intentionally left out of this grid, same as before.
+  private reconstructManualUserData(): void {
+    if (!this.userRoles.length) return;
+
+    const groups = new Map<string, { rule: DistributionRule; row: any }>();
+
+    for (const emp of this.selectedEmployeeList) {
+      const roleId = emp.roleId ?? emp.RoleId;
+      if (roleId == null) continue;
+
+      const rule: DistributionRule = {
+        roleId,
+        divisionCode: emp.divisionCode ?? emp.DivisionCode ?? null,
+        departmentCode: emp.departmentCode ?? emp.DepartmentCode ?? null,
+        subDepartmentCode: emp.subDepartmentCode ?? emp.SubDepartmentCode ?? null,
+        businessDomainCode: emp.businessDomainCode ?? emp.BusinessDomainCode ?? null,
+      };
+      const key = JSON.stringify(rule);
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          rule,
+          row: {
+            id: this.generateId(),
+            level1Id: rule.divisionCode,
+            level2Id: rule.departmentCode,
+            level3Id: rule.subDepartmentCode,
+            level4Id: rule.businessDomainCode,
+            userId: this.getDisplayName(this.userRoles, roleId),
+            employeeSelectionStatus: 'Loading...',
+          },
+        });
       }
+    }
+
+    this.manualUserData = Array.from(groups.values()).map((g) => g.row);
+    groups.forEach((g) => this.fetchTotalMatchingEmployees(g.row, g.rule));
+  }
+
+  // Fetches just the total headcount for a Role + Cabinet scope (M in "N of M selected") --
+  // used on reconstruction, where the employees themselves are already selected (they came
+  // from selectedUsers), unlike autoSelectEmployeesForRow which also has to select them.
+  private fetchTotalMatchingEmployees(rowData: any, rule: DistributionRule): void {
+    const payload = {
+      searchtext: '',
+      sortby: 'ASC',
+      sortcolumn: 'empid',
+      isactive: true,
+      pagenumber: 1,
+      pagesize: 1000000,
+      divisionCode: rule.divisionCode,
+      departmentCode: rule.departmentCode,
+      subDepartmentCode: rule.subDepartmentCode,
+      businessDomainCode: rule.businessDomainCode,
+      documentTypeCode: this.documentTypeCode || null,
+    };
+
+    this._peoplePartnerService.getUserByRoleId(rule.roleId, payload).subscribe({
+      next: (res) => {
+        const data = res?.Data;
+        const users = (Array.isArray(data) ? data : data?.Items || []).filter(
+          (u: any) => u != null,
+        );
+        this.updateSelectionStatus(rowData, rule, users.length);
+      },
+      error: () => {
+        this.updateSelectionStatus(rowData, rule, 0);
+      },
     });
   }
 
@@ -303,9 +581,19 @@ export class DRUsersComponent {
       departmentName: this.getDisplayName(this.departments, rowData.departmentName),
       subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
       userId: this.getDisplayName(this.userRoles, rowData.userId),
+      employeeSelectionStatus: 'Loading...',
     };
 
     this.manualUserData = [rowWithId, ...this.manualUserData];
+
+    // rowData.userId is still the raw role ID at this point (rowWithId.userId above has
+    // already been swapped for the display text).
+    const selectedRole = this.userRoles.find(
+      (r) => r.id == rowData.userId || r.text == rowData.userId,
+    );
+    const roleId = selectedRole ? selectedRole.id : rowData.userId;
+
+    this.autoSelectEmployeesForRow(rowWithId, roleId);
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
@@ -352,16 +640,19 @@ export class DRUsersComponent {
 
     if (!roleId) return;
 
-    // Filter out employees that match the deleted rule's criteria
-    this.selectedEmployeeList = this.selectedEmployeeList.filter(emp => {
-      const matchesRole = emp.roleId === roleId;
-      const matchesDivision = (emp.divisionCode || null) === (deletedRow.level1Id || null);
-      const matchesDepartment = (emp.departmentCode || null) === (deletedRow.level2Id || null);
-      const matchesSubDepartment = (emp.subDepartmentCode || null) === (deletedRow.level3Id || null);
-      const matchesBusinessDomain = (emp.businessDomainCode || null) === (deletedRow.level4Id || null);
+    const rule = {
+      roleId,
+      divisionCode: deletedRow.level1Id || null,
+      departmentCode: deletedRow.level2Id || null,
+      subDepartmentCode: deletedRow.level3Id || null,
+      businessDomainCode: deletedRow.level4Id || null,
+    };
 
-      return !(matchesRole && matchesDivision && matchesDepartment && matchesSubDepartment && matchesBusinessDomain);
-    });
+    // Filter out employees that match the deleted rule's criteria
+    this.selectedEmployeeList = this.selectedEmployeeList.filter(
+      (emp) => !this.employeeMatchesRule(emp, rule),
+    );
+    this.usersChanged.emit(this.selectedEmployeeList);
   }
 
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
@@ -386,13 +677,14 @@ export class DRUsersComponent {
     }
   }
 
-  removeUser(index: number) {
-    this.selectedEmployeeList.splice(index, 1);
-    this.usersChanged.emit(this.selectedEmployeeList);
-  }
-
+  // Date.now() alone collides when multiple rows are generated in the same synchronous pass
+  // (e.g. reconstructManualUserData() building several group rows in one loop, all within the
+  // same millisecond) -- two rows sharing an id makes updateSelectionStatus's id-match replace
+  // BOTH rows with whichever row's data resolves last, which is what made two different Role
+  // rows collapse into duplicates of one.
+  private idCounter = 0;
   private generateId(): number {
-    return Date.now();
+    return Date.now() * 1000 + this.idCounter++;
   }
 
   private getDisplayName(options: any[], id: any): string {
@@ -424,7 +716,12 @@ export class DRUsersComponent {
       this.cabinetHierarchy = hierarchy;
 
       // ✅ Load hierarchy dropdown data
-      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => this.buildGrid());
+      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => {
+        this.buildGrid();
+        // Rebuilds the "Document Users" grid rows from selectedUsers now that userRoles/
+        // cabinet dropdown options (needed to resolve display text) are actually loaded.
+        this.reconstructManualUserData();
+      });
     });
   }
 

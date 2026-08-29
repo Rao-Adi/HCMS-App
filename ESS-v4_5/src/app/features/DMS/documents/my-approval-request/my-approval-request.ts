@@ -800,19 +800,17 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       observation: observation,
     };
 
-    const actionMessages: Record<string, string> = {
-      APPROVED: 'Document approved successfully.',
-      REJECTED: 'Document rejected successfully.',
-      REWORKED: 'Document sent for rework successfully.',
-    };
-
     this._documentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
       next: (response) => {
         if (response?.Success) {
+          // Message reflects the action actually taken -- backend derives it from the same
+          // decision value it just persisted (see DMSDocumentRequestController.TakeWorkflowAction),
+          // instead of duplicating that action-to-text mapping here where it could drift out
+          // of sync with what actually happened.
           this._notificationToastService.createNotification(
             'success',
             'Request',
-            actionMessages[action] || response.Message,
+            response.Message,
           );
           this.clearSelection();
           this.getRequestCounts();

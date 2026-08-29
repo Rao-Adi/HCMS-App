@@ -819,14 +819,7 @@ export class DocumentRequestForm {
         );
     });
 
-    const userids = this.distributionUserList
-      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
-      .filter((code) => code != null && code !== '')
-      .map(String);
-
-    userids.forEach((id: string, index: number) => {
-      formData.append(`UserIds[${index}]`, id);
-    });
+    this.appendUserIdsToFormData(formData, this.distributionUserList);
 
     if (this.uploadedFile) {
       formData.append('DraftFile', this.uploadedFile);
@@ -976,14 +969,7 @@ export class DocumentRequestForm {
         );
     });
 
-    const userids = this.distributionUserList
-      .map((u: any) => u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId)
-      .filter((code) => code != null && code !== '')
-      .map(String);
-
-    userids.forEach((id: string, index: number) => {
-      formData.append(`UserIds[${index}]`, id);
-    });
+    this.appendUserIdsToFormData(formData, this.distributionUserList);
 
     if (this.uploadedFile) {
       formData.append('DraftFile', this.uploadedFile);
@@ -1066,21 +1052,6 @@ export class DocumentRequestForm {
       distributionTypeId: x.distributiontypeId || x.distributionTypeId,
     }));
 
-    const userids = this.distributionUserList
-      .map(
-        (u: any) =>
-          u.employeeCode ||
-          u.EmployeeCode ||
-          u.empcode ||
-          u.empid ||
-          u.userId ||
-          u.UserId ||
-          u.id ||
-          u.Id,
-      )
-      .filter((code) => code != null && code !== '')
-      .map(String);
-
     const formData = new FormData();
     formData.append('CompanyId', this.selectedCompany || '');
     formData.append('DocumentRequestTypeCode', this.selectedDocumentRequestType || '');
@@ -1114,9 +1085,7 @@ export class DocumentRequestForm {
         );
     });
 
-    userids.forEach((id: string, index: number) => {
-      formData.append(`UserIds[${index}]`, id);
-    });
+    this.appendUserIdsToFormData(formData, this.distributionUserList);
 
     if (this.uploadedFile) {
       formData.append('DraftFile', this.uploadedFile);
@@ -1148,6 +1117,38 @@ export class DocumentRequestForm {
           err?.error?.Message || err?.Message || 'Failed to submit revision.',
         );
       },
+    });
+  }
+
+  // Sends each selected employee tagged with the Role + Cabinet row it came from (backend
+  // now persists these on DocumentRequestUserDistributions), not just a bare employee code --
+  // without this, reopening the request has no way to rebuild the "Document Users" grid rows.
+  private appendUserIdsToFormData(formData: FormData, users: any[]): void {
+    const getCode = (u: any) =>
+      u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId || u.UserId || u.id || u.Id;
+
+    const filtered = (users || []).filter((u: any) => {
+      const code = getCode(u);
+      return code != null && code !== '';
+    });
+
+    filtered.forEach((u: any, index: number) => {
+      formData.append(`UserIds[${index}].employeeCode`, String(getCode(u)));
+
+      const roleId = u.roleId ?? u.RoleId;
+      if (roleId != null) formData.append(`UserIds[${index}].roleId`, String(roleId));
+
+      const divisionCode = u.divisionCode ?? u.DivisionCode;
+      if (divisionCode) formData.append(`UserIds[${index}].divisionCode`, divisionCode);
+
+      const departmentCode = u.departmentCode ?? u.DepartmentCode;
+      if (departmentCode) formData.append(`UserIds[${index}].departmentCode`, departmentCode);
+
+      const subDepartmentCode = u.subDepartmentCode ?? u.SubDepartmentCode;
+      if (subDepartmentCode) formData.append(`UserIds[${index}].subDepartmentCode`, subDepartmentCode);
+
+      const businessDomainCode = u.businessDomainCode ?? u.BusinessDomainCode;
+      if (businessDomainCode) formData.append(`UserIds[${index}].businessDomainCode`, businessDomainCode);
     });
   }
 
