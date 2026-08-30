@@ -1,3 +1,31 @@
+/* With domLayout: 'autoHeight' and zero rows, the row-viewport this grid computes its height
+   from collapses to close to 0px -- min-height only takes effect when the natural (row-count-
+   driven) height would be smaller than this, so grids with real rows are unaffected; it just
+   gives the empty state below room to render instead of being squeezed to nothing. Plain
+   selector (not ::ng-deep) because ag-grid-angular is this component's own template element,
+   not something AG Grid renders deep inside its own DOM. */
+ag-grid-angular {
+  display: block;
+  min-height: 120px;
+}
+
+/* Positioned via [style.top.px]="config.headerHeight" (bound in the template) rather than
+   centered across the whole grid -- this grid has no pinned rows, so the empty row-viewport
+   starts right below the header, which is where AG Grid's own no-rows overlay would normally
+   sit. Not using noRowsOverlayComponent for that positioning: api.showNoRowsOverlay() doesn't
+   reliably fire for the infinite row model this wrapper uses (see ag-grid-wrapper.ts,
+   showNoRowsMessage) -- this plain Angular-bound div sidesteps that overlay API entirely. */
+.ag-grid-empty-state {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-top: 20px;
+  text-align: center;
+  color: #000;
+  font-size: 14px;
+  pointer-events: none;
+}
+
 .ag-paging-panel {
   display: flex;
   justify-content: space-between;
@@ -6,22 +34,6 @@
   font-size: 12px;
   border-top: 1px solid #dde2eb;
   background-color: #fafafa;
-}
-
-/* Same absolute-overlay positioning as app-spinner (see spinner.component.ts) --
-   pointer-events: none so it never blocks clicks on the (empty) grid behind it. */
-.ag-grid-empty-state {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #000;
-  font-size: 14px;
-  pointer-events: none;
 }
 
 .ag-paging-row-summary {

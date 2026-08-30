@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { DocumentService } from '@app/shared/services/document.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { CabinetSelection } from '@app/shared/interfaces/interfaces';
+import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
@@ -14,6 +14,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 // Status badge styling for a Document's lifecycle CurrentStatus (Draft / Pending Approval /
 // Authorization Pending / Training Pending / Approved / Authorized / Effective / Rejected --
@@ -51,7 +52,7 @@ function documentStatusBadge(status: string): { color: string; bg: string; borde
   templateUrl: './my-documents.html',
   styleUrl: './my-documents.css',
 })
-export class MyDocuments {
+export class MyDocuments implements OnInit {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
   @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
 
@@ -87,7 +88,15 @@ export class MyDocuments {
     minWidth: 100,
   };
 
-  documentColumnDefs: ColDef[] = [
+   // field name each cabinet level maps to in the row data, keyed by level number
+  private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
+    1: { field: 'division', label: 'Division' },
+    2: { field: 'department', label: 'Department' },
+    3: { field: 'subdepartment', label: 'Sub-Department' },
+    4: { field: 'businessdomain', label: 'Business Domain' },
+  };
+
+  private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentNumber', headerName: 'Document Number', minWidth: 150 },
     { field: 'documentType', headerName: 'Document Type', minWidth: 150 },
     {
@@ -111,10 +120,9 @@ export class MyDocuments {
       },
     },
     { field: 'version', headerName: 'Version', minWidth: 100 },
-    { field: 'division', headerName: 'Division', minWidth: 130 },
-    { field: 'department', headerName: 'Department', minWidth: 130 },
-    { field: 'subDepartment', headerName: 'Sub-Department', minWidth: 140 },
-    { field: 'businessDomain', headerName: 'Business Domain', minWidth: 140 },
+  ];
+
+  private readonly trailingColumnDefs: ColDef[] = [
     {
       field: 'status',
       headerName: 'Status',
@@ -146,7 +154,11 @@ export class MyDocuments {
     { field: 'lastModifiedBy', headerName: 'Last Modified By', minWidth: 150, cellClass: 'audit-cell' },
   ];
 
-  columnToggles = this.documentColumnDefs.map((c) => ({
+  // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
+  // showing just the fixed columns until we know which levels are enabled.
+  documentColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
+  columnToggles: ColumnToggle[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs].map((c) => ({
     field: c.field as string,
     label: c.headerName as string,
     visible: true,
@@ -156,7 +168,42 @@ export class MyDocuments {
     private _documentService: DocumentService,
     private _notificationToastService: NotificationToastService,
     private modal: NzModalService,
+    private _cabinetHierarchyService: CabinetHierarchyService,
   ) {}
+
+  ngOnInit(): void {
+    // Only show Division/Department/Sub-Department/Business Domain columns for cabinet
+    // levels that are currently Enabled (CabinetLevel.isActive), labeled with whichever
+    // title is configured for that level.
+    this._cabinetHierarchyService.loadDropdownHierarchy().subscribe((levels) => {
+      const activeLevelDefs = levels
+        .filter((level) => level.isActive && this.cabinetLevelFields[level.level])
+        .map((level) => ({
+          ...this.cabinetLevelFields[level.level],
+          title: level.title,
+        }));
+
+      this.documentColumnDefs = [
+        ...this.leadingColumnDefs,
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
+        ...this.trailingColumnDefs,
+      ];
+
+      this.columnToggles = [
+        ...this.leadingColumnDefs.map((c) => ({
+          field: c.field as string,
+          label: c.headerName as string,
+          visible: true,
+        })),
+        ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
+        ...this.trailingColumnDefs.map((c) => ({
+          field: c.field as string,
+          label: c.headerName as string,
+          visible: true,
+        })),
+      ];
+    });
+  }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
     if (event && event.pageSize) {

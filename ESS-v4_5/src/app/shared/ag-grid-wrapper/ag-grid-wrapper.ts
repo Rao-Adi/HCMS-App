@@ -83,6 +83,26 @@ export class AgGridWrapper implements OnInit, OnChanges {
   }
   @Input() totalRows = 0;
   @Input() gridStyle: any = {};
+
+  // AG Grid's own noRowsOverlayComponent slot (used successfully in EditableAgGridWrapper)
+  // depends on api.showNoRowsOverlay()/hideOverlay() actually taking effect for the infinite
+  // row model this wrapper uses for every server-paginated grid -- tried twice now (this and
+  // an earlier round) and it doesn't reliably show. This plain Angular binding sidesteps AG
+  // Grid's overlay API entirely: Angular re-evaluates it on its own whenever totalRows changes,
+  // no imperative "trigger the overlay now" call for AG Grid to silently drop.
+  get showNoRowsMessage(): boolean {
+    return this.isServerSide && !this.isLoading && this.totalRows === 0;
+  }
+
+  // With domLayout: 'autoHeight' (the config default), AG Grid computes and sets its own
+  // height to fit the current page's rows -- a consumer-supplied fixed height in gridStyle
+  // would fight that (either clipping the grid or leaving dead space) since it's an inline
+  // style applied to the same host element. Width and any other style props still pass through.
+  get finalGridStyle(): any {
+    if (this.config.domLayout !== 'autoHeight') return this.gridStyle;
+    const { height, ...rest } = this.gridStyle || {};
+    return rest;
+  }
   @Input() gridId!: string;
   @Input() isSelectionRequired: boolean = true;
   @Input() showDisplayOption: boolean = false;
@@ -386,18 +406,6 @@ export class AgGridWrapper implements OnInit, OnChanges {
     if (this.autoSizeColumns) {
       this.autoSizeGridColumns();
     }
-  }
-
-  // AG Grid's clientSide row model manages its own "no rows" overlay automatically based on
-  // rowData -- left alone here. The infinite row model (used for every server-paginated grid,
-  // i.e. any consumer wiring up (serverQuery), which in practice is nearly all of them) does
-  // NOT show that overlay reliably: it's driven by AG Grid's own paging/block-loading state
-  // machine, not a plain rowData check, and calling api.showNoRowsOverlay()/hideOverlay()
-  // manually on rowData/totalRows changes proved unreliable in practice (see git history --
-  // this replaced that approach). This template-driven flag sidesteps AG Grid's overlay API
-  // entirely for that case: plain Angular binding, no dependency on AG Grid's internal timing.
-  get showNoRowsMessage(): boolean {
-    return this.isServerSide && !this.isLoading && this.totalRows === 0;
   }
 
   onSelectionChanged() {

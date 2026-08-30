@@ -33,6 +33,7 @@ import { Checkboxrenderer } from '../ag-grid-renderers/checkboxrenderer/checkbox
 import { FileUploadCellRenderer } from '../ag-grid-renderers/file-upload-cell-renderer/file-upload-cell-renderer';
 import { CascadeDropdownCellRenderer } from '../ag-grid-renderers/cascade-dropdown-cell-renderer/cascade-dropdown-cell-renderer';
 import { LinkRenderer } from '../ag-grid-renderers/link-renderer/link-renderer';
+import { NoRowsOverlay } from '../ag-grid-renderers/no-rows-overlay/no-rows-overlay';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -192,9 +193,24 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() roleList: any[] = [];
   @Input() gridStyle: any = {};
 
+  // With domLayout: 'autoHeight' (the config default), AG Grid computes and sets its own
+  // height to fit the current rows -- a consumer-supplied fixed height in gridStyle would
+  // fight that (either clipping the grid or leaving dead space) since it's an inline style
+  // applied to the same host element. Width and any other style props still pass through.
+  get finalGridStyle(): any {
+    if (this.config.domLayout !== 'autoHeight') return this.gridStyle;
+    const { height, ...rest } = this.gridStyle || {};
+    return rest;
+  }
+
   @Input() rowData: any[] = [];
   @Input() pinnedTopRowData: any[] = [];
   @Input() pinnedBottomRowData: any[] = [];
+
+  // Registered as gridOptions.noRowsOverlayComponent -- AG Grid renders and positions this
+  // itself within the grid's own row-viewport area (see no-rows-overlay.ts for why that beats
+  // a template-level overlay or in-flow sibling here).
+  noRowsOverlayComponent = NoRowsOverlay;
 
   // @Output() rowAdded = new EventEmitter<any>();
   @Output() rowUpdated = new EventEmitter<{ rowData: any; index: number }>();

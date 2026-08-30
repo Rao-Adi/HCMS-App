@@ -19,12 +19,14 @@
 
 <ag-grid-angular
   [gridId]="gridId"
-  [ngStyle]="gridStyle"
+  [ngStyle]="finalGridStyle"
+  [domLayout]="config.domLayout"
   [class]="config.theme || 'ag-theme-alpine'"
   [rowData]="rowData"
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
   [localeText]="{ noRowsToShow: 'No records to show.' }"
+  [noRowsOverlayComponent]="noRowsOverlayComponent"
   [rowHeight]="config.rowHeight"
   [headerHeight]="config.headerHeight"
   [pagination]="config.enablePagination"
@@ -45,8 +47,6 @@
   (rowDataUpdated)="onRowDataUpdated($event)"
 >
 </ag-grid-angular>
-
-<!-- domLayout="{{ config.domLayout }}" -->
 
 <!-- <nz-spin nzTip="Loading...">
       <nz-alert

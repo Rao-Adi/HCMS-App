@@ -368,9 +368,18 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.strBreadCrumb = this.generateBreadcrumb(url, this.formName);
       this.cdRef.detectChanges();
       this.logFormAccess(this.formName, this.currentFormId, url, 'Direct URL');
-    } else {
+    } else if (this._menuItems.length > 0) {
+      // Menu is loaded and genuinely has no entry for this URL -- ask the backend.
       this.GetHeaderDetails(url);
     }
+    // else: the menu hasn't loaded yet. This is the cold-boot case (e.g. opening a link
+    // straight from an email into a fresh tab) -- onActivate() can fire before the menu's own
+    // async fetch resolves, so _menuItems is still empty and this match can't succeed yet even
+    // though the page really is in the menu tree. onMenuLoaded() re-runs this exact match once
+    // menu data arrives, so there's nothing to do here -- falling through to GetHeaderDetails
+    // in that window would race it, and since that endpoint reads FormId from a query param
+    // that a deep link typically won't carry, it silently leaves the title blank instead of
+    // self-correcting a moment later.
   }
 
   onMenuLoaded(items: MenuItem[]): void {

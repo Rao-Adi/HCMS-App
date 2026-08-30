@@ -1,3 +1,14 @@
+/* With domLayout: 'autoHeight' and zero data rows, the row-viewport this grid computes its
+   height from can collapse enough to clip noRowsOverlayComponent's message. min-height only
+   takes effect when the natural (row-count-driven) height would be smaller than this, so
+   grids with real rows are unaffected -- this is just a floor for the empty state, not a
+   return to a large fixed size. Plain selector (not ::ng-deep) because ag-grid-angular is
+   this component's own template element, not something AG Grid renders deep inside its DOM. */
+ag-grid-angular {
+  display: block;
+  min-height: 120px;
+}
+
 /* Remove vertical separators between columns */
 /* .ag-theme-alpine .ag-cell {
   border-right: 1px solid transparent !important;
