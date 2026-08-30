@@ -134,6 +134,7 @@ export class DepartmentComponent {
         dropdownOptions: this.divisions,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
         minWidth: 200,
       },

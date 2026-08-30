@@ -132,6 +132,7 @@ export class BusinessDomainComponent {
         dropdownOptions: this.subdepartments,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
       // {

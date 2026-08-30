@@ -180,6 +180,7 @@ export class ManualManageEmployee {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 200,
+        placeholder: 'Please select any',
         required: true,
       },
       {

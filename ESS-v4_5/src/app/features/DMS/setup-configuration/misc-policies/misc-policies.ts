@@ -174,6 +174,7 @@ export class MiscPolicies {
         dropdownOptions: this.documentTypesList,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
       {
@@ -246,6 +247,7 @@ export class MiscPolicies {
         dropdownOptions: this.documentTypesList,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
       {
@@ -326,6 +328,7 @@ export class MiscPolicies {
         dropdownOptions: this.getAuthorizationPolicyDocumentTypeOptions(),
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
       {

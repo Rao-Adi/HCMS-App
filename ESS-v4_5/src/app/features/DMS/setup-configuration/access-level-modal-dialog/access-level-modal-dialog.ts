@@ -78,6 +78,7 @@ export class AccessLevelModalDialog {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
+        placeholder: 'Please select any',
         required: true,
       },
     ];

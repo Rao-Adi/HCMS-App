@@ -163,6 +163,7 @@ export class SubDepartmentComponent {
         dropdownOptions: this.departments,
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
       // {

@@ -16,7 +16,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
       [nzShowSearch]="params?.showSearch"
       [nzFilterOption]="params?.customFilter"
       [nzDisabled]="params?.disabled"
-      nzPlaceHolder="-- Any --"
+      [nzPlaceHolder]="params?.placeholder || '-- Any --'"
       [(ngModel)]="selectedValue"
       [nzAllowClear]="true"
       (ngModelChange)="onSelectionChange($event)"
@@ -59,6 +59,7 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     showSearch?: boolean;
     customFilter?: any;
     disabled?: boolean;
+    placeholder?: string;
   };
 
   agInit(params: any): void {

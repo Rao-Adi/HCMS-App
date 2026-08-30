@@ -172,6 +172,7 @@ export class EditableUploadDocument {
         filterKey: 'divisionId',
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
 
@@ -185,6 +186,7 @@ export class EditableUploadDocument {
         filterKey: 'departmentId',
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
+        placeholder: 'Please select any',
         required: true,
       },
 

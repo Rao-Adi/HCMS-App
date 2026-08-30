@@ -160,6 +160,7 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
+        placeholder: 'Please select any',
         required: true,
       },
       // DOCUMENT TYPES
@@ -171,6 +172,7 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
+        placeholder: 'Please select any',
         required: true,
       },
     ];
