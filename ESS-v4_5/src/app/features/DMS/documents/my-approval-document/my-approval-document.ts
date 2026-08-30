@@ -577,6 +577,13 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     this.documentName = rowData?.documentName || '';
     this.documentId = rowData?.Id;
 
+    if (fileUrl) {
+      // A real file exists -- download it directly instead of routing through a modal
+      // whose only content in that case was a "Download Document" button.
+      this.downloadDraft();
+      return;
+    }
+
     this.modal.create({
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,

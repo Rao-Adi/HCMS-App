@@ -454,6 +454,13 @@ export class MyTotalRequests {
       this.draftFileUrl = '';
     }
 
+    if (this.draftFileUrl) {
+      // A real file exists -- download it directly instead of routing through a modal
+      // whose only content in that case was a "Download Document" button.
+      this.downloadDraft();
+      return;
+    }
+
     this.modal.create({
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,

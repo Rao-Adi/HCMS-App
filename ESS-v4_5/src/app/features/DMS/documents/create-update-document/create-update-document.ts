@@ -193,10 +193,10 @@ export class CreateUpdateDocument {
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'businessDomain', headerName: 'Business Domain' },
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', minWidth: 150 },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150 },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -245,10 +245,10 @@ export class CreateUpdateDocument {
     { field: 'subDepartment', headerName: 'Sub-Department' },
     { field: 'businessDomain', headerName: 'Business Domain' },
 
-    { field: 'requestCreatedBy', headerName: 'Request Created By' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', minWidth: 150 },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150 },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
 
     {
       field: 'approvalHistory',

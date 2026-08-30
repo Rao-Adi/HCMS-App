@@ -292,10 +292,10 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell' },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On' },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150 },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
@@ -857,6 +857,13 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
     this.isPdf = false;
     this.isDocx = false;
     this.safeDraftFileUrl = undefined;
+
+    if (this.draftFileUrl) {
+      // A real file exists -- download it directly instead of routing through a modal
+      // whose only content in that case was a "Download Document" button.
+      this.downloadDraft();
+      return;
+    }
 
     this.modal.create({
       nzTitle: 'Document Content',

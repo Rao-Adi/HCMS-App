@@ -280,24 +280,28 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       field: 'requestCreatedBy',
       headerName: 'Request Created By',
       flex: 1,
+      minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
       field: 'requestCreatedOn',
       headerName: 'Request Created On',
       flex: 1,
+      minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created By',
       flex: 1,
+      minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       flex: 1,
+      minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
@@ -668,6 +672,13 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     this.draftFileUrl = fileUrl;
     this.requestId = rowData?.requestId || rowData?.Id || rowData?.id;
     this.currentDocumentName = rowData?.documentName || '';
+
+    if (fileUrl) {
+      // A real file exists -- download it directly instead of routing through a modal
+      // whose only content in that case was a "Download Document" button.
+      this.downloadDraft();
+      return;
+    }
 
     this.modal.create({
       nzTitle: 'Document Content',
