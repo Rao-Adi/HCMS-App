@@ -465,13 +465,10 @@ export class DraftRequestList {
       .subscribe({
         next: (response) => {
           this.loadingObservations = false;
+          // Just the observation text -- who/role/designation/when are already one click away
+          // via the "Reverted" status hyperlink's full history modal (openObservationModal).
           this.revertedObservations = (response?.Data || []).map((item: any) => ({
-            EmployeeName: item.EmployeeName,
-            RoleName: item.RoleName,
-            Designation: item.Designation,
             Observation: item.Observation,
-            Decision: item.Decision,
-            ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
           }));
         },
         error: () => {

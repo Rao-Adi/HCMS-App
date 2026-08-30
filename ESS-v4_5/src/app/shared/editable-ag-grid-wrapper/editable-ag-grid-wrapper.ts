@@ -232,7 +232,11 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       filter: this.config.enableFiltering,
       resizable: true,
       flex: 1,
-      minWidth: 100,
+      // Below ~120, multi-word headers (e.g. "Employee Selection Status") wrap
+      // character-by-character instead of at word boundaries -- matches the same floor in
+      // ag-grid-wrapper.ts's finalDefaultColDef. An individual column's own minWidth in
+      // config.columns still overrides this.
+      minWidth: 120,
       wrapHeaderText: true,
       autoHeaderHeight: true,
       suppressKeyboardEvent: (params: any) => {
@@ -934,8 +938,15 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     const columns = this.gridApi.getColumns();
     if (!columns || columns.length === 0) return;
 
+    // Content-sized width only -- no sizeColumnsToFit() fallback. That call used to fire
+    // whenever the auto-sized columns left the grid narrower than its container, proportionally
+    // stretching every column (including ones with short values) to fill the full width, which
+    // is exactly the padded-out look this was meant to avoid. Columns that intentionally want
+    // to fill available space still can via their own flex on the column def -- that's an
+    // explicit per-grid choice, untouched by this method.
     const allColumnIds = columns.map((col: any) => col.getId());
     this.gridApi.autoSizeColumns(allColumnIds);
+
 
     // Delay calculation to let AG Grid calculate and apply auto-sized column widths first
     setTimeout(() => {

@@ -138,17 +138,17 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
     { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
-    { field: 'reason', headerName: 'Reason', flex: 1 }, 
+    { field: 'reason', headerName: 'Reason', flex: 1 },
     { field: 'remarks', headerName: 'Remarks', flex: 1 }
-  ]; 
+  ];
 
   pendingApprovalData: any[] = [];
 
   submittedRequestColumnDefs: ColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 1 }, 
+    { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'from', headerName: 'From', flex: 1 },
     { field: 'To', headerName: 'To', flex: 1 },
-    { field: 'reason', headerName: 'Reason', flex: 1 },     
+    { field: 'reason', headerName: 'Reason', flex: 1 },
     {
       field: 'status',
       headerName: 'Status',
@@ -159,7 +159,7 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
         'rag-red': (params) => params.value === 'Pending',
       },
     },
-    { field: 'remarks', headerName: 'Comments', flex: 1 }, 
+    { field: 'remarks', headerName: 'Comments', flex: 1 },
   ];
 
   submittedApprovalData: any[] = [];

@@ -51,28 +51,13 @@
             *ngIf="selectedDraftRequest?.status === 'Reverted' && revertedObservations.length > 0"
           >
             <h3 class="PnlHeader">Reviewer Observation</h3>
-            <div class="table-responsive">
-              <table class="table mb-0">
-                <thead>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Designation</th>
-                  <th>Observation</th>
-                  <th>Action</th>
-                  <th>Action On</th>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let o of revertedObservations">
-                    <td>{{ o.EmployeeName }}</td>
-                    <td>{{ o.RoleName }}</td>
-                    <td>{{ o.Designation }}</td>
-                    <td [innerHTML]="o.Observation"></td>
-                    <td>{{ o.Decision === 'Reverted' ? 'Reverted' : o.Decision }}</td>
-                    <td>{{ o.ActionAt }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <!-- Just the observation text -- who/role/designation/when are already one click
+                 away via the "Reverted" status hyperlink's full history modal. -->
+            <div
+              *ngFor="let o of revertedObservations; let last = last"
+              [innerHTML]="o.Observation"
+              [ngClass]="{ 'mb-3 pb-3 border-bottom': !last }"
+            ></div>
           </div>
           <div class="status-box-leftColmd6-standard">
             <h3 class="PnlHeader">Document Justification</h3>

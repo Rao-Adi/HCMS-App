@@ -69,11 +69,14 @@ export class AgGridWrapper implements OnInit, OnChanges {
 
   get finalDefaultColDef(): ColDef {
     return {
-      // wrapHeaderText only breaks at word boundaries if the column is wide enough for
-      // the longest word -- without a floor here, columns without their own minWidth
-      // (e.g. flex-only columns) can shrink enough that headers wrap character-by-character.
-      minWidth: 120,
       ...this.defaultColDef,
+      // wrapHeaderText only breaks at word boundaries if the column is wide enough for the
+      // longest word -- placed after the spread (not before) so it's a genuine floor even
+      // when the consumer's own defaultColDef sets a smaller minWidth (most of them set 100,
+      // which was silently winning here and defeating this floor entirely). An individual
+      // column's own minWidth in columnDefs still overrides this normally -- that's a
+      // separate, higher-precedence merge layer AG Grid applies on top of defaultColDef.
+      minWidth: 120,
       wrapHeaderText: true,
       autoHeaderHeight: true,
     };
@@ -352,8 +355,15 @@ export class AgGridWrapper implements OnInit, OnChanges {
     const columns = this.gridApi.getColumns();
     if (!columns || columns.length === 0) return;
 
+    // Content-sized width only -- no sizeColumnsToFit() fallback. That call used to fire
+    // whenever the auto-sized columns left the grid narrower than its container, proportionally
+    // stretching every column (including ones with short values like "SOP" or "1.0") to fill
+    // the full width, which is exactly the padded-out look this was meant to avoid. Columns
+    // that intentionally want to fill available space still can via their own flex on the
+    // column def -- that's an explicit per-grid choice, untouched by this method.
     const allColumnIds = columns.map((col: any) => col.getId());
     this.gridApi.autoSizeColumns(allColumnIds);
+
 
     // Delay calculation to let AG Grid calculate and apply auto-sized column widths first
     setTimeout(() => {

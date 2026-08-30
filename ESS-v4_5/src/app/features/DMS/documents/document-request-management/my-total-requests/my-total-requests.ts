@@ -108,8 +108,8 @@ export class MyTotalRequests {
   };
 
   private readonly leadingColumnDefs: ColDef[] = [
-    { field: 'requestNumber', headerName: 'Request Number', minWidth: 140 },
-    { field: 'documentType', headerName: 'Document Type', minWidth: 150 },
+    { field: 'requestNumber', headerName: 'Request Number' },
+    { field: 'documentType', headerName: 'Document Type'  },
     {
       field: 'documentName',
       headerName: 'Document Title',

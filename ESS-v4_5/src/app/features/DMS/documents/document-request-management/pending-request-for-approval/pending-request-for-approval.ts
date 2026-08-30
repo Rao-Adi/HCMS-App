@@ -89,7 +89,7 @@ export class PendingRequestForApproval {
     {
       field: 'requestNumber',
       headerName: 'Request Number',
-      minWidth: 80,
+      minWidth: 120,
       flex: 1,
     },
   ];
