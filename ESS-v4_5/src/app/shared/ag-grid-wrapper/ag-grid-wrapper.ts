@@ -291,15 +291,6 @@ export class AgGridWrapper implements OnInit, OnChanges {
         const rows = this.rowData || [];
         this.getRowsParams.successCallback(rows, this.totalRows);
         this.getRowsParams = null; // Consume it so we don't double call
-
-        // Infinite row model doesn't auto-show the no-rows overlay like clientSide does.
-        if (this.gridApi) {
-          if (this.totalRows === 0) {
-            this.gridApi.showNoRowsOverlay();
-          } else {
-            this.gridApi.hideOverlay();
-          }
-        }
       }
     }
     if (changes['rowData'] && this.autoSizeColumns && this.gridApi) {
@@ -395,6 +386,18 @@ export class AgGridWrapper implements OnInit, OnChanges {
     if (this.autoSizeColumns) {
       this.autoSizeGridColumns();
     }
+  }
+
+  // AG Grid's clientSide row model manages its own "no rows" overlay automatically based on
+  // rowData -- left alone here. The infinite row model (used for every server-paginated grid,
+  // i.e. any consumer wiring up (serverQuery), which in practice is nearly all of them) does
+  // NOT show that overlay reliably: it's driven by AG Grid's own paging/block-loading state
+  // machine, not a plain rowData check, and calling api.showNoRowsOverlay()/hideOverlay()
+  // manually on rowData/totalRows changes proved unreliable in practice (see git history --
+  // this replaced that approach). This template-driven flag sidesteps AG Grid's overlay API
+  // entirely for that case: plain Angular binding, no dependency on AG Grid's internal timing.
+  get showNoRowsMessage(): boolean {
+    return this.isServerSide && !this.isLoading && this.totalRows === 0;
   }
 
   onSelectionChanged() {

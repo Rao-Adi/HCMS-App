@@ -8,6 +8,22 @@
   background-color: #fafafa;
 }
 
+/* Same absolute-overlay positioning as app-spinner (see spinner.component.ts) --
+   pointer-events: none so it never blocks clicks on the (empty) grid behind it. */
+.ag-grid-empty-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #000;
+  font-size: 14px;
+  pointer-events: none;
+}
+
 .ag-paging-row-summary {
   color: #666;
 }

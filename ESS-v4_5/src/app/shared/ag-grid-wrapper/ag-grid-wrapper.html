@@ -86,6 +86,7 @@
       (rowDataUpdated)="onRowDataUpdated($event)"
     >
     </ag-grid-angular>
+    <div class="ag-grid-empty-state" *ngIf="showNoRowsMessage">No records to show.</div>
     <app-spinner *ngIf="isLoading"></app-spinner>
   </div>
 </div>
