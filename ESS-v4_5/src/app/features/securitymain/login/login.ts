@@ -113,12 +113,17 @@ export class login implements OnInit {
 
     // 3. Now, navigate with SPA routing.
     if (localStorage.getItem('HRISRedirectURL') != null) {
-      // this.redirecturl = localStorage.getItem('HRISRedirectURL');
-      // localStorage.removeItem('HRISRedirectURL');
+      // Was previously commented out, leaving this.redirecturl always undefined -- so
+      // navigate([this.redirecturl]) below silently failed to return to whatever page
+      // (e.g. an email's "View Request Details" link) actually triggered the login,
+      // always landing somewhere else instead (auth.guard.ts / error.interceptor.ts are
+      // what save this URL, right before redirecting an unauthenticated/expired visit here).
+      this.redirecturl = localStorage.getItem('HRISRedirectURL');
+      localStorage.removeItem('HRISRedirectURL');
 
-      this.route.navigate([this.redirecturl]);
+      this.route.navigateByUrl(this.redirecturl);
     }
-    else {      
+    else {
       this.route.navigate(['/dashboard']);
     }
   }

@@ -28,6 +28,7 @@ import {
   ResponsibilityTransferItem 
 } from '@app/shared/services/responsibility-transfer.service';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { getWorkflowActionLabel } from '@app/shared/utils/workflow-action-label';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
@@ -582,7 +583,7 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
     }
 
     const modalRef = this.modal.create({
-      nzTitle: 'Observation',
+      nzTitle: `Observation - ${getWorkflowActionLabel(action, 'Transfer')}`,
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
         id: this.selectedRow.Id || this.selectedRow.id,

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild, TemplateRef, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -24,6 +25,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { getWorkflowActionLabel } from '@app/shared/utils/workflow-action-label';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
@@ -270,11 +272,21 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     private _employeeDraftObservationService: EmployeeDraftObservationService,
     private _navigationCountsService: NavigationCountsService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
     this.hasSelectedRows = false;
     this.GetLoginEmpId();
+
+    // Lets a notification's "View Request Details" link land on the tab that actually
+    // matches what it's about (e.g. ?tab=Rejected), instead of always the default tab --
+    // same pattern as my-approval-request.ts.
+    this.route.queryParams.subscribe((params) => {
+      if (params['tab']) {
+        this.selectedTab = params['tab'];
+      }
+    });
 
     // Tab badges reflect the same shared count state the sidebar menu uses (see
     // NavigationCountsService), so this page and the menu never disagree.
@@ -655,7 +667,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     if (!this.documentId) return;
 
     const modalRef = this.modal.create({
-      nzTitle: 'Observation',
+      nzTitle: `Observation - ${getWorkflowActionLabel(action, 'Document')}`,
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
         id: this.documentId,

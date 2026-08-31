@@ -105,6 +105,11 @@ export class DraftRequestList {
   totalUsers = 0;
   loadingDraft = false;
   loadingSubmit = false;
+  // True while the template/observation lookups kicked off by onCellClicked are still in
+  // flight -- Draft/Submit must stay disabled until this clears, otherwise the row's detail
+  // panel appears (and its buttons become clickable) before that data has actually loaded.
+  loadingDetail = false;
+  private pendingDetailLoads = 0;
 
   currentGridQuery: any = {
     pageNumber: 1,
@@ -415,6 +420,8 @@ export class DraftRequestList {
   onCellClicked(event: any): void {
     const row = event.data;
     this.selectedDraftRequest = row;
+    this.loadingDetail = true;
+    this.pendingDetailLoads = 0;
 
     this.requestId = row.Id;
     this.submittedby = row.sumbittedby;
@@ -434,6 +441,7 @@ export class DraftRequestList {
     this.selectedBusinessDomain = row.businessdomainId;
 
     if (this.selectedDocumentTypeCode) {
+      this.pendingDetailLoads++;
       this.GetTemplate(this.selectedDocumentTypeCode, true);
     }
 
@@ -446,7 +454,23 @@ export class DraftRequestList {
     // console.log('Distribution:', this.distributionListPayload);
     // console.log('Users:', this.distributionUserList);
 
+    this.pendingDetailLoads++;
     this.loadRevertedObservations(row);
+
+    // Neither call above actually went async (e.g. selectedDocumentTypeCode was empty and the
+    // row isn't Reverted) -- nothing left to wait on.
+    if (this.pendingDetailLoads === 0) {
+      this.loadingDetail = false;
+    }
+  }
+
+  // Called from every exit path (sync early-return, HTTP success, HTTP error) of each detail
+  // lookup kicked off in onCellClicked, so loadingDetail only clears once all of them are done.
+  private finishDetailLoad(): void {
+    this.pendingDetailLoads = Math.max(0, this.pendingDetailLoads - 1);
+    if (this.pendingDetailLoads === 0) {
+      this.loadingDetail = false;
+    }
   }
 
   // Shown ahead of the Document Justification panel so the user sees why the request was
@@ -456,6 +480,7 @@ export class DraftRequestList {
     this.revertedObservations = [];
 
     if (!row || row.status !== 'Reverted') {
+      this.finishDetailLoad();
       return;
     }
 
@@ -470,10 +495,12 @@ export class DraftRequestList {
           this.revertedObservations = (response?.Data || []).map((item: any) => ({
             Observation: item.Observation,
           }));
+          this.finishDetailLoad();
         },
         error: () => {
           this.loadingObservations = false;
           this.revertedObservations = [];
+          this.finishDetailLoad();
         },
       });
   }
@@ -597,6 +624,7 @@ export class DraftRequestList {
         if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
           this.selectedTemplateType = '';
           this.templateFileUrl = '';
+          this.finishDetailLoad();
           return;
         }
 
@@ -607,11 +635,13 @@ export class DraftRequestList {
           response.Data?.TemplateFileURL ||
           response.Data?.templateFileUrl ||
           '';
+        this.finishDetailLoad();
       },
       error: (err) => {
         this.selectedTemplateType = '';
         this.templateFileUrl = '';
         console.error(err);
+        this.finishDetailLoad();
       },
     });
   }

@@ -18,6 +18,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
+import { getWorkflowActionLabel } from '@app/shared/utils/workflow-action-label';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
@@ -770,7 +771,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     if (!this.selectedRow) return;
 
     const modalRef = this.modal.create({
-      nzTitle: 'Observation',
+      nzTitle: `Observation - ${getWorkflowActionLabel(action, 'Request')}`,
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
         id: this.selectedRow.Id || this.selectedRow.id,

@@ -40,7 +40,9 @@ export class DocumentTrainingAuthorizationService {
   }
  
   getDocumentTrainingAuthorizationById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocumentTrainingAuthorization/get-by-id/${Id}`;
+    // Same route-mismatch as delete() below -- [HttpGet("get-by-id")] has no {id} placeholder,
+    // so it needs to come through the query string, not a path segment.
+    const uri = `${this.apiUrl}/DMSDocumentTrainingAuthorization/get-by-id?id=${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
  
@@ -86,8 +88,11 @@ export class DocumentTrainingAuthorizationService {
   }
 
   delete(code: string) {
+    // The backend route is [HttpDelete("Delete")] with no {id} placeholder, so `id` is bound
+    // from the query string, not a path segment -- .../delete/${code} doesn't match that route
+    // template at all (extra path segment), which is what produced the 404.
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocumentTrainingAuthorization/delete/${code}`,
+      `${this.apiUrl}/DMSDocumentTrainingAuthorization/delete?id=${code}`,
     );
   }
 }

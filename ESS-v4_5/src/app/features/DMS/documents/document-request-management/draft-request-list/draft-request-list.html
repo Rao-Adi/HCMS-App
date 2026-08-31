@@ -324,7 +324,7 @@
             tabindex="0"
             class="btn btn-info shadow-sm"
             style="min-width: 120px; width: 120px !important; height: 35px"
-            [disabled]="loadingDraft || loadingSubmit"
+            [disabled]="loadingDraft || loadingSubmit || loadingDetail"
             (click)="UpdateDocumentRequests()"
           >
             <span
@@ -341,7 +341,7 @@
             tabindex="0"
             class="btn btn-primary shadow-sm"
             style="min-width: 120px; width: 120px !important; height: 35px"
-            [disabled]="loadingDraft || loadingSubmit"
+            [disabled]="loadingDraft || loadingSubmit || loadingDetail"
             (click)="SubmiteDocumentRequests()"
           >
             <span
