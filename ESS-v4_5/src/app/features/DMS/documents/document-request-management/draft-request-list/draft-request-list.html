@@ -270,7 +270,7 @@
                     <th>Approval Sequence</th>
                     <th>Employee Code</th>
                     <th>Employee Name</th>
-                    <th>Designation</th>
+                    <th>Role</th>
                   </thead>
                   <tbody>
                     @for (item of approvalSequenceData | keyvalue; track item.key; let i = $index) {
@@ -283,7 +283,7 @@
                           {{ item.value.EmployeeName }}
                         </td>
                         <td>
-                          {{ item.value.Designation }}
+                          {{ item.value.UserRole }}
                         </td>
                       </tr>
                     }

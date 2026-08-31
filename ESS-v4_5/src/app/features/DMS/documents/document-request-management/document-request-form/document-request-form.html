@@ -384,7 +384,7 @@
                     <th>Approval Sequence</th>
                     <th>Employee Code</th>
                     <th>Employee Name</th>
-                    <th>Designation</th>
+                    <th>Role</th>
                   </thead>
                   <tbody>
                     @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
@@ -392,7 +392,7 @@
                         <td>{{ item.StepOrder }}</td>
                         <td>{{ item.EmployeeCode }}</td>
                         <td>{{ item.EmployeeName }}</td>
-                        <td>{{ item.Designation }}</td>
+                        <td>{{ item.UserRole }}</td>
                       </tr>
                     }
                   </tbody>
