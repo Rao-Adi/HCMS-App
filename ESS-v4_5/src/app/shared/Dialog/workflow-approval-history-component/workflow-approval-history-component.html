@@ -37,6 +37,9 @@
           </span>
         </td>
       </tr>
+      <tr *ngIf="!workflowHistory || workflowHistory.length === 0">
+        <td colspan="5" class="text-center">No records to show.</td>
+      </tr>
     </tbody>
   </table>
 </div>

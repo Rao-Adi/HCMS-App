@@ -42,6 +42,12 @@ export class DRDistributionList {
   @Input() selectedDistributionList: any[] = [];
   @Output() distributionChanged = new EventEmitter<any[]>();
 
+  // Sentinel Role dropdown value meaning "every role" -- distinct from any real role id (those
+  // are backend ints). RoleId is a required int column on DocumentRequestRoleDistributions, so
+  // this never gets submitted as-is: adding a row with Role=ALL expands it into one real row per
+  // actual role (see onRowAdded) instead.
+  readonly ALL_ROLES_ID = 'ALL';
+
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
@@ -53,7 +59,7 @@ export class DRDistributionList {
   gridConfig: GridConfig = {} as GridConfig;
 
   distributionListData: DistributionGridRow[] = [];
-  userRoles: string[] = [];
+  userRoles: { id: any; text: string; rawName?: string }[] = [];
   divisions: any[] = [];
   departments: any[] = [];
   subDepartments: any[]=[];
@@ -276,6 +282,26 @@ export class DRDistributionList {
 
     // this.distributionListData = [payLoad, ...this.distributionListData];
 
+    // RoleId is a required int column on DocumentRequestRoleDistributions -- 'ALL' can't be
+    // submitted as one row, so it expands into one real row per actual role here instead,
+    // covering every role for this cabinet + distribution type in a single add.
+    if (rowData.roleId === this.ALL_ROLES_ID) {
+      const realRoles = this.userRoles.filter((r) => r.id !== this.ALL_ROLES_ID);
+      const expandedRows = realRoles.map((role) => ({
+        id: this.generateId(),
+        level1Id: rowData.level1Id ?? null,
+        level2Id: rowData.level2Id ?? null,
+        level3Id: rowData.level3Id ?? null,
+        level4Id: rowData.level4Id ?? null,
+        roleId: role.id,
+        distributiontypeId: rowData.distributiontypeId ?? null,
+      }));
+
+      this.distributionListData = [...expandedRows, ...this.distributionListData];
+      this.notifyParent();
+      return;
+    }
+
     const newRow = {
       id: this.generateId(),
 
@@ -396,12 +422,15 @@ export class DRDistributionList {
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
     }).subscribe(({ userRoles, distributionTypes, hierarchy }) => {
-      // ✅ Normalize Roles
-      this.userRoles =
-        userRoles?.Data?.map((d: any) => ({
+      // ✅ Normalize Roles -- "ALL" first so it reads as the deliberate bulk-add option, not
+      // just another role in the list.
+      this.userRoles = [
+        { id: this.ALL_ROLES_ID, text: 'ALL', rawName: ' ' },
+        ...(userRoles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
-        })) ?? [];
+        })) ?? []),
+      ];
 
       // ✅ Normalize Document Types
       this.distributionTypeList =
@@ -437,14 +466,11 @@ export class DRDistributionList {
   
   GetAllUserRoles = () => {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
-      if (res) {
-        this.userRoles = (res.Data ?? []).map((d: any) => ({
-          id: d.Id,
-          text: d.Value,
-        }));
-      } else {
-        this.userRoles = [];
-      }
+      const roles = (res?.Data ?? []).map((d: any) => ({
+        id: d.Id,
+        text: d.Value,
+      }));
+      this.userRoles = [{ id: this.ALL_ROLES_ID, text: 'ALL', rawName: ' ' }, ...roles];
     });
   };
 }

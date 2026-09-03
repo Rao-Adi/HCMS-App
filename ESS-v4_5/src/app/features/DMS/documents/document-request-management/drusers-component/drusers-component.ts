@@ -18,7 +18,7 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 
 // Identifies which "Document Users" grid row (Role + Cabinet scope) a selectedEmployeeList
 // entry belongs to -- mirrors DocumentRequestUserDistribution's RoleId/*Code columns.
@@ -40,6 +40,10 @@ export class DRUsersComponent {
   @Input() selectedUsers: any[] = [];
   @Output() usersChanged = new EventEmitter<any[]>();
   @Input() documentTypeCode: string = '';
+
+  // Sentinel Role dropdown value meaning "every role" -- distinct from any real role id (those
+  // are backend ints), so it's safe to store alongside them in the same dropdown/rule shape.
+  readonly ALL_ROLES_ID = 'ALL';
 
   gridConfig: GridConfig = {} as GridConfig;
   // --- PERMISSION FLAGS ---
@@ -260,6 +264,18 @@ export class DRUsersComponent {
     );
     const roleId = selectedRole ? selectedRole.id : rowData.userId;
 
+    if (roleId === this.ALL_ROLES_ID) {
+      // "Users in Role" doesn't make sense for the aggregate ALL row -- each employee under it
+      // keeps their own real role, so fine-tuning has to happen per specific role (add that
+      // role as its own row) rather than in one combined picker for "every role".
+      this._notificationToastService.createNotification(
+        'info',
+        'ALL Roles',
+        'To fine-tune individual employees, add that specific Role as its own row instead of ALL.',
+      );
+      return;
+    }
+
     const rule = {
       roleId,
       divisionCode: rowData.level1Id || rowData.divisionCode || null,
@@ -367,13 +383,26 @@ export class DRUsersComponent {
     const subDepartmentCode = emp.subDepartmentCode ?? emp.SubDepartmentCode ?? null;
     const businessDomainCode = emp.businessDomainCode ?? emp.BusinessDomainCode ?? null;
 
-    return (
-      roleId === rule.roleId &&
+    const cabinetMatches =
       divisionCode === (rule.divisionCode || null) &&
       departmentCode === (rule.departmentCode || null) &&
       subDepartmentCode === (rule.subDepartmentCode || null) &&
-      businessDomainCode === (rule.businessDomainCode || null)
-    );
+      businessDomainCode === (rule.businessDomainCode || null);
+
+    if (!cabinetMatches) return false;
+
+    // An "ALL" row's rule matches every employee in this cabinet scope regardless of their
+    // individual (real) role -- each employee added via ALL still carries their own actual
+    // roleId (needed for a valid DocumentRequestUserDistribution row), not the 'ALL' sentinel,
+    // so this can't be a plain roleId equality check the way single-role rows are. This also
+    // means deleting an ALL row removes everyone in scope, and adding ALL after a specific
+    // single-role row was already added for the same scope correctly recognizes those
+    // employees as already present instead of duplicating them.
+    if (rule.roleId === this.ALL_ROLES_ID) {
+      return roleId != null && roleId !== this.ALL_ROLES_ID;
+    }
+
+    return roleId === rule.roleId;
   }
 
   // Recomputes and writes the "N of M selected" text for one grid row, then replaces
@@ -471,6 +500,93 @@ export class DRUsersComponent {
       error: () => {
         this.updateSelectionStatus(rowData, rule, 0);
       },
+    });
+  }
+
+  // Same idea as autoSelectEmployeesForRow, but for the "ALL" pseudo-role: fetches every real
+  // role's employees for this cabinet scope (one call per role, in parallel) and adds them all.
+  // Each employee keeps their own real roleId (not the 'ALL' sentinel) since that's what
+  // actually gets persisted as DocumentRequestUserDistribution.RoleId -- 'ALL' only exists as a
+  // UI shorthand for "every role", never as data sent to the backend.
+  private autoSelectEmployeesForAllRoles(rowData: any): void {
+    const rule = {
+      roleId: this.ALL_ROLES_ID,
+      divisionCode: rowData.level1Id || rowData.divisionCode || null,
+      departmentCode: rowData.level2Id || rowData.departmentCode || null,
+      subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode || null,
+      businessDomainCode: rowData.level4Id || rowData.businessDomainCode || null,
+    };
+
+    const realRoles = this.userRoles.filter((r) => r.id !== this.ALL_ROLES_ID);
+    if (realRoles.length === 0) {
+      this.updateSelectionStatus(rowData, rule, 0);
+      return;
+    }
+
+    const payloadFor = () => ({
+      searchtext: '',
+      sortby: 'ASC',
+      sortcolumn: 'empid',
+      isactive: true,
+      pagenumber: 1,
+      pagesize: 1000000,
+      divisionCode: rule.divisionCode,
+      departmentCode: rule.departmentCode,
+      subDepartmentCode: rule.subDepartmentCode,
+      businessDomainCode: rule.businessDomainCode,
+      documentTypeCode: this.documentTypeCode || null,
+    });
+
+    const requestsPerRole = realRoles.map((role) =>
+      this._peoplePartnerService.getUserByRoleId(role.id, payloadFor()).pipe(
+        map((res) => ({ roleId: role.id, res })),
+        // One role's lookup failing shouldn't sink the whole ALL-roles add -- treat it as
+        // "no employees found for that role" rather than failing every other role too.
+        catchError(() => of({ roleId: role.id, res: null })),
+      ),
+    );
+
+    forkJoin(requestsPerRole).subscribe((results) => {
+      let totalFetched = 0;
+
+      for (const { roleId, res } of results) {
+        const data = res?.Data;
+        const users = (Array.isArray(data) ? data : data?.Items || []).filter(
+          (u: any) => u != null,
+        );
+        totalFetched += users.length;
+
+        const mappedUsers = users.map((u: any) => ({
+          ...u,
+          employeeCode: u.empcode || u.EmployeeCode || u.employeeCode,
+          employeeName: u.firstname
+            ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
+            : u.EmployeeName || u.employeeName || u.UserName || u.userName,
+          designation:
+            u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
+          role: this.getDisplayName(this.userRoles, roleId),
+          roleId,
+          divisionCode: rule.divisionCode,
+          departmentCode: rule.departmentCode,
+          subDepartmentCode: rule.subDepartmentCode,
+          businessDomainCode: rule.businessDomainCode,
+        }));
+
+        mappedUsers.forEach((user: any) => {
+          const code = user.employeeCode || user.EmployeeCode || user.empcode || user.empid;
+          const exists = this.selectedEmployeeList.some(
+            (u) =>
+              (u.employeeCode || u.EmployeeCode || u.empcode || u.empid) === code &&
+              this.employeeMatchesRule(u, rule),
+          );
+          if (!exists) {
+            this.selectedEmployeeList.push(user);
+          }
+        });
+      }
+
+      this.updateSelectionStatus(rowData, rule, totalFetched);
+      this.usersChanged.emit(this.selectedEmployeeList);
     });
   }
 
@@ -594,7 +710,11 @@ export class DRUsersComponent {
     );
     const roleId = selectedRole ? selectedRole.id : rowData.userId;
 
-    this.autoSelectEmployeesForRow(rowWithId, roleId);
+    if (roleId === this.ALL_ROLES_ID) {
+      this.autoSelectEmployeesForAllRoles(rowWithId);
+    } else {
+      this.autoSelectEmployeesForRow(rowWithId, roleId);
+    }
   }
 
   onRowUpdated(event: { rowData: any; index: number }): void {
@@ -706,12 +826,15 @@ export class DRUsersComponent {
       userRoles: this._peoplePartnerService.GetAllRoles(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
     }).subscribe(({ userRoles, hierarchy }) => {
-      // ✅ Normalize Roles
-      this.userRoles =
-        userRoles?.Data?.map((d: any) => ({
+      // ✅ Normalize Roles -- "ALL" first so it reads as the deliberate bulk-add option, not
+      // just another role in the list.
+      this.userRoles = [
+        { id: this.ALL_ROLES_ID, text: 'ALL', rawName: ' ' },
+        ...(userRoles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
-        })) ?? [];
+        })) ?? []),
+      ];
 
       // ✅ Cabinet hierarchy
       this.cabinetHierarchy = hierarchy;
@@ -728,14 +851,11 @@ export class DRUsersComponent {
 
   GetAllUserRoles = () => {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
-      if (res) {
-        this.userRoles = (res.Data ?? []).map((d: any) => ({
-          id: d.Id,
-          text: d.Value,
-        }));
-      } else {
-        this.userRoles = [];
-      }
+      const roles = (res?.Data ?? []).map((d: any) => ({
+        id: d.Id,
+        text: d.Value,
+      }));
+      this.userRoles = [{ id: this.ALL_ROLES_ID, text: 'ALL', rawName: ' ' }, ...roles];
     });
   };
 }

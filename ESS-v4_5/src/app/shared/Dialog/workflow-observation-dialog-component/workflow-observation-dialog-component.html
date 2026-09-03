@@ -34,6 +34,9 @@
           </td>
           <td class="audit-cell">{{ o.ActionAt }}</td>
         </tr>
+        <tr *ngIf="!observations || observations.length === 0">
+          <td colspan="6" class="text-center">No records to show.</td>
+        </tr>
       </tbody>
     </table>
   </div>

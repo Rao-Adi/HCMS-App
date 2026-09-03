@@ -812,7 +812,7 @@ export class DraftRequestList {
         if (response?.Success) {
           this._notificationToasService.createNotification(
             'success',
-            'Document Request (Draft)',
+            'Document Request',
             'Document submitted successfully!',
           );
           // This grid binds (serverQuery), so it's server-side/infinite-row-model —

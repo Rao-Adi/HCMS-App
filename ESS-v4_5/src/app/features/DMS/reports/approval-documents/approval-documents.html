@@ -210,34 +210,40 @@
 </div>
 
 <ng-template #distributionListModalTpl>
-  <div style="max-height: 400px; overflow-y: auto">
-    <table
-      class="table table-bordered table-striped"
-      style="width: 100%; border-collapse: collapse"
-    >
-      <thead style="position: sticky; top: 0; background: #fafafa">
-        <tr>
-          <th style="padding: 8px; text-align: left; border: 1px solid #f0f0f0">Employee Code</th>
-          <th style="padding: 8px; text-align: left; border: 1px solid #f0f0f0">Employee Name</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let user of selectedUserDistributions">
-          <td style="padding: 8px; border: 1px solid #f0f0f0">
-            {{ user.employeecode || user.EmployeeCode || user.employeeCode }}
-          </td>
-          <td style="padding: 8px; border: 1px solid #f0f0f0">
-            {{ user.employeename || user.EmployeeName || user.employeeName }}
-          </td>
-        </tr>
-        <tr *ngIf="!selectedUserDistributions || selectedUserDistributions.length === 0">
-          <td colspan="2" style="padding: 8px; text-align: center; border: 1px solid #f0f0f0">
-            No user distributions found.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Role Distributions: the authorization rules (Role + Cabinet) attached to this request/
+       document, each resolved to the employee(s) actually holding that role (backend LEFT JOIN
+       to TblEmpJobProfile/tblEmployee) -- e.g. selecting "ALL" roles produces one row per company
+       role, fanned out to one row per employee holding it, blank if nobody currently does. -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted">
+      {{ filteredRoleDistributions.length }} of {{ selectedRoleDistributions.length }}
+    </span>
+    <input
+      type="text"
+      class="form-control"
+      style="max-width: 260px"
+      placeholder="Search by role, code or name"
+      [ngModel]="distributionListSearchText"
+      (ngModelChange)="onDistributionSearchChange($event)"
+    />
   </div>
+  <!-- AgGridWrapper's own search box only works when a parent listens for (serverQuery) -- this
+       data is already fully loaded client-side, so search stays the plain input above (filtering
+       filteredRoleDistributions before the grid ever sees it) while the grid itself is only
+       responsible for pagination, which its client-side row model handles natively.
+       [rowData]/[gridStyle] are both plain component fields, not inline literals/getters -- either
+       would hand AG Grid a new reference on every change-detection cycle instead of only when the
+       data or style genuinely changes, which is what made the grid appear stuck/frozen before. -->
+  <app-ag-grid-wrapper
+    gridId="distribution-list-grid"
+    [rowData]="filteredRoleDistributions"
+    [columnDefs]="distributionListColumnDefs"
+    [defaultColDef]="defaultColDef"
+    [isSelectionRequired]="false"
+    [loading]="false"
+    [gridStyle]="distributionListGridStyle"
+  >
+  </app-ag-grid-wrapper>
 </ng-template>
 
 <!-- Document Content Modal Template -->

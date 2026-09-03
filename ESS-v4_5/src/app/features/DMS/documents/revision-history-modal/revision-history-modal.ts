@@ -42,11 +42,11 @@ export class RevisionHistoryModal {
 
   revisionHistoryColumnDefs: ColDef[] = [
     { field: 'documentNumber', headerName: 'Document Number', flex: 1 },
-    { field: 'version', headerName: 'Version' },
-    { field: 'status', headerName: 'Status' },
+    { field: 'version', headerName: 'Version', minWidth: 80 },
+    { field: 'status', headerName: 'Status', flex: 1  },
     {
       field: 'isCurrentVersion',
-      headerName: 'Current Version',
+      headerName: 'Current Version', flex: 1 ,
       cellRenderer: (p: any) => (p.value ? 'Yes' : ''),
     },
     {

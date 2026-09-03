@@ -114,7 +114,22 @@ export class ApprovalDocuments {
   selectedUser?: string;
   documentTypeData: any[] = [];
 
-  selectedUserDistributions: any[] = [];
+  selectedRoleDistributions: any[] = [];
+  distributionListSearchText: string = '';
+
+  // Field names match the raw (lowercase) shape Dapper/Postgres return -- no per-item remapping
+  // is done on this array (see roleDistributions in GetAllPendingDocuments), same as elsewhere
+  // in this component.
+  distributionListColumnDefs: ColDef[] = [
+    { field: 'rolename', headerName: 'Role', flex: 1 },
+    { field: 'division', headerName: 'Division', flex: 1 },
+    { field: 'department', headerName: 'Department', flex: 1 },
+    { field: 'employeecode', headerName: 'Employee Code', flex: 1 },
+    { field: 'employeename', headerName: 'Employee Name', flex: 1 },
+  ];
+  // A stable object reference for [gridStyle] -- an inline object literal in the template would
+  // be a new reference every change-detection cycle, same issue as the rowData getter below.
+  distributionListGridStyle = { width: '100%' };
 
   requestCreators: SelectList[] = [];
 
@@ -196,7 +211,7 @@ export class ApprovalDocuments {
         this.openDistributionListModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 140 },
     { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
     {
       field: 'previousVersionCreatedBy',
@@ -214,6 +229,7 @@ export class ApprovalDocuments {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
+      minWidth: 110,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -233,6 +249,7 @@ export class ApprovalDocuments {
       field: 'revisionHistory',
       headerName: 'Revision History',
       editable: false,
+      minWidth: 110,
       cellRenderer: (params: any) => {
         return `
           <span 
@@ -460,8 +477,8 @@ export class ApprovalDocuments {
                 approvalHistory: true, // Used to render the link in the cell
                 revisionHistory: true,
                 distributionList: true,
-                userDistributions: get(
-                  ['UserDistributions', 'userdistributions', 'userDistributions'],
+                roleDistributions: get(
+                  ['RoleDistributions', 'roledistributions', 'roleDistributions'],
                   [],
                 ),
               };
@@ -666,12 +683,40 @@ export class ApprovalDocuments {
   }
 
   openDistributionListModal(rowData: any) {
-    this.selectedUserDistributions = rowData.userDistributions || [];
+    this.selectedRoleDistributions = rowData.roleDistributions || [];
+    this.distributionListSearchText = '';
+    this.filteredRoleDistributions = this.selectedRoleDistributions;
     this.modal.create({
-      nzTitle: 'User Distributions',
+      nzTitle: 'Distribution List',
       nzContent: this.distributionListModalTpl,
       nzFooter: null,
-      nzWidth: 800,
+      nzWidth: 1000,
+    });
+  }
+
+  // A plain field, recomputed only on actual search-text changes -- NOT a getter. This list can
+  // legitimately be thousands of rows (every role x every employee holding it, e.g. from "ALL"
+  // role distribution), and [rowData] on app-ag-grid-wrapper was previously bound directly to a
+  // getter of the same shape: Angular re-evaluates a template getter on every change-detection
+  // cycle, so AG Grid was being handed a brand-new array reference (a fresh .filter() result)
+  // many times a second even when nothing changed, which it treats as entirely new data each
+  // time -- that's what was making the grid appear stuck/frozen with ~4000 rows, not the
+  // filtering work itself (which is well under a millisecond for this size).
+  filteredRoleDistributions: any[] = [];
+
+  onDistributionSearchChange(term: string): void {
+    this.distributionListSearchText = term;
+    this.filteredRoleDistributions = this.computeFilteredRoleDistributions(term);
+  }
+
+  private computeFilteredRoleDistributions(term: string): any[] {
+    const search = term.trim().toLowerCase();
+    if (!search) return this.selectedRoleDistributions;
+    return this.selectedRoleDistributions.filter((role) => {
+      const roleName = (role.rolename || role.RoleName || role.roleName || '').toString().toLowerCase();
+      const code = (role.employeecode || role.EmployeeCode || role.employeeCode || '').toString().toLowerCase();
+      const name = (role.employeename || role.EmployeeName || role.employeeName || '').toString().toLowerCase();
+      return roleName.includes(search) || code.includes(search) || name.includes(search);
     });
   }
 

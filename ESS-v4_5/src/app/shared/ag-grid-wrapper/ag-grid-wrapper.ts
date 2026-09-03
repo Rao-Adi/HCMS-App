@@ -79,6 +79,13 @@ export class AgGridWrapper implements OnInit, OnChanges {
       minWidth: 120,
       wrapHeaderText: true,
       autoHeaderHeight: true,
+      // Narrow columns (or long values like timestamps/names) silently clip cell text with no
+      // way to see what was cut off -- a hover tooltip showing the full value fixes that for
+      // every column in every grid using this wrapper, without having to widen columns (which
+      // just pushes the same problem onto grids with many columns). A column's own
+      // tooltipValueGetter/tooltipField in columnDefs still overrides this normally.
+      tooltipValueGetter: (params: any) =>
+        params.value != null && params.value !== '' ? String(params.value) : null,
     };
   }
   @Input() totalRows = 0;
