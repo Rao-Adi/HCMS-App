@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Input, Output, TemplateRef, ViewChild } from '@angular/core';
+import * as mammoth from 'mammoth';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -82,6 +83,9 @@ export class DocumentRequestForm {
   templateFileUrl: string = '';
   draftFileUrl: string = '';
   uploadedFile: File | null = null;
+  // True while mammoth.js is converting a just-uploaded .docx to HTML for the content-preview
+  // rich text editor (see onDraftFileSelected).
+  convertingUploadedFile: boolean = false;
   displayDocumentType: string = '';
   displayDivision: string = '';
   displayDepartment: string = '';
@@ -696,6 +700,33 @@ export class DocumentRequestForm {
     }
 
     this.uploadedFile = file;
+    this.previewUploadedFileContent(file);
+  }
+
+  // Converts the uploaded .docx to HTML client-side (mammoth.js) so its formatted content shows
+  // up in the rich text editor for review/editing -- see the template's "Content Preview"
+  // section. Only .docx is supported (mammoth doesn't read legacy .doc); anything else just
+  // leaves templateHtml empty, so only the original file participates in the download-time merge
+  // for those, exactly as before this feature. Never blocks the actual upload/submit on failure --
+  // this only affects the in-form preview.
+  private previewUploadedFileContent(file: File): void {
+    this.templateHtml = '';
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (ext !== 'docx') return;
+
+    this.convertingUploadedFile = true;
+    file
+      .arrayBuffer()
+      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((result) => {
+        this.templateHtml = result.value;
+      })
+      .catch(() => {
+        // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
+      })
+      .finally(() => {
+        this.convertingUploadedFile = false;
+      });
   }
 
   DraftDocumentRequests() {
@@ -1642,6 +1673,11 @@ export class DocumentRequestForm {
     // standard template / existing document reference, not the upload, and the
     // "Document Content" section's visibility depends on it staying set.
     this.uploadedFile = null;
+    // Only reachable from the Word/PDF file-upload branch (see the template) -- templateHtml
+    // there only ever holds this file's converted preview, never independently-typed HTML
+    // template content (that's the selectedTemplateType === '3' branch, which has no file
+    // upload UI at all), so clearing it here is safe.
+    this.templateHtml = '';
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }

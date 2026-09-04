@@ -43,8 +43,12 @@ export class EmployeeDraftObservationService {
     return headers;
   }
 
-  getEmployeeDraftObservationByEmployeeCode(employeeCode: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSEmployeeDraftObservation/get-by-employeecode/${employeeCode}`;
+  // Scoped by (employee, entityType, entityId) -- entityType is 'Document' or 'Request', matching
+  // the same values already carried around as modalData.entityType. A draft saved while
+  // reviewing one document/request must not resurface when the same employee opens a different
+  // one, which is what happened when this was only scoped by employee.
+  getDraftObservation(entityType: string, entityId: number): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSEmployeeDraftObservation/get-draft-observation/${entityType}/${entityId}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

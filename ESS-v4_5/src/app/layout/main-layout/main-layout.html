@@ -125,7 +125,7 @@
                 </div>
               </div>
 
-              <div class="flex-grow-1 overflow-auto custom-scrollbar" style="max-height: 400px; background-color: #fff;">
+              <div class="flex-grow-1 custom-scrollbar" style="max-height: 400px; overflow-y: auto; overflow-x: hidden; background-color: #fff;">
                 <div *ngIf="filteredNotifications.length === 0" class="d-flex flex-column align-items-center justify-content-center py-5 text-center h-100">
                   <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 72px; height: 72px;">
                     <i class="bi bi-bell-slash text-secondary fs-1"></i>
@@ -141,26 +141,26 @@
                        (click)="markAsRead(notif)"
                        style="cursor: pointer;">
 
-                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                          style="width: 42px; height: 42px;"
                          [ngClass]="'bg-' + getNotificationColor(notif.type).replace('text-', '') + ' bg-opacity-10'">
                       <i class="bi fs-5" [ngClass]="[getNotificationIcon(notif.type), getNotificationColor(notif.type)]"></i>
                     </div>
 
-                    <div class="flex-grow-1 min-vw-0 pe-3">
-                      <div class="d-flex justify-content-between align-items-baseline mb-1">
-                        <strong class="mb-0 text-truncate text-dark" style="font-size: 0.875rem; max-width: 75%;">{{ notif.title }}</strong>
-                        <small class="text-muted ms-2 fw-medium" style="font-size: 0.7rem;" *ngIf="notif.createdAt">{{ notif.createdAt | date:'MMM d, h:mm a' }}</small>
+                    <div class="flex-grow-1 min-w-0" [class.pe-2]="!notif.isRead">
+                      <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                        <strong class="mb-0 text-truncate text-dark" style="font-size: 0.875rem; min-width: 0;" [title]="notif.title">{{ notif.title }}</strong>
+                        <small class="text-muted flex-shrink-0" style="font-size: 0.7rem; white-space: nowrap;" *ngIf="notif.createdAt">{{ getRelativeTime(notif.createdAt) }}</small>
                       </div>
                       <p class="mb-0 text-secondary" style="font-size: 0.8125rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" [class.fw-medium]="!notif.isRead">
                         {{ notif.message }}
                       </p>
                     </div>
-                    <div *ngIf="!notif.isRead" class="position-absolute top-50 translate-middle-y bg-primary rounded-circle shadow-sm" style="width: 8px; height: 8px; right: 12px;"></div>
+                    <div *ngIf="!notif.isRead" class="flex-shrink-0 bg-primary rounded-circle shadow-sm mt-2" style="width: 8px; height: 8px;"></div>
                   </div>
                 </div>
               </div>
-              
+
               <div class="p-2 border-top bg-light text-center z-2">
                 <button class="btn btn-link btn-sm text-decoration-none fw-semibold shadow-none w-100" (click)="$event.stopPropagation();">
                   View all notifications

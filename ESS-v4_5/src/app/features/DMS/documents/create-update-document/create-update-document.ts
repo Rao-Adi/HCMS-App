@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import * as mammoth from 'mammoth';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -126,6 +127,9 @@ export class CreateUpdateDocument {
   loginEmpId: string = '';
   selectedTemplateType: string = '';
   draftFile: File | null = null;
+  // True while mammoth.js is converting a just-uploaded .docx to HTML for the content-preview
+  // rich text editor (see onDraftFileSelected).
+  convertingUploadedFile: boolean = false;
   reviewYear: number = 0;
 
   selectedEntityType: string = 'Document';
@@ -832,11 +836,16 @@ export class CreateUpdateDocument {
       }
     });
     // Template attachment for documents that didn't get one at Document Request creation time.
-    // Which one applies depends on the DocumentType's configured Template: a file (PDF/Word) or
-    // HTML content edited in the template editor -- never both.
+    // Both can now be sent together: a Word/PDF-type upload also populates templateHtml with a
+    // preview of the file's own content (see previewUploadedFileContent), which the user can
+    // leave as-is or edit -- either way, ProposedContent carries whatever's currently in that
+    // editor. The backend prefers ProposedContent over the raw file at download-merge time
+    // (DocumentComponent.MergeDocumentTemplateAsync), so an edit actually takes effect; leaving
+    // it untouched still reflects the original file's own content either way.
     if (this.draftFile) {
       formData.append('DocumentFile', this.draftFile, this.draftFile.name);
-    } else if (this.templateHtml) {
+    }
+    if (this.templateHtml) {
       formData.append('ProposedContent', this.templateHtml);
     }
 
@@ -906,6 +915,33 @@ export class CreateUpdateDocument {
     }
 
     this.draftFile = file;
+    this.previewUploadedFileContent(file);
+  }
+
+  // Converts the uploaded .docx to HTML client-side (mammoth.js) so its formatted content shows
+  // up in the rich text editor for review/editing -- see the template's "Content Preview"
+  // section. Only .docx is supported (mammoth doesn't read legacy .doc); anything else just
+  // leaves templateHtml empty, so only the original file participates in the download-time merge
+  // for those, exactly as before this feature. Never blocks the actual upload/submit on failure --
+  // this only affects the in-form preview.
+  private previewUploadedFileContent(file: File): void {
+    this.templateHtml = '';
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (ext !== 'docx') return;
+
+    this.convertingUploadedFile = true;
+    file
+      .arrayBuffer()
+      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((result) => {
+        this.templateHtml = result.value;
+      })
+      .catch(() => {
+        // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
+      })
+      .finally(() => {
+        this.convertingUploadedFile = false;
+      });
   }
 
   reviewDraftedFile(): void {
@@ -936,6 +972,11 @@ export class CreateUpdateDocument {
   removeDraftedFile(): void {
     this.draftFile = null;
     this.draftFileUrl = '';
+    // Only reachable from the Word/PDF file-upload branch (see the template) -- templateHtml
+    // there only ever holds this file's converted preview, never independently-typed HTML
+    // template content (that's the selectedTemplateType === '3' branch, which has no file
+    // upload UI at all), so clearing it here is safe.
+    this.templateHtml = '';
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }

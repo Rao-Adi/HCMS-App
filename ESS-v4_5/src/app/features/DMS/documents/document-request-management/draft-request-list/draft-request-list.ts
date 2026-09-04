@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Output, ViewChild } from '@angular/core';
+import * as mammoth from 'mammoth';
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
@@ -97,6 +98,9 @@ export class DraftRequestList {
   templateFileUrl: string = '';
   draftFileUrl: string = '';
   draftFile: File | null = null;
+  // True while mammoth.js is converting a just-uploaded .docx to HTML for the content-preview
+  // rich text editor (see onDraftFileSelected).
+  convertingUploadedFile: boolean = false;
 
   requestId: number = 0;
   submittedby: number = 0;
@@ -669,6 +673,33 @@ export class DraftRequestList {
     }
 
     this.draftFile = file;
+    this.previewUploadedFileContent(file);
+  }
+
+  // Converts the uploaded .docx to HTML client-side (mammoth.js) so its formatted content shows
+  // up in the rich text editor for review/editing -- see the template's "Content Preview"
+  // section. Only .docx is supported (mammoth doesn't read legacy .doc); anything else just
+  // leaves templateHtml empty, so only the original file participates in the download-time merge
+  // for those, exactly as before this feature. Never blocks the actual upload/submit on failure --
+  // this only affects the in-form preview.
+  private previewUploadedFileContent(file: File): void {
+    this.templateHtml = '';
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (ext !== 'docx') return;
+
+    this.convertingUploadedFile = true;
+    file
+      .arrayBuffer()
+      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((result) => {
+        this.templateHtml = result.value;
+      })
+      .catch(() => {
+        // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
+      })
+      .finally(() => {
+        this.convertingUploadedFile = false;
+      });
   }
 
   getFileIconClass(filename: string | null | undefined): string {

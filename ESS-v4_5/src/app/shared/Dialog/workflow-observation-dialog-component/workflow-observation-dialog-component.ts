@@ -85,18 +85,20 @@ export class WorkflowObservationDialogComponent implements OnInit {
   }
 
   loadDraftObservation() {
-    const empCode = localStorage.getItem('HRISEmpId') || '';
-    if (!empCode) return;
+    // Scoped by (employee, entityType, entityId) -- without the entity id, a draft saved while
+    // reviewing one document/request would incorrectly resurface for a different one, which is
+    // what happened when this only sent the employee code.
+    const entityId = this.modalData.id || this.modalData.Id;
+    const entityType = this.modalData.entityType;
+    if (!entityId || !entityType) return;
 
-    this._employeeDraftObservationService
-      .getEmployeeDraftObservationByEmployeeCode(empCode)
-      .subscribe((res) => {
-        if (res && res.Data && res.Data.ObservationText) {
-          this.form.patchValue({
-            observation: res.Data.ObservationText,
-          });
-        }
-      });
+    this._employeeDraftObservationService.getDraftObservation(entityType, entityId).subscribe((res) => {
+      if (res && res.Data && res.Data.ObservationText) {
+        this.form.patchValue({
+          observation: res.Data.ObservationText,
+        });
+      }
+    });
   }
 
   loadObservations() {
@@ -151,8 +153,21 @@ export class WorkflowObservationDialogComponent implements OnInit {
     const obsText = this.form.value.observation || '';
     if (!obsText) return;
 
+    const entityId = this.modalData.id || this.modalData.Id;
+    const entityType = this.modalData.entityType;
+    if (!entityId || !entityType) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Draft Observation',
+        'Unable to save draft: missing document/request reference.',
+      );
+      return;
+    }
+
     const payload = {
       ObservationText: obsText,
+      EntityType: entityType,
+      EntityId: entityId,
     };
 
     this.loading = true;

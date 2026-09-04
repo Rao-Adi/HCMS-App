@@ -179,6 +179,8 @@ export interface EmployeeDraftObservation {
   Id: number;
   EmployeeCode: string;
   ObservationText: string;
+  DocumentId?: number | null;
+  RequestId?: number | null;
 }
 
 export interface CabinetStructureTabsConfig {

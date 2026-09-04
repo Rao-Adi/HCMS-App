@@ -388,6 +388,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     const url = this.GetRouterUrl();
     if (url.toLowerCase().includes('dashboard') || url === '/') return;
 
+    // Skip if onActivate() already resolved the header itself (e.g. a menu click, or a direct
+    // URL where the menu happened to already be loaded) -- only the genuine cold-boot case
+    // (menu still empty when onActivate() ran) reaches here with formName still unset.
+    if (this.formName) return;
+
     const match = this.findMenuItemByUrl(url);
     if (match) {
       this.formName = match.Text;
@@ -395,6 +400,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.strBreadCrumb = this.generateBreadcrumb(url, match.Text);
       this.cdRef.detectChanges();
       this.logFormAccess(this.formName, this.currentFormId, url, 'Direct URL (Data Loaded)');
+    } else {
+      // Menu is now loaded and genuinely has no entry for this URL (e.g. this form isn't in
+      // the user's granted menu rights) -- same fallback onActivate() uses, so the header
+      // doesn't stay stuck on the skeleton forever like it did before this fix.
+      this.GetHeaderDetails(url);
     }
   }
 
@@ -727,6 +737,27 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       default:
         return 'text-primary';
     }
+  }
+
+  // Short relative timestamp for the notification list -- keeps the header row compact so it
+  // never fights the title for space (long absolute dates were getting clipped).
+  getRelativeTime(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+
+    const diffMs = Date.now() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 7) return `${diffDay}d ago`;
+
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   openAbout() {

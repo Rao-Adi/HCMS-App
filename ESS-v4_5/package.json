@@ -22,6 +22,7 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "^20.3.0",
     "@angular/cdk": "^20.2.13",
     "@angular/common": "^20.3.0",
     "@angular/compiler": "^20.3.0",
@@ -38,6 +39,7 @@
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "jest-editor-support": "*",
+    "mammoth": "^1.12.2",
     "ng-zorro-antd": "^20.0.0",
     "ngx-editor": "^19.0.0-beta.1",
     "ngx-quill": "^30.0.1",

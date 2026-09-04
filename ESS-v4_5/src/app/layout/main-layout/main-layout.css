@@ -637,10 +637,11 @@
  
 
 /* Custom Scrollbar for Notifications */
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { 
-  background: rgba(0,0,0,0.1); 
-  border-radius: 10px; 
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.15) transparent; }
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 0; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
 }
 
 /* Notification Item States */

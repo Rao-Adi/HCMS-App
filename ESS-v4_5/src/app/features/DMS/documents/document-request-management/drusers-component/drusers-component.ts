@@ -19,6 +19,7 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
 import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
 import { catchError, forkJoin, map, of } from 'rxjs';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 // Identifies which "Document Users" grid row (Role + Cabinet scope) a selectedEmployeeList
 // entry belongs to -- mirrors DocumentRequestUserDistribution's RoleId/*Code columns.
@@ -32,7 +33,7 @@ interface DistributionRule {
 
 @Component({
   selector: 'app-drusers-component',
-  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper, SpinnerComponent],
   templateUrl: './drusers-component.html',
   styleUrl: './drusers-component.css',
 })
@@ -94,6 +95,7 @@ export class DRUsersComponent {
   ) {}
 
   ngOnInit() {
+    this.loading = true;
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
@@ -845,6 +847,7 @@ export class DRUsersComponent {
         // Rebuilds the "Document Users" grid rows from selectedUsers now that userRoles/
         // cabinet dropdown options (needed to resolve display text) are actually loaded.
         this.reconstructManualUserData();
+        this.loading = false;
       });
     });
   }

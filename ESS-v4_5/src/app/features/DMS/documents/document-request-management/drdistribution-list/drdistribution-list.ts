@@ -17,6 +17,7 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
 import { PermissionService } from '@app/shared/services/permission.service'; 
 import { ColDef } from 'ag-grid-community';
 import { forkJoin } from 'rxjs';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 export interface DropdownOption {
   id: string | number;
@@ -33,7 +34,7 @@ export interface DistributionGridRow {
 }
 @Component({
   selector: 'app-drdistribution-list',
-  imports: [CommonModule, FormsModule, EditableAgGridWrapper],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper, SpinnerComponent],
   templateUrl: './drdistribution-list.html',
   styleUrl: './drdistribution-list.css',
 })
@@ -104,12 +105,13 @@ export class DRDistributionList {
   }
 
   ngOnInit() {
+    this.loading = true;
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
       this.canEdit = permissions.canEdit;
       this.canDelete = permissions.canDelete;
 
-      this.loadDropdownsAndGrid(); 
+      this.loadDropdownsAndGrid();
     });
 
     // this.GetAllDistributionList({
@@ -443,7 +445,10 @@ export class DRDistributionList {
       this.cabinetHierarchy = hierarchy;
 
       // ✅ Load hierarchy dropdown data
-      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => this.buildGrid());
+      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => {
+        this.buildGrid();
+        this.loading = false;
+      });
     });
   }
 
