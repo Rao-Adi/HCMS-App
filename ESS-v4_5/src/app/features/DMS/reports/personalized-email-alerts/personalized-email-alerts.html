@@ -125,11 +125,11 @@
   <div class="header-bar">
     <div class="title-area">
       <h2>Personalized Email Alerts</h2>
-      <p class="subtitle">Create New Alert Configuration</p>
+      <p class="subtitle">{{ editingAlertId ? 'Edit Alert Configuration' : 'Create New Alert Configuration' }}</p>
     </div>
     <div class="action-buttons">
       <button type="button" class="btn-cancel" (click)="onCancel()">Cancel</button>
-      <button type="button" class="btn-save" (click)="onSaveAlert()">Save Alert</button>
+      <button type="button" class="btn-save" (click)="onSaveAlert()">{{ editingAlertId ? 'Update Alert' : 'Save Alert' }}</button>
     </div>
   </div>
 
@@ -149,7 +149,13 @@
   <div class="section-card">
     <div class="section-title"><span class="step-num">2</span> Cabinet (Document Scope)</div>
     <p class="section-desc">Select which documents this alert should monitor.</p>
-    <app-cabinet-structure-list (hierarchyChange)="onHierarchyChange($event)">
+    <app-cabinet-structure-list
+      [divisionCode]="selectedDivisions || null"
+      [departmentCode]="selectedDepartment || null"
+      [subDepartmentCode]="selectedSubDepartment || null"
+      [businessDomainCode]="selectedBusinessDomain || null"
+      (hierarchyChange)="onHierarchyChange($event)"
+    >
     </app-cabinet-structure-list>
     <!-- <div class="grid-4-col">
       <div class="form-group">

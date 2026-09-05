@@ -45,7 +45,10 @@ export class CustomizeEmailAlertService {
   }
 
   getCustomizeEmailAlertById(Id: string): Observable<GenericResponse<any>> {
-    const uri = `${this.apiUrl}/DMSCustomizeEmailAlerts/get-email-alert-by-id/id=${Id}`;
+    // Backend route is get-email-alert-by-id/{id} (a plain int route param) -- the previous
+    // "id=${Id}" suffix made the whole "id=123" string the route value, which never binds to
+    // the controller's `int id` parameter.
+    const uri = `${this.apiUrl}/DMSCustomizeEmailAlerts/get-email-alert-by-id/${Id}`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

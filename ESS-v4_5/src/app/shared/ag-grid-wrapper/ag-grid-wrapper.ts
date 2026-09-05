@@ -86,7 +86,33 @@ export class AgGridWrapper implements OnInit, OnChanges {
       // tooltipValueGetter/tooltipField in columnDefs still overrides this normally.
       tooltipValueGetter: (params: any) =>
         params.value != null && params.value !== '' ? String(params.value) : null,
+      // The tooltip above only helps on hover -- the underlying complaint (e.g. "Muhammad
+      // Wajahat Shahid" showing as "Muhammad Wajahat Sh...") is that values are hard clipped at
+      // a glance. wrapText lets a cell that doesn't fit wrap onto a second line. autoHeight
+      // (which lets the row itself grow to fit however many lines that takes, rather than
+      // clipping at a fixed height) is only added when this particular grid instance isn't
+      // server-paginated: AG Grid's Infinite Row Model (see isServerSide/getRows below) doesn't
+      // support colDef.autoHeight -- pairing them was tried there and it broke column sizing
+      // grid-wide instead of fixing it. Consumers that never bind (serverQuery) (e.g.
+      // revision-history-modal.ts) run AG Grid's plain client-side row model instead, where
+      // autoHeight works correctly -- finalRowHeight's fixed floor was clipping wrapped text
+      // there for no reason, since autoHeight can size the row properly instead. A column's own
+      // wrapText/autoHeight in columnDefs still overrides this normally.
+      wrapText: true,
+      autoHeight: !this.isServerSide,
     };
+  }
+
+  // Floor so a wrapped second line of text has room to actually show instead of being clipped
+  // by the row's fixed height -- only relevant for server-paginated grids, where autoHeight
+  // above is deliberately left off (see that comment). config.rowHeight can't just be defaulted
+  // higher up top because nearly every consumer passes their own explicit rowHeight (commonly
+  // 47, sized for one line), which would silently win over any default there. This mirrors
+  // finalDefaultColDef's minWidth floor pattern: applied after reading the consumer's value,
+  // not before.
+  get finalRowHeight(): number | undefined {
+    if (!this.isServerSide) return this.config.rowHeight;
+    return Math.max(this.config.rowHeight ?? 47, 60);
   }
   @Input() totalRows = 0;
   @Input() gridStyle: any = {};

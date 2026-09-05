@@ -52,7 +52,11 @@
 
   <!-- Key Metrics: every card is gated to the role(s) it's actually relevant to. A dual-role
        user sees both Initiator and Approver cards together; nothing swaps in place of anything
-       else anymore, and nothing company-wide (Pending Auth.) shows to someone with no stake in it. -->
+       else anymore, and nothing company-wide (Pending Auth.) shows to someone with no stake in it.
+       Pending Auth. and Total Approved Documents are both creator-scoped counts (documents you
+       created), so beyond the permission check they also require hasCreatedContent -- an
+       Approver who happens to also hold Initiator/Authorizer rights but has never actually
+       created anything would otherwise see these sitting at a meaningless 0. -->
   <div class="metrics-grid mb-4">
     <a (click)="navigateTo('/documents/sop-training')" class="card-link">
       <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
@@ -67,7 +71,7 @@
         </div>
       </div>
     </a>
-    <a (click)="navigateTo('/documents/trainingauthorization')" class="card-link" *ngIf="isAuthorizer">
+    <a (click)="navigateTo('/documents/trainingauthorization')" class="card-link" *ngIf="isAuthorizer && hasCreatedContent">
       <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-danger bg-opacity-10 text-danger rounded d-flex align-items-center justify-content-center metric-icon me-3">
@@ -132,7 +136,7 @@
         </div>
       </div>
     </a>
-    <a (click)="navigateTo('/reports/viewapproved')" class="card-link" *ngIf="isInitiator">
+    <a (click)="navigateTo('/reports/viewapproved')" class="card-link" *ngIf="isInitiator && hasCreatedContent">
       <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
         <div class="card-body d-flex align-items-center">
           <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center metric-icon me-3">
@@ -165,7 +169,7 @@
             <i class="bi bi-hourglass-split fs-5"></i>
           </div>
           <div>
-            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">Pending Requests</p>
+            <p class="text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">My Pending Requests for Approval</p>
             <h4 class="mb-0 fw-bold">{{ summary.MyPendingRequests || 0 }}</h4>
           </div>
         </div>

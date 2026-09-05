@@ -187,11 +187,12 @@ export class DocumentRequestForm {
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'nextReviewDate', headerName: 'Next Review Date' },
+    { field: 'nextReviewDate', headerName: 'Next Review Date', flex: 1 },
     {
       field: 'url',
       headerName: 'Url',
       editable: false,
+      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -207,24 +208,28 @@ export class DocumentRequestForm {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created  By',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
+      minWidth: 120,
+      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span
@@ -243,6 +248,8 @@ export class DocumentRequestForm {
       field: 'revisionHistory',
       headerName: 'Revision History',
       editable: false,
+      minWidth: 120,
+      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span

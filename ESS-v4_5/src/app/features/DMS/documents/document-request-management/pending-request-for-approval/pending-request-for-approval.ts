@@ -97,12 +97,13 @@ export class PendingRequestForApproval {
   // Columns after the cabinet (Division/Department/...) columns
   private readonly trailingColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type', minWidth: 150, flex: 1 },
-    { field: 'documentName', headerName: 'Document Title', minWidth: 200 },
+    { field: 'documentName', headerName: 'Document Title', minWidth: 200, flex: 1 },
     {
       field: 'justification',
       headerName: 'Justification',
       minWidth: 150,
       editable: false,
+      flex: 1,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
         if (!val) return '<span>-</span>';
@@ -122,8 +123,8 @@ export class PendingRequestForApproval {
         }
       },
     },
-    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell' },
-    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell' },
+    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell', flex: 1 },
+    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell', flex: 1 },
     { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell' },
   ];
 

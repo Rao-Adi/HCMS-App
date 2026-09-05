@@ -127,6 +127,16 @@ export class PersonalizedEmailAlerts implements OnInit {
   // Grid Data Array matching image_846444.png structure
   alertsList: AlertGridItem[] = [];
 
+  // Non-null while editing an existing alert -- onSaveAlert branches on this to call update()
+  // instead of create(), and includes it in the payload (CustomizeEmailAlertUpdateDto extends
+  // the create DTO with just this one extra field).
+  editingAlertId: number | null = null;
+  // The alert's current enabled/disabled state, carried through edit -- the form has no
+  // isActive control of its own (that's the grid's separate toggle switch), so without this,
+  // saving an edit would silently force a disabled alert back on (create's payload always
+  // sends isactive: true, which is correct only for brand-new alerts).
+  private editingAlertIsActive = true;
+
   constructor(
     private fb: FormBuilder,
     private _notificationToastService: NotificationToastService,
@@ -181,6 +191,7 @@ export class PersonalizedEmailAlerts implements OnInit {
   }
 
   onCreateNew(): void {
+    this.editingAlertId = null;
     this.showForm = true;
     this.alertForm.reset();
     // Set default initial values for the form
@@ -191,10 +202,15 @@ export class PersonalizedEmailAlerts implements OnInit {
       sendAtTime: '09:00',
       deliveryFormat: 'Embedded in Email Body',
     });
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
   }
 
   onBackToGrid(): void {
     this.showForm = false;
+    this.editingAlertId = null;
   }
 
   onCancel(): void {
@@ -227,9 +243,11 @@ export class PersonalizedEmailAlerts implements OnInit {
           });
         }
       } 
-      const payload = {
+      const isEditing = this.editingAlertId != null;
+      const payload: any = {
+        ...(isEditing ? { id: this.editingAlertId } : {}),
         name: formValue.name,
-        isactive: true,
+        isactive: isEditing ? this.editingAlertIsActive : true,
         pendingstate: formValue.pendingState || '',
         pendingdays: Number(formValue.pendingDays) || 0,
         reviewwithindays: Number(formValue.reviewWithinDays) || 0,
@@ -254,18 +272,35 @@ export class PersonalizedEmailAlerts implements OnInit {
 
       console.log('Production Ready API Payload Context:', payload);
 
-      this._customizeEmailAlertService.create(payload).subscribe({
+      const request$ = isEditing
+        ? this._customizeEmailAlertService.update(payload)
+        : this._customizeEmailAlertService.create(payload);
+
+      request$.subscribe({
         next: (res) => {
           if (res?.Success) {
-            this._notificationToastService.createNotification('success', 'Success', 'Alert created successfully.');
+            this._notificationToastService.createNotification(
+              'success',
+              'Success',
+              isEditing ? 'Alert updated successfully.' : 'Alert created successfully.',
+            );
             this.showForm = false;
+            this.editingAlertId = null;
             this.GetAllCustomizeEmailAlerts();
           } else {
-            this._notificationToastService.createNotification('error', 'Error', res?.Message || 'Failed to create alert.');
+            this._notificationToastService.createNotification(
+              'error',
+              'Error',
+              res?.Message || `Failed to ${isEditing ? 'update' : 'create'} alert.`,
+            );
           }
         },
         error: (err) => {
-          this._notificationToastService.createNotification('error', 'Error', 'An error occurred while creating the alert.');
+          this._notificationToastService.createNotification(
+            'error',
+            'Error',
+            `An error occurred while ${isEditing ? 'updating' : 'creating'} the alert.`,
+          );
         },
       });
     } else {
@@ -343,8 +378,76 @@ export class PersonalizedEmailAlerts implements OnInit {
   }
 
   onEditAlert(alert: AlertGridItem): void {
-    console.log('Editing Alert Configuration:', alert.id);
-    // routing link navigation logic or modal open trigger
+    this._customizeEmailAlertService.getCustomizeEmailAlertById(String(alert.id)).subscribe({
+      next: (res: any) => {
+        if (!res?.Success || !res.Data) {
+          this._notificationToastService.createNotification(
+            'error',
+            'Error',
+            res?.Message || 'Failed to load alert details.',
+          );
+          return;
+        }
+
+        const data = res.Data;
+        const pick = (pascal: string, camel: string) => data[pascal] ?? data[camel];
+
+        // Reconstruct the two form-only fields (recipientType/customEmails/ccEmails) from the
+        // flat Recipients list the backend stores -- the inverse of onSaveAlert's mapping.
+        const recipientsList: any[] = pick('Recipients', 'recipients') || [];
+        const isSelfOnly =
+          recipientsList.length === 1 && (recipientsList[0].IsSelf ?? recipientsList[0].isSelf);
+        const toEmails = recipientsList
+          .filter((r) => (r.RecipientType ?? r.recipientType) === 'To' && !(r.IsSelf ?? r.isSelf))
+          .map((r) => r.EmailAddress ?? r.emailAddress)
+          .join(', ');
+        const ccEmails = recipientsList
+          .filter((r) => (r.RecipientType ?? r.recipientType) === 'Cc')
+          .map((r) => r.EmailAddress ?? r.emailAddress)
+          .join(', ');
+
+        this.editingAlertId = pick('Id', 'id');
+        this.editingAlertIsActive = pick('IsActive', 'isActive') ?? true;
+
+        this.alertForm.reset();
+        this.alertForm.patchValue({
+          companyId: pick('CompanyId', 'companyId') || 1,
+          name: pick('Name', 'name') || '',
+          pendingState: pick('PendingState', 'pendingState') || 'Approval',
+          pendingDays: pick('PendingDays', 'pendingDays') ?? '',
+          reviewWithinDays: pick('ReviewWithinDays', 'reviewWithinDays') ?? '',
+          inactiveDays: pick('InactiveDays', 'inactiveDays') ?? '',
+          statusChangedTo: pick('StatusChangedTo', 'statusChangedTo') || null,
+          lookbackDays: pick('LookbackDays', 'lookbackDays') ?? '',
+          recipientType: isSelfOnly ? 'self' : 'custom',
+          customEmails: toEmails,
+          ccEmails: ccEmails,
+          frequency: pick('Frequency', 'frequency') || 'Daily',
+          sendAtTime: pick('SendAtTime', 'sendAtTime') || '09:00',
+          deliveryFormat: pick('DeliveryFormat', 'deliveryFormat') || 'Embedded in Email Body',
+          emailSubject: pick('EmailSubject', 'emailSubject') || '',
+          emailBody: pick('EmailBody', 'emailBody') || '',
+        });
+
+        // Cabinet scope -- onSaveAlert reads these plain fields (not form controls) into the
+        // payload; the [divisionCode]/etc bindings on <app-cabinet-structure-list> in the
+        // template reflect them back into the picker so the previous scope shows pre-selected.
+        const scope = (pick('Scopes', 'scopes') || [])[0] || {};
+        this.selectedDivisions = scope.DivisionCode ?? scope.divisionCode ?? '';
+        this.selectedDepartment = scope.DepartmentCode ?? scope.departmentCode ?? '';
+        this.selectedSubDepartment = scope.SubDepartmentCode ?? scope.subDepartmentCode ?? '';
+        this.selectedBusinessDomain = scope.BusinessDomainCode ?? scope.businessDomainCode ?? '';
+
+        this.showForm = true;
+      },
+      error: () => {
+        this._notificationToastService.createNotification(
+          'error',
+          'Error',
+          'An error occurred while loading the alert for editing.',
+        );
+      },
+    });
   }
 
   onDeleteAlert(alert: AlertGridItem): void {

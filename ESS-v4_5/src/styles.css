@@ -5383,12 +5383,18 @@ ag-theme-alpine .ag-header-group-cell-label {
   min-width: 0 !important;
 }
 
-/* Ensure cell values truncate with ellipsis instead of overflowing */
+/* Ensure cell values truncate with ellipsis instead of overflowing -- except cells opted into
+   wrapText (both shared grid wrappers now default every column to wrapText, so long values like
+   "Muhammad Wajahat Shahid" wrap onto a second line instead of being clipped to "...Sh"; this
+   exclusion lets that actually take effect instead of being silently overridden by this
+   !important rule). A column can still force single-line truncation by setting wrapText: false. */
 .ag-cell-value {
+  min-width: 0 !important;
+}
+.ag-cell:not(.ag-cell-wrap-text) .ag-cell-value {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
-  min-width: 0 !important;
 }
 
 .ag-cell-inline-editing {

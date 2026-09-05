@@ -97,7 +97,7 @@ export class ViewDocumentPendingApproval {
 
   // Columns before the cabinet (Division/Department/...) columns
   private readonly leadingColumnDefs: ColDef[] = [
-    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentType', headerName: 'Document Type'},
     { field: 'documentNumber', headerName: 'Document Number' },
     {
       field: 'documentName',
@@ -118,7 +118,7 @@ export class ViewDocumentPendingApproval {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'version', headerName: 'Version' },
+    { field: 'version', headerName: 'Version', flex: 1 },
   ];
 
   // Columns after the cabinet (Division/Department/...) columns
@@ -140,24 +140,28 @@ export class ViewDocumentPendingApproval {
     //     this.openDocumentModal(event.data);
     //   },
     // },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created By',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
+      minWidth: 120,
+      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `

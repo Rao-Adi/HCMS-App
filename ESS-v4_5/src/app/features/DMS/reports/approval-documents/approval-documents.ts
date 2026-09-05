@@ -164,12 +164,12 @@ export class ApprovalDocuments {
 
   // Columns before the cabinet (Division/Department/...) columns
   private readonly leadingColumnDefs: ColDef[] = [
-    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentType', headerName: 'Document Type'  },
     { field: 'documentnumber', headerName: 'Document Number' },
     {
       field: 'documentName',
       headerName: 'Document Name',
-      editable: false,
+      editable: false, 
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -185,7 +185,7 @@ export class ApprovalDocuments {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'version', headerName: 'Version' },
+    { field: 'version', headerName: 'Version', flex: 1 },
   ];
 
   // Columns after the cabinet (Division/Department/...) columns
@@ -196,6 +196,7 @@ export class ApprovalDocuments {
       headerName: 'Distribution List',
       editable: false,
       minWidth: 100,
+      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -211,29 +212,32 @@ export class ApprovalDocuments {
         this.openDistributionListModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 140 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 140, flex: 1 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created By',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
       minWidth: 110,
+      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-          <span 
+          <span
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
@@ -250,6 +254,7 @@ export class ApprovalDocuments {
       headerName: 'Revision History',
       editable: false,
       minWidth: 110,
+      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span 

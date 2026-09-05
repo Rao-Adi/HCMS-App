@@ -203,6 +203,7 @@ export class DocumentAuthorizationPostTraining {
       field: 'url',
       headerName: 'Url',
       editable: false,
+      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -218,29 +219,32 @@ export class DocumentAuthorizationPostTraining {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created  By',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
       minWidth: 150,
+      flex: 1,
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
       minWidth: 120,
+      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
-        <span 
+        <span
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
@@ -255,6 +259,8 @@ export class DocumentAuthorizationPostTraining {
     {
       field: 'revisionHistory',
       headerName: 'Revision History',
+      minWidth: 120,
+      flex: 1,
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {

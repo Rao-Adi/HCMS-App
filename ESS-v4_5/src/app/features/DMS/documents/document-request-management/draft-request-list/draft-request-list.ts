@@ -153,13 +153,15 @@ export class DraftRequestList {
     {
       field: 'requestNumber',
       headerName: 'Request Number',
+      flex: 1,
     },
-    { field: 'documentType', headerName: 'Document Type' },
-    { field: 'documentName', headerName: 'Document Title' },
+    { field: 'documentType', headerName: 'Document Type', flex: 1 },
+    { field: 'documentName', headerName: 'Document Title', flex: 1 },
     {
       field: 'justification',
       headerName: 'Justification',
       editable: false,
+      flex: 1,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
         if (!val) return '<span>-</span>';
@@ -182,11 +184,12 @@ export class DraftRequestList {
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell' },
+    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
     {
       field: 'status',
       headerName: 'Status',
       editable: false,
+      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span

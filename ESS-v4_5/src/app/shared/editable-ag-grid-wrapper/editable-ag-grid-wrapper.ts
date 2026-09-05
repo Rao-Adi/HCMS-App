@@ -261,6 +261,16 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       // finalDefaultColDef. A column's own tooltipValueGetter/tooltipField still overrides this.
       tooltipValueGetter: (params: any) =>
         params.value != null && params.value !== '' ? String(params.value) : null,
+      // The tooltip above only helps on hover -- values were still hard clipped at a glance
+      // (e.g. "Muhammad Wajahat Shahid" showing as "...Sh"). wrapText + autoHeight let a cell
+      // that doesn't fit grow onto a second line and the row grow to match, using AG Grid's own
+      // row-height recalculation. Safe here because this wrapper binds rowData directly (client-
+      // side row model), which does support colDef.autoHeight -- unlike ag-grid-wrapper.ts's
+      // Infinite Row Model, where pairing the two was tried and broke column sizing grid-wide
+      // (see that file's wrapText comment for why it uses a fixed row-height floor instead). A
+      // column's own wrapText/autoHeight still overrides this normally.
+      wrapText: true,
+      autoHeight: true,
       suppressKeyboardEvent: (params: any) => {
         const event = params.event;
         const key = event.key;
