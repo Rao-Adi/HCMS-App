@@ -241,7 +241,7 @@ export class DocumentRequestForm {
         `;
       },
       onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
+        this.openWorkflowDetailsModal(event.data);
       },
     },
     {
@@ -1629,7 +1629,7 @@ export class DocumentRequestForm {
     });
   }
 
-  openWorkflowDeatilsModal(rowData: any) {
+  openWorkflowDetailsModal(rowData: any) {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
@@ -1637,7 +1637,7 @@ export class DocumentRequestForm {
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,
-        entityType: 'Request',
+        entityType: 'Document', // Sending Document because User needs to see the approval History of Document
         decision:''
       },
       nzFooter: null, // custom footer handled inside component

@@ -92,6 +92,15 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Gates the "Pending Auth." and "Total Approved Documents" cards below their existing
+  // isAuthorizer/isInitiator permission checks -- those only confirm the user has *rights* to
+  // those forms, not that they've actually created anything. An Approver who also happens to
+  // hold Initiator/Authorizer rights but has never created a document or request would
+  // otherwise see these creator-scoped cards sitting at a meaningless 0.
+  get hasCreatedContent(): boolean {
+    return (this.summary?.MyTotalDocuments || 0) > 0 || (this.summary?.MyTotalRequests || 0) > 0;
+  }
+
   calculatePercentage(count: number): number {
     const total = this.documentDistribution.reduce((sum, d) => sum + (d?.Count || 0), 0);
     if (!total) return 0;

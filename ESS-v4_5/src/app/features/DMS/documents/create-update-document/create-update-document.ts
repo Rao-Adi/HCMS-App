@@ -216,7 +216,7 @@ export class CreateUpdateDocument {
       `;
       },
       onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
+        this.openWorkflowDetailsModal(event.data);
       },
     },
     {
@@ -262,7 +262,7 @@ export class CreateUpdateDocument {
         params: {
           label: 'Approval History',
           onClick: (rowData: any) => {
-            this.openWorkflowDeatilsModal(rowData);
+            this.openWorkflowDetailsModal(rowData);
           },
         },
       }),
@@ -1065,7 +1065,7 @@ export class CreateUpdateDocument {
     });
   }
 
-  openWorkflowDeatilsModal(rowData: any) {
+  openWorkflowDetailsModal(rowData: any) {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
@@ -1074,6 +1074,7 @@ export class CreateUpdateDocument {
       nzData: {
         id: rowData.Id,
         entityType: this.selectedEntityType || 'Document',
+        decision:'Approved'
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',
@@ -1289,11 +1290,15 @@ export class CreateUpdateDocument {
               requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
               startedAt: this.formatDate(startedAtRaw),
 
-              // Previous version info (only if present in real payloads)
-              //previsousVersionCreatedBy: get(['RequestCreatedBy', 'requestCreatedBy'], ''),
-              // previousVersionCreatedOn: this.formatDate(
-              //   get(['RequestCreatedAt', 'requestCreatedAt']),
-              // ),
+              // Previous version info -- was commented out (and, before that, misspelled and
+              // reading the wrong source fields: RequestCreatedBy/At instead of
+              // PreviousVersionCreatedBy/On), which is why Obsoletion's grid never showed it
+              // even though GetDocumentByStatus already returns it (same fields the sibling
+              // grids, e.g. my-approval-document.ts, read successfully).
+              previousVersionCreatedBy: get(['PreviousVersionCreatedBy', 'previousVersionCreatedBy'], ''),
+              previousVersionCreatedOn: this.formatDate(
+                get(['PreviousVersionCreatedOn', 'previousVersionCreatedOn']),
+              ),
 
               // ──────────────────────────────────────────────
               // Placeholder / missing fields from your original

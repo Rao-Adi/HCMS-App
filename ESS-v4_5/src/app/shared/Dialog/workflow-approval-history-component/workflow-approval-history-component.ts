@@ -10,10 +10,11 @@ import {
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-workflow-approval-history-component',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, SpinnerComponent],
   templateUrl: './workflow-approval-history-component.html',
   styleUrl: './workflow-approval-history-component.css',
 })
@@ -66,6 +67,7 @@ export class WorkflowApprovalHistoryComponent {
         } else {
           this.workflowHistory = [];
         }
+        this.loading = false;
       },
       error: (err) => {
         // this._notificationToastService.createNotification(
@@ -73,6 +75,8 @@ export class WorkflowApprovalHistoryComponent {
         //   'Error',
         //   err?.Message || 'Failed to fetch document details.',
         // );
+        this.workflowHistory = [];
+        this.loading = false;
       },
     });
   }

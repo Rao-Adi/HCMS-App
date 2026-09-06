@@ -1,4 +1,5 @@
-<div class="approval-table-wrapper">
+<div class="approval-table-wrapper" style="position: relative; min-height: 120px">
+  <app-spinner *ngIf="loading"></app-spinner>
   <table class="approval-table">
     <thead>
       <tr>
@@ -37,7 +38,7 @@
           </span>
         </td>
       </tr>
-      <tr *ngIf="!workflowHistory || workflowHistory.length === 0">
+      <tr *ngIf="!loading && (!workflowHistory || workflowHistory.length === 0)">
         <td colspan="5" class="text-center">No records to show.</td>
       </tr>
     </tbody>
