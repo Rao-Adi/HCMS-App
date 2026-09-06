@@ -2,3 +2,9 @@
   color: #6c757d;
   font-size: 12px;
 }
+
+/* Overrides the global `.btn { width: 100% !important }` rule (styles.css), which otherwise
+   stretches this button across the full header row. */
+.upload-doc-btn {
+  width: auto !important;
+}

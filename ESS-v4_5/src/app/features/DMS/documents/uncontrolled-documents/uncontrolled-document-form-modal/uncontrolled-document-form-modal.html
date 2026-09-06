@@ -9,6 +9,15 @@
     <input type="text" class="form-control" [value]="documentName" disabled />
   </div>
 
+  <div class="mb-3" *ngIf="!isCreateMode && currentDocumentUrl">
+    <label class="form-label">Current File</label>
+    <div>
+      <a [href]="currentDocumentUrl" target="_blank">
+        <i class="bi bi-download me-1"></i> Download current file
+      </a>
+    </div>
+  </div>
+
   <div class="mb-3">
     <label class="form-label">Review Date <span class="text-danger">*</span></label>
     <input type="date" class="form-control" [(ngModel)]="reviewDate" />
@@ -16,12 +25,19 @@
 
   <div class="mb-3" *ngIf="isCreateMode">
     <label class="form-label">Review Authority <span class="text-danger">*</span></label>
-    <app-employee-list
+    <nz-select
+      style="width: 100%"
       [(ngModel)]="reviewAuthorityEmpCode"
-      [isMultiSelect]="false"
-      placeholder="Select Review Authority"
-      width="100%"
-    ></app-employee-list>
+      nzPlaceHolder="Select Review Authority"
+      nzAllowClear
+      nzShowSearch
+    >
+      <nz-option
+        *ngFor="let item of employees"
+        [nzValue]="item.CODE"
+        [nzLabel]="item.NAME"
+      ></nz-option>
+    </nz-select>
   </div>
 
   <div class="mb-3">

@@ -1,22 +1,33 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { UncontrolledDocumentService } from '@app/shared/services/uncontrolled-document.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
-import { ColDef } from 'ag-grid-community';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { PermissionService } from '@app/shared/services/permission.service';
+import { ColDef } from 'ag-grid-community'; 
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { UncontrolledDocumentFormModal } from './uncontrolled-document-form-modal/uncontrolled-document-form-modal';
 import { UncontrolledDocumentHistoryModal } from './uncontrolled-document-history-modal/uncontrolled-document-history-modal';
+import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { AppConfigService } from '@app/core/services/app-config';
+import { resolveUploadUrl } from '@app/shared/utils/resolve-upload-url';
 
 @Component({
   selector: 'app-uncontrolled-documents',
   standalone: true,
-  imports: [CommonModule, AgGridWrapper],
+  imports: [CommonModule, AgGridWrapper, NzModalModule, SafeTranslatePipe],
   templateUrl: './uncontrolled-documents.html',
   styleUrl: './uncontrolled-documents.css',
 })
-export class UncontrolledDocuments {
+export class UncontrolledDocuments implements OnInit {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
+
+  // --- PERMISSION FLAGS ---
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
+  formId = 'uncontrolleddocuments';
 
   documentsData: any[] = [];
   totalRows = 0;
@@ -36,26 +47,37 @@ export class UncontrolledDocuments {
     { field: 'reviewAuthorityName', headerName: 'Review Authority' },
     { field: 'createdByName', headerName: 'Uploaded By' },
     { field: 'createdAt', headerName: 'Uploaded On', cellClass: 'audit-cell' },
+    { field: 'lastModifiedByName', headerName: 'Last Updated By' },
     {
       field: 'actions',
       headerName: 'Actions',
       sortable: false,
       filter: false,
+      // Arrow function closes over `this`, so it re-reads canEdit/canDelete at render time --
+      // permissions load in ngOnInit alongside (and well before) the grid's own data actually
+      // renders any rows.
       cellRenderer: () => `
-        <button class="btn btn-sm btn-outline-primary me-1" data-action="review" title="Review / Replace File">
-          <i class="bi bi-arrow-repeat"></i>
-        </button>
+        ${
+          this.canEdit
+            ? `<button class="btn btn-sm btn-outline-primary me-1" data-action="review" title="Review / Replace File">
+                 <i class="bi bi-arrow-repeat"></i>
+               </button>`
+            : ''
+        }
         <button class="btn btn-sm btn-outline-secondary me-1" data-action="history" title="History">
           <i class="bi bi-clock-history"></i>
         </button>
         <a data-action="download" title="Download" class="btn btn-sm btn-outline-success me-1">
           <i class="bi bi-download"></i>
         </a>
-        <button class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">
-          <i class="bi bi-trash"></i>
-        </button>
+        ${
+          this.canDelete
+            ? `<button class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">
+                 <i class="bi bi-trash"></i>
+               </button>`
+            : ''
+        }
       `,
-      onCellClicked: (event: any) => this.onActionClicked(event),
     },
   ];
 
@@ -70,8 +92,18 @@ export class UncontrolledDocuments {
   constructor(
     private _uncontrolledDocumentService: UncontrolledDocumentService,
     private _notificationToastService: NotificationToastService,
+    private _permissionService: PermissionService,
+    private _config: AppConfigService,
     private modal: NzModalService,
   ) {}
+
+  ngOnInit(): void {
+    this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
+      this.canAdd = permissions.canAdd;
+      this.canEdit = permissions.canEdit;
+      this.canDelete = permissions.canDelete;
+    });
+  }
 
   GetAllDocuments(query?: any) {
     if (query && typeof query === 'object') {
@@ -94,14 +126,19 @@ export class UncontrolledDocuments {
         if (res?.Success && res?.Data) {
           this.totalRows = res.Data.TotalCount || 0;
           this.documentsData = (res.Data.Items || []).map((item: any) => ({
-            id: item.Id ?? item.id,
+             id: item.Id ?? item.id,
             documentName: item.DocumentName ?? item.documentName,
             documentUrl: item.DocumentURL ?? item.documentURL,
-            reviewDate: item.ReviewDate ?? item.reviewDate,
+            reviewDate: new CustomDateFormatPipe().transform(item.ReviewDate) ?? new CustomDateFormatPipe().transform(item.reviewDate),
+            // Kept alongside the display-formatted `reviewDate` above -- the Review modal's
+            // native <input type="date"> needs a raw, parseable value (it can't read "Sep 11,
+            // 2026 00:00:00"), so it reads this field instead when prefilling.
+            reviewDateRaw: item.ReviewDate ?? item.reviewDate,
             reviewAuthorityEmpCode: item.ReviewAuthorityEmpCode ?? item.reviewAuthorityEmpCode,
             reviewAuthorityName: item.ReviewAuthorityName ?? item.reviewAuthorityName,
             createdByName: item.CreatedByName ?? item.createdByName,
-            createdAt: item.CreatedAt ?? item.createdAt,
+            createdAt: new CustomDateFormatPipe().transform(item.CreatedAt) ?? new CustomDateFormatPipe().transform(item.createdAt),
+            lastModifiedByName: item.LastModifiedByName ?? item.lastModifiedByName,
           }));
         }
       },
@@ -131,7 +168,7 @@ export class UncontrolledDocuments {
         this.openHistoryModal(event.data);
         break;
       case 'download':
-        window.open(event.data.documentUrl, '_blank');
+        window.open(resolveUploadUrl(event.data.documentUrl, this._config.baseUrl), '_blank');
         break;
       case 'delete':
         this.deleteDocument(event.data);
@@ -140,6 +177,7 @@ export class UncontrolledDocuments {
   }
 
   openUploadModal() {
+    if (!this.canAdd) return;
     const modalRef = this.modal.create({
       nzTitle: 'Upload Document',
       nzContent: UncontrolledDocumentFormModal,
@@ -156,6 +194,7 @@ export class UncontrolledDocuments {
   }
 
   openReviewModal(rowData: any) {
+    if (!this.canEdit) return;
     const modalRef = this.modal.create({
       nzTitle: 'Review Document',
       nzContent: UncontrolledDocumentFormModal,

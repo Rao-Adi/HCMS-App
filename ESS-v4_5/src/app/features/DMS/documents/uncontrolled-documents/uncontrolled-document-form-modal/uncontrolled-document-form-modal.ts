@@ -2,9 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
-import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { UncontrolledDocumentService } from '@app/shared/services/uncontrolled-document.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { AppConfigService } from '@app/core/services/app-config';
+import { resolveUploadUrl } from '@app/shared/utils/resolve-upload-url';
 
 export interface UncontrolledDocumentFormModalData {
   mode: 'create' | 'review';
@@ -14,7 +17,7 @@ export interface UncontrolledDocumentFormModalData {
 @Component({
   selector: 'app-uncontrolled-document-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, EmployeeList],
+  imports: [CommonModule, FormsModule, NzSelectModule],
   templateUrl: './uncontrolled-document-form-modal.html',
   styleUrl: './uncontrolled-document-form-modal.css',
 })
@@ -25,13 +28,22 @@ export class UncontrolledDocumentFormModal implements OnInit {
   reviewDate = '';
   reviewAuthorityEmpCode: string | null = null;
   selectedFile: File | null = null;
+  currentDocumentUrl = '';
 
   submitting = false;
+
+  // Populated from the same PeoplePartnersService.GetEmployeeList() call and CODE/NAME shape
+  // used by ApprovalWorkflowPolicyManagement's employee dropdown -- app-employee-list wasn't
+  // rendering any options here, so this plain nz-select (sends the employee CODE as the
+  // authority, same as that reference screen) replaces it.
+  employees: { CODE: string; NAME: string }[] = [];
 
   constructor(
     private modalRef: NzModalRef,
     private _uncontrolledDocumentService: UncontrolledDocumentService,
+    private _peoplePartnerService: PeoplePartnersService,
     private _notificationToastService: NotificationToastService,
+    private _config: AppConfigService,
     @Inject(NZ_MODAL_DATA) public modalData: UncontrolledDocumentFormModalData,
   ) {}
 
@@ -40,8 +52,34 @@ export class UncontrolledDocumentFormModal implements OnInit {
 
     if (!this.isCreateMode && this.modalData.record) {
       this.documentName = this.modalData.record.documentName;
-      this.reviewDate = this.modalData.record.reviewDate;
+      // record.reviewDate is pre-formatted for the grid ("Sep 11, 2026 00:00:00"), which
+      // <input type="date"> can't parse -- use the raw value and format it as yyyy-MM-dd
+      // ourselves (avoiding toISOString's UTC shift, since the raw value has no offset and
+      // must be read in local time to land on the same calendar day).
+      const raw = this.modalData.record.reviewDateRaw;
+      if (raw) {
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          const yyyy = parsed.getFullYear();
+          const mm = (parsed.getMonth() + 1).toString().padStart(2, '0');
+          const dd = parsed.getDate().toString().padStart(2, '0');
+          this.reviewDate = `${yyyy}-${mm}-${dd}`;
+        }
+      }
       this.reviewAuthorityEmpCode = this.modalData.record.reviewAuthorityEmpCode;
+      this.currentDocumentUrl = resolveUploadUrl(this.modalData.record.documentUrl, this._config.baseUrl);
+    }
+
+    if (this.isCreateMode) {
+      this._peoplePartnerService.GetEmployeeList().subscribe((res: any) => {
+        this.employees = (res?.Data ?? [])
+          .map((d: any) => ({
+            CODE: d.Code,
+            NAME: '(' + d.Code + ') ' + d.Value,
+            val: d.Value || '',
+          }))
+          .sort((a: any, b: any) => (a.val || '').localeCompare(b.val || ''));
+      });
     }
   }
 
