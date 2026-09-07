@@ -146,13 +146,14 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
   pendingApprovalData: any[] = [];
 
   submittedRequestColumnDefs: ColDef[] = [
-    { field: 'id', headerName: 'ID' },
-    { field: 'from', headerName: 'From' },
-    { field: 'To', headerName: 'To' },
-    { field: 'reason', headerName: 'Reason' },
+    { field: 'id', headerName: 'ID', flex: 1  },
+    { field: 'from', headerName: 'From', flex: 1  },
+    { field: 'To', headerName: 'To', flex: 1  },
+    { field: 'reason', headerName: 'Reason', flex: 1  },
     {
       field: 'status',
-      headerName: 'Status',
+      headerName: 'Status', 
+      flex: 1 ,      
       cellClassRules: {
         'rag-green': (params) => params.value === 'Approved' || params.value === 'Controlled',
         'rag-blue': (params) => params.value === 'Rejected',

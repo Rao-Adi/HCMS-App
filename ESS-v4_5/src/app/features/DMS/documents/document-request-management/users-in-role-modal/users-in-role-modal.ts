@@ -12,7 +12,7 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
 })
 export class UsersInRoleModal {
   @Input() data: any;
-  
+
   selectedPageSize = 10;
   pageSize = 10;
   totalRows = 0;
@@ -31,10 +31,12 @@ export class UsersInRoleModal {
     {
       field: 'employeeCode',
       headerName: 'Employee Code',
+      flex: 1,
     },
     {
       field: 'employeeName',
       headerName: 'Employee Name',
+      flex: 1,
     },
     // {
     //   field: 'department',
@@ -44,6 +46,7 @@ export class UsersInRoleModal {
     {
       field: 'designation',
       headerName: 'Designation',
+      flex: 1,
     },
   ];
 
@@ -97,7 +100,7 @@ export class UsersInRoleModal {
 
   loadData(query: any = {}) {
     const roleId = this.modalData?.data;
-    if (!roleId) return; 
+    if (!roleId) return;
     const sort = query.sortModel?.[0];
     const payload = {
       searchtext: query.searchTerm || query.searchText || '',
@@ -117,7 +120,7 @@ export class UsersInRoleModal {
       if (res?.Success && res.Data) {
         const data = res.Data;
         const users = (Array.isArray(data) ? data : data.Items || []).filter((u: any) => u != null);
-        
+
         if (users.length > 0) {
           this.totalRows = data.TotalCount ?? users.length;
           this.workflowAuthoritiesData = users.map((u: any) => ({
@@ -129,7 +132,10 @@ export class UsersInRoleModal {
             department:
               u.Department || u.department || u.DepartmentName || (u.dptid ? String(u.dptid) : ''),
             designation:
-              u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
+              u.Designation ||
+              u.designation ||
+              u.DesignationName ||
+              (u.dsgid ? String(u.dsgid) : ''),
           }));
           this.preselectRows();
         } else {
