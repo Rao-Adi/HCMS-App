@@ -52,21 +52,8 @@ export class PeoplePartnersEmployee {
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
-  };
-
-  //  columnToggles?: ColumnToggle[] = [
-  //   { field: 'EmployeeCode', label: 'Employee Code', visible: true },
-  //   { field: 'EmployeeName', label: 'Employee Name', visible: true },
-  //   { field: 'DivisionName', label: 'Division', visible: true },
-  //   { field: 'DepartmentName', label: 'Department', visible: true },
-  //   { field: 'SubDepartmentName', label: 'Sub-Department', visible: true },
-  //   { field: 'Designation', label: 'Designation', visible: true },
-  //   { field: 'Grade', label: 'Grade', visible: true },
-  //   { field: 'ReportingTo', label: 'Reporting To', visible: true },
-  //   { field: 'DateOfJoining', label: 'Date Of Joining', visible: true },
-  //   { field: 'accessLevel', label: 'AccessLevel', visible: true },
-  // ];
-
+  }; 
+  
   columnToggles?: ColumnToggle[] = [
     { field: 'empcode', label: 'Employee Code', visible: true },
     { field: 'employeeName', label: 'Employee Name', visible: true },

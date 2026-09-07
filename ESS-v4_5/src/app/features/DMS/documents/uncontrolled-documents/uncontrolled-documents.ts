@@ -33,12 +33,13 @@ export class UncontrolledDocuments implements OnInit {
   totalRows = 0;
   pageSize = 10;
 
+  // No flex here -- a flex column is flex-managed by AG Grid and ignores autoSizeColumns()
+  // (see ag-grid-wrapper.ts's autoSizeGridColumns), which is what actually sizes each column
+  // to fit its own content (e.g. Document Name vs. Review Date).
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
     editable: false,
-    flex: 1,
-    minWidth: 100,
   };
 
   columnDefs: ColDef[] = [

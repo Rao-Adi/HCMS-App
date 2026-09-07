@@ -165,9 +165,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     //     this.openObservationModal(event.data);
     //   },
     // },
-    { field: 'documentType', headerName: 'Document Type', minWidth: 130, flex: 1 },
+    { field: 'documentType', headerName: 'Document Type', minWidth: 130 },
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
-    { field: 'documentId', headerName: 'Document ID', minWidth: 120, flex: 1 },
+    { field: 'documentId', headerName: 'Document ID', minWidth: 120 },
     {
       field: 'documentName',
       headerName: 'Document Name',
@@ -209,30 +209,25 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         }
       },
     },
-    { field: 'company', headerName: 'Company', minWidth: 100, flex: 1 },
+    { field: 'company', headerName: 'Company', minWidth: 100 },
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
     { field: 'proposedVersionNumber', headerName: 'Proposed Version Number' },
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'dateOfCreation', headerName: 'Date of Creation', cellClass: 'audit-cell', minWidth: 150,
-      flex: 1 },
+    { field: 'dateOfCreation', headerName: 'Date of Creation', cellClass: 'audit-cell', minWidth: 150 },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
-    { field: 'requestCreatedBy', headerName: 'Requested By', cellClass: 'audit-cell', minWidth: 150,
-      flex: 1 },
-    { field: 'requestCreatedOn', headerName: 'Requested On', cellClass: 'audit-cell', minWidth: 150,
-      flex: 1 },
+    { field: 'requestCreatedBy', headerName: 'Requested By', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedOn', headerName: 'Requested On', cellClass: 'audit-cell', minWidth: 150 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created By',
       cellClass: 'audit-cell',minWidth: 150,
-      flex: 1
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',minWidth: 150,
-      flex: 1
     },
     {
       field: 'approvalHistory',

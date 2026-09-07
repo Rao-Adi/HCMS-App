@@ -241,12 +241,11 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
       },
     },
     { field: 'documentType', headerName: 'Document Type', },
-    { field: 'version', headerName: 'Version', flex: 1 },
+    { field: 'version', headerName: 'Version' },
     { field: 'trainingMode', headerName: 'Training Mode' },
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
-      flex: 1,
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
@@ -260,7 +259,6 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
     {
       field: 'averageDocumentScore',
       headerName: 'Average Document Score',
-      flex: 1,
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
@@ -279,7 +277,6 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
       field: 'url',
       headerName: 'Url',
       editable: false,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -295,16 +292,15 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150, flex: 1 },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150, flex: 1 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150 },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
       minWidth: 120,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -325,7 +321,6 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
       headerName: 'Revision History',
       editable: false,
       minWidth: 120,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `

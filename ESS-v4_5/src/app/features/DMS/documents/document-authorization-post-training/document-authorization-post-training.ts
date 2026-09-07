@@ -140,7 +140,7 @@ export class DocumentAuthorizationPostTraining {
   // Columns before the cabinet (Division/Department/...) columns
   private readonly leadingColumnDefs: ColDef[] = [
     { field: 'documentType', headerName: 'Document Type', pinned: 'left' },
-    { field: 'documentnumber', headerName: 'Document Number', pinned: 'left', flex: 1 },
+    { field: 'documentnumber', headerName: 'Document Number', pinned: 'left' },
     {
       field: 'documentName',
       headerName: 'Document Name',
@@ -161,8 +161,8 @@ export class DocumentAuthorizationPostTraining {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60, flex: 1 },
-    { field: 'trainingMode', headerName: 'Training Mode',pinned: 'left', minWidth: 120, flex: 1 },
+    { field: 'version', headerName: 'Version', pinned: 'left', minWidth: 60 },
+    { field: 'trainingMode', headerName: 'Training Mode',pinned: 'left', minWidth: 120 },
     {
       field: 'userAssigned',
       headerName: 'User Assigned',
@@ -177,7 +177,6 @@ export class DocumentAuthorizationPostTraining {
         },
       }),
       minWidth: 100,
-      flex: 1,
     },
     {
       field: 'averageDocumentScore',
@@ -192,7 +191,6 @@ export class DocumentAuthorizationPostTraining {
         },
       }),
       minWidth: 100,
-      flex: 1,
     },
   ];
 
@@ -203,7 +201,6 @@ export class DocumentAuthorizationPostTraining {
       field: 'url',
       headerName: 'Url',
       editable: false,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -219,28 +216,25 @@ export class DocumentAuthorizationPostTraining {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created  By',
       cellClass: 'audit-cell',
       minWidth: 150,
-      flex: 1,
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
       minWidth: 150,
-      flex: 1,
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
       minWidth: 120,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -260,7 +254,6 @@ export class DocumentAuthorizationPostTraining {
       field: 'revisionHistory',
       headerName: 'Revision History',
       minWidth: 120,
-      flex: 1,
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {

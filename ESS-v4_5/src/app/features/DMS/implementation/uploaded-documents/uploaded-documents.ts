@@ -79,11 +79,10 @@ export class UploadedDocuments {
   };
 
   private readonly fixedColumnDefs: ColDef[] = [
-    { field: 'documentId', headerName: 'Document ID', flex: 1 },
+    { field: 'documentId', headerName: 'Document ID' },
     {
       field: 'documentName',
       headerName: 'Document Name',
-      flex: 1,
       editable: false,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
@@ -100,12 +99,12 @@ export class UploadedDocuments {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'version', headerName: 'Version Number', flex: 1 },
-    { field: 'documentType', headerName: 'Document Type', flex: 1 },
+    { field: 'version', headerName: 'Version Number' },
+    { field: 'documentType', headerName: 'Document Type' },
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'nextReviewDate', headerName: 'Next Review Date', flex: 1 },
+    { field: 'nextReviewDate', headerName: 'Next Review Date' },
   ];
 
   // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
@@ -143,7 +142,6 @@ export class UploadedDocuments {
         .map((level) => ({
           field: this.cabinetLevelFields[level.level],
           headerName: level.title,
-          flex: 1,
         }));
 
       this.workflowAuthoritiesColumnDefs = [

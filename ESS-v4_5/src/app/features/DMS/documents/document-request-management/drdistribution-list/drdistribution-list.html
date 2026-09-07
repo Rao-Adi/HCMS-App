@@ -9,7 +9,17 @@
   </div>
 </div>
 
-<div style="position: relative; min-height: 300px">
+<div class="d-flex justify-content-end mb-2" *ngIf="distributionListData.length > 0">
+  <button style="min-width:150px"
+    type="button"
+    class="btn btn-sm btn-outline-danger mt-2"
+    (click)="clearAllDistribution()"
+  >
+    <i class="bi bi-trash me-1"></i> Clear All
+  </button>
+</div>
+
+<div style="position: relative;">
   <app-spinner *ngIf="loading"></app-spinner>
   <app-editable-ag-grid-wrapper
     [showSearchBar]="false"

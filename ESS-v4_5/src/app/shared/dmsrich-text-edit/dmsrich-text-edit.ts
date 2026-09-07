@@ -98,15 +98,24 @@ export class DMSRichTextEdit implements OnInit {
   ngOnInit() {}
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['contentHtml'] && this.editor?.quillEditor && this.contentHtml) {
+    if (changes['contentHtml'] && this.editor?.quillEditor) {
       // Guard against a feedback loop: every keystroke emits contentHtmlChange, the parent
       // writes it straight back into [contentHtml], which re-triggers this hook. Re-pasting
       // HTML the editor already has resets Quill's cursor to the start on every keystroke.
       // Only re-sync when the incoming value actually differs from what's already in the
       // editor — i.e. it came from outside (initial load, switching records, etc).
+      // Must still run when the incoming value is empty (previously gated on `this.contentHtml`
+      // being truthy) -- otherwise clearing contentHtml externally, e.g. removing an uploaded
+      // file whose conversion had populated the editor, left the stale content on screen even
+      // though the parent's own state was already cleared.
       const current = this.editor.quillEditor.root.innerHTML;
-      if (this.contentHtml !== current) {
-        this.editor.quillEditor.clipboard.dangerouslyPasteHTML(this.contentHtml);
+      const incoming = this.contentHtml || '';
+      if (incoming !== current) {
+        if (incoming) {
+          this.editor.quillEditor.clipboard.dangerouslyPasteHTML(incoming);
+        } else {
+          this.editor.quillEditor.setText('');
+        }
       }
     }
   }

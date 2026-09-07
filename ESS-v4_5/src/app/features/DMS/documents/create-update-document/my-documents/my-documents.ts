@@ -80,12 +80,13 @@ export class MyDocuments implements OnInit {
     searchTerm: '',
   };
 
+  // No flex here -- a flex column is flex-managed by AG Grid and ignores autoSizeColumns()
+  // (see ag-grid-wrapper.ts's autoSizeGridColumns), which is what sizes each column to fit
+  // its own content instead of splitting space equally.
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
     editable: false,
-    flex: 1,
-    minWidth: 100,
   };
 
    // field name each cabinet level maps to in the row data, keyed by level number

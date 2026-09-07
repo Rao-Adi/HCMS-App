@@ -121,11 +121,11 @@ export class ApprovalDocuments {
   // is done on this array (see roleDistributions in GetAllPendingDocuments), same as elsewhere
   // in this component.
   distributionListColumnDefs: ColDef[] = [
-    { field: 'rolename', headerName: 'Role', flex: 1 },
-    { field: 'division', headerName: 'Division', flex: 1 },
-    { field: 'department', headerName: 'Department', flex: 1 },
-    { field: 'employeecode', headerName: 'Employee Code', flex: 1 },
-    { field: 'employeename', headerName: 'Employee Name', flex: 1 },
+    { field: 'rolename', headerName: 'Role' },
+    { field: 'division', headerName: 'Division' },
+    { field: 'department', headerName: 'Department' },
+    { field: 'employeecode', headerName: 'Employee Code' },
+    { field: 'employeename', headerName: 'Employee Name' },
   ];
   // A stable object reference for [gridStyle] -- an inline object literal in the template would
   // be a new reference every change-detection cycle, same issue as the rowData getter below.
@@ -185,7 +185,7 @@ export class ApprovalDocuments {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'version', headerName: 'Version', flex: 1 },
+    { field: 'version', headerName: 'Version' },
   ];
 
   // Columns after the cabinet (Division/Department/...) columns
@@ -196,7 +196,6 @@ export class ApprovalDocuments {
       headerName: 'Distribution List',
       editable: false,
       minWidth: 100,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -212,28 +211,25 @@ export class ApprovalDocuments {
         this.openDistributionListModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 140, flex: 1 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 140 },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created By',
       cellClass: 'audit-cell',
       minWidth: 150,
-      flex: 1,
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell',
       minWidth: 150,
-      flex: 1,
     },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
       editable: false,
       minWidth: 110,
-      flex: 1,
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -254,7 +250,6 @@ export class ApprovalDocuments {
       headerName: 'Revision History',
       editable: false,
       minWidth: 110,
-      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span 

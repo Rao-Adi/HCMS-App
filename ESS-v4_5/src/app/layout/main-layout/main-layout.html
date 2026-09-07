@@ -102,7 +102,7 @@
               </span>
             </button>
 
-            <div class="dropdown-content shadow border-0 p-0 notif-dropdown-anim" [style.display]="isNotificationOpen ? 'flex' : 'none'" (click)="$event.stopPropagation()" style="width: 380px; right: -10px; left: auto; max-height: 85vh; border-radius: 12px; flex-direction: column; overflow: hidden; background: #fff;">
+            <div class="dropdown-content notif-dropdown shadow border-0 p-0 notif-dropdown-anim" [style.display]="isNotificationOpen ? 'flex' : 'none'" (click)="$event.stopPropagation()" style="right: -10px; left: auto; max-height: 85vh; border-radius: 12px; flex-direction: column; overflow: hidden; background: #fff;">
               <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white z-2">
                 <h6 class="fw-bold mb-0 text-dark fs-6">Notifications</h6>
                 <button class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold shadow-none" *ngIf="unreadNotificationCount > 0" (click)="markAllAsRead(); $event.stopPropagation()">
@@ -149,7 +149,7 @@
 
                     <div class="flex-grow-1 min-w-0" [class.pe-2]="!notif.isRead">
                       <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-                        <strong class="mb-0 text-truncate text-dark" style="font-size: 0.875rem; min-width: 0;" [title]="notif.title">{{ notif.title }}</strong>
+                        <strong class="mb-0 text-dark" style="font-size: 0.875rem; min-width: 0; word-break: break-word;" [title]="notif.title">{{ notif.title }}</strong>
                         <small class="text-muted flex-shrink-0" style="font-size: 0.7rem; white-space: nowrap;" *ngIf="notif.createdAt">{{ getRelativeTime(notif.createdAt) }}</small>
                       </div>
                       <p class="mb-0 text-secondary" style="font-size: 0.8125rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" [class.fw-medium]="!notif.isRead">

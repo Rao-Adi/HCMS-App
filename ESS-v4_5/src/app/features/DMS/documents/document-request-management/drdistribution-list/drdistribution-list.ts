@@ -18,6 +18,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { ColDef } from 'ag-grid-community';
 import { forkJoin } from 'rxjs';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 export interface DropdownOption {
   id: string | number;
@@ -34,7 +35,7 @@ export interface DistributionGridRow {
 }
 @Component({
   selector: 'app-drdistribution-list',
-  imports: [CommonModule, FormsModule, EditableAgGridWrapper, SpinnerComponent],
+  imports: [CommonModule, FormsModule, EditableAgGridWrapper, SpinnerComponent, NzModalModule],
   templateUrl: './drdistribution-list.html',
   styleUrl: './drdistribution-list.css',
 })
@@ -99,7 +100,8 @@ export class DRDistributionList {
     private _cabinetHirarchyService: CabinetHierarchyService,
     private cabinetGridService: CabinetGridService,
     private _permissionService: PermissionService,
-    private _peoplePartnerService: PeoplePartnersService
+    private _peoplePartnerService: PeoplePartnersService,
+    private modal: NzModalService
   ) {
     
   }
@@ -379,6 +381,24 @@ export class DRDistributionList {
     this.notifyParent();
   }
 
+  // Selecting "All" under Role expands into one row per real role in a single add (see
+  // onRowAdded) -- this is the matching bulk action for the other direction, since removing
+  // those rows one at a time via the per-row trash icon was the actual complaint.
+  clearAllDistribution(): void {
+    if (!this.distributionListData.length) return;
+
+    this.modal.confirm({
+      nzTitle: 'Clear all distribution rows?',
+      nzContent: `This will remove all ${this.distributionListData.length} row(s) from the Distribution List. This cannot be undone.`,
+      nzOkText: 'Clear All',
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.distributionListData = [];
+        this.notifyParent();
+      },
+    });
+  }
+
   onCellValueChanged(event: { field: string; value: any; rowData: any; rowIndex: number }): void {
     //console.log('Cell value changed:', JSON.stringify(event));
 
@@ -427,7 +447,7 @@ export class DRDistributionList {
       // ✅ Normalize Roles -- "ALL" first so it reads as the deliberate bulk-add option, not
       // just another role in the list.
       this.userRoles = [
-        { id: this.ALL_ROLES_ID, text: 'ALL', rawName: ' ' },
+        { id: this.ALL_ROLES_ID, text: 'All', rawName: ' ' },
         ...(userRoles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
@@ -475,7 +495,7 @@ export class DRDistributionList {
         id: d.Id,
         text: d.Value,
       }));
-      this.userRoles = [{ id: this.ALL_ROLES_ID, text: 'ALL', rawName: ' ' }, ...roles];
+      this.userRoles = [{ id: this.ALL_ROLES_ID, text: 'All', rawName: ' ' }, ...roles];
     });
   };
 }

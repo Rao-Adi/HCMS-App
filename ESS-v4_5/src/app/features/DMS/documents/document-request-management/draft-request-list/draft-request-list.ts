@@ -64,12 +64,14 @@ export class DraftRequestList {
   formId = 'create-update-document';
 
   // Default Column Definitions: Apply configuration across all columns
+  // No flex here -- a flex column is flex-managed by AG Grid and ignores autoSizeColumns()
+  // (see ag-grid-wrapper.ts's autoSizeGridColumns), which is what actually sizes each column
+  // to fit its own content (e.g. Document Title vs. Status). Sibling grids like
+  // pending-request-for-approval.ts already omit flex here for the same reason.
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
     editable: false,
-    flex: 1,
-    minWidth: 100,
   };
 
   selectedDraftRequest: any;
@@ -152,16 +154,14 @@ export class DraftRequestList {
     },
     {
       field: 'requestNumber',
-      headerName: 'Request Number',
-      flex: 1,
+      headerName: 'Request Number'
     },
-    { field: 'documentType', headerName: 'Document Type', flex: 1 },
-    { field: 'documentName', headerName: 'Document Title', flex: 1 },
+    { field: 'documentType', headerName: 'Document Type'},
+    { field: 'documentName', headerName: 'Document Title' },
     {
       field: 'justification',
       headerName: 'Justification',
       editable: false,
-      flex: 1,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
         if (!val) return '<span>-</span>';
@@ -184,12 +184,11 @@ export class DraftRequestList {
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell', minWidth: 150, flex: 1 },
+    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell', minWidth: 150 },
     {
       field: 'status',
       headerName: 'Status',
       editable: false,
-      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span
@@ -761,6 +760,11 @@ export class DraftRequestList {
   removeDraftedFile(): void {
     this.draftFile = null;
     this.draftFileUrl = '';
+    // Unlike document-request-form.ts / create-update-document.ts, this was missing --
+    // templateHtml here only ever holds this removed file's converted preview (the
+    // selectedTemplateType === '3' branch has no file upload UI at all), so leaving it set
+    // left stale converted content showing in the editor after the file was removed.
+    this.templateHtml = '';
     if (this.fileInput && this.fileInput.nativeElement) {
       this.fileInput.nativeElement.value = '';
     }

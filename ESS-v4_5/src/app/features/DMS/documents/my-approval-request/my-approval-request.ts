@@ -125,12 +125,10 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     {
       field: 'documentType',
       headerName: 'Document Type',
-      flex: 1,
     },
     {
       field: 'documentRequestId',
       headerName: 'Request ID',
-      flex: 1,
     },
     {
       field: 'documentName',
@@ -222,7 +220,6 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     {
       field: 'proposedVersionNumber',
       headerName: 'Proposed Version Number',
-      flex: 1,
     },
   ];
 
@@ -280,28 +277,24 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     {
       field: 'requestCreatedBy',
       headerName: 'Request Created By',
-      flex: 1,
       minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
       field: 'requestCreatedOn',
       headerName: 'Request Created On',
-      flex: 1,
       minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
       field: 'previousVersionCreatedBy',
       headerName: 'Previous Version Created By',
-      flex: 1,
       minWidth: 150,
       cellClass: 'audit-cell',
     },
     {
       field: 'previousVersionCreatedOn',
       headerName: 'Previous Version Created On',
-      flex: 1,
       minWidth: 150,
       cellClass: 'audit-cell',
     },
@@ -674,20 +667,11 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     this.requestId = rowData?.requestId || rowData?.Id || rowData?.id;
     this.currentDocumentName = rowData?.documentName || '';
 
-    if (fileUrl) {
-      // A real file exists -- download it directly instead of routing through a modal
-      // whose only content in that case was a "Download Document" button.
-      this.downloadDraft();
-      return;
-    }
-
-    this.modal.create({
-      nzTitle: 'Document Content',
-      nzContent: this.documentModalTpl,
-      nzFooter: null,
-      nzWidth: '50%',
-      nzStyle: { top: '20px' },
-    });
+    // Both the file-upload and type-manually paths now merge into the Document Type's saved
+    // Word template before downloading (see MergeDocumentRequestTemplateAsync on the backend) --
+    // previously the no-file/HTML-only case opened a raw, un-templated content-preview modal
+    // instead of the same merged download the file case already got.
+    this.downloadDraft();
   }
 
   onCellClicked(event: any): void {

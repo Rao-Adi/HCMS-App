@@ -10,28 +10,44 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
   standalone: true,
   imports: [CommonModule, FormsModule, NzSelectModule],
   template: `
-    <nz-select
-      class="ag-input"
-      style="width: 100%; min-width: 150px;"
-      [nzShowSearch]="params?.showSearch"
-      [nzFilterOption]="params?.customFilter"
-      [nzDisabled]="params?.disabled"
-      [nzPlaceHolder]="params?.placeholder || '-- Any --'"
-      [(ngModel)]="selectedValue"
-      [nzAllowClear]="true"
-      (ngModelChange)="onSelectionChange($event)"
-      (keydown)="$event.stopPropagation()"
-      (keyup)="$event.stopPropagation()"
-      (keypress)="$event.stopPropagation()"
-      (mousedown)="$event.stopPropagation()"
-      (click)="$event.stopPropagation()"
-    >
-      <nz-option
-        *ngFor="let option of options"
-        [nzValue]="option[params?.valueField || 'id']"
-        [nzLabel]="option[params?.displayField || 'text']"
-      ></nz-option>
-    </nz-select>
+    <div class="dropdown-cell-wrap">
+      <nz-select
+        class="ag-input"
+        style="width: 100%; min-width: 150px;"
+        [nzShowSearch]="params?.showSearch"
+        [nzFilterOption]="params?.customFilter"
+        [nzDisabled]="params?.disabled"
+        [nzPlaceHolder]="params?.placeholder || '-- Any --'"
+        [(ngModel)]="selectedValue"
+        [nzAllowClear]="true"
+        (ngModelChange)="onSelectionChange($event)"
+        (keydown)="$event.stopPropagation()"
+        (keyup)="$event.stopPropagation()"
+        (keypress)="$event.stopPropagation()"
+        (mousedown)="$event.stopPropagation()"
+        (click)="$event.stopPropagation()"
+      >
+        <nz-option
+          *ngFor="let option of options"
+          [nzValue]="option[params?.valueField || 'id']"
+          [nzLabel]="option[params?.displayField || 'text']"
+        ></nz-option>
+      </nz-select>
+      <!-- nz-select's own built-in clear "x" (nzAllowClear) sits inside its internal DOM, and
+           the mousedown/click stopPropagation above (needed to stop ag-Grid from stealing focus
+           mid-edit) unreliably swallows clicks on it in some browsers -- this button is ours,
+           fully outside nz-select, so clearing always works regardless of that interaction. -->
+      <button
+        type="button"
+        *ngIf="selectedValue !== null && selectedValue !== undefined && selectedValue !== '' && !params?.disabled"
+        class="dropdown-cell-clear"
+        title="Clear selection"
+        (mousedown)="$event.stopPropagation()"
+        (click)="clearSelection($event)"
+      >
+        &times;
+      </button>
+    </div>
   `,
   styles: [
     `
@@ -40,8 +56,31 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
         width: 100%;
         padding: 4px 0;
       }
+      .dropdown-cell-wrap {
+        position: relative;
+        width: 100%;
+      }
       nz-select {
         width: 100% !important;
+      }
+      .dropdown-cell-clear {
+        position: absolute;
+        top: 50%;
+        right: 24px;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        line-height: 14px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: rgba(0, 0, 0, 0.45);
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 2;
+      }
+      .dropdown-cell-clear:hover {
+        color: rgba(0, 0, 0, 0.85);
       }
     `,
   ],
@@ -152,6 +191,12 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     if (this.params.onValueChange) {
       this.params.onValueChange(value, this.params.data);
     }
+  }
+
+  clearSelection(event: Event): void {
+    event.stopPropagation();
+    this.selectedValue = null;
+    this.onSelectionChange(null);
   }
 
   // selectedValue: number = 0;

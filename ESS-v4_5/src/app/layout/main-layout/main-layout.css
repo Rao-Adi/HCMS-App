@@ -259,6 +259,21 @@
   display: flex; /* Handled by [style.display] in HTML */
 }
 
+/* Was a fixed 380px inline width -- clamps to the viewport instead so it doesn't overflow
+   (or get clipped) on narrow screens; the title text inside no longer truncates to one line
+   (see .text-truncate removal in the template), so notifications stay fully readable at any
+   width instead of being cut off mid-sentence. */
+.notif-dropdown {
+  width: min(380px, 94vw);
+}
+
+@media (max-width: 576px) {
+  .notif-dropdown {
+    width: 94vw;
+    right: 3vw !important;
+  }
+}
+
 
 .dropdown-content a {
   padding: .625rem .875rem;

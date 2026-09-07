@@ -31,12 +31,10 @@ export class UsersInRoleModal {
     {
       field: 'employeeCode',
       headerName: 'Employee Code',
-      flex: 1,
     },
     {
       field: 'employeeName',
       headerName: 'Employee Name',
-      flex: 1,
     },
     // {
     //   field: 'department',
@@ -46,7 +44,6 @@ export class UsersInRoleModal {
     {
       field: 'designation',
       headerName: 'Designation',
-      flex: 1,
     },
   ];
 

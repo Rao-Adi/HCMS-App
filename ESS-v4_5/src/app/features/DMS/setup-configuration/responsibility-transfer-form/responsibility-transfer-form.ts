@@ -136,31 +136,30 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
   selectedStatus: string = '1';
 
   pendingRequestApprovalColumnDefs: ColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 1 },
-    { field: 'from', headerName: 'From', flex: 1 },
-    { field: 'To', headerName: 'To', flex: 1 },
-    { field: 'reason', headerName: 'Reason', flex: 1 },
-    { field: 'remarks', headerName: 'Remarks', flex: 1 }
+    { field: 'id', headerName: 'ID' },
+    { field: 'from', headerName: 'From' },
+    { field: 'To', headerName: 'To' },
+    { field: 'reason', headerName: 'Reason' },
+    { field: 'remarks', headerName: 'Remarks' }
   ];
 
   pendingApprovalData: any[] = [];
 
   submittedRequestColumnDefs: ColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 1 },
-    { field: 'from', headerName: 'From', flex: 1 },
-    { field: 'To', headerName: 'To', flex: 1 },
-    { field: 'reason', headerName: 'Reason', flex: 1 },
+    { field: 'id', headerName: 'ID' },
+    { field: 'from', headerName: 'From' },
+    { field: 'To', headerName: 'To' },
+    { field: 'reason', headerName: 'Reason' },
     {
       field: 'status',
       headerName: 'Status',
-      flex: 1,
       cellClassRules: {
         'rag-green': (params) => params.value === 'Approved' || params.value === 'Controlled',
         'rag-blue': (params) => params.value === 'Rejected',
         'rag-red': (params) => params.value === 'Pending',
       },
     },
-    { field: 'remarks', headerName: 'Comments', flex: 1 },
+    { field: 'remarks', headerName: 'Comments' },
   ];
 
   submittedApprovalData: any[] = [];
