@@ -121,11 +121,11 @@ export class ApprovalDocuments {
   // is done on this array (see roleDistributions in GetAllPendingDocuments), same as elsewhere
   // in this component.
   distributionListColumnDefs: ColDef[] = [
-    { field: 'rolename', headerName: 'Role' },
+    { field: 'rolename', headerName: 'Role', flex: 1 },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'employeecode', headerName: 'Employee Code' },
-    { field: 'employeename', headerName: 'Employee Name' },
+    { field: 'employeename', headerName: 'Employee Name', flex: 1  },
   ];
   // A stable object reference for [gridStyle] -- an inline object literal in the template would
   // be a new reference every change-detection cycle, same issue as the rowData getter below.
@@ -690,7 +690,7 @@ export class ApprovalDocuments {
       nzTitle: 'Distribution List',
       nzContent: this.distributionListModalTpl,
       nzFooter: null,
-      nzWidth: 1000,
+      nzWidth: 1100,
     });
   }
 

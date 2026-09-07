@@ -53,6 +53,7 @@ export class RevisionHistoryModal {
       field: 'requestedBy',
       headerName: 'Requested By', 
       cellClass: 'audit-cell',
+      
     },
     {
       field: 'requestedOn',

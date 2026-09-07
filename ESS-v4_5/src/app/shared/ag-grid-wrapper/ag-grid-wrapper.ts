@@ -11,7 +11,6 @@ import {
   signal,
   SimpleChanges,
   NgZone,
-  ElementRef,
 } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -195,7 +194,6 @@ export class AgGridWrapper implements OnInit, OnChanges {
   constructor(
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    private el: ElementRef,
     private iconService: NzIconService,
   ) {
     this.iconService.addIcon(SettingOutline);
@@ -347,9 +345,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
       }
     }
     if (changes['rowData'] && this.autoSizeColumns && this.gridApi) {
-      setTimeout(() => {
-        this.autoSizeGridColumns();
-      }, 50);
+      this.scheduleAutoSize();
     }
   }
 
@@ -399,46 +395,49 @@ export class AgGridWrapper implements OnInit, OnChanges {
     const columns = this.gridApi.getColumns();
     if (!columns || columns.length === 0) return;
 
-    // Content-sized width only -- no sizeColumnsToFit() fallback. That call used to fire
-    // whenever the auto-sized columns left the grid narrower than its container, proportionally
-    // stretching every column (including ones with short values like "SOP" or "1.0") to fill
-    // the full width, which is exactly the padded-out look this was meant to avoid. Columns
-    // that intentionally want to fill available space still can via their own flex on the
-    // column def -- that's an explicit per-grid choice, untouched by this method.
+    // Content-sized width only -- deliberately no sizeColumnsToFit() fallback here (a previous
+    // version of this method called it whenever the auto-sized columns left the grid narrower
+    // than its container -- see git history). That call proportionally re-stretches EVERY
+    // column, including ones with short values like "SOP" or "1.0", to exactly fill the
+    // container width, which both pads out short columns for no reason and, worse, can leave a
+    // column narrower than the auto-size pass just gave it if the container is narrower than
+    // the full content-fit total (this is what was still clipping "Regulatory Affairs Manager
+    // (...)" et al. even after the auto-size call had correctly sized it -- the sizeColumnsToFit
+    // call right after was silently overriding it back down). Columns that intentionally want
+    // to fill available space still can via their own flex on the column def -- that's an
+    // explicit per-grid choice, untouched by this method. Overflow now scrolls horizontally
+    // instead, same as the reference Users grid.
     const allColumnIds = columns.map((col: any) => col.getId());
     this.gridApi.autoSizeColumns(allColumnIds);
-
-
-    // Delay calculation to let AG Grid calculate and apply auto-sized column widths first
-    setTimeout(() => {
-      if (!this.gridApi) return;
-      const cols = this.gridApi.getColumns();
-      if (!cols || cols.length === 0) return;
-
-      let totalColumnWidth = 0;
-      cols.forEach((col: any) => {
-        totalColumnWidth += col.getActualWidth();
-      });
-
-      const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
-      const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
-
-      if (totalColumnWidth < gridWidth) {
-        this.gridApi.sizeColumnsToFit();
-      }
-    }, 150);
   }
 
   onFirstDataRendered(event: any): void {
     if (this.autoSizeColumns) {
-      this.autoSizeGridColumns();
+      this.scheduleAutoSize();
     }
   }
 
   onRowDataUpdated(event: any): void {
     if (this.autoSizeColumns) {
-      this.autoSizeGridColumns();
+      this.scheduleAutoSize();
     }
+  }
+
+  // autoSizeColumns() measures whatever's CURRENTLY painted in the DOM -- for a grid that just
+  // mounted (e.g. inside an nz-modal, or right after rowData loads), AG Grid doesn't guarantee
+  // every row's cell text is committed to the DOM on the very first tick. A single immediate or
+  // fixed-delay call can catch some rows before their content paints and permanently undersizes
+  // that column, since this is a one-time calculation, not reactive -- observed directly: in a
+  // 10-row page, most cells widened correctly but one ("Regulatory Affairs Manager (...)")
+  // stayed clipped because its row hadn't painted yet when the single delayed call fired.
+  // Re-running the measurement a few times over the following ~400ms is safe (it just re-reads
+  // the DOM and adjusts widths, never shrinks below what's already correct) and reliably catches
+  // whichever pass finally sees a fully-painted grid, without guessing a single "big enough"
+  // delay that either fires too early on a slow render or feels sluggish on a fast one.
+  private scheduleAutoSize(): void {
+    requestAnimationFrame(() => requestAnimationFrame(() => this.autoSizeGridColumns()));
+    setTimeout(() => this.autoSizeGridColumns(), 150);
+    setTimeout(() => this.autoSizeGridColumns(), 400);
   }
 
   onSelectionChanged() {

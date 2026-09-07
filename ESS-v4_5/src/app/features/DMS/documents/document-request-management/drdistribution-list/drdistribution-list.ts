@@ -46,9 +46,9 @@ export class DRDistributionList {
 
   // Sentinel Role dropdown value meaning "every role" -- distinct from any real role id (those
   // are backend ints). RoleId is a required int column on DocumentRequestRoleDistributions, so
-  // this never gets submitted as-is: adding a row with Role=ALL expands it into one real row per
+  // this never gets submitted as-is: adding a row with Role=All expands it into one real row per
   // actual role (see onRowAdded) instead.
-  readonly ALL_ROLES_ID = 'ALL';
+  readonly ALL_ROLES_ID = 'All';
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
