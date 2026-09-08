@@ -506,14 +506,21 @@ export class DocumentRequestForm {
     });
   };
 
-  GetTemplate(value: string, isRevision: boolean = false) {
+  // existingDocumentUrl: the document actually being revised (row.DocumentURL from
+  // onCellClicked), as opposed to templateFileUrl below (the Document Type's blank template).
+  // For a Revision these are two different files -- "Download Existing Document" downloading
+  // the blank template instead of the document under revision was exactly this mix-up.
+  GetTemplate(value: string, isRevision: boolean = false, existingDocumentUrl: string = '') {
     this._documentTemplateService.getTemplateByDocumentTypeCode(value).subscribe({
       next: (response: any) => {
         if (!response?.Success || !response?.Data || Object.keys(response.Data).length === 0) {
           this.selectedTemplateType = '';
           this.templateFileUrl = '';
-          this.draftFileUrl = '';
+          // A revision keeps the document's own file/content regardless of the Document Type's
+          // template state -- the document being revised still exists and is still downloadable
+          // even if its type's template was since removed.
           if (!isRevision) {
+            this.draftFileUrl = '';
             this.templateHtml = ''; // Clear only if not a revision and no data
           }
           this._notificationToastService.createNotification(
@@ -534,25 +541,36 @@ export class DocumentRequestForm {
 
         // Handle content based on TemplateType
         if (this.selectedTemplateType === '3') {
-          // For HTML templates, set the HTML content.
-          this.templateHtml =
-            response.Data?.TemplateContent || response.Data?.templateContent || '';
+          // For HTML templates: a revision already has its own saved content (row.proposedContent,
+          // set by the caller before this runs) -- keep that instead of overwriting it with the
+          // Document Type's default template content, which is what a brand-new request should see.
+          this.templateHtml = isRevision
+            ? this.templateHtml
+            : response.Data?.TemplateContent || response.Data?.templateContent || '';
           this.draftFileUrl = ''; // Ensure no file URL is present
         } else if (this.selectedTemplateType === '1' || this.selectedTemplateType === '2') {
-          // For DOCX/PDF templates, set the draftFileUrl from the template URL.
-          this.draftFileUrl = this.templateFileUrl;
-          this.templateHtml = ''; // Ensure no HTML content is present
+          // For DOCX/PDF templates: a revision downloads/edits the document's OWN file, not the
+          // Document Type's blank template -- only fall back to the template if this document
+          // somehow has no file of its own.
+          this.draftFileUrl = isRevision && existingDocumentUrl ? existingDocumentUrl : this.templateFileUrl;
+          // Left as whatever onCellClicked / the mammoth preview already populated (row content,
+          // or a client-side conversion of the document's own file) rather than cleared here.
+          if (!isRevision) {
+            this.templateHtml = '';
+          }
         } else {
           // Fallback for other cases or if template type is not set
-          this.templateHtml = '';
-          this.draftFileUrl = '';
+          if (!isRevision) {
+            this.draftFileUrl = '';
+            this.templateHtml = '';
+          }
         }
       },
       error: (err) => {
         this.selectedTemplateType = '';
         this.templateFileUrl = '';
-        this.draftFileUrl = '';
         if (!isRevision) {
+          this.draftFileUrl = '';
           this.templateHtml = '';
         }
         console.error(err);
@@ -705,6 +723,16 @@ export class DocumentRequestForm {
     this.previewUploadedFileContent(file);
   }
 
+  // Bumped by every previewUploadedFileContent/previewExistingDocumentContent call and captured
+  // at the start of each -- these are two independent async conversions (a freshly-picked local
+  // file vs. fetching the document-under-revision's own file) that can legitimately overlap:
+  // selecting a document to revise kicks off the latter, and the user can pick a *different*
+  // file to upload before it resolves. Without this guard, whichever conversion finished last
+  // silently won and could overwrite the other's (correct, more recent) result -- e.g. a fresh
+  // upload's converted content getting clobbered back to the old document's content once that
+  // slower network fetch finally resolved.
+  private contentPreviewToken = 0;
+
   // Converts the uploaded .docx to HTML client-side (mammoth.js) so its formatted content shows
   // up in the rich text editor for review/editing -- see the template's "Content Preview"
   // section. Only .docx is supported (mammoth doesn't read legacy .doc); anything else just
@@ -712,6 +740,7 @@ export class DocumentRequestForm {
   // for those, exactly as before this feature. Never blocks the actual upload/submit on failure --
   // this only affects the in-form preview.
   private previewUploadedFileContent(file: File): void {
+    const token = ++this.contentPreviewToken;
     this.templateHtml = '';
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     if (ext !== 'docx') return;
@@ -721,13 +750,16 @@ export class DocumentRequestForm {
       .arrayBuffer()
       .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
       .then((result) => {
+        if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
       })
       .catch(() => {
         // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
       })
       .finally(() => {
-        this.convertingUploadedFile = false;
+        if (token === this.contentPreviewToken) {
+          this.convertingUploadedFile = false;
+        }
       });
   }
 
@@ -1586,7 +1618,13 @@ export class DocumentRequestForm {
 
     this.selectedTemplateType = row.templateType?.toString() || '';
     this.templateFileUrl = row.templateFileUrl || '';
-    this.draftFileUrl = row.draftFileUrl || row.url || '';
+    // The row's actual field is "DocumentURL" (see the document being revised's own record) --
+    // "draftFileUrl"/"url" don't exist on it, so this always evaluated to '' before, silently
+    // losing the document's own file and leaving GetTemplate() to fall back to the Document
+    // Type's blank template for both download and (previously) the content preview.
+    const existingDocumentUrl: string =
+      row.DocumentURL || row.documenturl || row.draftFileUrl || row.url || '';
+    this.draftFileUrl = existingDocumentUrl;
 
     this.displayDocumentType = row.documentType || '';
     this.displayDivision = row.division || '';
@@ -1606,10 +1644,49 @@ export class DocumentRequestForm {
     // ✅ Populate Users
     this.distributionUserList = row.distributionUserList || [];
 
+    // This document was authored via file upload (no saved proposedContent, unlike an
+    // HTML-templated document) -- convert its own file client-side so the rich text editor
+    // shows its actual current content instead of sitting blank, same as a freshly-picked
+    // upload already does via previewUploadedFileContent.
+    if (!this.templateHtml && existingDocumentUrl) {
+      this.previewExistingDocumentContent(existingDocumentUrl);
+    }
+
     if (this.selectedDocumentType) {
-      this.GetTemplate(this.selectedDocumentType, true); // <--- Add this line
+      this.GetTemplate(this.selectedDocumentType, true, existingDocumentUrl);
       this.loadWorkflowAuthorities(this.selectedDocumentType);
     }
+  }
+
+  // Same mammoth-based conversion as previewUploadedFileContent, but for the EXISTING document's
+  // own file (fetched by URL) rather than a freshly-picked local File -- lets a Revision's rich
+  // text editor show that document's real content instead of sitting blank, without requiring
+  // the user to re-upload the same file just to see/edit it inline.
+  private previewExistingDocumentContent(url: string): void {
+    const token = ++this.contentPreviewToken;
+    const ext = url.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase() || '';
+    if (ext !== 'docx') return;
+
+    this.convertingUploadedFile = true;
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) throw new Error('Fetch failed');
+        return response.arrayBuffer();
+      })
+      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((result) => {
+        if (token !== this.contentPreviewToken) return; // superseded by a newer selection
+        this.templateHtml = result.value;
+      })
+      .catch(() => {
+        // Leave templateHtml empty -- the document's own file is still fully valid for
+        // download/merge regardless of whether this preview conversion succeeded.
+      })
+      .finally(() => {
+        if (token === this.contentPreviewToken) {
+          this.convertingUploadedFile = false;
+        }
+      });
   }
 
   openRevisionHistoryModal(row: any): void {

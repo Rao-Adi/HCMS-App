@@ -7004,7 +7004,6 @@ html.ant-scrolling-effect {
 /* Global style for AG-Grid audit cells */
 .audit-cell {
   color: #999 !important; /* Slightly dimmer grey, still readable */
-  font-style: italic !important;
 }
 
 
@@ -7120,6 +7119,23 @@ html.ant-scrolling-effect {
 .ag-cell.audit-cell * {
   color: #999999 !important; /* Slightly dimmer grey, still readable */
   font-style: italic !important;
+}
+
+/* Client requires italic here, so the clipping has to be solved without removing it. Root
+   cause: font-style: italic is a paint-time skew -- the browser lays the text out (and AG
+   Grid's autoSizeColumns measures it) at its upright width, then slants the glyphs when
+   painting, so the rightmost character's ink can extend past the box that was sized for it.
+   That overhang is a few px and varies by character/font, so no fixed padding/margin/width
+   value reliably covers it (confirmed: two rounds of padding attempts here, plus the user's
+   own padding/margin/width tweaks, all still clipped). Letting that harmless overhang paint
+   instead of hard-clipping it is the fix that doesn't depend on guessing the right number:
+   the cell's own layout width (and the grid's column-width bookkeeping) is untouched, only
+   what happens to ink that overflows it visually.
+*/
+.ag-cell.audit-cell,
+.ag-cell.audit-cell .ag-cell-value,
+.ag-cell.audit-cell .ag-cell-wrapper {
+  overflow: visible !important;
 }
 
 .btn-export {

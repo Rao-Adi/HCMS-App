@@ -155,6 +155,7 @@ export class MyTotalRequests {
         }
       },
     },
+    // { field: 'rowVersion', headerName: 'Version' },
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
@@ -327,6 +328,7 @@ export class MyTotalRequests {
               documentType: item.DocumentType || item.documentType,
               documentName: item.DocumentName || item.documentName,
               justification: item.Justification || item.justification || '',
+              // rowVersion: item.RowVersion || item.rowVersion || '',
               division: item.Division,
               department: item.Department,
               subdepartment: item.SubDepartment,

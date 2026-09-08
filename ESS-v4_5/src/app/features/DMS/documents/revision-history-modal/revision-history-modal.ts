@@ -41,44 +41,49 @@ export class RevisionHistoryModal {
   };
 
   revisionHistoryColumnDefs: ColDef[] = [
-    { field: 'documentNumber', headerName: 'Document Number'},
+    { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'version', headerName: 'Version', minWidth: 80 },
-    { field: 'status', headerName: 'Status'  },
+    { field: 'status', headerName: 'Status' },
     {
       field: 'isCurrentVersion',
-      headerName: 'Current Version', 
+      headerName: 'Current Version',
       cellRenderer: (p: any) => (p.value ? 'Yes' : ''),
     },
     {
       field: 'requestedBy',
-      headerName: 'Requested By', 
+      headerName: 'Requested By',
       cellClass: 'audit-cell',
-      
+      minWidth: 200,
     },
     {
       field: 'requestedOn',
-      headerName: 'Requested On', 
+      headerName: 'Requested On',
       cellClass: 'audit-cell',
+      minWidth: 200,
     },
     {
       field: 'approvedBy',
-      headerName: 'Approved By', 
+      headerName: 'Approved By',
       cellClass: 'audit-cell',
+      minWidth: 200,
     },
     {
       field: 'approvedOn',
-      headerName: 'Approved On', 
+      headerName: 'Approved On',
       cellClass: 'audit-cell',
+      minWidth: 200,
     },
     {
       field: 'effectiveBy',
-      headerName: 'Effective By', 
+      headerName: 'Effective By',
       cellClass: 'audit-cell',
+      minWidth: 200,
     },
     {
       field: 'effectiveOn',
-      headerName: 'Effective On', 
+      headerName: 'Effective On',
       cellClass: 'audit-cell',
+      minWidth: 200,
     },
   ];
 

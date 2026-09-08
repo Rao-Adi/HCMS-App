@@ -647,6 +647,10 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       this.stepId = 0;
       this.selectedRow = null;
     }
+    // Row selection (checkbox) is a separate AG Grid event from onCellClicked, and unlike that
+    // handler this one never refreshed the Observation panel -- selecting a different document
+    // this way left the previously-clicked document's observations on screen indefinitely.
+    this.loadObservations(this.requestId);
   }
 
   openDocumentModal(rowData: any): void {
@@ -727,8 +731,10 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
   }
 
   loadObservations(requestId: any) {
+    // Cleared up front, not just in the response branches below -- otherwise the previous
+    // document's observations stay visible for the entire round trip to the new one's.
+    this.observationData = [];
     if (!requestId) {
-      this.observationData = [];
       return;
     }
     this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request', this.selectedTab).subscribe({

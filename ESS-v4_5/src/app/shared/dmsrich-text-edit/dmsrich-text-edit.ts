@@ -135,12 +135,16 @@ export class DMSRichTextEdit implements OnInit {
   }
 
   changeContent(quill: any) {
-    // this.contentChange = quill.editor.getText();
-    // console.log(this.contentChange);
+    // ngx-quill's ContentChange fires for BOTH genuine user edits and our own programmatic
+    // changes (ngOnChanges' dangerouslyPasteHTML/setText calls above, e.g. when a parent clears
+    // contentHtml externally). quill.source distinguishes them ('user' vs 'api'/'silent') --
+    // without this check, our own clear re-emits contentHtmlChange back up to the parent
+    // mid-change-detection-cycle, which is exactly what was throwing NG0100
+    // (ExpressionChangedAfterItHasBeenCheckedError: '' -> '<p><br></p>') when a parent set
+    // contentHtml = '' while this editor was already mid-render.
+    if (quill.source && quill.source !== 'user') return;
 
     this.contentChange = quill.editor.root.innerHTML;
-    // console.log(this.contentChange);
-
     this.contentHtmlChange.emit(this.contentChange);
   }
 
