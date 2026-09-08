@@ -44,12 +44,6 @@ export class DRDistributionList {
   @Input() selectedDistributionList: any[] = [];
   @Output() distributionChanged = new EventEmitter<any[]>();
 
-  // Sentinel Role dropdown value meaning "every role" -- distinct from any real role id (those
-  // are backend ints). RoleId is a required int column on DocumentRequestRoleDistributions, so
-  // this never gets submitted as-is: adding a row with Role=All expands it into one real row per
-  // actual role (see onRowAdded) instead.
-  readonly ALL_ROLES_ID = 'All';
-
   // --- PERMISSION FLAGS ---
   canAdd = false;
   canEdit = false;
@@ -143,7 +137,14 @@ export class DRDistributionList {
   }
 
   private setGridData() {
-    if (!this.selectedDistributionList.length) return;
+    // An empty incoming list is a real state (the newly-selected record genuinely has no
+    // distribution rows) and must clear the grid, not leave whatever the previously-selected
+    // record had sitting there. Returning early here was the bug: it treated "nothing to load"
+    // as "nothing to do".
+    if (!this.selectedDistributionList.length) {
+      this.distributionListData = [];
+      return;
+    }
     // console.log(JSON.stringify(this.selectedDistributionList));
     this.distributionListData = this.selectedDistributionList.map((item: any) => ({
       id: item.Id ?? this.generateId(),
@@ -170,8 +171,11 @@ export class DRDistributionList {
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        placeholder: 'Please select any',
-        required: true,
+        // Left unselected (null), same as Division/Department/SubDepartment/BusinessDomain --
+        // "Any" here means no filter, matching how those cabinet levels already work rather than
+        // being a distinct selectable option.
+        placeholder: 'Any',
+        required: false,
       },
       // DOCUMENT TYPES
       {
@@ -286,26 +290,10 @@ export class DRDistributionList {
 
     // this.distributionListData = [payLoad, ...this.distributionListData];
 
-    // RoleId is a required int column on DocumentRequestRoleDistributions -- 'ALL' can't be
-    // submitted as one row, so it expands into one real row per actual role here instead,
-    // covering every role for this cabinet + distribution type in a single add.
-    if (rowData.roleId === this.ALL_ROLES_ID) {
-      const realRoles = this.userRoles.filter((r) => r.id !== this.ALL_ROLES_ID);
-      const expandedRows = realRoles.map((role) => ({
-        id: this.generateId(),
-        level1Id: rowData.level1Id ?? null,
-        level2Id: rowData.level2Id ?? null,
-        level3Id: rowData.level3Id ?? null,
-        level4Id: rowData.level4Id ?? null,
-        roleId: role.id,
-        distributiontypeId: rowData.distributiontypeId ?? null,
-      }));
-
-      this.distributionListData = [...expandedRows, ...this.distributionListData];
-      this.notifyParent();
-      return;
-    }
-
+    // Role left unselected (null) means "Any role" -- same as leaving Division/Department/
+    // SubDepartment/BusinessDomain unselected. The grid keeps this as a single row; expanding
+    // "Any" into one row per actual role happens server-side (InsertDistributionsAsync), the
+    // same place Division/Department/etc.'s "blank = no filter" is already applied.
     const newRow = {
       id: this.generateId(),
 
@@ -381,9 +369,8 @@ export class DRDistributionList {
     this.notifyParent();
   }
 
-  // Selecting "All" under Role expands into one row per real role in a single add (see
-  // onRowAdded) -- this is the matching bulk action for the other direction, since removing
-  // those rows one at a time via the per-row trash icon was the actual complaint.
+  // Bulk-clear for the grid, since removing rows one at a time via the per-row trash icon was
+  // the actual complaint.
   clearAllDistribution(): void {
     if (!this.distributionListData.length) return;
 
@@ -444,15 +431,13 @@ export class DRDistributionList {
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
     }).subscribe(({ userRoles, distributionTypes, hierarchy }) => {
-      // ✅ Normalize Roles -- "ALL" first so it reads as the deliberate bulk-add option, not
-      // just another role in the list.
-      this.userRoles = [
-        { id: this.ALL_ROLES_ID, text: 'All', rawName: ' ' },
-        ...(userRoles?.Data?.map((d: any) => ({
+      // ✅ Normalize Roles. No "Any"/"All" entry here -- leaving Role unselected already means
+      // "Any role", same as Division/Department/SubDepartment/BusinessDomain.
+      this.userRoles =
+        userRoles?.Data?.map((d: any) => ({
           id: d.Id,
           text: d.Value,
-        })) ?? []),
-      ];
+        })) ?? [];
 
       // ✅ Normalize Document Types
       this.distributionTypeList =
@@ -491,11 +476,10 @@ export class DRDistributionList {
   
   GetAllUserRoles = () => {
     this._peoplePartnerService.GetAllRoles().subscribe((res) => {
-      const roles = (res?.Data ?? []).map((d: any) => ({
+      this.userRoles = (res?.Data ?? []).map((d: any) => ({
         id: d.Id,
         text: d.Value,
       }));
-      this.userRoles = [{ id: this.ALL_ROLES_ID, text: 'All', rawName: ' ' }, ...roles];
     });
   };
 }

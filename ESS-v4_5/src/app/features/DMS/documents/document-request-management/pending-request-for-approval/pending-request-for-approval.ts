@@ -90,13 +90,14 @@ export class PendingRequestForApproval {
       field: 'requestNumber',
       headerName: 'Request Number',
       minWidth: 120,
+      flex: 1,
     },
   ];
 
   // Columns after the cabinet (Division/Department/...) columns
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'documentType', headerName: 'Document Type', minWidth: 150 },
-    { field: 'documentName', headerName: 'Document Title', minWidth: 200 },
+    { field: 'documentType', headerName: 'Document Type', minWidth: 150, flex: 1 },
+    { field: 'documentName', headerName: 'Document Title', minWidth: 200, flex: 1 },
     {
       field: 'justification',
       headerName: 'Justification',
@@ -121,9 +122,9 @@ export class PendingRequestForApproval {
         }
       },
     },
-    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell' },
-    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell' },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell' },
+    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell', flex: 1 },
+    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell', flex: 1 },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell', flex: 1 },
   ];
 
   // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
@@ -176,6 +177,7 @@ export class PendingRequestForApproval {
           field: def.field,
           headerName: def.title,
           minWidth: 150,
+          flex: 1,
         })),
         ...this.trailingColumnDefs,
       ];
