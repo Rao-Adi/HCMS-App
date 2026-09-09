@@ -699,9 +699,15 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       nzData: {
         id: rowData.id,
         entityType: 'Request',
-        // Backend segregates workflow steps by decision -- values line up 1:1 with this
-        // screen's tabs ('Pending' | 'Approved' | 'Rejected').
-        decision: this.selectedTab,
+        // This tab's button is labeled "Reverted/Rejected" and lists BOTH outcomes together
+        // (see the html: item.status can be 'Reverted' or 'Rejected' per row), but selectedTab
+        // is always the single literal string 'Rejected' regardless of which one a given row
+        // actually is -- filtering the modal strictly by that silently returned no history at
+        // all for a row that was actually Reworked/Reverted. 'All' shows this row's complete
+        // step-by-step history regardless of outcome type, which is what "Approval History"
+        // should show either way. Pending/Approved tabs are unaffected since selectedTab only
+        // ever equals 'Rejected' on this specific combined tab.
+        decision: this.selectedTab === 'Rejected' ? 'All' : this.selectedTab,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',

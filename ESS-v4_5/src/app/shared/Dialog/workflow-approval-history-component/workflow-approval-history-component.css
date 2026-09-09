@@ -38,11 +38,18 @@
 }
 
 /* Decision Badge */
+/* This app loads Bootstrap globally, whose own .badge rule sets color:#fff unconditionally --
+   Angular's component-scoped styles don't shield against that external rule, so any decision
+   value that doesn't match .approve/.reject/.pending below silently rendered as white text on
+   this modal's white background (this is what actually happened for "Reworked", which the
+   ngClass binding here didn't recognize until now). Setting a real fallback color keeps any
+   future unmapped value visible instead of quietly disappearing again. */
 .badge {
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
+  color: #5a6a85;
 }
 
 .badge.approve {

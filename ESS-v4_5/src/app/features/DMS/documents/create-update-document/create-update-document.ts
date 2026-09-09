@@ -364,10 +364,15 @@ export class CreateUpdateDocument {
       }
     }
 
-    // Document file is mandatory for file-based templates (types 1 & 2) if not already uploaded
+    // Document content is mandatory for file-based templates (types 1 & 2) -- either an
+    // uploaded file OR real content already in the rich text editor satisfies this (matches
+    // the form's own "Upload... OR type the content manually below" wording). Previously this
+    // only accepted a file, so a document that already had real content (e.g. loaded from an
+    // existing document when revising, or typed with no file ever uploaded) stayed permanently
+    // disabled even though there was nothing left for the user to actually do.
     if (this.selectedRequestType === 'DRT-0001' || this.selectedRequestType === 'DRT-0002') {
       if (this.selectedTemplateType !== '3') {
-        if (!this.draftFileUrl && !this.draftFile) {
+        if (!this.draftFileUrl && !this.draftFile && !this.hasRealContent(this.templateHtml)) {
           return true;
         }
       }
@@ -390,6 +395,18 @@ export class CreateUpdateDocument {
       }
     }
     return false;
+  }
+
+  // A rich-text editor with no real user content can still carry Quill's empty-state markup
+  // (e.g. "<p><br></p>"), which is non-empty as a raw string but shows nothing to the user --
+  // stripping tags and checking for actual leftover text avoids treating that as real content.
+  private hasRealContent(html: string | null | undefined): boolean {
+    if (!html) return false;
+    const text = html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/gi, ' ')
+      .trim();
+    return text.length > 0;
   }
 
   // The actual file extension a drafted upload must match. Derived straight from the

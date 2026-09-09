@@ -910,9 +910,15 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       nzData: {
         id: rowData.Id,
         entityType: 'Document',
-        // Backend segregates workflow steps by decision, which expects 'Rejected' rather than
-        // this screen's 'Disapproved' tab label -- same mapping used for RequestStatus above.
-        decision: this.selectedTab,
+        // This tab's button is labeled "Reverted/Rejected" and lists BOTH outcomes together,
+        // but selectedTab is always the single literal string 'Rejected' regardless of which
+        // one a given row actually is -- filtering the modal strictly by that silently returned
+        // no history at all for a row that was actually Reworked/Reverted (the backend's decision
+        // filter correctly only matches a step whose real Decision equals the value asked for).
+        // 'All' shows this row's complete step-by-step history regardless of outcome type, which
+        // is what "Approval History" should show either way. Pending/Approved tabs are unaffected
+        // since selectedTab only ever equals 'Rejected' on this specific combined tab.
+        decision: this.selectedTab === 'Rejected' ? 'All' : this.selectedTab,
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',

@@ -31,10 +31,12 @@
             class="badge"
             [ngClass]="{
               approve: h.Decision === 'Approved',
-                reject: h.Decision === 'Rejected' || h.Decision === 'Reverted'
+              reject: h.Decision === 'Rejected',
+              pending: h.Decision === 'Reworked' || !h.Decision
             }"
           >
-            {{ h.Decision === 'Reverted' ? 'Reverted' : (h.Decision || 'Pending') }}
+            <!-- DB/backend value is 'Reworked' -- client-facing label is "Reverted". -->
+            {{ h.Decision === 'Reworked' ? 'Reverted' : (h.Decision || 'Pending') }}
           </span>
         </td>
       </tr>
