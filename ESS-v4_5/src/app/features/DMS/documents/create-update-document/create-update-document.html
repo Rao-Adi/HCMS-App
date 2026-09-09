@@ -218,7 +218,16 @@
                   <h3 class="PnlHeader" style="margin-top: 0">Request & Document Attributes</h3>
 
                   <div class="row mb-4">
-                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+                    <div class="col-lg-12 mb-10">
+                      <nz-radio-group
+                        [(ngModel)]="creationMode"
+                        (ngModelChange)="onCreationModeChange()"
+                      >
+                        <label nz-radio nzValue="request">Use an Approved Request</label>
+                        <label nz-radio nzValue="direct">Create Document Directly</label>
+                      </nz-radio-group>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10" *ngIf="creationMode === 'request'">
                       <div class="PnlHeading">
                         <label>{{ 'labels.Request ID' | safeTranslate }} </label>
                       </div>
@@ -238,6 +247,20 @@
                           >
                           </nz-option>
                         </nz-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10" *ngIf="creationMode === 'direct'">
+                      <div class="PnlHeading">
+                        <label>Document Name</label>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          class="form-control"
+                          style="width: 100%; max-width: 250px"
+                          [(ngModel)]="documentName"
+                          placeholder="Enter Document Name"
+                        />
                       </div>
                     </div>
                     <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
@@ -523,11 +546,42 @@
                     </div>
                   </div>
                 </div>
-                <!-- Workflow Authorities Card -->
+                <!-- Ad-hoc Approver Card: this-document-only, never saved to the reusable
+                     Workflow Policy config. Once added it shows up directly in the Workflow
+                     Authorities table below (see combinedWorkflowAuthorities) -- no separate
+                     results table here, to avoid showing the same approver twice. -->
+                <div class="status-box-leftColmd6-standard mb-4">
+                  <h3 class="PnlHeader" style="margin-top: 0">
+                    Additional Approver (This Document Only)
+                  </h3>
+                  <div class="row mb-2">
+                    <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
+                      <app-employee-list
+                        #adHocEmployeeList
+                        [isMultiSelect]="false"
+                        placeholder="Select Approver"
+                        width="100%"
+                        [(ngModel)]="selectedAdHocApprover"
+                      ></app-employee-list>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-12 mb-10">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-primary"
+                        (click)="AddAdHocApprover()"
+                        [disabled]="adHocApprovers.length > 0"
+                      >
+                        <i class="bi bi-plus-circle"></i> Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Workflow Authorities Card -- policy-defined steps plus any ad-hoc approver,
+                     merged (see combinedWorkflowAuthorities), so this preview matches exactly
+                     what SubmitDocumentAsync will actually build. -->
                 <div
-                  *ngIf="
-                    showExclusionTable && approvalSequenceData && approvalSequenceData.length > 0
-                  "
+                  *ngIf="showExclusionTable && combinedWorkflowAuthorities.length > 0"
                   class="status-box-leftColmd6-standard mb-4"
                 >
                   <h3 class="PnlHeader" style="margin-top: 0">
@@ -542,18 +596,28 @@
                             <th>Employee Code</th>
                             <th>Employee Name</th>
                             <th>Role</th>
+                            <th></th>
                           </thead>
                           <tbody>
                             @for (
-                              item of approvalSequenceData | keyvalue;
-                              track item.key;
-                              let i = $index
+                              item of combinedWorkflowAuthorities;
+                              track item.EmployeeCode + '-' + item.StepOrder
                             ) {
                               <tr>
-                                <td>{{ item.value.StepOrder }}</td>
-                                <td>{{ item.value.EmployeeCode }}</td>
-                                <td>{{ item.value.EmployeeName }}</td>
-                                <td>{{ item.value.UserRole }}</td>
+                                <td>{{ item.StepOrder }}</td>
+                                <td>{{ item.EmployeeCode }}</td>
+                                <td>{{ item.EmployeeName }}</td>
+                                <td>{{ item.UserRole }}</td>
+                                <td>
+                                  @if (item.UserRole === 'Ad-hoc Approver') {
+                                    <i
+                                      class="bi bi-trash text-danger"
+                                      style="cursor: pointer"
+                                      title="Remove"
+                                      (click)="RemoveAdHocApprover(0)"
+                                    ></i>
+                                  }
+                                </td>
                               </tr>
                             }
                           </tbody>

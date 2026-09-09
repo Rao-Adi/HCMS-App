@@ -44,6 +44,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 import { MyDocuments } from './my-documents/my-documents';
@@ -74,6 +75,7 @@ interface RequestType {
     DynamicFormByDocumentAttribute,
     NzModalModule,
     RoleList,
+    EmployeeList,
     MyDocuments,
   ],
   templateUrl: './create-update-document.html',
@@ -138,6 +140,23 @@ export class CreateUpdateDocument {
 
   approvalSequenceData: any[] = [];
   trainingUsersData: any[] = [];
+
+  // "Use an Approved Request" vs "Create Document Directly" (DRT-0001 only) -- defaults to
+  // 'request' so existing users see no change in default behavior. See isSubmitDisabled and
+  // SubmiteDocument() for how each mode is gated/submitted differently.
+  creationMode: 'request' | 'direct' = 'request';
+
+  // This-document-only approver, appended after the policy-resolved workflow sequence at submit
+  // time (never persisted to the reusable WorkflowPolicies/WorkflowStepDefinitions config).
+  // Capped at exactly one entry -- see AddAdHocApprover.
+  selectedAdHocApprover: string = '';
+  adHocApprovers: { EmployeeCode: string; EmployeeName: string }[] = [];
+  // Reads its label from adHocEmployeeListRef.options (the SAME data app-employee-list already
+  // fetched for its own dropdown) instead of this component doing its own separate
+  // GetEmployeeList() call -- an earlier version did that, and doing the full employee-list
+  // fetch+sort a second time on top of app-employee-list's own internal one was the actual cause
+  // of the reported UI hang when opening this picker.
+  @ViewChild('adHocEmployeeList') adHocEmployeeListRef?: EmployeeList;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -359,8 +378,16 @@ export class CreateUpdateDocument {
     }
 
     if (this.selectedRequestType === 'DRT-0001') {
-      if (!this.selectedRequestId) {
-        return true;
+      if (this.creationMode === 'request') {
+        if (!this.selectedRequestId) {
+          return true;
+        }
+      } else {
+        // "Create Document Directly" -- no Request was ever selected, so Document Name has to
+        // come from the user directly instead of being prefilled by onRequestIdChange.
+        if (!this.documentName || !this.documentName.trim()) {
+          return true;
+        }
       }
     }
 
@@ -395,6 +422,22 @@ export class CreateUpdateDocument {
       }
     }
     return false;
+  }
+
+  // "Workflow Authorities" preview merged with the this-document-only ad-hoc approver(s), so the
+  // sequence shown here matches what SubmitDocumentAsync will actually build (policy-defined
+  // steps first, ad-hoc appended after -- see EnsureAdHocApproverStepDefinitionAsync). Built as a
+  // getter (not copied into a stored field) so it re-evaluates automatically whenever
+  // approvalSequenceData is re-fetched or adHocApprovers changes, with no extra wiring needed.
+  get combinedWorkflowAuthorities(): any[] {
+    const policySteps = this.approvalSequenceData || [];
+    const adHocSteps = (this.adHocApprovers || []).map((a, idx) => ({
+      StepOrder: policySteps.length + idx + 1,
+      EmployeeCode: a.EmployeeCode,
+      EmployeeName: a.EmployeeName,
+      UserRole: 'Ad-hoc Approver',
+    }));
+    return [...policySteps, ...adHocSteps];
   }
 
   // A rich-text editor with no real user content can still carry Quill's empty-state markup
@@ -550,7 +593,23 @@ export class CreateUpdateDocument {
       this.GetTemplate(this.selectedDocumentType);
     } else {
       this.emptyFields();
-    } 
+    }
+  }
+
+  // Switching between "Use an Approved Request" and "Create Document Directly" changes what
+  // identifies the document being worked on (an existing Request vs. a name the user types), so
+  // anything resolved from the previous mode has to be cleared -- mirrors what
+  // onDocumentTypeChange already does when the document type itself changes.
+  onCreationModeChange(): void {
+    this.selectedRequestId = '';
+    this.documentId = '';
+    this.documentName = '';
+    this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.draftFile = null;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 
   loadWorkflowAuthorities(documentType: string) {
@@ -824,6 +883,38 @@ export class CreateUpdateDocument {
     this.selectedUser = [];
   }
 
+  // This-document-only approver, appended after the policy-resolved workflow sequence at submit
+  // time -- see SubmiteDocument()'s adhocapprovers payload. Capped at exactly one entry (per
+  // confirmed scope); the Add button is disabled once one exists (see the template), and
+  // RemoveAdHocApprover exists specifically so a mis-pick doesn't trap the user under that cap.
+  AddAdHocApprover(): void {
+    if (!this.selectedAdHocApprover) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select an approver.',
+      );
+      return;
+    }
+    if (this.adHocApprovers.length > 0) {
+      return;
+    }
+
+    // options labels are "Name (Code)" (see EmployeeList.getAllUsersList) -- strip the trailing
+    // " (Code)" back off for a clean display name.
+    const opt = this.adHocEmployeeListRef?.options.find((o) => o.value === this.selectedAdHocApprover);
+    const name = opt?.label ? opt.label.replace(/\s*\([^)]*\)\s*$/, '') : this.selectedAdHocApprover;
+    this.adHocApprovers.push({
+      EmployeeCode: this.selectedAdHocApprover,
+      EmployeeName: name,
+    });
+    this.selectedAdHocApprover = '';
+  }
+
+  RemoveAdHocApprover(index: number): void {
+    this.adHocApprovers.splice(index, 1);
+  }
+
   SubmiteDocument() {
     this.submitting = true;
     const attributeValues = this.buildAttributePayload();
@@ -837,18 +928,37 @@ export class CreateUpdateDocument {
       };
     });
 
-    const payLoad = {
-      documentid: this.documentId,
+    const adHocApprovers = (this.adHocApprovers || []).map((a) => ({
+      employeecode: a.EmployeeCode,
+    }));
+
+    const payLoad: any = {
       attributes: attributeValues,
       trainingusers: trainingUsers,
+      adhocapprovers: adHocApprovers,
     };
+
+    // "Create Document Directly" (creationMode === 'direct', DRT-0001 only) has no existing
+    // DocumentId to send -- the backend creates the Document itself when documentid is omitted
+    // (see DocumentComponent.SubmitDocumentAsync / CreateBareDocumentForSubmissionAsync). The
+    // request-driven path keeps sending documentid exactly as it always has.
+    if (this.selectedRequestType === 'DRT-0001' && this.creationMode === 'direct') {
+      payLoad.documenttypecode = this.selectedDocumentType;
+      payLoad.documentname = this.documentName;
+      payLoad.divisioncode = this.selectedDivisions;
+      payLoad.departmentcode = this.selectedDepartment;
+      payLoad.subdepartmentcode = this.selectedSubDepartment;
+      payLoad.businessdomaincode = this.selectedBusinessDomain;
+    } else {
+      payLoad.documentid = this.documentId;
+    }
 
     // Append the new draft file if it exists
     const formData = new FormData();
     Object.keys(payLoad).forEach((key) => {
-      if (key === 'trainingusers' || key === 'TrainingUsers' || key === 'attributes') {
+      if (key === 'trainingusers' || key === 'TrainingUsers' || key === 'attributes' || key === 'adhocapprovers') {
         formData.append(key, JSON.stringify((payLoad as any)[key]));
-      } else {
+      } else if ((payLoad as any)[key] !== undefined && (payLoad as any)[key] !== null) {
         formData.append(key, (payLoad as any)[key]);
       }
     });
@@ -1383,6 +1493,9 @@ export class CreateUpdateDocument {
     this.selectedTrainingMode = '';
     this.selectedRole = '';
     this.selectedUser = [];
+    this.creationMode = 'request';
+    this.adHocApprovers = [];
+    this.selectedAdHocApprover = '';
   }
 
   getFileIconClass(filename: string | null | undefined): string {

@@ -723,9 +723,19 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
       nzTitle: 'Workflow History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
-        id: rowData.requestid || rowData.RequestId,
-        entityType: 'Request',
-        decision:'Approved'
+        // This screen is about the DOCUMENT (pending/undergoing training), not the request that
+        // originally created it -- entityType: 'Request' with the request's own id was querying
+        // the wrong workflow entirely (the pre-document-creation request approval), which could
+        // never include anything that happens at the document level (e.g. an ad-hoc approver
+        // added via Create/Update Document, or any document-stage approval/rejection).
+        id: rowData.documentId || rowData.DocumentId || rowData.Id,
+        entityType: 'Document',
+        // 'Approved' filtered out any step that hasn't been decided yet -- a still-pending step
+        // (e.g. an ad-hoc approver appended after the policy-defined steps, not yet reached) was
+        // invisible here even once entityType was corrected. "Workflow History" should show the
+        // complete chain, matching the same fix already applied to my-approval-document.ts/
+        // my-approval-request.ts's combined Reverted/Rejected tab for the same reason.
+        decision: 'All',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',
