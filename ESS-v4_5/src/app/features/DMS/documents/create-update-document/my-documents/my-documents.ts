@@ -287,7 +287,7 @@ export class MyDocuments implements OnInit {
             version: item.Version || item.version,
             division: item.Division || item.division,
             department: item.Department || item.department,
-            subDepartment: item.SubDepartment || item.subdepartment,
+            subdepartment: item.SubDepartment || item.subdepartment,
             businessDomain: item.BusinessDomain || item.businessdomain,
             status: item.CurrentStatus || item.currentstatus || 'Draft',
             url: item.DocumentURL || item.documenturl,

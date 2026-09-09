@@ -155,14 +155,12 @@ export class DraftRequestList {
     {
       field: 'requestNumber',
       headerName: 'Request Number',
-      flex: 1
     },
-    { field: 'documentType', headerName: 'Document Type', flex: 1 },
-    { field: 'documentName', headerName: 'Document Title', flex: 1 },
+    { field: 'documentType', headerName: 'Document Type' },
+    { field: 'documentName', headerName: 'Document Title' },
     {
       field: 'justification',
       headerName: 'Justification',
-      flex: 1,
       editable: false,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
@@ -186,12 +184,11 @@ export class DraftRequestList {
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell', minWidth: 220, flex: 1 },
+    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell', minWidth: 220 },
     {
       field: 'status',
       headerName: 'Status',
       editable: false,
-      flex: 1,
       cellRenderer: (params: any) => {
         return `
           <span
@@ -206,7 +203,7 @@ export class DraftRequestList {
         this.openObservationModal(event.data);
       },
     },
-    { field: 'submittedby', headerName: 'Submitted By', hide: true, flex: 1 },
+    { field: 'submittedby', headerName: 'Submitted By', hide: true },
   ];
 
   // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
@@ -253,7 +250,7 @@ export class DraftRequestList {
 
       this.documentColumnDefs = [
         ...this.fixedColumnDefs,
-        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title, flex:1 })),
+        ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title, })),
         ...this.trailingColumnDefs,
       ];
 

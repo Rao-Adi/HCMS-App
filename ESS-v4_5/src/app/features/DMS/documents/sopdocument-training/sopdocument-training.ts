@@ -292,15 +292,14 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         this.openDocumentModal(event.data);
       },
     },
-    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell', minWidth: 150 },
-    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell', minWidth: 150 },
-    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
-    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150 },
+    { field: 'requestCreatedBy', headerName: 'Request Created By', cellClass: 'audit-cell'  },
+    { field: 'requestCreatedOn', headerName: 'Request Created On', cellClass: 'audit-cell' },
+    { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On'},
+    { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
-      editable: false,
-      minWidth: 120,
+      editable: false, 
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `
@@ -319,8 +318,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
     {
       field: 'revisionHistory',
       headerName: 'Revision History',
-      editable: false,
-      minWidth: 120,
+      editable: false, 
       cellRenderer: (params: any) => {
         if (!params.data) return '';
         return `

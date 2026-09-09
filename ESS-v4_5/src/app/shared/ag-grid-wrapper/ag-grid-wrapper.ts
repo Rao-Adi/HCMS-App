@@ -344,7 +344,14 @@ export class AgGridWrapper implements OnInit, OnChanges {
         this.getRowsParams = null; // Consume it so we don't double call
       }
     }
-    if (changes['rowData'] && this.autoSizeColumns && this.gridApi) {
+    // columnDefs changing on its own (not just rowData) matters too: several consumers
+    // (my-approval-document.ts, draft-request-list.ts, etc.) mount the grid with a placeholder
+    // set of columns, then rebuild columnDefs once an async cabinet-hierarchy lookup resolves
+    // and adds Division/Department/SubDepartment columns. Without also scheduling here, those
+    // newly-added columns are never measured at all -- autoSizeColumns() had already run (and
+    // finished) against the earlier column set by the time they're added, so they're stuck at
+    // whatever default/minWidth floor AG Grid gives a brand-new column, forever.
+    if ((changes['rowData'] || changes['columnDefs']) && this.autoSizeColumns && this.gridApi) {
       this.scheduleAutoSize();
     }
   }

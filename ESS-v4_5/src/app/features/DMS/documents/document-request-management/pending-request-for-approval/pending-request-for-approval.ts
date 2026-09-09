@@ -89,15 +89,14 @@ export class PendingRequestForApproval {
     {
       field: 'requestNumber',
       headerName: 'Request Number',
-      minWidth: 120,
-      flex: 1,
+      minWidth: 120, 
     },
   ];
 
   // Columns after the cabinet (Division/Department/...) columns
   private readonly trailingColumnDefs: ColDef[] = [
-    { field: 'documentType', headerName: 'Document Type', minWidth: 150, flex: 1 },
-    { field: 'documentName', headerName: 'Document Title', minWidth: 200, flex: 1 },
+    { field: 'documentType', headerName: 'Document Type'  },
+    { field: 'documentName', headerName: 'Document Title'  },
     {
       field: 'justification',
       headerName: 'Justification',
@@ -122,9 +121,9 @@ export class PendingRequestForApproval {
         }
       },
     },
-    { field: 'createdOn', headerName: 'Last Saved On', minWidth: 150, cellClass: 'audit-cell', flex: 1 },
-    { field: 'pendingWith', headerName: 'Pending with', minWidth: 150, cellClass: 'audit-cell', flex: 1 },
-    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell', flex: 1 },
+    { field: 'createdOn', headerName: 'Last Saved On', cellClass: 'audit-cell'},
+    { field: 'pendingWith', headerName: 'Pending with', cellClass: 'audit-cell' },
+    { field: 'sumbittedby', headerName: 'sumbittedby', hide: true, cellClass: 'audit-cell' },
   ];
 
   // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
@@ -176,8 +175,6 @@ export class PendingRequestForApproval {
         ...activeLevelDefs.map((def) => ({
           field: def.field,
           headerName: def.title,
-          minWidth: 150,
-          flex: 1,
         })),
         ...this.trailingColumnDefs,
       ];

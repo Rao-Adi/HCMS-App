@@ -276,26 +276,22 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
     {
       field: 'requestCreatedBy',
-      headerName: 'Request Created By',
-      minWidth: 150,
+      headerName: 'Request Created By', 
       cellClass: 'audit-cell',
     },
     {
       field: 'requestCreatedOn',
-      headerName: 'Request Created On',
-      minWidth: 150,
+      headerName: 'Request Created On', 
       cellClass: 'audit-cell',
     },
     {
       field: 'previousVersionCreatedBy',
-      headerName: 'Previous Version Created By',
-      minWidth: 150,
+      headerName: 'Previous Version Created By', 
       cellClass: 'audit-cell',
     },
     {
       field: 'previousVersionCreatedOn',
-      headerName: 'Previous Version Created On',
-      minWidth: 150,
+      headerName: 'Previous Version Created On', 
       cellClass: 'audit-cell',
     },
     {
