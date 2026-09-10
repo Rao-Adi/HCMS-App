@@ -324,22 +324,52 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       .get<HeaderDetailsResponse>(
         `Security/GetHeaderDetails?_URL=${Url}&FormId=${FormId}&applicationCode=${applicationCode}`,
       )
-      .subscribe((res) => {
-        this.formName = res.formName;
-        this.strBreadCrumb = res.FormLocation;
-        this.currentFormId = res.FormId;
+      .subscribe({
+        next: (res) => {
+          // The backend's Redis-cached menu lookup can come back with an empty formName for a
+          // URL it doesn't recognize (a cold session whose cache hasn't warmed yet, or this
+          // page genuinely isn't in the cached chunk) -- this used to assign res.formName
+          // unconditionally, so a blank response left formName falsy forever, and with it the
+          // header's skeleton (*ngIf="!formName" in the template), instead of ever resolving.
+          this.formName = res.formName || this.deriveFallbackTitleFromUrl(Url);
+          this.strBreadCrumb = res.FormLocation || this.generateBreadcrumb(Url, this.formName);
+          this.currentFormId = res.FormId || '';
 
-        if (res.formdescription && res.formdescription.length > 0) {
-          this.showdesc = true;
-          this.formdescription = res.formdescription;
-        } else {
-          this.showdesc = false;
-          this.formdescription = '';
-        }
+          if (res.formdescription && res.formdescription.length > 0) {
+            this.showdesc = true;
+            this.formdescription = res.formdescription;
+          } else {
+            this.showdesc = false;
+            this.formdescription = '';
+          }
 
-        this.addedfavourite = !!res.IsFavorite;
-        this.cdRef.detectChanges();
+          this.addedfavourite = !!res.IsFavorite;
+          this.cdRef.detectChanges();
+          this.logFormAccess(this.formName, this.currentFormId, Url, 'Header API');
+        },
+        error: (err) => {
+          // No error handler previously existed here either -- a failed lookup (e.g. a 401
+          // during the brief window before a fresh cold-boot session's auth settles) left the
+          // skeleton stuck exactly the same way a merely-empty response did.
+          console.error('GetHeaderDetails failed:', err);
+          this.formName = this.deriveFallbackTitleFromUrl(Url);
+          this.strBreadCrumb = this.generateBreadcrumb(Url, this.formName);
+          this.cdRef.detectChanges();
+        },
       });
+  }
+
+  // Last-resort title when the backend can't (or doesn't yet) know this URL: title-cases the
+  // final path segment ("my-approvals-documents" -> "My Approvals Documents") so the header
+  // shows *something* readable instead of leaving formName falsy -- which is what previously
+  // left the skeleton placeholder on screen indefinitely.
+  private deriveFallbackTitleFromUrl(url: string): string {
+    const segments = url.split('/').filter((s) => s);
+    const last = segments[segments.length - 1] || 'Page';
+    return last
+      .split('-')
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+      .join(' ');
   }
 
   onActivate() {

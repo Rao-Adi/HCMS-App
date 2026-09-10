@@ -277,9 +277,22 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     // Lets a notification's "View Request Details" link land on the tab that actually
     // matches what it's about (e.g. ?tab=Rejected), instead of always the default tab --
     // same pattern as my-approval-request.ts.
+    //
+    // Matched case-insensitively: seen in production as "?tab=pending" (lowercase) even
+    // though this app only ever sends "Pending" -- something outside this codebase (an email
+    // link scanner/rewriter is the leading suspect) is altering the URL's casing in transit.
+    // selectedTab drives strict 'Pending'/'Approved'/'Rejected' checks all over this component
+    // (the tab content's *ngIf, the grid's own RequestStatus filter, the history modal's
+    // decision param) -- an unrecognized case silently matched none of them, rendering a
+    // completely blank page instead of just missing the intended tab highlight.
     this.route.queryParams.subscribe((params) => {
       if (params['tab']) {
-        this.selectedTab = params['tab'];
+        const canonicalTab = ['Pending', 'Approved', 'Rejected'].find(
+          (t) => t.toLowerCase() === String(params['tab']).toLowerCase(),
+        );
+        if (canonicalTab) {
+          this.selectedTab = canonicalTab;
+        }
       }
     });
 

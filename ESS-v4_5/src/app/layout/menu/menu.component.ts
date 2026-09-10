@@ -93,10 +93,24 @@ export class MenuComponent implements OnDestroy {
   }
 
   getMenuData(): void {
-    this._dataService.get<any[]>('Menu/GetMenuDataThroughRedis/DMS-b').subscribe(data => {
-      //console.log(data);
-      this.RootItems = data;
-      this.menuLoaded.emit(data); // ← emit after load
+    this._dataService.get<any[]>('Menu/GetMenuDataThroughRedis/DMS-b').subscribe({
+      next: (data) => {
+        this.RootItems = data;
+        this.menuLoaded.emit(data); // ← emit after load
+      },
+      error: (err) => {
+        // No error handler here previously meant a failed menu fetch left menuLoaded never
+        // emitted at all -- main-layout.ts's onMenuLoaded() cold-boot fallback (which resolves
+        // the page header/breadcrumb for a direct URL opened before the menu has loaded, e.g.
+        // an email link into a fresh tab) never got a chance to run, leaving the header's
+        // skeleton stuck indefinitely instead of ever resolving. Emitting an empty array keeps
+        // the same contract a successful-but-empty response already has: onMenuLoaded() still
+        // runs, finds no match, and falls back to asking the backend directly
+        // (GetHeaderDetails) instead of hanging forever.
+        console.error('Failed to load menu data:', err);
+        this.RootItems = [];
+        this.menuLoaded.emit([]);
+      },
     });
   }
 
