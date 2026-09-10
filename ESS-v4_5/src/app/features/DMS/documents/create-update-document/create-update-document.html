@@ -113,7 +113,7 @@
               <div class="row">
                 <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.Training Mode' | safeTranslate }} </label>
+                    <label>{{ 'labels.Training Mode' | safeTranslate }} <span class="text-danger">*</span></label>
                   </div>
                   <div>
                     <nz-select
@@ -134,7 +134,7 @@
                 </div>
                 <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.Trainers' | safeTranslate }} </label>
+                    <label>{{ 'labels.Trainers' | safeTranslate }} <span class="text-danger">*</span></label>
                   </div>
                   <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px">
                     <div>
@@ -153,7 +153,11 @@
                 </div>
                 <div class="col-lg-4 col-md-4 col-sm-12 mb-10">
                   <div class="PnlHeading">
-                    <label>{{ 'labels.User' | safeTranslate }}</label>
+                    <label
+                      >{{ 'labels.User' | safeTranslate }}
+                      <span class="text-danger">*</span>
+                      <small class="text-muted fw-normal">(pick a User, then click + to add)</small></label
+                    >
                   </div>
                   <div class="d-flex align-items-start w-100" style="max-width: 350px">
                     <nz-select
@@ -223,7 +227,13 @@
                         [(ngModel)]="creationMode"
                         (ngModelChange)="onCreationModeChange()"
                       >
-                        <label nz-radio nzValue="request">Use an Approved Request</label>
+                        <label
+                          nz-radio
+                          nzValue="request"
+                          [nzDisabled]="requestIds.length === 0"
+                          [title]="requestIds.length === 0 ? 'No approved requests available for this Document Type' : ''"
+                          >Use an Approved Request</label
+                        >
                         <label nz-radio nzValue="direct">Create Document Directly</label>
                       </nz-radio-group>
                     </div>
@@ -237,6 +247,7 @@
                           [(ngModel)]="selectedRequestId"
                           nzPlaceHolder="Select Request ID"
                           (ngModelChange)="onRequestIdChange($event)"
+                          [nzDisabled]="requestIds.length === 0"
                           nzAllowClear
                           nzShowSearch
                         >
@@ -295,6 +306,18 @@
                     </div>
                   </div>
 
+                  <!-- Justification: parity with the Document Request form's own required
+                       field (document-request-form.html) -- 'request' mode never needs this
+                       here since it was already captured when the Request was created. -->
+                  <div class="row mb-4" *ngIf="creationMode === 'direct'">
+                    <div class="col-lg-9 col-md-9 col-sm-12 mb-10">
+                      <div class="PnlHeading">
+                        <label>{{ 'labels.Justification' | safeTranslate }} <span class="text-danger">*</span></label>
+                      </div>
+                      <textarea class="w-100" rows="3" nz-input [(ngModel)]="justification"></textarea>
+                    </div>
+                  </div>
+
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12">
                       <app-dynamic-form-by-document-attribute
@@ -308,6 +331,38 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Document Users / Distribution List: parity with the Document Request form
+                     (document-request-form.html) -- 'request' mode never needs these here since
+                     they were already captured and promoted onto the Document when its Request
+                     was approved. -->
+                <div class="status-box-leftColmd6-standard mb-4" *ngIf="creationMode === 'direct'">
+                  <h3 class="PnlHeader" style="margin-top: 0">Document Users</h3>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                      <app-drusers-component
+                        [selectedUsers]="distributionUserList"
+                        [documentTypeCode]="selectedDocumentType"
+                        (usersChanged)="distributionUserList = $event"
+                      ></app-drusers-component>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="status-box-leftColmd6-standard mb-4" *ngIf="creationMode === 'direct'">
+                  <h3 class="PnlHeader" style="margin-top: 0">Distribution List</h3>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                      <app-drdistribution-list
+                        [DocumentTypeCode]="selectedDocumentType"
+                        [selectedDistributionList]="distributionListPayload"
+                        (distributionChanged)="onDistributionChanged($event)"
+                      >
+                      </app-drdistribution-list>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="status-box-leftColmd6-standard mb-4">
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12">
@@ -567,7 +622,7 @@
                     <div class="col-lg-2 col-md-3 col-sm-12 mb-10">
                       <button
                         type="button"
-                        class="btn btn-sm btn-primary"
+                        class="btn btn-sm btn-primary w-10"
                         (click)="AddAdHocApprover()"
                         [disabled]="adHocApprovers.length > 0"
                       >
@@ -629,6 +684,16 @@
 
                 <!-- Submit Button stick -->
                 <div class="row mt-4 btn-stick">
+                  <!-- The button below has no click handler while disabled, so this is the only
+                       way a user finds out WHY -- previously it just silently stayed disabled
+                       with no indication which of several possible requirements was unmet. -->
+                  <div
+                    class="col-lg-12 col-md-12 col-sm-12 text-center text-danger"
+                    style="font-size: 13px"
+                    *ngIf="submitDisabledReason"
+                  >
+                    <i class="bi bi-exclamation-circle me-1"></i>{{ submitDisabledReason }}
+                  </div>
                   <div
                     class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
                   >
@@ -639,6 +704,7 @@
                         class="btn btn-sm btn-primary shadow-sm"
                         (click)="SubmiteDocument()"
                         [disabled]="isSubmitDisabled || submitting"
+                        [title]="submitDisabledReason || ''"
                       >
                         <span
                           class="spinner-border spinner-border-sm me-2"

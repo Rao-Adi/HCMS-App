@@ -497,7 +497,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
                 ['DraftFileURL', 'draftFileURL', 'draftfileurl', 'DraftFileUrl', 'draftFileUrl'],
                 '',
               ),
-              justification: get(['Justification', 'justification', 'Reason', 'reason'], ''),
+              justification: get(['RequestJustification', 'requestJustification', 'DocumentJustification', 'documentJustification'], ''),
 
               // ──────────────────────────────────────────────
               // Audit / History fields

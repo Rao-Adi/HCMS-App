@@ -40,7 +40,7 @@ interface DistributionRule {
 export class DRUsersComponent {
   @Input() selectedUsers: any[] = [];
   @Output() usersChanged = new EventEmitter<any[]>();
-  @Input() documentTypeCode: string = '';
+  @Input() documentTypeCode?: string = '';
 
   gridConfig: GridConfig = {} as GridConfig;
   // --- PERMISSION FLAGS ---

@@ -40,7 +40,7 @@ export interface DistributionGridRow {
   styleUrl: './drdistribution-list.css',
 })
 export class DRDistributionList {
-  @Input() DocumentTypeCode: string | null = null;
+  @Input() DocumentTypeCode?: string | null = null;
   @Input() selectedDistributionList: any[] = [];
   @Output() distributionChanged = new EventEmitter<any[]>();
 
@@ -175,6 +175,9 @@ export class DRDistributionList {
         // "Any" here means no filter, matching how those cabinet levels already work rather than
         // being a distinct selectable option.
         placeholder: 'Any',
+        // Shows "Any" for an already-saved row's blank Role too, not just as the editor's
+        // placeholder -- matches getColumns()'s same emptyValueDisplay on the cabinet columns.
+        emptyValueDisplay: 'Any',
         required: false,
       },
       // DOCUMENT TYPES
@@ -213,10 +216,14 @@ export class DRDistributionList {
   }
 
   private getColumns(): GridColumn[] {
-    return [
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
-      ...this.getRemainingColumns(),
-    ];
+    // buildCabinetColumns is a shared service used by other grids too -- mapping its result
+    // locally here (instead of changing the service itself) shows "Any" for a blank cabinet
+    // level only in this grid, exactly as asked, without touching how any other grid displays
+    // its own blank cabinet-level cells.
+    const cabinetColumns = this.cabinetGridService
+      .buildCabinetColumns(this.cabinetHierarchy)
+      .map((col) => ({ ...col, emptyValueDisplay: 'Any' }));
+    return [...cabinetColumns, ...this.getRemainingColumns()];
   }
 
   GetAllDistributionList(query: any) {

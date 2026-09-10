@@ -86,6 +86,13 @@ export interface GridColumn<T = any> {
   suffix?: string;
   placeholder?: string;
 
+  // Dropdown display only (not editing): text shown for an already-saved row whose value is
+  // null/blank, e.g. "Any" for a cabinet-scope or role column where blank means "no filter".
+  // Opt-in and defaults to unset (empty cell, today's existing behavior for every column that
+  // doesn't set it) -- scoped per-column so this never changes how any other grid using this
+  // wrapper displays its own blank dropdown cells.
+  emptyValueDisplay?: string;
+
   // For numbers
   decimalPlaces?: number;
 
@@ -544,7 +551,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         };
 
         colDef.valueFormatter = (params) => {
-          if (!params.value) return '';
+          if (!params.value) return column.emptyValueDisplay ?? '';
 
           const options = column.dropdownOptions || [];
           const match = options.find((opt) => opt.id == params.value);

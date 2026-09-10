@@ -29,6 +29,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -47,6 +48,7 @@ import { NavigationCountsService } from '@app/shared/services/navigation-counts.
     CabinetStructureList,
     AgGridWrapper,
     DMSRichTextEdit,
+    SpinnerComponent,
   ],
   templateUrl: './document-authorization-post-training.html',
   styleUrl: './document-authorization-post-training.css',

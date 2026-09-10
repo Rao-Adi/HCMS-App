@@ -48,6 +48,8 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 import { MyDocuments } from './my-documents/my-documents';
+import { DRUsersComponent } from '../document-request-management/drusers-component/drusers-component';
+import { DRDistributionList } from '../document-request-management/drdistribution-list/drdistribution-list';
 
 // Define interface for request types
 interface RequestType {
@@ -77,6 +79,8 @@ interface RequestType {
     RoleList,
     EmployeeList,
     MyDocuments,
+    DRUsersComponent,
+    DRDistributionList,
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -146,11 +150,20 @@ export class CreateUpdateDocument {
   // SubmiteDocument() for how each mode is gated/submitted differently.
   creationMode: 'request' | 'direct' = 'request';
 
+  // Justification / Document Users / Distribution List -- only used in 'direct' mode. The
+  // 'request' path never needs these here: they were already captured when the Request itself
+  // was created, and CreateDocumentFromApprovedRequestAsync's own promotion step already carried
+  // them onto the Document at approval time (Documents.Justification, DocumentRoleDistributions,
+  // DocumentUserDistributions) before this screen ever saw that Request ID.
+  justification: string = '';
+  distributionListPayload: any[] = [];
+  distributionUserList: any[] = [];
+
   // This-document-only approver, appended after the policy-resolved workflow sequence at submit
   // time (never persisted to the reusable WorkflowPolicies/WorkflowStepDefinitions config).
   // Capped at exactly one entry -- see AddAdHocApprover.
   selectedAdHocApprover: string = '';
-  adHocApprovers: { EmployeeCode: string; EmployeeName: string }[] = [];
+  adHocApprovers: { EmployeeCode: string; EmployeeName: string; Role: string }[] = [];
   // Reads its label from adHocEmployeeListRef.options (the SAME data app-employee-list already
   // fetched for its own dropdown) instead of this component doing its own separate
   // GetEmployeeList() call -- an earlier version did that, and doing the full employee-list
@@ -370,24 +383,28 @@ export class CreateUpdateDocument {
   }
 
   get isSubmitDisabled(): boolean {
-    if (this.submitting) {
-      return true;
-    }
-    if (!this.selectedRequestType || !this.selectedDocumentType) {
-      return true;
-    }
+    return this.submitting || !!this.submitDisabledReason;
+  }
+
+  // Single source of truth for both isSubmitDisabled and the message shown next to the Submit
+  // button (see create-update-document.html) -- previously the button just went disabled with
+  // no way for the user to tell WHICH of several possible requirements was still unmet (e.g.
+  // Document Training being required for this Document Type, easy to miss since it's a whole
+  // separate card above this one with no visual "required" marking of its own).
+  get submitDisabledReason(): string | null {
+    if (!this.selectedRequestType) return 'Please select an Activity Type.';
+    if (!this.selectedDocumentType) return 'Please select a Document Type.';
 
     if (this.selectedRequestType === 'DRT-0001') {
       if (this.creationMode === 'request') {
-        if (!this.selectedRequestId) {
-          return true;
-        }
+        if (!this.selectedRequestId) return 'Please select a Request ID.';
       } else {
         // "Create Document Directly" -- no Request was ever selected, so Document Name has to
         // come from the user directly instead of being prefilled by onRequestIdChange.
-        if (!this.documentName || !this.documentName.trim()) {
-          return true;
-        }
+        if (!this.documentName || !this.documentName.trim()) return 'Please enter a Document Name.';
+        // Same "Please enter Justification" requirement the Document Request form enforces --
+        // this mode is the direct-create equivalent of that form, so it carries the same one.
+        if (!this.justification || !this.justification.trim()) return 'Please enter Justification.';
       }
     }
 
@@ -400,7 +417,7 @@ export class CreateUpdateDocument {
     if (this.selectedRequestType === 'DRT-0001' || this.selectedRequestType === 'DRT-0002') {
       if (this.selectedTemplateType !== '3') {
         if (!this.draftFileUrl && !this.draftFile && !this.hasRealContent(this.templateHtml)) {
-          return true;
+          return 'Please upload a document file, or add content in Document Content below.';
         }
       }
     }
@@ -408,20 +425,20 @@ export class CreateUpdateDocument {
     if (this.selectedRequestType === 'DRT-0001') {
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
-          return true;
+          return 'Please fill all required fields in Document Attributes.';
         }
       }
 
       if (this.trainingRequired) {
         if (!this.selectedTrainingMode) {
-          return true;
+          return 'Training is required for this Document Type -- please select a Training Mode.';
         }
         if (!this.trainingUsersData || this.trainingUsersData.length === 0) {
-          return true;
+          return 'Training is required for this Document Type -- please select a Trainer/User and click + to add them.';
         }
       }
     }
-    return false;
+    return null;
   }
 
   // "Workflow Authorities" preview merged with the this-document-only ad-hoc approver(s), so the
@@ -435,7 +452,11 @@ export class CreateUpdateDocument {
       StepOrder: policySteps.length + idx + 1,
       EmployeeCode: a.EmployeeCode,
       EmployeeName: a.EmployeeName,
-      UserRole: 'Ad-hoc Approver',
+      // The approver's actual job Role, resolved in AddAdHocApprover -- matches what this same
+      // person's Role will show once the document is submitted (backend resolves it identically
+      // in EnsureAdHocApproverStepDefinitionAsync), instead of a generic "Ad-hoc Approver" label
+      // that said nothing about who they actually are.
+      UserRole: a.Role,
     }));
     return [...policySteps, ...adHocSteps];
   }
@@ -445,6 +466,13 @@ export class CreateUpdateDocument {
   // stripping tags and checking for actual leftover text avoids treating that as real content.
   private hasRealContent(html: string | null | undefined): boolean {
     if (!html) return false;
+    // A document can legitimately be image-only (e.g. a scanned page, or content pasted into
+    // the editor as a screenshot rather than typed) -- an <img> tag has no text of its own, so
+    // stripping ALL tags before checking for leftover text incorrectly reported that as empty.
+    // Confirmed against a real case: an approved Request's saved content was a single <img>
+    // with a ~230KB base64 image and zero surrounding text, which this treated as "no content"
+    // and kept Submit disabled even though real content already existed.
+    if (/<img[\s>]/i.test(html)) return true;
     const text = html
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/gi, ' ')
@@ -607,9 +635,37 @@ export class CreateUpdateDocument {
     this.templateHtml = '';
     this.draftFileUrl = '';
     this.draftFile = null;
+    this.justification = '';
+    this.distributionListPayload = [];
+    this.distributionUserList = [];
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
+  }
+
+  onDistributionChanged(list: any[]): void {
+    this.distributionListPayload = list;
+  }
+
+  // Mirrors document-request-form.ts's appendUserIdsToFormData field resolution (DRUsersComponent
+  // emits users tagged with whichever casing/shape the cabinet row they were picked under used).
+  private buildUserIdsPayload(users: any[]): any[] {
+    const getCode = (u: any) =>
+      u.employeeCode || u.EmployeeCode || u.empcode || u.empid || u.userId || u.UserId || u.id || u.Id;
+
+    return (users || [])
+      .filter((u: any) => {
+        const code = getCode(u);
+        return code != null && code !== '';
+      })
+      .map((u: any) => ({
+        employeeCode: String(getCode(u)),
+        roleId: u.roleId ?? u.RoleId,
+        divisionCode: u.divisionCode ?? u.DivisionCode,
+        departmentCode: u.departmentCode ?? u.DepartmentCode,
+        subDepartmentCode: u.subDepartmentCode ?? u.SubDepartmentCode,
+        businessDomainCode: u.businessDomainCode ?? u.BusinessDomainCode,
+      }));
   }
 
   loadWorkflowAuthorities(documentType: string) {
@@ -726,6 +782,17 @@ export class CreateUpdateDocument {
           }));
       } else {
         this.requestIds = [];
+      }
+
+      // No approved requests to pick from -- "Use an Approved Request" is disabled in the
+      // template ([nzDisabled]="requestIds.length === 0") so the user can't click into an
+      // empty dropdown, and this mirrors that by defaulting the mode to the only option that's
+      // actually usable. Only forces the switch when currently on 'request': a user who already
+      // chose 'direct' (e.g. for a prior Document Type with no requests either) keeps that
+      // choice rather than being silently reset by every DocumentType change.
+      if (this.requestIds.length === 0 && this.creationMode === 'request') {
+        this.creationMode = 'direct';
+        this.onCreationModeChange();
       }
     });
   }
@@ -904,11 +971,33 @@ export class CreateUpdateDocument {
     // " (Code)" back off for a clean display name.
     const opt = this.adHocEmployeeListRef?.options.find((o) => o.value === this.selectedAdHocApprover);
     const name = opt?.label ? opt.label.replace(/\s*\([^)]*\)\s*$/, '') : this.selectedAdHocApprover;
+    const employeeCode = this.selectedAdHocApprover;
     this.adHocApprovers.push({
-      EmployeeCode: this.selectedAdHocApprover,
+      EmployeeCode: employeeCode,
       EmployeeName: name,
+      // Placeholder until the actual lookup below resolves.
+      Role: 'Ad-hoc Approver',
     });
     this.selectedAdHocApprover = '';
+
+    // Resolved separately (not blocking the Add click) so the Workflow Authorities preview
+    // shows this person's actual job Role -- matches what the backend resolves identically at
+    // submit time (DocumentComponent.EnsureAdHocApproverStepDefinitionAsync), instead of the
+    // generic "Ad-hoc Approver" label that said nothing about who they actually are.
+    this._peoplePartnerService.GetEmployeeRoleByCode(employeeCode).subscribe({
+      next: (res) => {
+        const role = res?.Data;
+        if (!role) return;
+        const entry = this.adHocApprovers.find((a) => a.EmployeeCode === employeeCode);
+        if (entry) {
+          entry.Role = role;
+          this.adHocApprovers = [...this.adHocApprovers];
+        }
+      },
+      // Leave the placeholder Role in place on failure -- this preview cell just stays less
+      // precise; nothing about actually submitting the document depends on this lookup.
+      error: () => {},
+    });
   }
 
   RemoveAdHocApprover(index: number): void {
@@ -949,6 +1038,21 @@ export class CreateUpdateDocument {
       payLoad.departmentcode = this.selectedDepartment;
       payLoad.subdepartmentcode = this.selectedSubDepartment;
       payLoad.businessdomaincode = this.selectedBusinessDomain;
+
+      // Justification / Document Users / Distribution List -- parity with the Document Request
+      // form (document-request-form.ts), only relevant here since 'request' mode already got
+      // these promoted onto the Document when its Request was approved (see the property
+      // comment on `justification` above).
+      payLoad.justification = this.justification;
+      payLoad.distributionlist = (this.distributionListPayload || []).map((x: any) => ({
+        divisionCode: x.level1Id || x.divisionCode,
+        departmentCode: x.level2Id || x.departmentCode,
+        subDepartmentCode: x.level3Id || x.subDepartmentCode,
+        businessDomainCode: x.level4Id || x.businessDomainCode,
+        roleId: x.roleId,
+        distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+      }));
+      payLoad.userids = this.buildUserIdsPayload(this.distributionUserList);
     } else {
       payLoad.documentid = this.documentId;
     }
@@ -956,7 +1060,14 @@ export class CreateUpdateDocument {
     // Append the new draft file if it exists
     const formData = new FormData();
     Object.keys(payLoad).forEach((key) => {
-      if (key === 'trainingusers' || key === 'TrainingUsers' || key === 'attributes' || key === 'adhocapprovers') {
+      if (
+        key === 'trainingusers' ||
+        key === 'TrainingUsers' ||
+        key === 'attributes' ||
+        key === 'adhocapprovers' ||
+        key === 'distributionlist' ||
+        key === 'userids'
+      ) {
         formData.append(key, JSON.stringify((payLoad as any)[key]));
       } else if ((payLoad as any)[key] !== undefined && (payLoad as any)[key] !== null) {
         formData.append(key, (payLoad as any)[key]);
@@ -1496,6 +1607,9 @@ export class CreateUpdateDocument {
     this.creationMode = 'request';
     this.adHocApprovers = [];
     this.selectedAdHocApprover = '';
+    this.justification = '';
+    this.distributionListPayload = [];
+    this.distributionUserList = [];
   }
 
   getFileIconClass(filename: string | null | undefined): string {
