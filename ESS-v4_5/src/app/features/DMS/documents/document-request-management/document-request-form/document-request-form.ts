@@ -743,7 +743,15 @@ export class DocumentRequestForm {
     const token = ++this.contentPreviewToken;
     this.templateHtml = '';
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (ext !== 'docx') return;
+    if (ext !== 'docx') {
+      // Bumping the token above already invalidates any older in-flight conversion, but that
+      // older conversion's own `finally` only clears convertingUploadedFile if ITS token still
+      // matches -- which, now that we've moved the token past it, it never will. Without this,
+      // a non-.docx pick (e.g. .pdf) right after a .docx preview started would leave
+      // convertingUploadedFile stuck true forever, permanently hiding the content editor.
+      this.convertingUploadedFile = false;
+      return;
+    }
 
     this.convertingUploadedFile = true;
     file
@@ -753,8 +761,18 @@ export class DocumentRequestForm {
         if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
       })
-      .catch(() => {
+      .catch((err) => {
         // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
+        // Previously silent, which made a failed preview look identical to "nothing to show" --
+        // surfacing it means a genuinely broken/unsupported .docx is now diagnosable instead of
+        // just an unexplained empty box.
+        if (token !== this.contentPreviewToken) return;
+        console.error('Failed to preview uploaded document content:', err);
+        this._notificationToastService.createNotification(
+          'warning',
+          'Preview Unavailable',
+          'Could not generate an in-form preview of the uploaded document. The file itself is still fine to submit.',
+        );
       })
       .finally(() => {
         if (token === this.contentPreviewToken) {
@@ -1678,9 +1696,11 @@ export class DocumentRequestForm {
         if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
       })
-      .catch(() => {
+      .catch((err) => {
         // Leave templateHtml empty -- the document's own file is still fully valid for
         // download/merge regardless of whether this preview conversion succeeded.
+        if (token !== this.contentPreviewToken) return;
+        console.error('Failed to preview existing document content:', err);
       })
       .finally(() => {
         if (token === this.contentPreviewToken) {

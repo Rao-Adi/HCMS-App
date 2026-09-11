@@ -36,7 +36,8 @@ export class HighlightSearchPipe implements PipeTransform {
   // templateUrl: './employee-list.html',
   // styleUrl: './employee-list.css'
   template: `<nz-select
-    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
+    name="employeeListInner"
+    [nzMode]="nzMode"
     [nzPlaceHolder]="placeholder"
     nzAllowClear
     nzShowSearch
@@ -102,12 +103,19 @@ export class EmployeeList {
   selectedUser: any = null;
   searchTerm = '';
 
+  // Resolved once in ngOnInit, not bound in the template as a live `isMultiSelect ? 'multiple' :
+  // 'default'` expression -- see RoleList's identical fix/comment for the full reasoning. This
+  // component has the same pattern and is used with isMultiSelect="false" for the "Additional
+  // Approver" picker on create-update-document.html, which was throwing the same NG01203 error.
+  nzMode: 'multiple' | 'default' = 'multiple';
+
   constructor(private _peoplePartnerService: PeoplePartnersService) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
+    this.nzMode = this.isMultiSelect ? 'multiple' : 'default';
     this.getAllUsersList();
   }
 

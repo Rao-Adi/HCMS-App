@@ -376,7 +376,17 @@
                   <div *ngIf="convertingUploadedFile" class="text-muted mt-3">
                     <i class="bi bi-hourglass-split me-1"></i> Reading uploaded document...
                   </div>
-                  <div *ngIf="!convertingUploadedFile" class="mt-3">
+                  <!-- Always rendered (not *ngIf-gated on convertingUploadedFile) -- this editor
+                       used to be torn down and recreated on every conversion, which meant a
+                       freshly-picked file's converted content could only ever reach the screen
+                       via the brand-new instance's one-time editorCreated() paste. If that timing
+                       lined up wrong (e.g. a slower, still-in-flight "existing document" preview
+                       recreating this component again right after), the converted content was
+                       silently lost even though templateHtml held it correctly. Keeping one
+                       persistent instance means ngOnChanges' existing diff-and-resync logic is
+                       always what applies updates, regardless of which async preview finishes
+                       when. -->
+                  <div class="mt-3">
                     <div class="PnlHeading">
                       <label>Or type the content manually below (edit if needed after uploading, or leave as uploaded)</label>
                     </div>

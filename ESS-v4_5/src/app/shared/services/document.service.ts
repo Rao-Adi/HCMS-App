@@ -62,6 +62,11 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  GetDocumentTrainingAssignments(documentId: number): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-document-training-assignments/${documentId}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   approveDocument(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/approve-document`,

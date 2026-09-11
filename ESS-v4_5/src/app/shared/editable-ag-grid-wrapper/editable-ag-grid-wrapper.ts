@@ -311,10 +311,31 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       setTimeout(() => {
         this.isUpdatingRowData = false;
         if (this.autoSizeColumns && this.gridApi) {
-          this.autoSizeGridColumns();
+          this.scheduleAutoSize();
         }
       }, 50);
     }
+  }
+
+  // onGridReady, onFirstDataRendered, onRowDataUpdated and the ngOnChanges block above can all
+  // fire for the SAME underlying rowData change (AG Grid's own events plus Angular's input
+  // change detection observing the same assignment), and each used to call autoSizeGridColumns()
+  // directly -- which itself does a forced-layout column-width measurement PLUS a follow-up
+  // offsetWidth/getActualWidth pass 150ms later. Left unguarded, one row-data update could
+  // trigger that full sequence 3+ times over. With several such grids on one page all
+  // re-assigning rowData on the same click (e.g. create-update-document.ts's Distribution List/
+  // Document Users grids), this compounded into dozens of forced-reflow violations and a
+  // multi-second UI freeze -- confirmed via a real console trace. This collapses any number of
+  // overlapping requests within one window into a single pass; it still always reads the
+  // CURRENT DOM/column state when it fires.
+  private autoSizeScheduled = false;
+  private scheduleAutoSize(delay: number = 0): void {
+    if (this.autoSizeScheduled) return;
+    this.autoSizeScheduled = true;
+    setTimeout(() => {
+      this.autoSizeGridColumns();
+      this.autoSizeScheduled = false;
+    }, delay);
   }
 
   private buildColumnDefs(): void {
@@ -966,7 +987,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     this.gridApi.addEventListener('paginationChanged', this.onPaginationChanged.bind(this));
 
     if (this.autoSizeColumns) {
-      this.autoSizeGridColumns();
+      this.scheduleAutoSize();
     }
 
     this.gridReady.emit(this.gridApi);
@@ -1009,13 +1030,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
   onFirstDataRendered(event: any): void {
     if (this.autoSizeColumns) {
-      this.autoSizeGridColumns();
+      this.scheduleAutoSize();
     }
   }
 
   onRowDataUpdated(event: any): void {
     if (this.autoSizeColumns) {
-      this.autoSizeGridColumns();
+      this.scheduleAutoSize();
     }
   }
 

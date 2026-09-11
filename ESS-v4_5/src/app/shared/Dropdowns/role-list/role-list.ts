@@ -28,7 +28,8 @@ export class HighlightSearchPipe implements PipeTransform {
   // templateUrl: './role-list.html',
   // styleUrl: './role-list.css',
   template: `<nz-select
-    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
+    name="roleListInner"
+    [nzMode]="nzMode"
     nzPlaceHolder="Select Roles"
     nzAllowClear
     nzShowSearch
@@ -84,6 +85,17 @@ export class RoleList implements ControlValueAccessor {
   selectedUser: any = null;
   searchTerm = '';
 
+  // Resolved once in ngOnInit (not bound in the template as `isMultiSelect ? 'multiple' :
+  // 'default'`) -- nz-select's nzMode isn't designed to be re-evaluated as a reactive
+  // expression on every change-detection cycle; every OTHER usage of this component in the app
+  // relies on the default (multiple) and never hit this, but the one place that explicitly
+  // passes isMultiSelect="false" (create-update-document.html's Trainers card) was intermittently
+  // throwing NG01203 "No value accessor for form control" the moment this component's view was
+  // freshly created -- consistent with nz-select's internal mode-dependent setup racing against
+  // Angular's own NgModel value-accessor registration when nzMode is a live expression instead
+  // of a value that's stable from first render onward.
+  nzMode: 'multiple' | 'default' = 'multiple';
+
   constructor(private _peoplePartnerService: PeoplePartnersService
   ) {}
 
@@ -91,6 +103,7 @@ export class RoleList implements ControlValueAccessor {
   private onTouched = () => {};
 
   ngOnInit() {
+    this.nzMode = this.isMultiSelect ? 'multiple' : 'default';
     this.getAllRoles();
   }
 

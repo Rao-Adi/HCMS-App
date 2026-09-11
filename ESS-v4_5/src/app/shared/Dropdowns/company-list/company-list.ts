@@ -10,8 +10,15 @@ import { CompanyService } from '@app/shared/services/company.service';
   imports: [CommonModule, FormsModule, NzSelectModule],
   templateUrl: './company-list.html',
   styleUrl: './company-list.css',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => CompanyList),
+      multi: true,
+    },
+  ],
 })
-export class CompanyList {
+export class CompanyList implements ControlValueAccessor {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';

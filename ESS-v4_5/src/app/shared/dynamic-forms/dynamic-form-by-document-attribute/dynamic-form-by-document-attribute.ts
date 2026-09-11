@@ -74,14 +74,17 @@ export class DynamicFormByDocumentAttribute {
       this.prepareAttributes();
       this.buildDynamicForm(this.attributes || []);
 
-      // Patch immediately if in view mode
-      if (this.mode === 'view' && this.attributeValues?.length) {
+      // Patch whenever values are available -- previously gated on mode === 'view', which also
+      // meant prefilling was impossible without simultaneously force-disabling the whole form
+      // (see patchValues). A Revision/Obsoletion needs the opposite: show the document's existing
+      // attribute values as a starting point in 'create' mode, but keep them editable.
+      if (this.attributeValues?.length) {
         this.patchValues();
       }
     }
 
     // If only values changed → patch existing form
-    if (valuesChanged && this.mode === 'view' && this.form && this.attributeValues?.length) {
+    if (valuesChanged && this.form && this.attributeValues?.length) {
       this.patchValues();
     }
   }
@@ -150,7 +153,12 @@ export class DynamicFormByDocumentAttribute {
       this.form.get(controlName)?.setValue(value);
     });
 
-    this.form.disable();
+    // Only 'view' mode (read-only display, e.g. the Approval History modal) disables the form
+    // after patching. 'create' mode with prefilled values (a Revision/Obsoletion starting from
+    // the document's existing attribute values) must stay editable.
+    if (this.mode === 'view') {
+      this.form.disable();
+    }
   }
 
   GetDocumentTemplate() { 

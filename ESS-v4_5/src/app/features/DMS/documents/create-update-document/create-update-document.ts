@@ -50,6 +50,8 @@ import { DocumentReviewPolicyService } from '@app/shared/services/document-revie
 import { MyDocuments } from './my-documents/my-documents';
 import { DRUsersComponent } from '../document-request-management/drusers-component/drusers-component';
 import { DRDistributionList } from '../document-request-management/drdistribution-list/drdistribution-list';
+import { NzInputModule } from 'ng-zorro-antd/input';
+
 
 // Define interface for request types
 interface RequestType {
@@ -81,6 +83,7 @@ interface RequestType {
     MyDocuments,
     DRUsersComponent,
     DRDistributionList,
+    NzInputModule
   ],
   templateUrl: './create-update-document.html',
   styleUrl: './create-update-document.css',
@@ -122,7 +125,26 @@ export class CreateUpdateDocument {
   selectedTrainingMode?: string = '';
   selectedCompany?: string = '';
   selectedRequestId: string = '';
-  templateHtml: string = '';
+
+  // Backed by a get/set pair (not a plain field) so hasRealContent's regex work over
+  // potentially very large HTML (a converted .docx can easily carry a large embedded base64
+  // image -- see hasRealContent's own comment, a confirmed ~230KB case) runs once per actual
+  // content change instead of on every change-detection cycle. submitDisabledReason reads
+  // _hasRealContentCache directly; it used to call hasRealContent(this.templateHtml) itself,
+  // and since it's bound in the template from 3+ places (isSubmitDisabled, the disabled-reason
+  // banner, the button's title), a single click ANYWHERE on the page -- Angular's default
+  // change detection re-checks the whole component tree on every event -- re-ran that regex
+  // work 3-4 times per click, which is what made every dropdown feel like it hung for seconds.
+  private _templateHtml: string = '';
+  private _hasRealContentCache: boolean = false;
+  get templateHtml(): string {
+    return this._templateHtml;
+  }
+  set templateHtml(value: string) {
+    this._templateHtml = value;
+    this._hasRealContentCache = this.hasRealContent(value);
+  }
+
   draftFileUrl: string = '';
   templateFileUrl: string = '';
   trainingRequired: boolean = false;
@@ -202,6 +224,15 @@ export class CreateUpdateDocument {
   public noRowsOverlay: string = '';
 
   attributes: DocumentAttribute[] = [];
+  // Populated only for Revision/Obsoletion (onCellClicked) -- the picked document's OWN
+  // currently-saved attribute values, prefilled into the (still-editable) Document Attributes
+  // form as a starting point. DRT-0001 create never has a prior document to read these from.
+  attributeValues: any[] = [];
+  // Tracks which Document Type CheckTrainingPolicy/GetDocumentAttributes/GetDocumentReviewPolicy
+  // were last fetched for -- see onCellClicked, which skips re-fetching these 3 when clicking
+  // between rows of the same type in the Revision/Obsoletion grid (they're Document-Type-scoped,
+  // not per-row).
+  private lastLoadedAttributesDocumentType: string = '';
   dynamicForm!: FormGroup;
 
   selectedRole?: string = '';
@@ -228,7 +259,12 @@ export class CreateUpdateDocument {
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'businessDomain', headerName: 'Business Domain' },
+    // Business Domain removed -- this cabinet level is configured inactive for this company
+    // (CabinetHierarchyService's active-levels list), so the column always showed empty/
+    // irrelevant data. Scoped to just these two grids, not a general "hide inactive cabinet
+    // levels everywhere" fix -- a company that DOES have Business Domain active would still
+    // want to see it, which would need the column list to read the active-levels config
+    // dynamically rather than being hardcoded like this.
     { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150 },
     { field: 'requestCreatedOn', headerName: 'Request Created On', minWidth: 150 },
     { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By', minWidth: 150 },
@@ -279,7 +315,7 @@ export class CreateUpdateDocument {
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
     { field: 'subDepartment', headerName: 'Sub-Department' },
-    { field: 'businessDomain', headerName: 'Business Domain' },
+    // Business Domain removed -- see documentRevisionColumnDefs' comment above.
 
     { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150 },
     { field: 'requestCreatedOn', headerName: 'Request Created On', minWidth: 150 },
@@ -386,6 +422,13 @@ export class CreateUpdateDocument {
     return this.submitting || !!this.submitDisabledReason;
   }
 
+  // DRT-0002 (Revision) and DRT-0003 (Obsoletion) share the same "direct" treatment as DRT-0001
+  // "Create Document Directly" once a document row is picked from their grid -- see onCellClicked,
+  // SubmiteDocument, submitDisabledReason, and the shared card block in the template.
+  get isRevisionOrObsoletion(): boolean {
+    return this.selectedRequestType === 'DRT-0002' || this.selectedRequestType === 'DRT-0003';
+  }
+
   // Single source of truth for both isSubmitDisabled and the message shown next to the Submit
   // button (see create-update-document.html) -- previously the button just went disabled with
   // no way for the user to tell WHICH of several possible requirements was still unmet (e.g.
@@ -406,6 +449,12 @@ export class CreateUpdateDocument {
         // this mode is the direct-create equivalent of that form, so it carries the same one.
         if (!this.justification || !this.justification.trim()) return 'Please enter Justification.';
       }
+    } else if (this.isRevisionOrObsoletion) {
+      // Mirrors DRT-0001 "Create Document Directly" above -- picking a grid row (onCellClicked)
+      // stands in for both the Request-ID selection and the typed Document Name, so only
+      // Justification (a fresh reason for THIS revision/obsoletion) needs to be re-entered.
+      if (!this.documentId) return 'Please select a document from the grid above.';
+      if (!this.justification || !this.justification.trim()) return 'Please enter Justification.';
     }
 
     // Document content is mandatory for file-based templates (types 1 & 2) -- either an
@@ -413,26 +462,41 @@ export class CreateUpdateDocument {
     // the form's own "Upload... OR type the content manually below" wording). Previously this
     // only accepted a file, so a document that already had real content (e.g. loaded from an
     // existing document when revising, or typed with no file ever uploaded) stayed permanently
-    // disabled even though there was nothing left for the user to actually do.
-    if (this.selectedRequestType === 'DRT-0001' || this.selectedRequestType === 'DRT-0002') {
+    // disabled even though there was nothing left for the user to actually do. Applies uniformly
+    // to DRT-0003 too -- CreateBareDocumentForSubmissionAsync/AttachOrUpdateTemplateAsync treat
+    // Obsoletion identically to Revision (a fresh child Document with its own content either way).
+    if (this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) {
       if (this.selectedTemplateType !== '3') {
-        if (!this.draftFileUrl && !this.draftFile && !this.hasRealContent(this.templateHtml)) {
+        if (!this.draftFileUrl && !this.draftFile && !this._hasRealContentCache) {
           return 'Please upload a document file, or add content in Document Content below.';
         }
       }
     }
 
+    // Document Attributes is only checked for DRT-0001 -- its UI (app-dynamic-form-by-document-
+    // attribute, the only thing that ever sets dynamicForm via formReady) is hidden for
+    // Revision/Obsoletion (demo scope reduction, per explicit request), so dynamicForm would
+    // never get set at all there and this would permanently block Submit for any document type
+    // with configured attributes.
     if (this.selectedRequestType === 'DRT-0001') {
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return 'Please fill all required fields in Document Attributes.';
         }
       }
+    }
 
+    if (this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) {
       if (this.trainingRequired) {
-        if (!this.selectedTrainingMode) {
-          return 'Training is required for this Document Type -- please select a Training Mode.';
-        }
+        // The real requirement is just "at least one trainee assigned" -- selectedTrainingMode
+        // is only the transient picker state AddTrainingUsers() uses to add ONE MORE row; it has
+        // nothing to do with whether training is already satisfied. Checking it directly used to
+        // work by coincidence (AddTrainingUsers() never clears it after a successful add, so it
+        // stayed populated once anything had been added through that form). It broke as soon as
+        // onCellClicked started prefilling trainingUsersData directly from the picked document's
+        // existing assignment (see GetDocumentTrainingAssignments) -- that path never touches
+        // selectedTrainingMode at all, so Submit stayed blocked even with real, already-assigned
+        // trainees showing in the table.
         if (!this.trainingUsersData || this.trainingUsersData.length === 0) {
           return 'Training is required for this Document Type -- please select a Trainer/User and click + to add them.';
         }
@@ -531,6 +595,15 @@ export class CreateUpdateDocument {
 
   onCellClicked(event: any): void {
     const data = event.data;
+    const newDocId = String(data?.documentId || data?.Id || data?.id || '');
+
+    // AG-Grid's cellClicked fires once per cell, not once per row -- re-clicking within an
+    // already-loaded row (or a stray second event for the same click) previously re-ran every
+    // fetch below from scratch. Skip entirely when this row is already the one loaded.
+    if (newDocId && newDocId === this.documentId && this.showDocumentContent) {
+      return;
+    }
+
     this.templateHtml = data?.proposedContent || '';
     this.draftFileUrl = data?.draftFileUrl || '';
     this.requestId = data?.requestId || data?.Id || data?.id || 0;
@@ -539,11 +612,80 @@ export class CreateUpdateDocument {
     this.selectedTemplateType = data?.templateType?.toString() || '';
     this.showDocumentContent = true;
 
+    // Full field parity with DRT-0001 "Create Document Directly": the document actually being
+    // revised/obsoleted (ParentDocumentId for SubmiteDocument -- distinct from requestId above,
+    // which historically doubled for this but is misleadingly named for this purpose), a fresh
+    // Justification (a Revision/Obsoletion needs its own reason, not the original document's),
+    // its Cabinet location (shown disabled/prefilled in the relocated Cabinet Filters card -- see
+    // onHierarchyChange/[disabled]="isRevisionOrObsoletion" in the template), and its current
+    // Distribution List / Document Users, prefilled from the same fields DRT-0001 direct-create
+    // already uses so app-drusers-component/app-drdistribution-list need no changes.
+    this.documentId = newDocId;
+    this.justification = '';
+    this.selectedDivisions = data?.divisionCode || '';
+    this.selectedDepartment = data?.departmentId || data?.departmentCode || '';
+    this.selectedSubDepartment = data?.subDepartmentCode || '';
+    this.selectedBusinessDomain = data?.businessDomainCode || '';
+    this.cabinetHierarchy = [
+      { level: 1, title: '', value: this.selectedDivisions },
+      { level: 2, title: '', value: this.selectedDepartment },
+      { level: 3, title: '', value: this.selectedSubDepartment },
+      { level: 4, title: '', value: this.selectedBusinessDomain },
+    ].filter((c) => !!c.value) as CabinetSelection[];
+    this.distributionListPayload = data?.distributionListPayload || [];
+    this.distributionUserList = data?.distributionUserList || [];
+
+    // Same "start from what's already there, let the user adjust" treatment for Document
+    // Attributes and Training Users -- these were previously left blank on Revision/Obsoletion
+    // even though the document being revised already has its own saved values/assignments.
+    this.attributeValues = [];
+    this.trainingUsersData = [];
+    this.showTrainingUserTable = false;
+    const docId = Number(this.documentId);
+    if (docId) {
+      this._documentAttributeService.getDocumentAttributeByDocumentId(docId).subscribe({
+        next: (res) => {
+          this.attributeValues = res?.Data || [];
+        },
+        error: () => {
+          this.attributeValues = [];
+        },
+      });
+
+      this._documentService.GetDocumentTrainingAssignments(docId).subscribe({
+        next: (res) => {
+          const modeName = (m: number) => (m === 1 ? 'Classroom' : m === 2 ? 'Online' : '');
+          this.trainingUsersData = (res?.Data || []).map((t: any) => ({
+            TrainingMode: modeName(t.TrainingMode),
+            TrainerName: t.Role || '',
+            UserName: t.EmployeeName?.trim() || t.EmployeeCode,
+            TrainerCode: '',
+            UserCode: t.EmployeeCode,
+          }));
+          this.showTrainingUserTable = this.trainingUsersData.length > 0;
+        },
+        error: () => {
+          this.trainingUsersData = [];
+          this.showTrainingUserTable = false;
+        },
+      });
+    }
+
     if (this.selectedDocumentType) {
-      this.CheckTrainingPolicy(this.selectedDocumentType);
-      this.GetDocumentAttributes(this.selectedDocumentType);
+      // Training Policy / Attribute *definitions* / Review Policy are scoped to the Document
+      // Type alone (unlike everything above, which is scoped to the specific document/row) --
+      // the Revision/Obsoletion grids are usually filtered to one Document Type already, so
+      // clicking between rows of that same type repeated these 3 network round trips for data
+      // that couldn't have changed. Re-fetched only when the type actually differs from the last
+      // row clicked. loadWorkflowAuthorities is NOT skipped -- it also depends on this row's own
+      // Cabinet (just set above), which can differ between documents of the same type.
+      if (this.selectedDocumentType !== this.lastLoadedAttributesDocumentType) {
+        this.lastLoadedAttributesDocumentType = this.selectedDocumentType;
+        this.CheckTrainingPolicy(this.selectedDocumentType);
+        this.GetDocumentAttributes(this.selectedDocumentType);
+        this.GetDocumentReviewPolicy();
+      }
       this.loadWorkflowAuthorities(this.selectedDocumentType);
-      this.GetDocumentReviewPolicy();
     }
   }
 
@@ -613,6 +755,7 @@ export class CreateUpdateDocument {
     }
 
     if (value) {
+      this.lastLoadedAttributesDocumentType = value;
       this.CheckTrainingPolicy(value);
       this.GetDocumentAttributes(value);
       this.GetAllApprovedRequests();
@@ -620,6 +763,7 @@ export class CreateUpdateDocument {
       this.GetDocumentReviewPolicy();
       this.GetTemplate(this.selectedDocumentType);
     } else {
+      this.lastLoadedAttributesDocumentType = '';
       this.emptyFields();
     }
   }
@@ -1027,11 +1171,15 @@ export class CreateUpdateDocument {
       adhocapprovers: adHocApprovers,
     };
 
-    // "Create Document Directly" (creationMode === 'direct', DRT-0001 only) has no existing
-    // DocumentId to send -- the backend creates the Document itself when documentid is omitted
-    // (see DocumentComponent.SubmitDocumentAsync / CreateBareDocumentForSubmissionAsync). The
-    // request-driven path keeps sending documentid exactly as it always has.
-    if (this.selectedRequestType === 'DRT-0001' && this.creationMode === 'direct') {
+    // "Create Document Directly" (creationMode === 'direct', DRT-0001) and a direct
+    // Revision/Obsoletion (DRT-0002/DRT-0003, picked straight from the grid -- no Request/
+    // approval-to-create stage) both have no existing DocumentId to send: the backend creates a
+    // Document itself when documentid is omitted (see DocumentComponent.SubmitDocumentAsync /
+    // CreateBareDocumentForSubmissionAsync). Only the legacy request-driven DRT-0001 "Use an
+    // Approved Request" path keeps sending documentid, exactly as it always has.
+    const isDirectCreate = this.selectedRequestType === 'DRT-0001' && this.creationMode === 'direct';
+
+    if (isDirectCreate || this.isRevisionOrObsoletion) {
       payLoad.documenttypecode = this.selectedDocumentType;
       payLoad.documentname = this.documentName;
       payLoad.divisioncode = this.selectedDivisions;
@@ -1053,6 +1201,15 @@ export class CreateUpdateDocument {
         distributionTypeId: x.distributiontypeId || x.distributionTypeId,
       }));
       payLoad.userids = this.buildUserIdsPayload(this.distributionUserList);
+
+      // Identifies which document is being revised/obsoleted -- see onCellClicked. The backend
+      // creates a new child Document (ParentDocumentId = this) and transitions the parent's own
+      // state to REVISED/OBSOLETE (CreateBareDocumentForSubmissionAsync /
+      // TransitionParentDocumentStateAsync).
+      if (this.isRevisionOrObsoletion) {
+        payLoad.parentdocumentid = this.documentId;
+        payLoad.activitytypecode = this.selectedRequestType;
+      }
     } else {
       payLoad.documentid = this.documentId;
     }
@@ -1165,7 +1322,10 @@ export class CreateUpdateDocument {
   private previewUploadedFileContent(file: File): void {
     this.templateHtml = '';
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (ext !== 'docx') return;
+    if (ext !== 'docx') {
+      this.convertingUploadedFile = false;
+      return;
+    }
 
     this.convertingUploadedFile = true;
     file
@@ -1174,8 +1334,15 @@ export class CreateUpdateDocument {
       .then((result) => {
         this.templateHtml = result.value;
       })
-      .catch(() => {
+      .catch((err) => {
         // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
+        // Previously silent, which made a failed preview look identical to "nothing to show".
+        console.error('Failed to preview uploaded document content:', err);
+        this._notificationToastService.createNotification(
+          'warning',
+          'Preview Unavailable',
+          'Could not generate an in-form preview of the uploaded document. The file itself is still fine to submit.',
+        );
       })
       .finally(() => {
         this.convertingUploadedFile = false;
@@ -1222,6 +1389,11 @@ export class CreateUpdateDocument {
 
   private buildAttributePayload(): any[] {
     const result: any[] = [];
+    // dynamicForm is only ever set via app-dynamic-form-by-document-attribute's formReady --
+    // that card is hidden for Revision/Obsoletion (demo scope reduction), so it never mounts and
+    // dynamicForm stays undefined there. Nothing to submit in that case; this used to throw the
+    // instant Submit was clicked for a document type with any configured attributes.
+    if (!this.dynamicForm) return result;
     const formValues = this.dynamicForm.value;
 
     this.attributes.forEach((attr) => {
@@ -1369,6 +1541,7 @@ export class CreateUpdateDocument {
             startedAt: item.StartedAt || item.startedAt,
             version: item.Version,
             division: item.Division,
+            divisionCode: item.DivisionCode,
             documentId: item.Id || item.id,
             documentNumber: item.documentNumber || item.DocumentNumber,
             documentName: item.DocumentName,
@@ -1376,6 +1549,7 @@ export class CreateUpdateDocument {
             department: item.Department,
             departmentId: item.DepartmentCode,
             subdepartment: item.SubDepartment,
+            subDepartmentCode: item.SubDepartmentCode,
             justification: item.Justification,
             businessdomain: item.BusinessDomain,
             businessDomainCode: item.BusinessDomainCode,
@@ -1507,9 +1681,11 @@ export class CreateUpdateDocument {
               // Organizational context
               // ──────────────────────────────────────────────
               division: get(['Division']),
+              divisionCode: get(['DivisionCode', 'divisionCode']),
               department: get(['Department']),
               departmentId: get(['DepartmentCode', 'departmentCode']),
               subDepartment: get(['SubDepartment', 'SubDepartment']),
+              subDepartmentCode: get(['SubDepartmentCode', 'subDepartmentCode']),
               businessDomain: get(['BusinessDomain', 'businessDomain']),
               businessDomainCode: get(['BusinessDomainCode', 'businessDomainCode']),
               version: get(['Version', 'version']),
@@ -1519,6 +1695,26 @@ export class CreateUpdateDocument {
 
               proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
               draftFileUrl: get(['DraftFileUrl', 'draftfileurl', 'draftFileUrl'], ''),
+              // Document's own Justification (AllDocumentDto.DocumentJustification, from
+              // fn_get_my_inbox_documents) -- distinct from RequestJustification (the original
+              // Request's reason, not relevant here).
+              justification: get(['DocumentJustification', 'documentJustification'], ''),
+
+              // Same shape as GetEffectiveDocumentsForRevision's mapping above -- both grids feed
+              // the same onCellClicked, which reads these exact field names.
+              distributionListPayload: (get(['DistributionList', 'distributionList'], []) || []).map(
+                (x: any) => ({
+                  ...x,
+                  level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+                  level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+                  level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+                  level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+                  roleId: x.roleId || x.RoleId,
+                  distributiontypeId:
+                    x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+                }),
+              ),
+              distributionUserList: get(['UserList', 'userList'], []),
 
               // ──────────────────────────────────────────────
               // Audit / History fields
@@ -1596,6 +1792,7 @@ export class CreateUpdateDocument {
     this.draftFileUrl = '';
     this.templateFileUrl = '';
     this.documentName = '';
+    this.documentId = '';
     this.requestId = 0;
     this.draftFile = null;
     this.selectedRequestId = '';
@@ -1610,6 +1807,9 @@ export class CreateUpdateDocument {
     this.justification = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];
+    this.attributeValues = [];
+    this.lastLoadedAttributesDocumentType = '';
+    this.cabinetHierarchy = [];
   }
 
   getFileIconClass(filename: string | null | undefined): string {

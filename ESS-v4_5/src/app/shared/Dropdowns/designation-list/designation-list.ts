@@ -29,7 +29,8 @@ export class HighlightSearchPipe implements PipeTransform {
   imports: [CommonModule, FormsModule, NzSelectModule, NzIconModule, HighlightSearchPipe],
   //templateUrl: './designation-list.html',
   template: `<nz-select
-    [nzMode]="isMultiSelect ? 'multiple' : 'default'"
+    name="designationListInner"
+    [nzMode]="nzMode"
     nzPlaceHolder="Select Designation"
     nzAllowClear
     nzShowSearch
@@ -86,6 +87,11 @@ export class DesignationList implements ControlValueAccessor {
   selectedUser: any = null;
   searchTerm = '';
 
+  // Resolved once in ngOnInit -- see RoleList/EmployeeList's identical fix/comment. Same
+  // fragile `isMultiSelect ? 'multiple' : 'default'` live-expression pattern; fixed here
+  // proactively even though no current caller passes isMultiSelect="false" for this one.
+  nzMode: 'multiple' | 'default' = 'multiple';
+
   constructor(private _designationServices: DesignationService,
     private _peoplePartnerService: PeoplePartnersService
   ) {}
@@ -94,6 +100,7 @@ export class DesignationList implements ControlValueAccessor {
   private onTouched = () => {};
 
   ngOnInit() {
+    this.nzMode = this.isMultiSelect ? 'multiple' : 'default';
     this.getAllDesignations();
   }
 
