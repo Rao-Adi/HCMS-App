@@ -22,10 +22,30 @@
             class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
             >{{ formatBadgeCount(myDocumentsCount) }}</span>
         </button>
+        <button
+          class="tab-button"
+          tabindex="0"
+          [ngClass]="{ 'active-tab': selectedTab === 'DocumentDraft' }"
+          (click)="selectedTab = 'DocumentDraft'"
+        >
+          Document Draft
+          <span
+            *ngIf="draftDocumentsCount > 0"
+            class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+            >{{ formatBadgeCount(draftDocumentsCount) }}</span>
+        </button>
       </div>
 
       <div class="row row-space" *ngIf="selectedTab === 'MyDocuments'">
         <app-my-documents></app-my-documents>
+      </div>
+
+      <!-- Drafts never submitted, plus documents reverted for rework. Picking a row opens its
+           editable detail panel inside this tab -- same as the Draft Request tab. -->
+      <div class="row row-space" *ngIf="selectedTab === 'DocumentDraft'">
+        <app-draft-document-list
+          (draftDocumentChanged)="getMyDraftDocumentsCount(); getMyDocumentsCount()"
+        ></app-draft-document-list>
       </div>
 
       <div *ngIf="selectedTab === 'CreateUpdate'">
@@ -807,11 +827,37 @@
                   <div
                     class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
                   >
-                    <div class="col-sm-1">
+                    <!-- Save as Draft: only for a directly-created document (the 'request' mode
+                         document already exists, created when its Request was approved). Not
+                         bound to isSubmitDisabled on purpose -- an incomplete document is exactly
+                         what a draft is for; SaveAsDraft() enforces only the minimum the backend
+                         needs to create the row at all. -->
+                    <div *ngIf="creationMode === 'direct' && !isRevisionOrObsoletion">
+                      <button
+                        type="button"
+                        tabindex="0"
+                        class="btn btn-sm btn-outline-secondary shadow-sm"
+                        style="min-width: 140px; height: 35px"
+                        (click)="SaveAsDraft()"
+                        [disabled]="savingDraft || submitting"
+                        title="Save your progress without starting the approval workflow"
+                      >
+                        <span
+                          class="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                          *ngIf="savingDraft"
+                        ></span>
+                        <i class="bi bi-save me-2" *ngIf="!savingDraft"></i>
+                        Save as Draft
+                      </button>
+                    </div>
+                    <div>
                       <button
                         type="button"
                         tabindex="0"
                         class="btn btn-sm btn-primary shadow-sm"
+                        style="min-width: 140px; height: 35px"
                         (click)="SubmiteDocument()"
                         [disabled]="isSubmitDisabled || submitting"
                         [title]="submitDisabledReason || ''"

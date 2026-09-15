@@ -171,6 +171,29 @@ export class DocumentService {
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  // Same payload as submitDocument, but saves without starting the approval workflow.
+  saveDocumentAsDraft(payload: FormData): Observable<ApiResponse<any>> {
+    // No Content-Type header -- see submitDocument above.
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/save-document-as-draft`,
+      payload,
+    );
+  }
+
+  // Documents the user created that are still in Draft -- never submitted, or reverted for rework.
+  getMyDraftDocuments(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-my-draft-documents`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  getMyDraftDocumentsCount(): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-my-draft-documents-count`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   exportMyDocumentsList(payload: any) {
     return this.http.post(`${this.apiUrl}/DMSDocument/export-my-documents-list`, payload, {
       observe: 'response',

@@ -116,6 +116,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private _pendingFormId: string | null = null;
   private _menuItems: MenuItem[] = [];
 
+  // Last known count per menu key. The counts and the menu arrive independently, so whichever
+  // lands second has to be able to reconcile with the first: a menu that loads (or reloads)
+  // after the counts arrive gets its badges from here immediately, instead of coming back blank
+  // until the next successful fetch -- that mismatch is why a badge would sometimes only appear
+  // after a manual page refresh.
+  private readonly latestMenuCounts = new Map<string, number>();
+
   private spinnerService = inject(SpinnerService);
   public isLoading: Signal<boolean> = this.spinnerService.isLoading.asReadonly();
 
@@ -414,6 +421,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   onMenuLoaded(items: MenuItem[]): void {
     this._menuItems = items;
+    // Paint what we already know before the refresh below resolves, so a menu arriving after the
+    // counts doesn't render badge-less for a round trip (or indefinitely, if that fetch fails).
+    this.applyCachedCountsToMenu();
     this.updateNavigationCounts();
     const url = this.GetRouterUrl();
     if (url.toLowerCase().includes('dashboard') || url === '/') return;
@@ -439,8 +449,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   updateNavigationCounts(): void {
-    if (!this._menuItems || this._menuItems.length === 0) return;
-
+    // Deliberately not gated on the menu being loaded. The fetch result is cached in
+    // latestMenuCounts and painted by onMenuLoaded() whenever the menu does arrive, so starting
+    // it early is free -- whereas skipping it (as this used to when _menuItems was still empty)
+    // meant a cold boot fetched counts only if onMenuLoaded happened to fire afterwards.
+    //
     // Counts are fetched through NavigationCountsService and applied to the menu via the
     // subscriptions set up in ngOnInit, so every subscriber (this menu, and any page that
     // also subscribes) reacts to the same fetch instead of racing independent copies.
@@ -448,6 +461,29 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   private applyCountToMenu(navigateUrl: string, count: number): void {
+    this.latestMenuCounts.set(navigateUrl, count);
+    this.assignCountToMenuItems(navigateUrl, count);
+    this.repaintMenu();
+  }
+
+  // Re-applies every count received so far. Called once the menu is (re)loaded, since those are
+  // fresh MenuItem objects with no count on them yet.
+  private applyCachedCountsToMenu(): void {
+    if (!this._menuItems || this._menuItems.length === 0) return;
+    this.latestMenuCounts.forEach((count, navigateUrl) => {
+      this.assignCountToMenuItems(navigateUrl, count);
+    });
+    this.repaintMenu();
+  }
+
+  private repaintMenu(): void {
+    if (this.menuComponent) {
+      this.menuComponent.RootItems = [...this._menuItems];
+    }
+    this.cdRef.detectChanges();
+  }
+
+  private assignCountToMenuItems(navigateUrl: string, count: number): void {
     const updateCount = (menuList: MenuItem[]) => {
       for (const item of menuList) {
         const matchesUrl = !!(
@@ -487,9 +523,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
         if (matchesUrl || matchesText) {
           item.count = count;
-          console.log(
-            `[MainLayout] Matched menu: text="${item.Text}" url="${item.NavigateUrl}" -> assigned count=${count}`,
-          );
         }
 
         if (item.child && item.child.length > 0) {
@@ -501,11 +534,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       }
     };
     updateCount(this._menuItems);
-
-    if (this.menuComponent) {
-      this.menuComponent.RootItems = [...this._menuItems];
-    }
-    this.cdRef.detectChanges();
   }
 
   private findMenuItemByUrl(url: string): MenuItem | null {

@@ -48,6 +48,7 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 import { MyDocuments } from './my-documents/my-documents';
+import { DraftDocumentList } from './draft-document-list/draft-document-list';
 import { DRUsersComponent } from '../document-request-management/drusers-component/drusers-component';
 import { DRDistributionList } from '../document-request-management/drdistribution-list/drdistribution-list';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -81,6 +82,7 @@ interface RequestType {
     RoleList,
     EmployeeList,
     MyDocuments,
+    DraftDocumentList,
     DRUsersComponent,
     DRDistributionList,
     NzInputModule
@@ -101,6 +103,9 @@ export class CreateUpdateDocument {
 
   selectedTab: string = 'CreateUpdate';
   myDocumentsCount: number = 0;
+  draftDocumentsCount: number = 0;
+
+  savingDraft: boolean = false;
 
   // --- PERMISSION FLAGS ---
   canAdd = false;
@@ -377,6 +382,7 @@ export class CreateUpdateDocument {
       this.loadRequestTypes();
     });
     this.getMyDocumentsCount();
+    this.getMyDraftDocumentsCount();
   }
 
   getMyDocumentsCount() {
@@ -387,6 +393,17 @@ export class CreateUpdateDocument {
         }
       },
       error: (err) => console.error('Failed to get my documents count', err),
+    });
+  }
+
+  getMyDraftDocumentsCount() {
+    this._documentService.getMyDraftDocumentsCount().subscribe({
+      next: (response) => {
+        if (response && response.Success) {
+          this.draftDocumentsCount = response.Data ?? 0;
+        }
+      },
+      error: (err) => console.error('Failed to get my draft documents count', err),
     });
   }
 
@@ -1148,8 +1165,10 @@ export class CreateUpdateDocument {
     this.adHocApprovers.splice(index, 1);
   }
 
-  SubmiteDocument() {
-    this.submitting = true;
+  // Shared by SubmiteDocument and SaveAsDraft -- both send the exact same multipart payload and
+  // differ only in which endpoint receives it (submit-document kicks off the approval workflow,
+  // save-document-as-draft doesn't).
+  private buildDocumentFormData(): FormData {
     const attributeValues = this.buildAttributePayload();
     // console.log(JSON.stringify(attributeValues));
 
@@ -1210,6 +1229,7 @@ export class CreateUpdateDocument {
         payLoad.parentdocumentid = this.documentId;
         payLoad.activitytypecode = this.selectedRequestType;
       }
+
     } else {
       payLoad.documentid = this.documentId;
     }
@@ -1243,6 +1263,13 @@ export class CreateUpdateDocument {
     if (this.templateHtml) {
       formData.append('ProposedContent', this.templateHtml);
     }
+
+    return formData;
+  }
+
+  SubmiteDocument() {
+    this.submitting = true;
+    const formData = this.buildDocumentFormData();
 
     this._documentService.submitDocument(formData).subscribe({
       next: (response) => {
@@ -1283,6 +1310,78 @@ export class CreateUpdateDocument {
           'Document Create/Update',
           message,
         );
+      },
+    });
+  }
+
+  // Saves whatever has been filled in so far without starting the approval workflow, so the user
+  // can come back to it from the "Document Draft" tab. Only the three fields the backend itself
+  // requires to create the Document row at all (see CreateBareDocumentForSubmissionAsync) are
+  // enforced here -- everything else is exactly what a draft is allowed to still be missing.
+  // Mirrors the Document Request form's own DraftDocumentRequests() bar.
+  SaveAsDraft(): void {
+    if (!this.selectedDocumentType) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Save as Draft',
+        'Please select a Document Type.',
+      );
+      return;
+    }
+    if (!this.documentName?.trim()) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Save as Draft',
+        'Please enter a Document Name.',
+      );
+      return;
+    }
+    if (!this.justification?.trim()) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Save as Draft',
+        'Please enter a Justification.',
+      );
+      return;
+    }
+
+    this.savingDraft = true;
+    const formData = this.buildDocumentFormData();
+
+    this._documentService.saveDocumentAsDraft(formData).subscribe({
+      next: (response) => {
+        if (response?.Success) {
+          this._notificationToastService.createNotification(
+            'success',
+            'Save as Draft',
+            response.Message || 'Document saved as draft.',
+          );
+          // Same finish as SubmiteDocument: wipe the form, then reload so the page comes back in
+          // a clean state with the Document Draft tab's badge count refreshed. Resuming a draft
+          // is done from that tab, which repopulates every field.
+          this.emptyFields();
+          this.selectedRequestType = '';
+          this.attributes = [];
+          if (this.dynamicForm) {
+            this.dynamicForm.reset();
+          }
+          setTimeout(() => {
+            this.savingDraft = false;
+            window.location.reload();
+          }, 1000);
+        } else {
+          this.savingDraft = false;
+        }
+      },
+      error: (err) => {
+        this.savingDraft = false;
+        let message = 'Something went wrong. Please try again.';
+        if (err?.error?.Message) {
+          message = err.error.Message;
+        } else if (typeof err?.error === 'string') {
+          message = err.error;
+        }
+        this._notificationToastService.createNotification('error', 'Save as Draft', message);
       },
     });
   }
