@@ -66,8 +66,19 @@ export class AgGridWrapper implements OnInit, OnChanges {
   @Input() pageSize = 10;
   @Input() defaultColDef!: ColDef;
 
-  get finalDefaultColDef(): ColDef {
-    return {
+  // Bound to AG Grid as [defaultColDef], so it MUST be a stable object reference.
+  //
+  // As a getter this rebuilt the object -- and a fresh tooltipValueGetter closure -- on every
+  // call, and Angular calls it once per change-detection pass. AG Grid saw a changed input each
+  // time: it re-validated every column definition, tore down and rebuilt its cell components,
+  // then recalculated layout. Profiling a single keystroke in a form field on Create/Update
+  // Document showed 8.7s of a 15.3s profile inside AG Grid _isHorizontalScrollShowing alone,
+  // with validateColDef / getCompDetails / destroyFunc / addEventListener underneath it --
+  // the entire grid was being rebuilt on every character typed anywhere on the page.
+  finalDefaultColDef: ColDef = {};
+
+  private rebuildFinalDefaultColDef(): void {
+    this.finalDefaultColDef = {
       ...this.defaultColDef,
       // wrapHeaderText only breaks at word boundaries if the column is wide enough for the
       // longest word -- placed after the spread (not before) so it's a genuine floor even
@@ -201,6 +212,8 @@ export class AgGridWrapper implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
+    this.rebuildFinalDefaultColDef();
+
     if (this.loading !== null) {
       this.isLoading = this.loading;
     } else {
@@ -326,6 +339,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges) {
+    // Rebuilt only on a real input change, never per change-detection pass -- see the field.
+    if (changes['defaultColDef']) {
+      this.rebuildFinalDefaultColDef();
+    }
     if (changes['loading'] && this.loading !== null) {
       this.isLoading = this.loading;
     }
@@ -437,14 +454,35 @@ export class AgGridWrapper implements OnInit, OnChanges {
   // that column, since this is a one-time calculation, not reactive -- observed directly: in a
   // 10-row page, most cells widened correctly but one ("Regulatory Affairs Manager (...)")
   // stayed clipped because its row hadn't painted yet when the single delayed call fired.
-  // Re-running the measurement a few times over the following ~400ms is safe (it just re-reads
-  // the DOM and adjusts widths, never shrinks below what's already correct) and reliably catches
-  // whichever pass finally sees a fully-painted grid, without guessing a single "big enough"
-  // delay that either fires too early on a slow render or feels sluggish on a fast one.
+  // Re-running the measurement a few times over the following ~400ms reliably catches whichever
+  // pass finally sees a fully-painted grid.
+  //
+  // Two things make that safe to do repeatedly without wrecking interactivity:
+  //
+  //   * runOutsideAngular -- autoSizeColumns() only mutates column widths inside AG Grid, which
+  //     owns its own rendering. Left inside the zone, every rAF and timeout below triggered a
+  //     full application-wide change-detection pass, and each of those also forces a synchronous
+  //     layout because measuring cells reads geometry. With three passes per call from three
+  //     call sites, a single grid load could fire nine reflow+CD cycles, which is what made every
+  //     later click (the rich text editor, a form input) wait seconds before the browser painted.
+  //
+  //   * the in-flight guard -- onFirstDataRendered, onRowDataUpdated and ngOnChanges all fire for
+  //     the same one data load. Without it each scheduled its own set of passes on top of the
+  //     others; now the first one owns the burst and the rest are no-ops until it finishes.
+  private autoSizeScheduled = false;
+
   private scheduleAutoSize(): void {
-    requestAnimationFrame(() => requestAnimationFrame(() => this.autoSizeGridColumns()));
-    setTimeout(() => this.autoSizeGridColumns(), 150);
-    setTimeout(() => this.autoSizeGridColumns(), 400);
+    if (this.autoSizeScheduled) return;
+    this.autoSizeScheduled = true;
+
+    this.ngZone.runOutsideAngular(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => this.autoSizeGridColumns()));
+      setTimeout(() => this.autoSizeGridColumns(), 150);
+      setTimeout(() => {
+        this.autoSizeGridColumns();
+        this.autoSizeScheduled = false;
+      }, 400);
+    });
   }
 
   onSelectionChanged() {

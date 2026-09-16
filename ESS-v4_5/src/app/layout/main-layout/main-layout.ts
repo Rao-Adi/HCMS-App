@@ -200,6 +200,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             (notification as any).RelatedEntityType || (notification as any).relatedEntityType,
         });
         this.unreadNotificationCount++;
+
+        // Every notification this user receives corresponds to something arriving in (or leaving)
+        // one of their queues -- a document reaching their approval step, a training request, a
+        // transfer awaiting approval. Previously only the bell reacted, so the sidebar badge stayed
+        // at whatever it was when the page last navigated and the user had to reload to see the
+        // real number. This is what makes the counts live rather than per-navigation.
+        this.updateNavigationCounts();
+
         this.cdRef.detectChanges();
       }),
     );
@@ -245,10 +253,23 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       }),
     );
 
+    // A tab left open in the background misses nothing while SignalR is connected, but it also
+    // silently misses everything while that connection is dropped (sleep, network change, proxy
+    // timeout). Re-reading the counts when the user returns to the tab costs one request and
+    // removes the most common way a badge goes stale without anyone noticing.
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+
     this.fetchExistingNotifications();
   }
 
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') {
+      this.updateNavigationCounts();
+    }
+  };
+
   ngOnDestroy(): void {
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.notificationSignalrService.stopConnection();
   }

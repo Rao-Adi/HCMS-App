@@ -722,10 +722,13 @@ export class ApprovalDocuments {
 
   downloadDocumentUrl() {
     if (!this.draftFileUrl) return;
+    // Uploaded documents are static files on the API host; a relative href would resolve against
+    // the app instead and hand the user the Angular shell rather than the document.
+    const fileUrl = this._config.resolveFileUrl(this.draftFileUrl);
     const a = document.createElement('a');
-    a.href = this.draftFileUrl;
+    a.href = fileUrl;
     a.target = '_blank';
-    const parts = this.draftFileUrl.split('/');
+    const parts = fileUrl.split('/');
     a.download = parts[parts.length - 1];
     document.body.appendChild(a);
     a.click();

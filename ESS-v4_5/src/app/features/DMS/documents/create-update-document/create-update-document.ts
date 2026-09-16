@@ -527,7 +527,17 @@ export class CreateUpdateDocument {
   // steps first, ad-hoc appended after -- see EnsureAdHocApproverStepDefinitionAsync). Built as a
   // getter (not copied into a stored field) so it re-evaluates automatically whenever
   // approvalSequenceData is re-fetched or adHocApprovers changes, with no extra wiring needed.
-  get combinedWorkflowAuthorities(): any[] {
+  // Policy steps plus any ad-hoc approvers, as one list for the Workflow Authorities table.
+  //
+  // This is a plain field, rebuilt only when one of its two inputs changes -- deliberately NOT a
+  // getter. As a getter it returned a freshly spread array on every call, and the template binds
+  // it twice (the *ngIf and the @for). Every change-detection pass therefore built new arrays and
+  // made @for re-diff a collection it had no way to recognise as unchanged -- doubled again by
+  // dev mode running each pass twice to verify stability. With a keystroke in any field on this
+  // page triggering that cycle, typing had become unusable (measured ~5s per keystroke).
+  combinedWorkflowAuthorities: any[] = [];
+
+  private rebuildCombinedWorkflowAuthorities(): void {
     const policySteps = this.approvalSequenceData || [];
     const adHocSteps = (this.adHocApprovers || []).map((a, idx) => ({
       StepOrder: policySteps.length + idx + 1,
@@ -539,7 +549,7 @@ export class CreateUpdateDocument {
       // that said nothing about who they actually are.
       UserRole: a.Role,
     }));
-    return [...policySteps, ...adHocSteps];
+    this.combinedWorkflowAuthorities = [...policySteps, ...adHocSteps];
   }
 
   // A rich-text editor with no real user content can still carry Quill's empty-state markup
@@ -832,6 +842,7 @@ export class CreateUpdateDocument {
   loadWorkflowAuthorities(documentType: string) {
     if (!documentType) {
       this.approvalSequenceData = [];
+      this.rebuildCombinedWorkflowAuthorities();
       this.showExclusionTable = false;
       return;
     }
@@ -847,6 +858,7 @@ export class CreateUpdateDocument {
     this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
+      this.rebuildCombinedWorkflowAuthorities();
     });
   }
 
@@ -1139,6 +1151,7 @@ export class CreateUpdateDocument {
       // Placeholder until the actual lookup below resolves.
       Role: 'Ad-hoc Approver',
     });
+    this.rebuildCombinedWorkflowAuthorities();
     this.selectedAdHocApprover = '';
 
     // Resolved separately (not blocking the Add click) so the Workflow Authorities preview
@@ -1153,6 +1166,7 @@ export class CreateUpdateDocument {
         if (entry) {
           entry.Role = role;
           this.adHocApprovers = [...this.adHocApprovers];
+          this.rebuildCombinedWorkflowAuthorities();
         }
       },
       // Leave the placeholder Role in place on failure -- this preview cell just stays less
@@ -1163,6 +1177,7 @@ export class CreateUpdateDocument {
 
   RemoveAdHocApprover(index: number): void {
     this.adHocApprovers.splice(index, 1);
+    this.rebuildCombinedWorkflowAuthorities();
   }
 
   // Shared by SubmiteDocument and SaveAsDraft -- both send the exact same multipart payload and
@@ -1896,12 +1911,14 @@ export class CreateUpdateDocument {
     this.draftFile = null;
     this.selectedRequestId = '';
     this.approvalSequenceData = [];
+    this.rebuildCombinedWorkflowAuthorities();
     this.trainingUsersData = [];
     this.selectedTrainingMode = '';
     this.selectedRole = '';
     this.selectedUser = [];
     this.creationMode = 'request';
     this.adHocApprovers = [];
+    this.rebuildCombinedWorkflowAuthorities();
     this.selectedAdHocApprover = '';
     this.justification = '';
     this.distributionListPayload = [];

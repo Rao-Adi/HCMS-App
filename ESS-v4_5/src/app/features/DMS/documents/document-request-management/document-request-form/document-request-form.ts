@@ -30,6 +30,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { AppConfigService } from '@app/core/services/app-config';
 import { SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
@@ -293,6 +294,7 @@ export class DocumentRequestForm {
     private _workflowStepService: WorkflowStepService,
     private _permissionService: PermissionService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _appConfig: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -1311,7 +1313,14 @@ export class DocumentRequestForm {
     // render (PDF, images) that opens an inline viewer instead of downloading. Fetching the
     // file ourselves and driving the save through a Blob + <a download> forces an actual
     // download regardless of content type, matching downloadTemplate()/downloadDraft() below.
-    fetch(this.draftFileUrl)
+    //
+    // The stored path is relative ("/uploads/documents/Foo.docx") and the file lives on the API
+    // host, so it must be resolved against that host rather than the page. Fetching it relative
+    // returned the Angular app itself -- index.html with a 200 under the dev server (saving a
+    // corrupt .docx), and a 404 under the deployed sub-path, which is the failure users hit.
+    const fileUrl = this._appConfig.resolveFileUrl(this.draftFileUrl);
+
+    fetch(fileUrl)
       .then((response) => {
         if (!response.ok) throw new Error('Download failed');
         return response.blob();
@@ -1319,7 +1328,7 @@ export class DocumentRequestForm {
       .then((blob) => {
         let filename = `Document_${this.selectedDocumentType || 'template'}`;
         try {
-          const decoded = decodeURIComponent(this.draftFileUrl);
+          const decoded = decodeURIComponent(fileUrl);
           const last = decoded.split('?')[0].split('#')[0].split('/').pop();
           if (last) filename = last;
         } catch {
@@ -1685,8 +1694,11 @@ export class DocumentRequestForm {
     const ext = url.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase() || '';
     if (ext !== 'docx') return;
 
+    // Same host resolution as downloadDraftTemplate -- the stored path points at the API host,
+    // not the page. Fetching it relative returned the app shell instead of the .docx, so the
+    // mammoth conversion below silently produced nothing and the editor came up blank.
     this.convertingUploadedFile = true;
-    fetch(url)
+    fetch(this._appConfig.resolveFileUrl(url))
       .then((response) => {
         if (!response.ok) throw new Error('Fetch failed');
         return response.arrayBuffer();

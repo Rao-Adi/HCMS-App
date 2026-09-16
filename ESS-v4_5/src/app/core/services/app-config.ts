@@ -53,6 +53,28 @@ export class AppConfigService {
     }
     return this.appConfig.sessionTimeoutURL;
   }
+  /**
+   * Origin that serves uploaded files. Documents and templates are stored with a relative path
+   * (e.g. "/uploads/documents/Foo.docx") and served as static files by the API -- NOT by the app.
+   * Resolving such a path against the page origin reaches the Angular app instead, which answers
+   * with index.html under the dev server and 404 under a deployed sub-path; either way the
+   * download is wrong. Derived from apiBaseUrl by dropping its trailing "/api".
+   */
+  public get fileBaseUrl(): string {
+    if (!this.appConfig) {
+      throw new Error('Config not loaded!');
+    }
+    return String(this.appConfig.apiBaseUrl || '').replace(/\/api\/?$/i, '');
+  }
+
+  /** Turns a stored relative file path into an absolute URL. Absolute paths are left alone. */
+  public resolveFileUrl(path: string | null | undefined): string {
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
+    const base = this.fileBaseUrl.replace(/\/$/, '');
+    return base + (path.startsWith('/') ? path : '/' + path);
+  }
+
   get environment() {
     return this.appConfig;
   }

@@ -51,7 +51,7 @@ export class HighlightSearchPipe implements PipeTransform {
     nzVirtualItemSize="32"
   >
     <nz-option
-      *ngFor="let opt of options"
+      *ngFor="let opt of visibleOptions; trackBy: trackByValue"
       [nzValue]="opt.value"
       [nzLabel]="opt.label"
       nzCustomContent
@@ -93,7 +93,25 @@ export class EmployeeList {
   @Input() showSearch = true;
   @Input() isMultiSelect = true;
 
+  // Every employee in the company -- the full list is kept in memory (it is one cheap fetch) but
+  // deliberately NOT rendered.
   options: Array<{ label: string; value: string }> = [];
+
+  // What the template actually renders. nz-option is an Angular COMPONENT, so *ngFor over the
+  // full list instantiated one per employee -- 16,953 of them on this installation -- and every
+  // change-detection pass anywhere on the page then had to walk all of them. Each also carried an
+  // [innerHTML] binding, so Angular ran its HTML sanitizer that many times too. Measured with a
+  // CPU profile of a single row click on Create/Update Document: 2.7s in the sanitizer
+  // (getInertBodyElement) and 6.3s of AG Grid layout reads thrashing against that DOM churn,
+  // which is what froze the page and made each later keystroke take seconds.
+  //
+  // nzVirtualHeight/nzVirtualItemSize do not help here: they virtualise the dropdown PANEL, not
+  // the *ngFor that creates the option components in the first place.
+  visibleOptions: Array<{ label: string; value: string }> = [];
+
+  // Enough to fill the 300px virtual-scroll panel several times over while staying trivial to
+  // render. Narrowing further is the search box's job.
+  private static readonly MaxVisibleOptions = 50;
 
   @Output() valueChange = new EventEmitter<any>();
 
@@ -121,12 +139,14 @@ export class EmployeeList {
 
   onSelectionChange(value: any): void {
     this.selectedUser = value;
+    this.refreshVisibleOptions();
     this.onChange(value); // VERY IMPORTANT
     this.onTouched();
   }
 
   writeValue(value: any): void {
     this.selectedUser = value;
+    this.refreshVisibleOptions();
   }
 
   registerOnChange(fn: any): void {
@@ -148,6 +168,37 @@ export class EmployeeList {
 
   onSearch(value: string): void {
     this.searchTerm = value;
+    this.refreshVisibleOptions();
+  }
+
+  trackByValue = (_: number, opt: { value: string }) => opt.value;
+
+  // Rebuilds the rendered window: everything currently selected (nz-select reads the selected
+  // item's LABEL off its option, so dropping it would blank the chip), then the best matches for
+  // the current search term, up to the cap. One pass over the in-memory array, no DOM work.
+  private refreshVisibleOptions(): void {
+    const term = (this.searchTerm || '').toLowerCase().trim();
+    const raw = this.selectedUser;
+    const selected = new Set<string>(
+      Array.isArray(raw) ? raw : raw !== null && raw !== undefined && raw !== '' ? [raw] : [],
+    );
+
+    const shown: Array<{ label: string; value: string }> = [];
+
+    if (selected.size) {
+      for (const opt of this.options) {
+        if (selected.has(opt.value)) shown.push(opt);
+      }
+    }
+
+    for (const opt of this.options) {
+      if (shown.length >= EmployeeList.MaxVisibleOptions) break;
+      if (selected.has(opt.value)) continue;
+      if (term && !(opt.label || '').toLowerCase().includes(term)) continue;
+      shown.push(opt);
+    }
+
+    this.visibleOptions = shown;
   }
 
   // onSelectionChange(value: any): void {
@@ -169,6 +220,7 @@ export class EmployeeList {
       } else {
         this.options = [];
       }
+      this.refreshVisibleOptions();
     });
   };
 }
