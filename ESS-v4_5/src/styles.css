@@ -7222,3 +7222,25 @@ html.ant-scrolling-effect {
   cursor: pointer;
   text-decoration: underline;
 }
+
+/* The "what is still missing before you can Submit" hint above the buttons.
+   Amber rather than red: this is guidance about an incomplete form, not a failure -- red beside a
+   disabled button reads as though something went wrong. Sized to its text so a one-line hint does
+   not stretch into a full-width banner. */
+.submit-hint {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 8px 14px;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #92620b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.submit-hint .bi {
+  color: #f59e0b;
+  flex: 0 0 auto;
+}

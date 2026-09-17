@@ -822,12 +822,17 @@
                   <!-- The button below has no click handler while disabled, so this is the only
                        way a user finds out WHY -- previously it just silently stayed disabled
                        with no indication which of several possible requirements was unmet. -->
+                  <!-- Amber, not red: nothing has failed here. The form is telling the user what
+                       is still needed before Submit becomes available, which is guidance, not an
+                       error -- and red next to a disabled button reads as "something broke".
+                       mb-3 keeps it off the buttons; it used to sit directly against them. -->
                   <div
-                    class="col-lg-12 col-md-12 col-sm-12 text-center text-danger"
-                    style="font-size: 13px"
+                    class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center mb-3"
                     *ngIf="submitDisabledReason"
                   >
-                    <i class="bi bi-exclamation-circle me-1"></i>{{ submitDisabledReason }}
+                    <div class="submit-hint">
+                      <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ submitDisabledReason }}
+                    </div>
                   </div>
                   <div
                     class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
