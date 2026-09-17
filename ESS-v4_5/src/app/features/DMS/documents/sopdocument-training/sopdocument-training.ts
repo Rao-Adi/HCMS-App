@@ -178,16 +178,6 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         this.isGridVisible = true;
       });
 
-    // Tab badges reflect the same shared count state the sidebar menu uses (see
-    // NavigationCountsService), so this page and the "Training for SOP Documents" menu
-    // item never disagree.
-    this.subscriptions.push(
-      this._navigationCountsService.documentsPendingTrainingCounts$.subscribe((counts) => {
-        this.classRoomPendingCount = counts.classroom;
-        this.onlinePendingCount = counts.online;
-      }),
-    );
-
     this.getTrainingPendingCounts();
   }
 
@@ -196,9 +186,36 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
   }
 
   getTrainingPendingCounts(): void {
-    // Fetches through the shared service; the ngOnInit subscription above applies the result
-    // to this page's tab badges, and main-layout's own subscription applies the same result
-    // to the "Training for SOP Documents" sidebar badge.
+    // Two different counts, deliberately fetched separately.
+    //
+    // The tab badges must be counted under the SAME filters the grids are showing. They used to
+    // read the shared NavigationCountsService state, which is fetched with an empty payload --
+    // so with the default SOP document type selected the Class Room badge said 5 (every pending
+    // document, all types) while the grid underneath said "1 to 3 of 3" (the 3 SOP ones). That
+    // is the mismatch users report: the badge is not wrong about the system, it is answering a
+    // different question than the grid.
+    const payload = {
+      divisioncode: this.selectedDivisions || '',
+      departmentcode: this.selectedDepartment || '',
+      subdepartmentcode: this.selectedSubDepartment || '',
+      businessdomaincode: this.selectedBusinessDomain || '',
+      documenttypecode: this.selectedDocumentType || '',
+      searchtext: '',
+    };
+
+    this._documentService.GetDocumentsPendingTrainingCounts(payload).subscribe({
+      next: (response) => {
+        const data = response?.Data;
+        if (response?.Success && data) {
+          this.classRoomPendingCount = Number(data.ClassroomCount ?? data.classroomCount) || 0;
+          this.onlinePendingCount = Number(data.OnlineCount ?? data.onlineCount) || 0;
+        }
+      },
+      error: (err) => console.error('Failed to get training pending counts', err),
+    });
+
+    // The sidebar badge has no filters of its own, so it keeps its unfiltered company-wide total
+    // through the shared service -- which is also what main-layout subscribes to.
     this._navigationCountsService.refreshDocumentsPendingTrainingCounts();
   }
 
@@ -370,6 +387,9 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
 
   onDocumentTypeChange(value: any): void {
     this.selectedDocumentType = value;
+    // The tab badges are counted under the same filters as the grid, so they have to be refetched
+    // whenever a filter moves -- otherwise they keep answering for the previous selection.
+    this.getTrainingPendingCounts();
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     } else {
@@ -703,6 +723,9 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    // Same reason as onDocumentTypeChange: the badges are filter-scoped, so they follow the
+    // cabinet selection too.
+    this.getTrainingPendingCounts();
     if (this.agGridWrapper) {
       this.agGridWrapper.refresh();
     } else {

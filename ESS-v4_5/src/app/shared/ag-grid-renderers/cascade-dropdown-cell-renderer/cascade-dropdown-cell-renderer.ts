@@ -9,13 +9,21 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
   selector: 'app-cascade-dropdown-cell',
   imports: [CommonModule, FormsModule, NzSelectModule],
   template: `
+    <!-- Fills the cell instead of being pinned to a fixed 200px. At 200px the select stayed that
+         wide no matter how much room the column actually had, so any column narrower than that
+         (which is what happens as soon as a grid carries several of these) clipped the control and
+         cut off its dropdown arrow -- the Department and Sub-Department filters were the two that
+         showed it, because those are the cascading ones. min-width matches DropdownCellRenderer,
+         and the column will not go below it either (see DROPDOWN_COLUMN_MIN_WIDTH in
+         editable-ag-grid-wrapper.ts), so the select is always fully visible. -->
+    <div class="dropdown-cell-wrap">
     <nz-select
       class="ag-input"
-      style="width: 200px;"
+      style="width: 100%; min-width: 150px;"
       [nzShowSearch]="params?.showSearch"
       [nzFilterOption]="params?.customFilter"
       [nzPlaceHolder]="params?.placeholder || '-- Any --'"
-      [nzAllowClear]="true"
+      [nzAllowClear]="false"
       [nzDisabled]="disabled"
       [(ngModel)]="value"
       (ngModelChange)="onChange($event)"
@@ -31,7 +39,59 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
         [nzLabel]="option[params?.displayField || 'text']"
       ></nz-option>
     </nz-select>
+
+      <!-- Same clear button, same position, same markup as DropdownCellRenderer. Before this,
+           a cascading column (Department, Sub-Department) cleared through nz-select's own
+           built-in cross while the plain columns next to it (Division, Document Type) cleared
+           through this one -- two different-looking crosses sitting side by side in the same
+           filter row. nzAllowClear is off above for the same reason it is off there. -->
+      <button
+        type="button"
+        *ngIf="value !== null && value !== undefined && value !== '' && !disabled"
+        class="dropdown-cell-clear"
+        title="Clear selection"
+        (mousedown)="$event.stopPropagation()"
+        (click)="clearSelection($event)"
+      >
+        &times;
+      </button>
+    </div>
   `,
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 100%;
+        padding: 4px 0;
+      }
+      .dropdown-cell-wrap {
+        position: relative;
+        width: 100%;
+      }
+      nz-select {
+        width: 100% !important;
+      }
+      .dropdown-cell-clear {
+        position: absolute;
+        top: 50%;
+        right: 24px;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        line-height: 14px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: rgba(0, 0, 0, 0.45);
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 2;
+      }
+      .dropdown-cell-clear:hover {
+        color: rgba(0, 0, 0, 0.85);
+      }
+    `,
+  ],
 })
 export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
   selectedValue = null;
@@ -148,6 +208,13 @@ export class CascadeDropdownCellRenderer implements ICellRendererAngularComp {
 
   //   //console.groupEnd();
   // }
+
+  clearSelection(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.value = null;
+    this.onChange(null);
+  }
 
   onChange(value: any): void {
     //console.log('✅ DROPDOWN CHANGE', {

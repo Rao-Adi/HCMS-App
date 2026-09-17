@@ -332,7 +332,7 @@
                       <span
                         class="status-badge"
                         [ngClass]="{
-                          'badge-rework': item.status == 'Reverted',
+                          'dms-status-reverted': item.status === 'Reverted',
                           'badge-rejected': item.status == 'Rejected',
                           'badge-approved': item.status == 'Approved',
                         }"

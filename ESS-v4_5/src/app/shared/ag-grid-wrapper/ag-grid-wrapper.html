@@ -91,6 +91,7 @@
       class="ag-grid-empty-state"
       *ngIf="showNoRowsMessage"
       [style.top.px]="config.headerHeight"
+      [style.height.px]="config.rowHeight || 47"
     >
       No records to show.
     </div>

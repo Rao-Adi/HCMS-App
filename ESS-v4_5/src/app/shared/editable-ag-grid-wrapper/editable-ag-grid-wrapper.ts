@@ -33,7 +33,6 @@ import { Checkboxrenderer } from '../ag-grid-renderers/checkboxrenderer/checkbox
 import { FileUploadCellRenderer } from '../ag-grid-renderers/file-upload-cell-renderer/file-upload-cell-renderer';
 import { CascadeDropdownCellRenderer } from '../ag-grid-renderers/cascade-dropdown-cell-renderer/cascade-dropdown-cell-renderer';
 import { LinkRenderer } from '../ag-grid-renderers/link-renderer/link-renderer';
-import { NoRowsOverlay } from '../ag-grid-renderers/no-rows-overlay/no-rows-overlay';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -136,6 +135,10 @@ export interface GridConfig {
   pinnedBottomRowData?: any[];
 }
 
+// DropdownCellRenderer's nz-select is min-width: 150px, plus the alpine cell's ~17px padding on
+// each side. Anything narrower clips the control instead of shrinking it.
+const DROPDOWN_COLUMN_MIN_WIDTH = 190;
+
 @Component({
   selector: 'app-editable-ag-grid-wrapper',
   standalone: true,
@@ -214,10 +217,20 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   @Input() pinnedTopRowData: any[] = [];
   @Input() pinnedBottomRowData: any[] = [];
 
-  // Registered as gridOptions.noRowsOverlayComponent -- AG Grid renders and positions this
-  // itself within the grid's own row-viewport area (see no-rows-overlay.ts for why that beats
-  // a template-level overlay or in-flow sibling here).
-  noRowsOverlayComponent = NoRowsOverlay;
+  // AG Grid's own no-rows overlay is suppressed (see the template) and this pair drives a
+  // positioned message instead. The overlay centres itself over the whole body area, which on
+  // this grid includes the pinned top row holding the add/filter line -- with no data that put
+  // "No records to show." directly on top of that row's own text.
+  get showNoRowsMessage(): boolean {
+    return !this.rowData || this.rowData.length === 0;
+  }
+
+  /** Offset of the first empty row: below the header and any pinned top rows. */
+  get emptyStateTop(): number {
+    const headerHeight = this.config?.headerHeight ?? 40;
+    const rowHeight = this.config?.rowHeight ?? 47;
+    return headerHeight + (this.pinnedTopRowData?.length ?? 0) * rowHeight;
+  }
 
   // @Output() rowAdded = new EventEmitter<any>();
   @Output() rowUpdated = new EventEmitter<{ rowData: any; index: number }>();
@@ -487,6 +500,34 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       editable: isColumnEditable,
       cellClass: column.cellClass,
     };
+
+    // A dropdown column has to be at least as wide as the select it renders, or the select is
+    // simply clipped by the cell. DropdownCellRenderer's nz-select carries min-width: 150px, and
+    // the alpine cell adds ~17px of padding either side -- so anything under ~190px cuts the
+    // control off, which is what happened to the Department and Sub-Department filters whenever
+    // the grid had to share its width between several of them.
+    //
+    // Widening these on purpose can push the columns past the grid's own width. That is the
+    // intended outcome: the horizontal scrollbar (kept visible in styles.css) then lets the user
+    // reach them, which beats squeezing every dropdown until none of them is usable.
+    if (column.type === 'dropdown') {
+      colDef.minWidth = Math.max(column.minWidth ?? 0, DROPDOWN_COLUMN_MIN_WIDTH);
+
+      // A dropdown cell stores the option's id, not its text, so the wrapper's generic tooltip --
+      // which just stringifies the cell value -- was showing raw keys on hover: "DIV-0003-DPT-0001"
+      // over a cell reading "Quality Control". Resolve the id back to the label it is displaying,
+      // and fall back to the raw value only if no option matches it.
+      const valueField = column.dropdownValueField || 'id';
+      const displayField = column.dropdownDisplayField || 'text';
+      colDef.tooltipValueGetter = (params: any) => {
+        const raw = params.value;
+        if (raw === null || raw === undefined || raw === '') return null;
+        const match = (column.dropdownOptions || []).find(
+          (option: any) => String(option?.[valueField]) === String(raw),
+        );
+        return match ? String(match[displayField] ?? raw) : String(raw);
+      };
+    }
 
     // Set cell renderer based on column type
     switch (column.type) {

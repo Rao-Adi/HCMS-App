@@ -27,16 +27,10 @@
         </td>
 
         <td>
-          <span
-            class="badge"
-            [ngClass]="{
-              approve: h.Decision === 'Approved',
-              reject: h.Decision === 'Rejected',
-              pending: h.Decision === 'Reworked' || !h.Decision
-            }"
-          >
-            <!-- DB/backend value is 'Reworked' -- client-facing label is "Reverted". -->
-            {{ h.Decision === 'Reworked' ? 'Reverted' : (h.Decision || 'Pending') }}
+          <!-- Colour and wording both come from shared/utils/document-status.ts, the single place
+               the DMS decides them, so a decision reads the same here as in every grid. -->
+          <span class="dms-status-pill" [ngClass]="statusClass(h.Decision)">
+            {{ statusLabel(h.Decision) }}
           </span>
         </td>
       </tr>

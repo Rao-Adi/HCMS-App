@@ -11,6 +11,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
+import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
 
 @Component({
   selector: 'app-workflow-approval-history-component',
@@ -19,6 +20,16 @@ import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
   styleUrl: './workflow-approval-history-component.css',
 })
 export class WorkflowApprovalHistoryComponent {
+  // Wording and colour for a decision, both from the one shared source so this modal can never
+  // drift from the grids again.
+  statusLabel(decision: unknown): string {
+    return normalizeStatusLabel(decision) || 'Pending';
+  }
+
+  statusClass(decision: unknown): string {
+    return statusBadgeClass(this.statusLabel(decision));
+  }
+
   @Input() entityId!: number;
   @Input() entityType!: 'Document' | 'Request';
 

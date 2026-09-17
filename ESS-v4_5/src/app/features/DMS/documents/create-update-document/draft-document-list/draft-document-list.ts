@@ -21,6 +21,7 @@ import { DRDistributionList } from '../../document-request-management/drdistribu
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
 
 // Documents the user created that are still in Draft: never submitted ("Draft"), or submitted and
 // then sent back for rework ("Reverted"). Mirrors document-request-management's draft-request-list
@@ -153,30 +154,11 @@ export class DraftDocumentList implements OnInit {
       headerName: 'Status',
       minWidth: 140,
       cellRenderer: (params: any) => {
-        const reverted = params.value === 'Reverted';
-        const color = reverted ? '#f59e0b' : '#6b7280';
-        const bg = reverted ? '#fffbeb' : '#f3f4f6';
-        const border = reverted ? '#fef3c7' : '#e5e7eb';
+        const label = normalizeStatusLabel(params.value);
+        if (!label) return '';
         // Only a Reverted row has an observation behind it, so only that one reads as clickable.
-        const clickable = reverted ? 'cursor:pointer; text-decoration:underline;' : '';
-        return `
-          <span style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 1;
-            color: ${color};
-            background-color: ${bg};
-            border: 1px solid ${border};
-            border-radius: 9999px;
-            ${clickable}
-          ">
-            ${params.value || 'Draft'}
-          </span>
-        `;
+        const clickable = label === 'Reverted' ? ' dms-status-clickable' : '';
+        return `<span class="dms-status-pill ${statusBadgeClass(label)}${clickable}" data-action="open">${label}</span>`;
       },
       onCellClicked: (event: any) => {
         if (event?.data?.status === 'Reverted') this.openObservationModal(event.data);

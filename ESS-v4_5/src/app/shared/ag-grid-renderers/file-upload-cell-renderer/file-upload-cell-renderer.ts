@@ -5,6 +5,7 @@ import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Component({
   selector: 'app-file-upload-cell-renderer',
@@ -85,7 +86,10 @@ export class FileUploadCellRenderer implements ICellRendererAngularComp {
   fileInfo: any = null;
   isEditing: boolean = false;
 
-  constructor(private message: NzMessageService) {}
+  constructor(
+    private message: NzMessageService,
+    private _appConfig: AppConfigService,
+  ) {}
 
   agInit(params: any): void {
     this.params = params;
@@ -120,7 +124,13 @@ export class FileUploadCellRenderer implements ICellRendererAngularComp {
     if (!value) return null;
     if (typeof value === 'string') {
       const fileName = value.split('/').pop() || value;
-      return { name: fileName, url: value, size: 0 };
+      // Resolved here rather than at each preview button. This cell's value arrives as a stored
+      // server path ("/uploads/...") whenever the grid is showing something already saved, and
+      // seven different screens read fileInfo.url back out to open it -- each of them was opening
+      // it against the Angular origin, which has no /uploads and answers 404. Resolving once, at
+      // the point the string becomes a fileInfo, fixes all of them. The name still comes from the
+      // original path, so the label is unchanged.
+      return { name: fileName, url: this._appConfig.resolveFileUrl(value), size: 0 };
     }
     return value;
   }
@@ -171,7 +181,12 @@ export class FileUploadCellRenderer implements ICellRendererAngularComp {
 
   previewFile(): void {
     if (this.fileInfo?.url) {
-      window.open(this.fileInfo.url, '_blank');
+      // This cell holds two different kinds of url: a blob: url for a file the user just picked
+      // in this grid, and a stored server path ("/uploads/...") for one already saved. Only the
+      // second needs the API host in front of it, and resolveFileUrl leaves blob:/data:/http(s)
+      // alone -- opening a stored path as-is asked the Angular origin, which has no /uploads and
+      // answers 404.
+      window.open(this._appConfig.resolveFileUrl(this.fileInfo.url), '_blank');
     }
   }
 

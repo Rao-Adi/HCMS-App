@@ -15,6 +15,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { statusCellRenderer } from '@app/shared/utils/document-status';
 
 // Status badge styling for a Document's lifecycle CurrentStatus (Draft / Pending Approval /
 // Authorization Pending / Training Pending / Approved / Authorized / Effective / Rejected --
@@ -22,18 +23,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 // dictionary since CurrentStatus is a free-text state Name, not a fixed code, so this stays
 // correct even if the exact wording of a state's Name changes -- mirrors the same
 // pending/approved/rejected color convention used by my-total-requests.ts and my-approval-request.ts.
-function documentStatusBadge(status: string): { color: string; bg: string; border: string } {
-  const s = (status || '').toLowerCase();
-  if (s.includes('reject')) return { color: '#ef4444', bg: '#fef2f2', border: '#fee2e2' };
-  if (s.includes('draft')) return { color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' };
-  if (s.includes('pending') || s.includes('progress') || s.includes('rework') || s.includes('revert')) {
-    return { color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' };
-  }
-  if (s.includes('approv') || s.includes('effective') || s.includes('authoriz')) {
-    return { color: '#10b981', bg: '#ecfdf5', border: '#d1fae5' };
-  }
-  return { color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' };
-}
+// Status colours come from shared/utils/document-status.ts.
 
 @Component({
   selector: 'app-my-documents',
@@ -128,26 +118,7 @@ export class MyDocuments implements OnInit {
       field: 'status',
       headerName: 'Status',
       minWidth: 140,
-      cellRenderer: (params: any) => {
-        const badge = documentStatusBadge(params.value);
-        return `
-          <span style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 1;
-            color: ${badge.color};
-            background-color: ${badge.bg};
-            border: 1px solid ${badge.border};
-            border-radius: 9999px;
-          ">
-            ${params.value || 'Draft'}
-          </span>
-        `;
-      },
+      cellRenderer: statusCellRenderer,
     },
     { field: 'createdOn', headerName: 'Created On', minWidth: 160, cellClass: 'audit-cell' },
     { field: 'createdBy', headerName: 'Created By', minWidth: 150, cellClass: 'audit-cell' },

@@ -22,14 +22,9 @@
           <!-- <td class="obs">{{ o.Division }}</td> -->
           <td class="obs" [innerHTML]="o.Observation"></td>
           <td>
-            <span
-              class="badge"
-              [ngClass]="{
-                approve: o.Decision === 'Approved',
-                reject: o.Decision === 'Rejected' || o.Decision === 'Reverted',
-              }"
-            >
-              {{ o.Decision === 'Reverted' ? 'Reverted' : o.Decision }}
+            <!-- Same shared source as every other status in the product. -->
+            <span class="dms-status-pill" [ngClass]="statusClass(o.Decision)">
+              {{ statusLabel(o.Decision) }}
             </span>
           </td>
           <td class="audit-cell">{{ o.ActionAt }}</td>

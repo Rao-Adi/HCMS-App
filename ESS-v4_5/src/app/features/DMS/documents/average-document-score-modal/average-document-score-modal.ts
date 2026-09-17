@@ -4,6 +4,7 @@ import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { DocumentTrainingService } from '@app/shared/services/document-training.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { statusCellRenderer } from '@app/shared/utils/document-status';
 
 @Component({
   selector: 'app-average-document-score-modal',
@@ -32,7 +33,7 @@ export class AverageDocumentScoreModal {
     { field: 'trainingModeName', headerName: 'Training Mode' },
     { field: 'noOfAttempts', headerName: 'No. of Attempts' },
     { field: 'score', headerName: 'Score (%)' },
-    { field: 'status', headerName: 'Status' },
+    { field: 'status', headerName: 'Status', cellRenderer: statusCellRenderer },
   ];
 
   constructor(

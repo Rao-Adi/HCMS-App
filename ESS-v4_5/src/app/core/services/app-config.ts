@@ -67,11 +67,29 @@ export class AppConfigService {
     return String(this.appConfig.apiBaseUrl || '').replace(/\/api\/?$/i, '');
   }
 
-  /** Turns a stored relative file path into an absolute URL. Absolute paths are left alone. */
+  /**
+   * Turns a stored relative file path into an absolute URL on the API host.
+   *
+   * Left alone, in order:
+   *  - http(s): already absolute.
+   *  - blob: / data: a URL the browser made for a file the user just picked. Several screens
+   *    put those and stored server paths through the same field (see FileUploadCellRenderer),
+   *    and prefixing one with the API host would break a file that was working fine.
+   *
+   * Never throws: if the config somehow is not loaded yet, this falls back to the path as given
+   * rather than taking down whatever is rendering -- a grid cell should not disappear because a
+   * download link could not be built.
+   */
   public resolveFileUrl(path: string | null | undefined): string {
     if (!path) return '';
-    if (/^https?:\/\//i.test(path)) return path;
-    const base = this.fileBaseUrl.replace(/\/$/, '');
+    if (/^(https?:|blob:|data:)/i.test(path)) return path;
+
+    let base = '';
+    try {
+      base = this.fileBaseUrl.replace(/\/$/, '');
+    } catch {
+      base = '';
+    }
     return base + (path.startsWith('/') ? path : '/' + path);
   }
 

@@ -656,7 +656,11 @@ export class DocumentRequestForm {
                   response?.Data?.templateFileUrl ||
                   this.templateFileUrl;
             if (url) {
-              window.open(url, '_blank');
+              // Resolved against the API host, not the page. This branch runs when the endpoint
+              // answered with the template's stored path ("/uploads/templates/Foo.docx") instead
+              // of the file itself -- opened as-is, the browser asks the Angular origin for it,
+              // which has no /uploads, so the user gets a 404 on a template that exists.
+              window.open(this._appConfig.resolveFileUrl(url), '_blank');
             } else {
               this._notificationToastService.createNotification(
                 'warning',

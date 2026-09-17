@@ -7,6 +7,7 @@ import { ObservationModalPopup } from '../observation-modal-popup/observation-mo
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzIconModule } from 'ng-zorro-antd/icon'; 
 import { PermissionService } from '@app/shared/services/permission.service';
+import { AppConfigService } from '@app/core/services/app-config';
 
 @Component({
   selector: 'app-my-pending-request-for-approval',
@@ -169,6 +170,7 @@ export class MyPendingRequestForApproval {
   constructor(
     private modal: NzModalService,
     private _permissionService: PermissionService,
+    private _appConfig: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -243,7 +245,12 @@ export class MyPendingRequestForApproval {
   viewDocument(rowData: any) {
     // If the backend returns a document URL (e.g. uploaded Word/PDF draft)
     if (rowData.documentUrl || rowData.draftFileUrl) {
-      window.open(rowData.documentUrl || rowData.draftFileUrl, '_blank');
+      // The stored path ("/uploads/documents/Foo.docx") points at a file the API serves, not the
+      // Angular app -- opening it as-is asks the page's own origin, which 404s.
+      window.open(
+        this._appConfig.resolveFileUrl(rowData.documentUrl || rowData.draftFileUrl),
+        '_blank',
+      );
     } else if (rowData.proposedContent) {
       // For HTML contents, open it in a new window/tab safely
       const newWindow = window.open('', '_blank');

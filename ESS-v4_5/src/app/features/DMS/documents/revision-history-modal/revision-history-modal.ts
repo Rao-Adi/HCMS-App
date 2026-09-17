@@ -4,6 +4,7 @@ import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { statusCellRenderer } from '@app/shared/utils/document-status';
 
 // Case of incoming JSON keys is inconsistent across this app depending on whether a controller
 // returns a strongly-typed DTO or a raw Dapper dynamic row (PascalCase vs all-lowercase), so
@@ -43,7 +44,7 @@ export class RevisionHistoryModal {
   revisionHistoryColumnDefs: ColDef[] = [
     { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'version', headerName: 'Version', minWidth: 80 },
-    { field: 'status', headerName: 'Status' },
+    { field: 'status', headerName: 'Status', cellRenderer: statusCellRenderer },
     {
       field: 'isCurrentVersion',
       headerName: 'Current Version',

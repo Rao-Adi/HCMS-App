@@ -92,11 +92,9 @@
   text-transform: uppercase;
 }
 
-.badge-rework {
-
-  background: #fde8e8;
-  color: #f44336;
-}
+/* Reverted is styled by .dms-status-reverted in src/styles.css -- one definition for the
+   whole product. The rule that used to live here gave Reverted the same red as .badge-rejected
+   below, which made a reverted document indistinguishable from a rejected one. */
 
 .badge-rejected {
 

@@ -2,6 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { statusCellRenderer } from '@app/shared/utils/document-status';
 
 @Component({
   selector: 'app-approval-history-modal',
@@ -36,7 +37,7 @@ export class ApprovalHistoryModal {
       headerName: 'Status Updated On',
     },
 
-    { field: 'status', headerName: 'Status' },
+    { field: 'status', headerName: 'Status', cellRenderer: statusCellRenderer },
   ];
 
   constructor(@Inject(NZ_MODAL_DATA) public modalData: any) {}

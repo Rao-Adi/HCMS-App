@@ -6185,11 +6185,17 @@ html.ant-scrolling-effect {
   font-size: 5px !important;
 }
 
+/* AG Grid shows this gutter only when the body actually scrolls, and hides it otherwise.
+   display/visibility were forced on here, which kept an empty 8px strip down the right of
+   EVERY grid -- including every autoHeight grid, which never scrolls at all. The rows then
+   stopped short of the grid's own right edge while the header ran the full width, which is the
+   ragged right edge reported as "the box boundary is not proper in every grid".
+
+   The width stays: it is what makes the scrollbar comfortable to grab on the grids that do
+   scroll. Only the "always exist" part is gone. */
 .ag-body-vertical-scroll {
   width: 10px !important;
   min-width: 10px !important;
-  display: block !important;
-  visibility: visible !important;
 }
 
 .ag-body-vertical-scroll-viewport {
@@ -6202,17 +6208,27 @@ html.ant-scrolling-effect {
   min-width: 10px !important;
 }
 
+/* The horizontal counterpart of the same problem: overflow forced to scroll and visibility
+   forced visible kept a 16px dead band along the bottom of every grid, between the last row
+   and the paging panel, whether or not the columns overflowed. The width values were a copy of
+   the vertical rule above and never made sense here -- 8px wide on a bar that spans the grid
+   horizontally. auto lets the bar appear exactly when the columns do overflow. */
+/* Horizontal scrollbar: kept visible on every grid on purpose, so there is always a bar to grab
+   when a grid has more columns than fit -- which most of the document grids do. This is the
+   opposite of the vertical rule above, and deliberately so: the vertical gutter had nothing to
+   scroll on an autoHeight grid and only ate 8px off the right edge, whereas this bar is the only
+   affordance for reaching the columns off to the right.
+
+   AG Grid puts its own .ag-invisible on .ag-body-horizontal-scroll when it decides the bar is
+   not needed, so visibility has to be set on that element as well as on its viewport. */
+.ag-body-horizontal-scroll,
 .ag-body-horizontal-scroll-viewport {
-  width: 8px !important;
-  min-width: 8px !important;
-  overflow-y: scroll !important;
-  overflow-x: scroll !important;
   visibility: visible !important;
 }
 
-.ag-body-horizontal-scroll-container {
-  height: 10px !important;
-  min-height: 10px !important;
+.ag-body-horizontal-scroll-viewport {
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
 }
 
 
@@ -6325,20 +6341,28 @@ html.ant-scrolling-effect {
 .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
   height: 1.95rem !important;
 }
-/* Force AG Grid vertical scrollbar visibility */
+/* Vertical scrollbar sizing. It is NOT forced to exist: AG Grid adds .ag-hidden (display: none)
+   to this element whenever the body does not overflow, and the display/visibility declarations
+   that used to be here overrode that -- leaving an empty 8px strip down the right of every grid,
+   most visibly on autoHeight grids, which never scroll at all. Measured directly: with this
+   stylesheet the element computed display:block / width 8px while carrying .ag-hidden; without
+   it, display:none / width 0.
+
+   That strip is what made the rows stop short of the grid's own right edge while the header ran
+   the full width -- the ragged boundary reported on every grid.
+
+   Note this block is a duplicate of one further up the file; that one was cleaned first and
+   nothing changed, because this later copy was winning. */
 .ag-body-vertical-scroll {
   width: 8px !important;
   min-width: 8px !important;
-  display: block !important;
-  visibility: visible !important;
 }
 
 .ag-body-vertical-scroll-viewport {
   width: 8px !important;
   min-width: 8px !important;
-  overflow-y: scroll !important;
+  overflow-y: auto !important;
   overflow-x: hidden !important;
-  visibility: visible !important;
 }
 
 .ag-body-vertical-scroll-container {
@@ -7140,4 +7164,61 @@ html.ant-scrolling-effect {
 
 .btn-export {
       border-radius: unset !important;
+}
+/* ---------------------------------------------------------------------------
+   DMS status: Reverted
+   ---------------------------------------------------------------------------
+   One definition for the whole product. "Reverted" was showing in three
+   different colours depending on which screen you were on: amber (sharing the
+   Pending badge) in the Approval History modal, red (sharing the Rejected
+   badge) in the Observation cards, and indigo in My Total Requests. Sharing
+   the Rejected colour was the worst of the three -- reverted-for-rework and
+   rejected are different outcomes and were indistinguishable at a glance.
+
+   Indigo is kept because it is the one choice that collides with nothing else
+   in use: green Approved, red Rejected, amber Pending/In Approval, grey Draft.
+
+   Applied via .dms-status-reverted, which sits alongside whatever badge class
+   a given screen already uses (.status-badge, .badge, ...) and only supplies
+   the colours. Declared with the same specificity pattern the component
+   stylesheets use, so it wins over their generic badge rules.
+   --------------------------------------------------------------------------- */
+/* !important because these have to win against component-scoped .badge / .status-badge rules.
+   Angular emulated encapsulation gives those an attribute selector, so they match this class on
+   specificity and then win purely on being injected later -- which is how the Workflow History
+   modal kept rendering Reverted in its own grey while the grids showed indigo. A status colour
+   that is meant to be identical product-wide is exactly the case for forcing it. */
+.dms-status-reverted,
+.badge.dms-status-reverted,
+.status-badge.dms-status-reverted {
+  background: #f5f3ff !important;
+  color: #6366f1 !important;
+  border-color: #ddd6fe !important;
+}
+
+/* The rest of the DMS status vocabulary, same source, so a status reads the same
+   wherever it appears. Reverted above is the one that was inconsistent; these are
+   here so new screens have something to reach for instead of inventing a fourth
+   shade. Use with .dms-status-pill for the badge shape. */
+.dms-status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  border: 1px solid transparent;
+}
+
+.dms-status-approved { background: #ecfdf5; color: #10b981; border-color: #d1fae5; }
+.dms-status-rejected { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
+.dms-status-pending  { background: #fffbeb; color: #f59e0b; border-color: #fef3c7; }
+.dms-status-draft    { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
+
+/* A status that is also a link (the draft lists make a Reverted row clickable to open its
+   observation). Same pill, same colour -- only the affordance is added, so "clickable" never
+   becomes a reason to invent another colour. */
+.dms-status-clickable {
+  cursor: pointer;
+  text-decoration: underline;
 }

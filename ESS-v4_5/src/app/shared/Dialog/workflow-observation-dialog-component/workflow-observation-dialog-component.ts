@@ -14,6 +14,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 
 import { toHTML, Editor, Toolbar, NgxEditorModule } from 'ngx-editor';
+import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
 
 export interface WorkflowObservationDialogData {
   executionId: number;
@@ -29,6 +30,16 @@ export interface WorkflowObservationDialogData {
   styleUrl: './workflow-observation-dialog-component.css',
 })
 export class WorkflowObservationDialogComponent implements OnInit {
+  // Wording and colour for a decision, both from the one shared source so this modal can never
+  // drift from the grids again.
+  statusLabel(decision: unknown): string {
+    return normalizeStatusLabel(decision) || 'Pending';
+  }
+
+  statusClass(decision: unknown): string {
+    return statusBadgeClass(this.statusLabel(decision));
+  }
+
   observations: any[] = [];
   loading = false;
   templateHtml: string = '';
@@ -122,9 +133,17 @@ export class WorkflowObservationDialogComponent implements OnInit {
             Department: item.Department,
             roleName: item.RoleName,
             Designation: item.Designation,
-            Decision: item.Decision,
+            // Stored as 'Reworked'; shown to users everywhere as 'Reverted'. Translated once here
+            // so the template can test a single value for both its label and its status colour --
+            // it used to compare against 'Reverted', which the backend never sends, so a reverted
+            // step rendered as the raw word "Reworked" with no badge colour at all.
+            Decision: item.Decision === 'Reworked' ? 'Reverted' : item.Decision,
             Observation: item.Observation,
-            ActionAt: new CustomDateFormatPipe().transform(item.ActionAt || item.actionAt || ''),
+            // StatusUpdatedOn is the same column under its other alias -- kept as a fallback so
+            // this keeps working whichever name the endpoint returns.
+            ActionAt: new CustomDateFormatPipe().transform(
+              item.ActionAt || item.actionAt || item.StatusUpdatedOn || '',
+            ),
             IsActive: item.isActive || item.IsActive,
           }));
         } else {

@@ -21,6 +21,8 @@ import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { AppConfigService } from '@app/core/services/app-config';
+import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -190,14 +192,11 @@ export class DraftRequestList {
       headerName: 'Status',
       editable: false,
       cellRenderer: (params: any) => {
-        return `
-          <span
-            style="color:#1976d2; cursor:pointer; text-decoration:underline"
-            data-action="open"
-          >
-            ${params.value}
-          </span>
-        `;
+        const label = normalizeStatusLabel(params.value);
+        if (!label) return '';
+        // Only a Reverted row has an observation behind it, so only that one reads as clickable.
+        const clickable = label === 'Reverted' ? ' dms-status-clickable' : '';
+        return `<span class="dms-status-pill ${statusBadgeClass(label)}${clickable}" data-action="open">${label}</span>`;
       },
       onCellClicked: (event: any) => {
         this.openObservationModal(event.data);
@@ -227,6 +226,7 @@ export class DraftRequestList {
     private _permissionService: PermissionService,
     private _documentTemplateService: TemplateService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _appConfig: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -581,7 +581,10 @@ export class DraftRequestList {
                 response?.Data?.templateFileUrl ||
                 this.templateFileUrl;
           if (url) {
-            window.open(url, '_blank');
+            // Against the API host, not the page -- see the same branch in
+            // document-request-form.ts. The stored path lives under the API's /uploads, which the
+            // Angular origin knows nothing about.
+            window.open(this._appConfig.resolveFileUrl(url), '_blank');
           } else {
             this._notificationToasService.createNotification(
               'warning',

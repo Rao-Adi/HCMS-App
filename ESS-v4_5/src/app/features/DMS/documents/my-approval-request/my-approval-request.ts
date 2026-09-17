@@ -26,6 +26,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { statusCellRenderer } from '@app/shared/utils/document-status';
 
 
 @Component({
@@ -227,51 +228,11 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     {
       field: 'executionStatus',
       headerName: 'Execution Status',
-      cellRenderer: (params: any) => {
-        const val = params.value || '';
-        const displayVal = val.toLowerCase() === 'reworked' ? 'Reverted' : val;
-        const status = displayVal.toLowerCase();
-        let color = '#6b7280'; // default gray
-        let bgColor = '#f3f4f6';
-        let borderColor = '#e5e7eb';
-
-        if (status === 'approved') {
-          color = '#10b981';
-          bgColor = '#ecfdf5';
-          borderColor = '#d1fae5';
-        } else if (status === 'rejected') {
-          color = '#ef4444';
-          bgColor = '#fef2f2';
-          borderColor = '#fee2e2';
-        } else if (status === 'running' || status === 'pending') {
-          color = '#f59e0b';
-          bgColor = '#fffbeb';
-          borderColor = '#fef3c7';
-        } else if (status === 'revered') {
-          color = '#6366f1';
-          bgColor = '#f5f3ff';
-          borderColor = '#ddd6fe';
-        }
-
-        return `
-          <span style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 1;
-            color: ${color};
-            background-color: ${bgColor};
-            border: 1px solid ${borderColor};
-            border-radius: 9999px;
-            text-transform: capitalize;
-          ">
-            ${displayVal}
-          </span>
-        `;
-      },
+      // Was an if/else chain of hex codes local to this grid -- and its reverted branch tested
+      // for 'revered', a typo that never matched, so a reverted request fell through to the
+      // default grey while other screens showed it in colour. Shared renderer now, so the word
+      // and the colour are the same here as everywhere else.
+      cellRenderer: statusCellRenderer,
     },
     // { field: 'dateOfApproval', headerName: 'Date of Approval' },
     {
@@ -765,15 +726,21 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     if (!requestId) {
       return;
     }
-    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request', this.selectedTab).subscribe({
+    // 'All', not selectedTab: the backend filter matches a step's own Decision, which is only ever
+    // Approved / Rejected / Reworked. 'Pending' matched nothing, and 'Rejected' excluded every
+    // reverted step (stored as 'Reworked') -- so the action just performed was missing from the
+    // history that exists to show it. Mirrors my-approval-document.ts.
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Request', 'All').subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observationData = response.Data.map((item: any) => ({
             // Mapping to match the HTML template for observation cards
             loggedBy: item.EmployeeName,
             designation: item.Designation,
-            status: item.Decision,
-            date: item.ActionAt,
+            // Stored as 'Reworked', shown everywhere as 'Reverted' -- the template's badge classes
+            // and label both test for 'Reverted', so the raw value rendered with no status colour.
+            status: item.Decision === 'Reworked' ? 'Reverted' : item.Decision,
+            date: item.ActionAt || item.StatusUpdatedOn,
             observation: item.Observation,
             // You can keep other fields if needed for other logic
             ...item,
@@ -944,7 +911,9 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         entityType: 'Request',
         mode: 'view',
         action: 'Approver',
-        decision: this.selectedTab
+        // 'All' -- see loadObservations above for why the tab name filtered out the very action
+        // the user had just performed.
+        decision: 'All',
       },
       nzFooter: null,
       nzWidth: '70%',

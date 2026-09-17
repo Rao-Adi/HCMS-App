@@ -7,6 +7,21 @@
 ag-grid-angular {
   display: block;
   min-height: 120px;
+
+  /* The grid draws no outline of its own here: styles.css sets --ag-borders: none on
+     .ag-theme-alpine and --ag-wrapper-border: none on .ag-root-wrapper, which strips every
+     AG Grid border globally -- including the one around the grid itself. With rows present
+     the block of data reads as a box on its own, so nobody noticed; with no rows there is
+     nothing to give it an edge, and the header and the "No records to show." message sit on
+     the page with no boundary around them.
+
+     Restored here on the grid element rather than by putting --ag-borders back, so only the
+     outer edge returns -- row and cell separators stay off, exactly as they are today in
+     every grid that has data. Colour and radius match the paging panel below, which kept its
+     own border-top through all of this. */
+  border: 1px solid #dde2eb;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 /* Positioned via [style.top.px]="config.headerHeight" (bound in the template) rather than
@@ -19,8 +34,13 @@ ag-grid-angular {
   position: absolute;
   left: 0;
   right: 0;
-  padding-top: 20px;
-  text-align: center;
+  /* Sized and centred like a row rather than nudged down with padding, so the message lands
+     where the first row would have been instead of floating at an arbitrary offset. Matches
+     editable-ag-grid-wrapper, which had the worse version of the same problem: its message was
+     printing on top of the pinned add/filter row. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #000;
   font-size: 14px;
   pointer-events: none;

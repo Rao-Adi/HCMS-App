@@ -739,7 +739,12 @@
                   <h3 class="PnlHeader" style="margin-top: 0">
                     Additional Approver (This Document Only)
                   </h3>
-                  <div class="row mb-2">
+                  <!-- align-items-end so the Add button sits on the same baseline as the approver
+                       select beside it instead of floating at the top of its own column. The
+                       button also carried w-10, which is not a Bootstrap class (only w-25/50/75/100
+                       exist), so it was silently doing nothing and the button took an arbitrary
+                       width -- sized to its content now, with the icon and label properly centred. -->
+                  <div class="row mb-2 align-items-end">
                     <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
                       <app-employee-list
                         #adHocEmployeeList
@@ -752,7 +757,7 @@
                     <div class="col-lg-2 col-md-3 col-sm-12 mb-10">
                       <button
                         type="button"
-                        class="btn btn-sm btn-primary w-10"
+                        class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center gap-1"
                         (click)="AddAdHocApprover()"
                         [disabled]="adHocApprovers.length > 0"
                       >

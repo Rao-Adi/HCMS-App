@@ -17,6 +17,8 @@
   </div>
 </div>
 
+<!-- Relative, so the empty-state message below can be positioned against the grid. -->
+<div class="grid-host">
 <ag-grid-angular
   [gridId]="gridId"
   [ngStyle]="finalGridStyle"
@@ -26,7 +28,7 @@
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
   [localeText]="{ noRowsToShow: 'No records to show.' }"
-  [noRowsOverlayComponent]="noRowsOverlayComponent"
+  [suppressNoRowsOverlay]="true"
   [rowHeight]="config.rowHeight"
   [headerHeight]="config.headerHeight"
   [pagination]="config.enablePagination"
@@ -47,6 +49,21 @@
   (rowDataUpdated)="onRowDataUpdated($event)"
 >
 </ag-grid-angular>
+
+  <!-- AG Grid's own no-rows overlay is centred over the whole body area, which on this grid
+       includes the pinned top row that carries the add/filter line -- so with no data the message
+       printed straight on top of that row's "--any--" text. Positioned here instead, at exactly
+       the first empty row's offset (header + however many pinned rows there are), so it lands in
+       the empty band below them where a first row would have been. -->
+  <div
+    class="ag-grid-empty-state"
+    *ngIf="showNoRowsMessage"
+    [style.top.px]="emptyStateTop"
+    [style.height.px]="config.rowHeight || 47"
+  >
+    No records to show.
+  </div>
+</div>
 
 <!-- <nz-spin nzTip="Loading...">
       <nz-alert

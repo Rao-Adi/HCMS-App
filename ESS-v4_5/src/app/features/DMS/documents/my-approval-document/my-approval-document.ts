@@ -36,6 +36,23 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
+// WorkflowExecutions.Status as stored, translated into what the business calls it. 'Reworked' is
+// the stored value for a revert; nothing user-facing has ever called it that. 'Completed' means
+// the approval workflow finished, which from an approver's side reads as Approved.
+const MY_APPROVAL_STATUS_LABELS: Record<string, string> = {
+  Running: 'Pending',
+  Completed: 'Approved',
+  Rejected: 'Rejected',
+  Reworked: 'Reverted',
+};
+
+const MY_APPROVAL_STATUS_CLASSES: Record<string, string> = {
+  Pending: 'dms-status-pending',
+  Approved: 'dms-status-approved',
+  Rejected: 'dms-status-rejected',
+  Reverted: 'dms-status-reverted',
+};
+
 @Component({
   selector: 'app-my-approval-document',
   imports: [
@@ -134,6 +151,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+    { field: 'status', label: 'Status', visible: true },
     { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -212,6 +230,23 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'company', headerName: 'Company'},
     { field: 'proposedDocumentNumber', headerName: 'Proposed Document Number' },
     { field: 'proposedVersionNumber', headerName: 'Proposed Version Number' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      minWidth: 130,
+      // The Reverted/Rejected tab lists both outcomes together and, until now, gave no way to
+      // tell which a given row was without opening it. ExecutionStatus is already on every row
+      // (fn_get_my_inbox_documents returns it); this just names it in the user's own words.
+      valueGetter: (params: any) => MY_APPROVAL_STATUS_LABELS[params.data?.ExecutionStatus] ?? params.data?.ExecutionStatus ?? '',
+      cellRenderer: (params: any) => {
+        const label = params.value;
+        if (!label) return '';
+        const cls = MY_APPROVAL_STATUS_CLASSES[label] ?? 'dms-status-draft';
+        // Classes come from the global stylesheet, so the colours match the same status
+        // everywhere else in the DMS rather than being re-picked per grid.
+        return `<span class="dms-status-pill ${cls}">${label}</span>`;
+      },
+    },
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
@@ -253,6 +288,17 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
   // showing just the fixed columns until we know which levels are enabled.
   pendingDocumentsGridColumnDefs: ColDef[] = [...this.leadingColumnDefs, ...this.trailingColumnDefs];
+
+  // Display Options for those same tabs: offering a toggle for a column that is not on the grid
+  // just leaves a switch that does nothing.
+  columnTogglesWithoutStatus?: ColumnToggle[];
+
+  // The same columns without Status, for the tabs where every row necessarily has the same one.
+  // On Pending every row is Pending and on Approved every row is Approved, so the column says
+  // nothing there and only costs width. It earns its place on Reverted/Rejected, which is the one
+  // tab that lists two different outcomes together. Mirrors documentColumnDefsWithoutStatus in
+  // my-approval-request.ts, which already worked this way.
+  documentColumnDefsWithoutStatus: ColDef[] = [];
 
   pendingDocumentData: any[] = [];
 
@@ -322,6 +368,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
         ...this.trailingColumnDefs,
       ];
+      this.documentColumnDefsWithoutStatus = this.pendingDocumentsGridColumnDefs.filter(
+        (col) => col.field !== 'status',
+      );
 
       this.columnToggles = [
         { field: 'documentType', label: 'Document Type', visible: true },
@@ -331,6 +380,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         { field: 'justification', label: 'Justification', visible: true },
         { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
         { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
+        { field: 'status', label: 'Status', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
         { field: 'dateOfCreation', label: 'Date Of Creation', visible: true },
         { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -339,6 +389,10 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
         { field: 'approvalHistory', label: 'Approval History', visible: true },
       ];
+
+      this.columnTogglesWithoutStatus = this.columnToggles.filter(
+        (toggle) => toggle.field !== 'status',
+      );
     });
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
@@ -597,20 +651,17 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     this.documentName = rowData?.documentName || '';
     this.documentId = rowData?.Id;
 
-    if (fileUrl) {
-      // A real file exists -- download it directly instead of routing through a modal
-      // whose only content in that case was a "Download Document" button.
-      this.downloadDraft();
-      return;
-    }
-
-    this.modal.create({
-      nzTitle: 'Document Content',
-      nzContent: this.documentModalTpl,
-      nzFooter: null,
-      nzWidth: '50%',
-      nzStyle: { top: '20px' },
-    });
+    // Both paths download the same thing: download-submitted-document-template merges this
+    // version's content into the Document Type's Word template -- header, document number,
+    // version, effective date, the approver signature block and the status watermark -- see
+    // DocumentComponent.MergeDocumentTemplateAsync, which prefers the rich-text HTML over an
+    // uploaded file whenever both exist and works with no uploaded file at all.
+    //
+    // Only the uploaded-file case used to come through here. Content typed into the rich text
+    // box opened a modal that rendered that HTML raw, with none of the template around it, so an
+    // approver reviewing a typed document never saw the document as it would actually be issued.
+    // Mirrors my-approval-request.ts, where the same change was already made.
+    this.downloadDraft();
   }
 
   onCellClicked(event: any): void {
@@ -875,7 +926,13 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         entityType: 'Document',
         mode: 'view',
         action: 'Approver',
-        decision: this.selectedTab
+        // 'All', not selectedTab. The backend filter matches a step's own Decision value, and
+        // those are only ever Approved / Rejected / Reworked -- 'Pending' matches nothing at all,
+        // and 'Rejected' excludes every Reverted step, because a revert is stored as 'Reworked'.
+        // So on the Reverted/Rejected tab, reverting a document and then opening its Observation
+        // history showed everything except the action you had just performed. This history is
+        // meant to be the document's whole story regardless of outcome.
+        decision: 'All',
       },
       nzFooter: null,
       nzWidth: '70%',
@@ -894,15 +951,21 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     if (!requestId) {
       return;
     }
-    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Document', this.selectedTab).subscribe({
+    // 'All' for the same reason as openObservationModal: the panel is headed "Observation
+    // History" and a step's own Decision is only ever Approved / Rejected / Reworked, so passing
+    // the tab name filtered out the very actions this panel exists to show.
+    this._documentRequestService.GetWorkflowObservationDetails(requestId, 'Document', 'All').subscribe({
       next: (response) => {
         if (response && response.Data) {
           this.observationData = response.Data.map((item: any) => ({
             // Mapping to match the HTML template for observation cards
             loggedBy: item.EmployeeName,
             designation: item.Designation,
-            status: item.Decision,
-            date: item.ActionAt,
+            // A revert is stored as 'Reworked'; everything the user ever sees calls it 'Reverted'.
+            // The template's badge classes and label both test for 'Reverted', so an un-translated
+            // 'Reworked' fell through every branch -- rendering with no status colour at all.
+            status: item.Decision === 'Reworked' ? 'Reverted' : item.Decision,
+            date: item.ActionAt || item.StatusUpdatedOn,
             observation: item.Observation,
             // You can keep other fields if needed for other logic
             ...item,

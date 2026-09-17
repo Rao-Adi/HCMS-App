@@ -15,20 +15,15 @@ import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { statusCellRenderer } from '@app/shared/utils/document-status';
 
-// Status badge styling per DocumentRequestStatus (0-4) plus the Reverted case, which shares
-// Status 0 (Draft) with a genuinely new draft -- the backend tells them apart via IsReworked
-// (see DocumentRequestComponent.GetMyTotalRequestsAsync), the same distinction already used by
-// the dashboard's Draft/Reverted split and by my-approval-request.ts's status badge.
-const STATUS_BADGES: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  Draft: { label: 'Draft', color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' },
-  Reverted: { label: 'Reverted', color: '#6366f1', bg: '#f5f3ff', border: '#ddd6fe' },
-  Submitted: { label: 'Submitted', color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' },
-  'In Approval': { label: 'In Approval', color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' },
-  Approved: { label: 'Approved', color: '#10b981', bg: '#ecfdf5', border: '#d1fae5' },
-  Rejected: { label: 'Rejected', color: '#ef4444', bg: '#fef2f2', border: '#fee2e2' },
-};
-
+// The colours that used to live here as a lookup table now come from
+// shared/utils/document-status.ts, so this screen cannot drift from the rest of the product.
+//
+// The numeric mapping below stays: DocumentRequestStatus 0 means Draft, and a reverted request
+// also sits at 0 -- the backend tells them apart with IsReworked (see
+// DocumentRequestComponent.GetMyTotalRequestsAsync). That distinction is specific to requests,
+// which is why it is resolved here and only the resulting word is handed on.
 function statusLabel(status: number, isReworked: boolean): string {
   switch (status) {
     case 0:
@@ -163,26 +158,7 @@ export class MyTotalRequests {
       field: 'status',
       headerName: 'Status',
       minWidth: 140,
-      cellRenderer: (params: any) => {
-        const badge = STATUS_BADGES[params.value] || STATUS_BADGES['Draft'];
-        return `
-          <span style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 1;
-            color: ${badge.color};
-            background-color: ${badge.bg};
-            border: 1px solid ${badge.border};
-            border-radius: 9999px;
-          ">
-            ${badge.label}
-          </span>
-        `;
-      },
+      cellRenderer: statusCellRenderer,
     },
     { field: 'createdOn', headerName: 'Created On', minWidth: 160, cellClass: 'audit-cell' },
     { field: 'createdBy', headerName: 'Created By', minWidth: 150, cellClass: 'audit-cell' },

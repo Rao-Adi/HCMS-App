@@ -11,6 +11,10 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
   imports: [CommonModule, FormsModule, NzSelectModule],
   template: `
     <div class="dropdown-cell-wrap">
+      <!-- nzAllowClear is off on purpose: this cell renders its own clear button further down, and
+           with both enabled a selected value showed two crosses next to each other, with no way to
+           tell which one did what. The custom button is the one kept -- see its comment for why
+           nz-select's built-in clear cannot be relied on inside this cell. -->
       <nz-select
         class="ag-input"
         style="width: 100%; min-width: 150px;"
@@ -19,7 +23,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
         [nzDisabled]="params?.disabled"
         [nzPlaceHolder]="params?.placeholder || '-- Any --'"
         [(ngModel)]="selectedValue"
-        [nzAllowClear]="true"
+        [nzAllowClear]="false"
         (ngModelChange)="onSelectionChange($event)"
         (keydown)="$event.stopPropagation()"
         (keyup)="$event.stopPropagation()"
