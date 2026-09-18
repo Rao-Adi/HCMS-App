@@ -8,6 +8,42 @@
 
 <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" /> -->
 
+<!-- AI proofreading. Shown only when the server reports the assistant configured (see
+     DmsAiService.isEnabled) -- an installation without a model gets no button at all rather
+     than one that fails when pressed. Hidden in read-only mode: there is nothing to correct. -->
+<div class="row" *ngIf="aiEnabled && !IsReadyOnly">
+  <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end">
+    <button
+      type="button"
+      class="dms-ai-btn"
+      (click)="runProofread()"
+      [disabled]="aiBusy"
+      title="Check spelling and grammar with AI"
+    >
+      <span class="spinner-border spinner-border-sm me-2" *ngIf="aiBusy"></span>
+      <i class="bi bi-stars me-1" *ngIf="!aiBusy"></i>
+      {{ aiBusy ? 'Checking…' : 'AI Spell Check' }}
+    </button>
+  </div>
+</div>
+
+<!-- The correction is offered, never applied for the user. On a controlled document the author
+     has to see what changed and accept it. -->
+<div class="row" *ngIf="aiMessage">
+  <div class="col-lg-12 col-md-12 col-sm-12">
+    <div class="dms-ai-bar" [class.dms-ai-bar-error]="aiIsError">
+      <span class="dms-ai-bar-text">{{ aiMessage }}</span>
+      <span class="dms-ai-bar-actions" *ngIf="aiSuggestion !== null">
+        <button type="button" class="dms-ai-apply" (click)="applyProofread()">Apply</button>
+        <button type="button" class="dms-ai-dismiss" (click)="dismissProofread()">Discard</button>
+      </span>
+      <button type="button" class="dms-ai-dismiss" *ngIf="aiSuggestion === null" (click)="dismissProofread()">
+        Dismiss
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="row mt-2">
   <div class="col-lg-12 col-md-12 col-sm-12">
     <!-- <form [formGroup]="form">

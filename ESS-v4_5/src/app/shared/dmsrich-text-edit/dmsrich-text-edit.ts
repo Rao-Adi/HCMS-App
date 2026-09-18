@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   forwardRef,
@@ -26,6 +27,7 @@ import { QuillEditorComponent } from 'ngx-quill';
 import { Subject, takeUntil } from 'rxjs';
 
 import { VERSION } from '@angular/core';
+import { DmsAiService } from '@app/shared/services/dms-ai.service';
 
 @Component({
   selector: 'app-dmsrich-text-edit',
@@ -95,7 +97,125 @@ export class DMSRichTextEdit implements OnInit {
     },
   };
 
-  ngOnInit() {}
+  constructor(
+    private _dmsAi: DmsAiService,
+    private _cdr: ChangeDetectorRef,
+  ) {}
+
+  // ── AI proofreading ───────────────────────────────────────────────────────
+  // Whether the server has a model configured. Asked once per session by the service.
+  aiEnabled = false;
+  aiBusy = false;
+  /** The corrected HTML waiting for the author to accept. null when there is nothing to apply. */
+  aiSuggestion: string | null = null;
+  aiMessage = '';
+  aiIsError = false;
+
+  ngOnInit() {
+    this._dmsAi.isEnabled().subscribe((enabled) => {
+      this.aiEnabled = enabled;
+      // OnPush: this resolves after the first render, so the button would not appear without it.
+      this._cdr.markForCheck();
+    });
+  }
+
+  /**
+   * Sends the current content for a spelling and grammar pass.
+   *
+   * The result is held, not written. On a controlled document the author has to see what changed
+   * and accept it -- this is the same "generate-only" stance the rest of the DMS AI takes.
+   */
+  runProofread(): void {
+    if (this.aiBusy) return;
+
+    const current = this.editor?.quillEditor?.root?.innerHTML ?? this.contentHtml ?? '';
+    // Quill leaves this behind for an empty editor; treating it as content would send a request
+    // that can only come back "no issues found".
+    const isEmpty = !current || current.replace(/<[^>]*>/g, '').trim().length === 0;
+    if (isEmpty) {
+      this.showAiMessage('There is no content to check yet.', true);
+      return;
+    }
+
+    this.aiBusy = true;
+    this.aiSuggestion = null;
+    this.aiMessage = '';
+    this._cdr.markForCheck();
+
+    this._dmsAi.proofread(current).subscribe({
+      next: (result) => {
+        this.aiBusy = false;
+
+        if (!result.success || !result.correctedHtml) {
+          this.showAiMessage(result.message || 'The spell check could not be completed.', true);
+          return;
+        }
+
+        if (!result.changed) {
+          this.showAiMessage('No spelling or grammar issues were found.', false);
+          return;
+        }
+
+        this.aiSuggestion = result.correctedHtml;
+        this.aiIsError = false;
+        this.aiMessage = result.notice || 'AI-generated correction. Review before applying.';
+        this._cdr.markForCheck();
+      },
+      error: (err) => {
+        this.aiBusy = false;
+        // The server already phrases these ("the assistant is busy", "currently unavailable"),
+        // so prefer its wording over a generic failure message.
+        this.showAiMessage(
+          err?.error?.Message || err?.error?.message || 'The spell check is unavailable right now.',
+          true,
+        );
+      },
+    });
+  }
+
+  /** Writes the accepted correction into the editor and tells the parent, as a normal edit would. */
+  applyProofread(): void {
+    if (this.aiSuggestion === null) return;
+
+    const corrected = this.aiSuggestion;
+    this.aiSuggestion = null;
+
+    let applied = corrected;
+    if (this.editor?.quillEditor) {
+      // Same call ngOnChanges uses to load content: on its own it replaces the whole document.
+      // (Clearing first with setText('') leaves Quill's trailing newline behind as an extra
+      // empty paragraph.)
+      this.editor.quillEditor.clipboard.dangerouslyPasteHTML(corrected);
+
+      // Read back what Quill actually holds rather than assuming it kept our markup verbatim --
+      // it normalises as it parses. Emitting the normalised value is what the parent would have
+      // received from a real edit, and it keeps ngOnChanges' 'incoming !== current' guard from
+      // firing a redundant re-paste that would jump the cursor.
+      applied = this.editor.quillEditor.root.innerHTML;
+    }
+
+    this.contentHtml = applied;
+    this.contentHtmlChange.emit(applied);
+
+    // The bar disappearing on its own reads as 'nothing happened'; say plainly that it did.
+    this.aiMessage = 'Correction applied.';
+    this.aiIsError = false;
+    this._cdr.markForCheck();
+  }
+
+  dismissProofread(): void {
+    this.aiSuggestion = null;
+    this.aiMessage = '';
+    this.aiIsError = false;
+    this._cdr.markForCheck();
+  }
+
+  private showAiMessage(message: string, isError: boolean): void {
+    this.aiSuggestion = null;
+    this.aiMessage = message;
+    this.aiIsError = isError;
+    this._cdr.markForCheck();
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['contentHtml'] && this.editor?.quillEditor) {

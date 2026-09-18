@@ -133,3 +133,73 @@
     }
   }
 }
+/* AI proofreading action and its review bar. Kept visually quiet: this is an optional aid
+   beside the content, not a primary action competing with Save or Submit. */
+.dms-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ddd6fe;
+  background: #f5f3ff;
+  color: #6366f1;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.dms-ai-btn:hover:not(:disabled) {
+  background: #ede9fe;
+}
+
+.dms-ai-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.dms-ai-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid #ddd6fe;
+  border-radius: 6px;
+  background: #f5f3ff;
+  color: #4b4b6a;
+  font-size: 12.5px;
+}
+
+/* Amber, not red: the assistant being unavailable is an expected condition, not a document error. */
+.dms-ai-bar-error {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92620b;
+}
+
+.dms-ai-bar-actions {
+  display: inline-flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.dms-ai-apply,
+.dms-ai-dismiss {
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dms-ai-apply {
+  background: #6366f1;
+  color: #fff;
+}
+
+.dms-ai-dismiss {
+  background: transparent;
+  border-color: #cbd5e1;
+  color: #475569;
+}

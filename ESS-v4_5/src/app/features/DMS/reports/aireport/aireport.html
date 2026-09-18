@@ -1,46 +1,100 @@
+<!-- The page title/breadcrumb is rendered by the DMS layout shell, so no heading block here --
+     the sibling report screens (approval-documents, view-document-pending-approval) dropped
+     theirs for the same reason and this one was still showing a stale "View Document (Approved)". -->
 <div class="container-fluid">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="clearfix">
-          <div class="pull-left">
-            <h3 class="mt-0">View Document (Approved)</h3>
-            <small class="text-muted">View Document (Approved)</small>
-          </div>
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+      <div class="Master-box ai-box">
+        <div class="ai-box-head">
+          <h3 class="PnlHeader mb-0">{{ 'labels.AI Assistant' | safeTranslate }}</h3>
+          <span class="ai-scope-chip">
+            <i class="bi bi-shield-lock"></i>
+            Answers are limited to documents you can access
+          </span>
         </div>
-        <br />
-        <hr />
-        <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="chat-container">
-            <header class="chat-header">
-              <div class="title">ChatGPT</div>
-            </header>
 
-            <main class="chat-body" style="min-height: 600px;height: 100%;">
-              <div *ngFor="let msg of messages" class="message" [ngClass]="msg.role">
-                <div class="bubble">
-                  {{ msg.content }}
+        <div class="ai-chat">
+          <div class="ai-chat-body" #scrollBody>
+            <div
+              class="ai-msg"
+              [ngClass]="msg.role"
+              *ngFor="let msg of messages; trackBy: trackByIndex"
+            >
+              <div class="ai-avatar" [ngClass]="msg.role">
+                <i class="bi" [ngClass]="msg.role === 'assistant' ? 'bi-stars' : 'bi-person-fill'"></i>
+              </div>
+              <div class="ai-msg-main">
+                <div class="ai-bubble" [class.ai-bubble-error]="msg.isError">{{ msg.content }}</div>
+
+                <!-- The documents the answer actually used. Resolved server-side from the context
+                     it was given, so every chip here is a real record the user can open. -->
+                <div class="ai-sources" *ngIf="msg.sources?.length">
+                  <span class="ai-sources-label">Based on</span>
+                  <span class="ai-source" *ngFor="let src of msg.sources">
+                    <strong>{{ src.documentNumber }}</strong>
+                    <span class="ai-source-title">{{ src.title }}</span>
+                    <span class="ai-source-status" *ngIf="src.status">{{ src.status }}</span>
+                  </span>
                 </div>
-                <div class="time">
-                  {{ msg.time | date : 'shortTime' }}
+
+                <!-- A limit of the system, kept out of the answer itself so it never reads as a
+                     fact about the documents. -->
+                <div class="ai-notice" *ngIf="msg.notice">
+                  <i class="bi bi-info-circle"></i> {{ msg.notice }}
+                </div>
+
+                <div class="ai-time">{{ msg.time | date : 'shortTime' }}</div>
+              </div>
+            </div>
+
+            <div class="ai-msg assistant" *ngIf="loading">
+              <div class="ai-avatar assistant"><i class="bi bi-stars"></i></div>
+              <div class="ai-msg-main">
+                <div class="ai-bubble ai-typing">
+                  <span></span><span></span><span></span>
                 </div>
               </div>
-
-              <div *ngIf="loading" class="message assistant">
-                <div class="bubble typing">Typing…</div>
-              </div>
-            </main>
-
-            <footer class="chat-input">
-              <textarea
-                [(ngModel)]="input"
-                rows="1"
-                placeholder="Send a message"
-                (keydown.enter)="$event.preventDefault(); send()"
-              ></textarea>
-              <button (click)="(send)">➤</button>
-            </footer>
+            </div>
           </div>
+
+          <!-- Shown only before the first question: a blank chat box gives no clue what this
+               assistant can actually be asked about in a document system. -->
+          <div class="ai-starters" *ngIf="aiEnabled && messages.length === 1 && !loading">
+            <span class="ai-starters-label">Try asking</span>
+            <div class="ai-starter-chips">
+              <button
+                type="button"
+                class="ai-chip"
+                *ngFor="let s of starters"
+                (click)="useStarter(s)"
+              >
+                {{ s }}
+              </button>
+            </div>
+          </div>
+
+          <div class="ai-composer">
+            <textarea
+              #composer
+              [(ngModel)]="input"
+              rows="1"
+              class="ai-input"
+              placeholder="Ask about a document — its due date, status, or content"
+              [disabled]="!aiEnabled"
+              (input)="autoGrow(composer)"
+              (keydown.enter)="$event.preventDefault(); send(composer)"
+            ></textarea>
+            <button
+              type="button"
+              class="ai-send"
+              [disabled]="!input.trim() || loading || !aiEnabled"
+              (click)="send(composer)"
+              title="Send"
+            >
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </div>
+          <div class="ai-hint">Press Enter to send, Shift + Enter for a new line.</div>
         </div>
       </div>
     </div>
