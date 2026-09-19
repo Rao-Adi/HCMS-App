@@ -28,7 +28,6 @@ import {
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
@@ -144,7 +143,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private notificationSignalrService: NotificationSignalrService,
     private notificationHttpService: NotificationService,
-    private _documentRequestService: DocumentRequestService,
     private _navigationCountsService: NavigationCountsService,
     private modal: NzModalService,
   ) {}
@@ -209,12 +207,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.updateNavigationCounts();
 
         this.cdRef.detectChanges();
-      }),
-    );
-
-    this.subscriptions.push(
-      this._documentRequestService.refreshCounts$.subscribe(() => {
-        this.updateNavigationCounts();
       }),
     );
 

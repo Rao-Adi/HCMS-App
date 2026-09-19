@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { ActivatedRoute } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -13,7 +15,6 @@ import { PendingRequestForApproval } from './pending-request-for-approval/pendin
 import { DocumentRequestForm } from './document-request-form/document-request-form';
 import { DraftRequestList } from './draft-request-list/draft-request-list';
 import { MyTotalRequests } from './my-total-requests/my-total-requests';
-import { DocumentRequestService } from '@app/shared/services/document-request.service';
 @Component({
   selector: 'app-document-request-management',
   imports: [
@@ -34,7 +35,9 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
   templateUrl: './document-request-management.html',
   styleUrl: './document-request-management.css',
 })
-export class DocumentRequestManagement implements OnInit {
+export class DocumentRequestManagement implements OnInit, OnDestroy {
+  private subscriptions: Subscription[] = [];
+
   selectedTab: string = 'NewRequest';
   draftDocumentCounts: number = 0;
   myDocumentRequestPendingForApprovalCount: number = 0;
@@ -43,10 +46,25 @@ export class DocumentRequestManagement implements OnInit {
   
   constructor(
     private route: ActivatedRoute,
-    private _documentRequestService: DocumentRequestService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
+    // All three badges read the shared count state instead of fetching their own. The
+    // approval count in particular is the same number the sidebar shows, so fetching it
+    // twice was two answers to one question.
+    this.subscriptions.push(
+      this._navigationCountsService.draftRequestCount$.subscribe((count) => {
+        this.draftDocumentCounts = count;
+      }),
+      this._navigationCountsService.documentCreationRequestCount$.subscribe((count) => {
+        this.myDocumentRequestPendingForApprovalCount = count;
+      }),
+      this._navigationCountsService.myTotalRequestCount$.subscribe((count) => {
+        this.myTotalRequestCount = count;
+      }),
+    );
+
     this.route.queryParams.subscribe((params) => {
       if (params['tab']) {
         this.selectedTab = params['tab'];
@@ -58,36 +76,19 @@ export class DocumentRequestManagement implements OnInit {
   }
 
   getDocumentRequestCounts() {
-    this._documentRequestService.getDraftDocumentCount().subscribe({
-      next: (response) => {
-        if (response && response.Data) {
-          this.draftDocumentCounts = response.Data.count ?? 0;
-        }
-      },
-      error: (err) => console.error('Failed to get request counts', err),
-    });
+    this._navigationCountsService.refreshDraftRequestCount();
   }
 
   getMyDocumentRequestForApprovalCount() {
-    this._documentRequestService.getMyDocumentRequestForApprovalCount().subscribe({
-      next: (response) => {
-        if (response && response.Data) {
-          this.myDocumentRequestPendingForApprovalCount = response.Data.count ?? 0;
-        }
-      },
-      error: (err) => console.error('Failed to get request counts', err),
-    });
+    this._navigationCountsService.refreshDocumentCreationRequestCount();
   }
 
   getMyTotalRequestCount() {
-    this._documentRequestService.getMyTotalRequestCount().subscribe({
-      next: (response) => {
-        if (response && response.Success) {
-          this.myTotalRequestCount = response.Data ?? 0;
-        }
-      },
-      error: (err) => console.error('Failed to get request counts', err),
-    });
+    this._navigationCountsService.refreshMyTotalRequestCount();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   onRequestCreated(): void {

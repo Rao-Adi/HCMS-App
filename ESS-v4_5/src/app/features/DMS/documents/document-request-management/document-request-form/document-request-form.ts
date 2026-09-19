@@ -32,6 +32,7 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { AppConfigService } from '@app/core/services/app-config';
 import { SafeResourceUrl } from '@angular/platform-browser';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 @Component({
   selector: 'app-document-request-form',
@@ -62,6 +63,7 @@ export class DocumentRequestForm {
   @Output() requestCreated = new EventEmitter<void>();
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('documentModalTpl') documentModalTpl!: TemplateRef<any>;
+  @ViewChild(AgGridWrapper) agGridWrapper?: AgGridWrapper;
   isSubmitting = false;
 
   // --- PERMISSION FLAGS ---
@@ -141,6 +143,9 @@ export class DocumentRequestForm {
     { CODE: '1', NAME: 'Over Due' },
     { CODE: '2', NAME: 'Less than 30 days' },
   ];
+
+  /** The Filter dropdown's value. '1' = Over Due, '2' = due within 30 days, null = no filter. */
+  selectedReviewDateFilter: string | null = null;
 
   selectedPageSize = 10;
   requestId: number = 0;
@@ -295,6 +300,7 @@ export class DocumentRequestForm {
     private _permissionService: PermissionService,
     private _cabinetHierarchyService: CabinetHierarchyService,
     private _appConfig: AppConfigService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -365,19 +371,49 @@ export class DocumentRequestForm {
     } else if (this.selectedDocumentRequestType == '2' || this.selectedDocumentRequestType == 'DRT-0002') {
       this.showDocumentDiv = true;
       this.selectedEntityType ='Revision';
-      this.GetEffectiveDocumentsForRevision('');
+      this.reloadDocumentGrid();
       this.showDocumentCreationDiv = true;      
     } else {
       this.selectedEntityType ='Revision';
       this.showDocumentDiv = true; // show document grid on obseletion as well.
-      // Without this, switching directly from a type that already shows this grid (e.g.
-      // Revision) to Obsoletion never remounts <app-ag-grid-wrapper> (showDocumentDiv flips
-      // false->true synchronously within emptyFields()+this branch, so Angular's *ngIf never
-      // observes an intermediate unmount) — AG Grid's one-time automatic first load never
-      // re-fires, rowData never gets reassigned, and the wrapper's loading spinner never clears.
-      this.GetEffectiveDocumentsForRevision('');
+      // Switching straight from a type that already shows this grid (e.g. Revision) to Obsoletion
+      // never remounts <app-ag-grid-wrapper> -- showDocumentDiv flips false->true synchronously
+      // within emptyFields()+this branch, so Angular's *ngIf never observes an intermediate
+      // unmount and AG Grid's one-time first load does not re-fire. reloadDocumentGrid() is what
+      // makes it fetch again.
+      this.reloadDocumentGrid();
       this.showDocumentCreationDiv = true;
     }
+  }
+
+  /**
+   * Makes the document grid fetch again.
+   *
+   * It has to go through the wrapper. This grid binds (serverQuery), so AG Grid owns the rows and
+   * ignores [rowData] entirely (see ag-grid-wrapper: [rowData]="isServerSide ? undefined : rowData").
+   * Calling GetEffectiveDocumentsForRevision() directly therefore fetched a page of rows that were
+   * thrown away -- one wasted request per request-type change, and the grid kept showing whatever
+   * it had loaded first.
+   *
+   * When the grid is not mounted yet there is nothing to refresh: AG Grid will run its own first
+   * load as soon as it appears, and asking for one here as well is how the same page ended up
+   * being fetched twice.
+   */
+  private reloadDocumentGrid(): void {
+    this.agGridWrapper?.refresh();
+  }
+
+  onReviewDateFilterChange(value: string | null): void {
+    this.selectedReviewDateFilter = value ?? null;
+
+    // Refresh THROUGH the grid rather than calling the fetch directly.
+    //
+    // This grid binds (serverQuery), so AG Grid holds its own row cache and reassigning
+    // documentRevisionData never reaches the rendered rows -- the request went out and came back
+    // empty while the old rows stayed on screen with 'No records to show' painted over them.
+    // refresh() invalidates that cache (and resets to page one, so the page the user was on
+    // cannot outlive the result set it belonged to).
+    this.reloadDocumentGrid();
   }
 
   onCompanyChange(value: string | null) {
@@ -924,13 +960,15 @@ export class DocumentRequestForm {
           //clear all fields
           this.emptyFields();
           this.requestCreated.emit();
-          this._doumentRequestService.refreshCounts$.next();
 
           this._notificationToastService.createNotification(
             'success',
             'Document Request',
             'Document drafted successfully!',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Request Saved as Draft');
         }
       },
       error: (err) => {
@@ -1074,12 +1112,14 @@ export class DocumentRequestForm {
           //clear all fields
           this.emptyFields();
           this.requestCreated.emit();
-          this._doumentRequestService.refreshCounts$.next();
           this._notificationToastService.createNotification(
             'success',
             'User',
             'Document Request submitted successfully!',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Request Submitted');
           setTimeout(() => {
             window.location.reload();
           }, 1000);
@@ -1189,12 +1229,14 @@ export class DocumentRequestForm {
         if (response?.Success) {
           this.emptyFields();
           this.requestCreated.emit();
-          this._doumentRequestService.refreshCounts$.next();
           this._notificationToastService.createNotification(
             'success',
             'Document Request',
             'Revision submitted successfully!',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Revision Request Submitted');
           setTimeout(() => {
             window.location.reload();
           }, 1000);
@@ -1300,7 +1342,14 @@ export class DocumentRequestForm {
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
+    // This used to destructure the event and throw it away. The wrapper had already moved
+    // AG Grid to the new page size, but [pageSize] kept pushing the old value back in, so
+    // the two disagreed -- and every disagreement made onPaginationChanged call
+    // refreshInfiniteCache(), which is one more fetch of the same rows.
+    if (event && event.pageSize) {
+      this.selectedPageSize = event.pageSize;
+      this.currentGridQuery.pageSize = event.pageSize;
+    }
   }
 
   downloadDraftTemplate(): void {
@@ -1517,6 +1566,9 @@ export class DocumentRequestForm {
       sortBy: sortBy,
       sortColumn: sortColumn,
       searchText: searchText || '',
+      // Read from the field rather than passed in, so a page change or a sort keeps the filter
+      // the user chose instead of quietly reverting to the full list.
+      reviewDateFilter: this.selectedReviewDateFilter ? Number(this.selectedReviewDateFilter) : null,
     };
 
     this._documentService.GetEffectiveDocumentsForRevision(payload).subscribe({

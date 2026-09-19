@@ -798,9 +798,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
             this.agGridWrapper?.gridApi?.deselectAll();
             this.agGridWrapper?.refresh();
             this.emptyAllFileds();
-            // Previously this action never refreshed the tab/sidebar badges at all —
-            // they'd only catch up on next navigation. Refresh immediately now.
-            this.getDocumentCounts();
+            // Every badge, not just this screen's: approving a document can also move it into
+            // a training queue, whose menu badge would otherwise stay stale until navigation.
+            this._navigationCountsService.refreshAfterAction('Document ' + action);
           }
         },
         error: (err: any) => {

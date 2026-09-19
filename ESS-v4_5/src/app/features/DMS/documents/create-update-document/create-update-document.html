@@ -28,7 +28,7 @@
           [ngClass]="{ 'active-tab': selectedTab === 'DocumentDraft' }"
           (click)="selectedTab = 'DocumentDraft'"
         >
-          Document Draft/Revered
+           Draft/Reverted Documents
           <span
             *ngIf="draftDocumentsCount > 0"
             class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
@@ -138,8 +138,8 @@
                         [gridStyle]="{ width: '100%', height: '450px' }"
                         [columnDefs]="DocumentObsoletionGridColumnDefs"
                         [defaultColDef]="defaultColDef"
-                        [rowData]="DocumentObseletionData"
-                        [isSelectionRequired]="true"
+                        [rowData]="documentRevisionData"
+                        [isSelectionRequired]="false"
                         [showDisplayOption]="false"
                         [autoSizeColumns]="true"
                         [pageSize]="pageSize"

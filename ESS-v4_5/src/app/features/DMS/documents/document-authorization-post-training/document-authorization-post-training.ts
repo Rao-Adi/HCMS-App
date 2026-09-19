@@ -621,8 +621,9 @@ export class DocumentAuthorizationPostTraining {
                 this.gridApi.deselectAll();
                 this.gridApi.refreshInfiniteCache();
               }
-              // Updates the "Training Authorization" sidebar badge.
-              this._navigationCountsService.refreshTrainingAuthorizationCount();
+              // Every badge, not just this screen's: authorizing a document after training
+              // makes it effective, which changes what the document queues count too.
+              this._navigationCountsService.refreshAfterAction('Document ' + actionType);
             } else {
               this._notificationToastService.createNotification(
                 'error',

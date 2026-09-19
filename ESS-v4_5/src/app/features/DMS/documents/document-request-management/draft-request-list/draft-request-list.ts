@@ -23,6 +23,7 @@ import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-li
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { AppConfigService } from '@app/core/services/app-config';
 import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 export enum DocumentRequestStatus {
   Draft = 0,
@@ -227,6 +228,7 @@ export class DraftRequestList {
     private _documentTemplateService: TemplateService,
     private _cabinetHierarchyService: CabinetHierarchyService,
     private _appConfig: AppConfigService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
@@ -856,6 +858,9 @@ export class DraftRequestList {
             'Document Request',
             'Document submitted successfully!',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Draft Request Submitted');
           // This grid binds (serverQuery), so it's server-side/infinite-row-model —
           // reassigning documentRequestsData directly (via GetAllDraftDocuments()) doesn't
           // actually push the change into AG Grid's rendered rows unless it's mid-request.
@@ -929,6 +934,9 @@ export class DraftRequestList {
             'Document Request (Draft)',
             'Document updated successfully!',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Draft Request Updated');
           // Same server-side-grid refresh as SubmiteDocumentRequests() — GetAllDraftDocuments()
           // alone doesn't reach AG Grid's rendered rows. Also clear the selection so the user
           // has to explicitly pick a row again instead of re-saving the same in-memory form.

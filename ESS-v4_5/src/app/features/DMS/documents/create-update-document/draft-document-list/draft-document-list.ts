@@ -22,6 +22,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 // Documents the user created that are still in Draft: never submitted ("Draft"), or submitted and
 // then sent back for rework ("Reverted"). Mirrors document-request-management's draft-request-list
@@ -186,6 +187,7 @@ export class DraftDocumentList implements OnInit {
     private _notificationToastService: NotificationToastService,
     private modal: NzModalService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit(): void {
@@ -737,6 +739,9 @@ export class DraftDocumentList implements OnInit {
             'Document Draft',
             response.Message || 'Draft saved successfully.',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Document Draft Saved');
           this.closeDetailAndRefresh();
         }
       },
@@ -762,6 +767,9 @@ export class DraftDocumentList implements OnInit {
             'Document',
             response.Message || 'Document submitted successfully.',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Document Submitted from Draft');
           this.closeDetailAndRefresh();
         }
       },

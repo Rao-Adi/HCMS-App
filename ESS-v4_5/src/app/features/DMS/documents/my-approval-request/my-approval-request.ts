@@ -227,7 +227,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
   private readonly trailingColumnDefs: ColDef[] = [
     {
       field: 'executionStatus',
-      headerName: 'Execution Status',
+      headerName: 'Status',
       // Was an if/else chain of hex codes local to this grid -- and its reverted branch tested
       // for 'revered', a typo that never matched, so a reverted request fell through to the
       // default grey while other screens showed it in colour. Shared renderer now, so the word
@@ -810,7 +810,9 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
             response.Message,
           );
           this.clearSelection();
-          this.getRequestCounts();
+          // Every badge, not just this screen's: an approved request creates the document that
+          // the Create/Update and approval queues count.
+          this._navigationCountsService.refreshAfterAction('Request Workflow Action');
           if (this.agGridWrapper) {
             this.agGridWrapper.refresh();
           } else {

@@ -55,11 +55,16 @@
                 <div class="row mb-4">
                   <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                     <span class="d-flex">Filter</span>
+                    <!-- This had no value binding and no change handler at all, so choosing an
+                         option only moved the label -- the grid never heard about it. -->
                     <nz-select
                       style="width: 200px"
                       [nzPlaceHolder]="'Select Filter'"
                       nzAllowClear
                       nzShowSearch
+                      [(ngModel)]="selectedReviewDateFilter"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="onReviewDateFilterChange($event)"
                     >
                       <nz-option
                         *ngFor="let dep of filters"
@@ -81,7 +86,6 @@
                     [autoSizeColumns]="true"
                     [showDisplayOption]="true"
                     [rowData]="documentRevisionData"
-                    [pageSize]="pageSize"
                     [totalRows]="totalRows"
                     [pageSize]="selectedPageSize"
                     gridId="documentGrid"

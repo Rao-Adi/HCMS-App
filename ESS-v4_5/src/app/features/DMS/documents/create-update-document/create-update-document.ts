@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
 import * as mammoth from 'mammoth';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
@@ -52,6 +53,7 @@ import { DraftDocumentList } from './draft-document-list/draft-document-list';
 import { DRUsersComponent } from '../document-request-management/drusers-component/drusers-component';
 import { DRDistributionList } from '../document-request-management/drdistribution-list/drdistribution-list';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 
 
 // Define interface for request types
@@ -98,7 +100,9 @@ interface RequestType {
     `,
   ],
 })
-export class CreateUpdateDocument {
+export class CreateUpdateDocument implements OnInit, OnDestroy {
+  private subscriptions: Subscription[] = [];
+
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   selectedTab: string = 'CreateUpdate';
@@ -355,7 +359,6 @@ export class CreateUpdateDocument {
     },
   ];
 
-  DocumentObseletionData: any[] = [];
 
   constructor(
     private modal: NzModalService,
@@ -370,9 +373,22 @@ export class CreateUpdateDocument {
     private _trainingPolicyService: TrainingPolicyService,
     private _peoplePartnerService: PeoplePartnersService,
     private _documentReviewPolicyService: DocumentReviewPolicyService,
+    private _navigationCountsService: NavigationCountsService,
   ) {}
 
   ngOnInit() {
+    // Both tab badges read the shared count state rather than fetching their own. Whoever
+    // triggers a refresh -- this page on load, any action through refreshAfterAction, or
+    // main-layout on navigation -- every subscriber sees the same number.
+    this.subscriptions.push(
+      this._navigationCountsService.myDocumentsTotalCount$.subscribe((count) => {
+        this.myDocumentsCount = count;
+      }),
+      this._navigationCountsService.myDraftDocumentsCount$.subscribe((count) => {
+        this.draftDocumentsCount = count;
+      }),
+    );
+
     this.GetLoginEmpId();
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
       this.canAdd = permissions.canAdd;
@@ -386,25 +402,15 @@ export class CreateUpdateDocument {
   }
 
   getMyDocumentsCount() {
-    this._documentService.getMyDocumentsTotalCount().subscribe({
-      next: (response) => {
-        if (response && response.Success) {
-          this.myDocumentsCount = response.Data ?? 0;
-        }
-      },
-      error: (err) => console.error('Failed to get my documents count', err),
-    });
+    this._navigationCountsService.refreshMyDocumentsTotalCount();
   }
 
   getMyDraftDocumentsCount() {
-    this._documentService.getMyDraftDocumentsCount().subscribe({
-      next: (response) => {
-        if (response && response.Success) {
-          this.draftDocumentsCount = response.Data ?? 0;
-        }
-      },
-      error: (err) => console.error('Failed to get my draft documents count', err),
-    });
+    this._navigationCountsService.refreshMyDraftDocumentsCount();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   // Keeps the pill-shaped tab badge from stretching wide for large counts.
@@ -743,11 +749,19 @@ export class CreateUpdateDocument {
   }
 
   loadObsoletionData() {
-    // This grid (like the Revision one) has no (serverQuery) binding — it's a plain
-    // client-side grid that only ever shows whatever rowData it's given. Without this call,
-    // DocumentObseletionData never gets assigned, AgGridWrapper's rowData input never
-    // changes, and its loading spinner never clears.
-    this.GetAllApprovedDocuments('');
+    // Same source as Revision. Obsoleting a document and revising one both act on a document
+    // that is actually in force, so both grids ask the same question -- and their column
+    // definitions are already identical, field for field.
+    //
+    // This used to call GetAllApprovedDocuments(), which asks get-document-by-status for
+    // RequestStatus 'Approved'. APPROVED is a transient state on the way to EFFECTIVE, so the
+    // grid was empty in practice: against the live data that query returns 0 documents while
+    // this one returns 12.
+    //
+    // Like the Revision grid, this one has no (serverQuery) binding -- it is a plain
+    // client-side grid that shows whatever rowData it is given, so the fetch has to be made
+    // here or the loading spinner never clears.
+    this.GetEffectiveDocumentsForRevision('');
   }
 
   // Helper method to get display text
@@ -1294,6 +1308,9 @@ export class CreateUpdateDocument {
             'Document Create',
             response.Message,
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Document Submitted');
           this.emptyFields();
           this.selectedRequestType = '';
           this.attributes = [];
@@ -1371,6 +1388,9 @@ export class CreateUpdateDocument {
             'Save as Draft',
             response.Message || 'Document saved as draft.',
           );
+          // Every badge, not just this screen's: a workflow transition can empty one inbox and
+          // fill a queue on a screen the user is not looking at.
+          this._navigationCountsService.refreshAfterAction('Document Saved as Draft');
           // Same finish as SubmiteDocument: wipe the form, then reload so the page comes back in
           // a clean state with the Document Draft tab's badge count refreshed. Resuming a draft
           // is done from that tab, which repopulates every field.
@@ -1597,8 +1617,15 @@ export class CreateUpdateDocument {
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,
-        entityType: this.selectedEntityType || 'Document',
-        decision:'Approved'
+        // 'Document', not selectedEntityType. That field holds the workflow POLICY's entity type
+        // ('Revision' while the Revision/Obsoletion grid is up), which is the right thing to send
+        // to getWorkflowStepByDocumentTypeCode but not here: WorkflowExecutions.EntityType only
+        // ever holds 'Document' or 'Request', so asking for 'Revision' matched no execution and
+        // the modal came up empty every time.
+        entityType: 'Document', // Sending Document because User needs to see the approval History of Document
+        // Empty means every decision, which is what an approval HISTORY is. 'Approved' hid the
+        // rejections and reworks -- the part of the history people usually open this to read.
+        decision: '',
       },
       nzFooter: null, // custom footer handled inside component
       nzWidth: '70%',
@@ -1712,166 +1739,6 @@ export class CreateUpdateDocument {
           'error',
           'Error',
           err?.Message || 'Failed to fetch draft documents.',
-        );
-      },
-    });
-  }
-
-  GetAllApprovedDocuments(query: any) {
-    const sortModel = this.currentGridQuery.sortModel || [];
-    let sortBy = 'DESC'; // Default sort order
-    let sortColumn = 'Id'; // Default sort column (adjust if you have a different default column)
-    if (sortModel.length > 0) {
-      sortColumn = sortModel[0].colId;
-      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
-    }
-
-    const payLoad = {
-      divisionCode: this.selectedDivisions,
-      departmentCode: this.selectedDepartment,
-      subDepartmentCode: this.selectedSubDepartment,
-      businessDomainCode: this.selectedBusinessDomain,
-      documentTypeCode: this.selectedDocumentType,
-      RequestStatus: 'Approved',
-
-      pageNumber: this.currentGridQuery.pageNumber,
-      pageSize: this.currentGridQuery.pageSize || this.selectedPageSize,
-      sortModel: this.currentGridQuery.sortModel || [],
-      filterModel: this.currentGridQuery.filterModel || {},
-      searchTerm: this.currentGridQuery.searchTerm || '',
-      // Map to satisfy backend validation
-      sortBy: sortBy,
-      sortColumn: sortColumn,
-      searchText: this.currentGridQuery.searchTerm || '',
-      empid: this.loginEmpId,
-    };
-
-    this._documentService.GetDocumentByStatus(payLoad).subscribe({
-      next: (response) => {
-        if (response?.Success) {
-          // response.Data is { Items: [...], TotalCount } like every other list endpoint in
-          // this app — it is NOT itself an array. Calling .map() on it directly (as this used
-          // to) throws a TypeError before DocumentObseletionData is ever reassigned, which
-          // RxJS routes to the error handler below and leaves the grid's rowData untouched —
-          // so AgGridWrapper's loading spinner never clears.
-          const data = response?.Data;
-          const items = data?.Items || (Array.isArray(data) ? data : []);
-          this.totalRows = data?.TotalCount ?? items.length;
-          this.DocumentObseletionData = items.map((item: any) => {
-            // Helper to get value with case-insensitive fallback
-            const get = (keys: string[], defaultValue: any = ''): any => {
-              for (const key of keys) {
-                if (item[key] !== undefined && item[key] !== null) return item[key];
-                const lower = key.toLowerCase();
-                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
-              }
-              return defaultValue;
-            };
-
-            const createdAtRaw = get(['CreatedAt', 'createdAt', 'CreatedDate', 'createdDate']);
-            const startedAtRaw = get(['StartedAt', 'startedAt']);
-
-            return {
-              // ──────────────────────────────────────────────
-              // Identification & Request
-              // ──────────────────────────────────────────────
-              ExecutionId: get(['ExecutionId', 'executionId']),
-              Id: get(['Id', 'id']),
-              requestId: get(['Id', 'id']), // often same as Id
-              stepId: get(['StepId', 'stepId']),
-              stepOrder: get(['StepOrder', 'stepOrder']),
-              ExecutionStatus: get(['ExecutionStatus', 'executionStatus'], 'Unknown'),
-
-              // ──────────────────────────────────────────────
-              // Document metadata
-              // ──────────────────────────────────────────────
-              documentType: get(['DocumentType', 'documentType']),
-              documentTypeCode: get(['DocumentTypeCode', 'documentTypeCode']),
-              documentNumber: get(['DocumentNumber', 'documentNumber','documentnumber']),
-              documentName: get(['Title', 'title']),
-              company: get(['Company', 'company'], ''),  
-
-              // ──────────────────────────────────────────────
-              // Organizational context
-              // ──────────────────────────────────────────────
-              division: get(['Division']),
-              divisionCode: get(['DivisionCode', 'divisionCode']),
-              department: get(['Department']),
-              departmentId: get(['DepartmentCode', 'departmentCode']),
-              subDepartment: get(['SubDepartment', 'SubDepartment']),
-              subDepartmentCode: get(['SubDepartmentCode', 'subDepartmentCode']),
-              businessDomain: get(['BusinessDomain', 'businessDomain']),
-              businessDomainCode: get(['BusinessDomainCode', 'businessDomainCode']),
-              version: get(['Version', 'version']),
-              // ──────────────────────────────────────────────
-              // Content / Justification
-              // ──────────────────────────────────────────────
-
-              proposedContent: get(['VersionContent', 'ProposedContent', 'Content'], ''),
-              draftFileUrl: get(['DraftFileUrl', 'draftfileurl', 'draftFileUrl'], ''),
-              // Document's own Justification (AllDocumentDto.DocumentJustification, from
-              // fn_get_my_inbox_documents) -- distinct from RequestJustification (the original
-              // Request's reason, not relevant here).
-              justification: get(['DocumentJustification', 'documentJustification'], ''),
-
-              // Same shape as GetEffectiveDocumentsForRevision's mapping above -- both grids feed
-              // the same onCellClicked, which reads these exact field names.
-              distributionListPayload: (get(['DistributionList', 'distributionList'], []) || []).map(
-                (x: any) => ({
-                  ...x,
-                  level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
-                  level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
-                  level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
-                  level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
-                  roleId: x.roleId || x.RoleId,
-                  distributiontypeId:
-                    x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
-                }),
-              ),
-              distributionUserList: get(['UserList', 'userList'], []),
-
-              // ──────────────────────────────────────────────
-              // Audit / History fields
-              // ──────────────────────────────────────────────
-              requestCreatedBy: get(['LastModifiedByName', 'lastModifiedByName'], ''),
-              dateOfCreation: this.formatDate(createdAtRaw), // ← see helper below
-              requestCreatedOn: get(['RequestCreatedAt', 'requestCreatedAt']),
-              startedAt: this.formatDate(startedAtRaw),
-
-              // Previous version info -- was commented out (and, before that, misspelled and
-              // reading the wrong source fields: RequestCreatedBy/At instead of
-              // PreviousVersionCreatedBy/On), which is why Obsoletion's grid never showed it
-              // even though GetDocumentByStatus already returns it (same fields the sibling
-              // grids, e.g. my-approval-document.ts, read successfully).
-              previousVersionCreatedBy: get(['PreviousVersionCreatedBy', 'previousVersionCreatedBy'], ''),
-              previousVersionCreatedOn: this.formatDate(
-                get(['PreviousVersionCreatedOn', 'previousVersionCreatedOn']),
-              ),
-
-              // ──────────────────────────────────────────────
-              // Placeholder / missing fields from your original
-              // (add real data source when available)
-              // ──────────────────────────────────────────────
-              observation: '', // ← not in sample → populate when available
-              requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
-              dateOfApproval: '', // ← not present
-              approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
-            };
-          });
-        } else {
-          // A falsy Success must still clear the grid's rowData — otherwise it's left
-          // showing stale data (or none) while the loading spinner never turns off.
-          this.DocumentObseletionData = [];
-          this.totalRows = 0;
-        }
-      },
-      error: (err) => {
-        this.DocumentObseletionData = [];
-        this.totalRows = 0;
-        this._notificationToastService.createNotification(
-          'error',
-          'Error',
-          err?.error?.Message || err?.Message || 'Failed to fetch documents for obsoletion.',
         );
       },
     });

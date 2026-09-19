@@ -679,6 +679,9 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
           'Success',
           'Document training acknowledged and sent for authorization.',
         );
+        // Acknowledging moves the document out of the training queue and into the
+        // authorization one -- two different badges.
+        this._navigationCountsService.refreshAfterAction('Training Acknowledged');
         this.GetAllOnline({});
       } else {
         this._notificationToastService.createNotification(
@@ -854,7 +857,9 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
             } else {
               this.GetAllClassRooms({});
             }
-            this.getTrainingPendingCounts();
+            // Every badge, not just this screen's: acknowledging moves the document out of the
+            // training queue and into the authorization one.
+            this._navigationCountsService.refreshAfterAction('Classroom Training Acknowledged');
           }
         },
         error: (err) => {

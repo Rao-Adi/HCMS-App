@@ -624,6 +624,11 @@ export class AgGridWrapper implements OnInit, OnChanges {
       this.gridApi.redrawRows();
     }
     if (this.isServerSide && this.gridApi) {
+      // Both are needed HERE, unlike in onPaginationChanged. A caller asking for a refresh has
+      // usually not changed the page size, so setGridOption is a no-op that fetches nothing --
+      // refreshInfiniteCache is what actually re-requests. (Where the size HAS changed, the
+      // setGridOption alone does the refetch and the second call is a duplicate; see the note
+      // in onPaginationChanged.)
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
       this.gridApi.refreshInfiniteCache();
     } else {
@@ -639,8 +644,17 @@ export class AgGridWrapper implements OnInit, OnChanges {
       this.pageSize = newPageSize;
       this.pageSizeChange.emit({ gridId: this.gridId, pageSize: this.pageSize });
 
+      // Changing cacheBlockSize is enough on its own: AG Grid discards the cache and re-requests
+      // block 0 at the NEW size. The refreshInfiniteCache() that used to follow it was a second
+      // fetch of the same rows -- measured on AG Grid 34 with this project's own build:
+      //
+      //   setGridOption('cacheBlockSize', 50) alone  -> 1 getRows, startRow=0 endRow=50
+      //   refreshInfiniteCache() alone               -> 1 getRows, startRow=0 endRow=10  (stale size)
+      //   both, as this did                          -> 2 getRows
+      //
+      // Note the middle row: refreshInfiniteCache on its own re-requests at the OLD block size,
+      // so it is not the one to keep.
       this.gridApi.setGridOption('cacheBlockSize', this.pageSize);
-      this.gridApi.refreshInfiniteCache();
     }
   }
 

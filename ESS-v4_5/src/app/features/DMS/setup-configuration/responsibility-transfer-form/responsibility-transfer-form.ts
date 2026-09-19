@@ -206,6 +206,12 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
       }),
     );
 
+    this.subscriptions.push(
+      this._navigationCountsService.mySubmittedTransferCount$.subscribe((count) => {
+        this.mySubmittedRequestsCount = count;
+      }),
+    );
+
     this.getMyResponsibilityTransfersApprovalsCount();
     this.getMySubmittedResponsibilityTransfersCount();
   }
@@ -222,16 +228,9 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
   }
 
   getMySubmittedResponsibilityTransfersCount(): void {
-    this._responsibilityTransfer.GetMySubmittedResponsibilityTransfersCount().subscribe({
-      next: (res: any) => {
-        if (res?.Success && res.Data) {
-          this.mySubmittedRequestsCount = Number(res.Data.PendingCount ?? res.Data.pendingCount) || 0;
-        }
-      },
-      error: () => {
-        // Non-critical -- tab badge just stays at its last known value if this fails.
-      },
-    });
+    // Fetched through the shared service, like the approvals count above it; the ngOnInit
+    // subscription applies the result to this page's tab badge.
+    this._navigationCountsService.refreshMySubmittedTransferCount();
   }
 
   private getStatusText(statusId: any): string {
@@ -556,6 +555,7 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
           'Document',
           'Transfer request submitted successfully!',
         );
+        this._navigationCountsService.refreshAfterAction('Transfer Request Submitted');
         this.cancel();
       },
       error: (err: any) => {
@@ -634,7 +634,8 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
             res?.Message || `Request has been ${actionType.toLowerCase()}d.`,
           );
           this.GetAllResponsibilityTransferForms(); // Automatically refresh Grid
-          this.getMyResponsibilityTransfersApprovalsCount(); // Refresh tab badge
+          // Refreshes every badge, including this screen's own tab count.
+          this._navigationCountsService.refreshAfterAction('Transfer ' + actionType);
           this.observation = '';
           this.selectedRow = null;
         } else {
