@@ -496,12 +496,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       }
     }
 
-    // Document Attributes is only checked for DRT-0001 -- its UI (app-dynamic-form-by-document-
-    // attribute, the only thing that ever sets dynamicForm via formReady) is hidden for
-    // Revision/Obsoletion (demo scope reduction, per explicit request), so dynamicForm would
-    // never get set at all there and this would permanently block Submit for any document type
-    // with configured attributes.
-    if (this.selectedRequestType === 'DRT-0001') {
+    // Checked for Revision/Obsoletion as well, now that the Document Attributes card is shown
+    // there. It used to be DRT-0001 only because that card was hidden for a revision, so
+    // dynamicForm never got set and this check would have blocked Submit forever. With the card
+    // mounted the same rule applies: the backend enforces mandatory attributes either way, and
+    // catching it here tells the author which field is missing instead of failing on submit.
+    if (this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) {
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return 'Please fill all required fields in Document Attributes.';
@@ -1523,10 +1523,10 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
   private buildAttributePayload(): any[] {
     const result: any[] = [];
-    // dynamicForm is only ever set via app-dynamic-form-by-document-attribute's formReady --
-    // that card is hidden for Revision/Obsoletion (demo scope reduction), so it never mounts and
-    // dynamicForm stays undefined there. Nothing to submit in that case; this used to throw the
-    // instant Submit was clicked for a document type with any configured attributes.
+    // dynamicForm is only ever set via app-dynamic-form-by-document-attribute's formReady. The
+    // card now mounts for Revision/Obsoletion too, so this is no longer the normal path for a
+    // revision -- but it stays as a guard for the moment before formReady fires, and for a
+    // document type with no attributes configured at all. Without it, Submit threw outright.
     if (!this.dynamicForm) return result;
     const formValues = this.dynamicForm.value;
 

@@ -249,6 +249,7 @@
                 <!-- HTML Template Editor -- only for document types configured to author inline. -->
                 <ng-container *ngIf="selectedTemplateType === '3'">
                   <app-dmsrich-text-edit
+                    [allowAiSpellCheck]="true"
                     [editorStyle]="{ width: '100%', height: '300px' }"
                     [contentHtml]="templateHtml"
                     (contentHtmlChange)="templateHtml = $event"
@@ -405,6 +406,7 @@
                       <label>Or type the content manually below (edit if needed after uploading, or leave as uploaded)</label>
                     </div>
                     <app-dmsrich-text-edit
+                      [allowAiSpellCheck]="true"
                       [editorStyle]="{ width: '100%', height: '300px' }"
                       [contentHtml]="templateHtml"
                       (contentHtmlChange)="templateHtml = $event"
@@ -538,6 +540,7 @@
       <!-- Rich Text Box (If no URL exists) -->
       <ng-container *ngIf="!draftFileUrl">
         <app-dmsrich-text-edit
+          [allowAiSpellCheck]="true"
           [editorStyle]="{ width: '100%', height: '500px' }"
           [contentHtml]="templateHtml"
           (contentHtmlChange)="templateHtml = $event"

@@ -34,6 +34,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { TemplateService } from '@app/shared/services/template.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 
 // WorkflowExecutions.Status as stored, translated into what the business calls it. 'Reworked' is
@@ -313,6 +314,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     private _employeeDraftObservationService: EmployeeDraftObservationService,
     private _navigationCountsService: NavigationCountsService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _templateService: TemplateService,
     private route: ActivatedRoute,
   ) {}
 
@@ -651,18 +653,42 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     this.documentName = rowData?.documentName || '';
     this.documentId = rowData?.Id;
 
-    // Both paths download the same thing: download-submitted-document-template merges this
-    // version's content into the Document Type's Word template -- header, document number,
-    // version, effective date, the approver signature block and the status watermark -- see
-    // DocumentComponent.MergeDocumentTemplateAsync, which prefers the rich-text HTML over an
-    // uploaded file whenever both exist and works with no uploaded file at all.
+    // What the approver gets depends on the Document Type's template, not on whether a file
+    // happens to be attached: a Word template (with or without placeholders) is merged with this
+    // content and downloaded, so the approver reviews the document as it will actually be issued
+    // -- header, document number, version, signature block and all.
     //
-    // Only the uploaded-file case used to come through here. Content typed into the rich text
-    // box opened a modal that rendered that HTML raw, with none of the template around it, so an
-    // approver reviewing a typed document never saw the document as it would actually be issued.
-    // Mirrors my-approval-request.ts, where the same change was already made.
-    this.downloadDraft();
+    // An HTML template is the exception: there is no .docx to merge into, so its content is what
+    // the document IS, and it is shown in the rich text modal instead.
+    //
+    // The lookup is cached per document type (TemplateService), so a reviewer clicking through a
+    // list of the same type pays for it once. An unknown or failed lookup resolves to '' and falls
+    // through to the download, which is the behaviour every one of these screens had before.
+    this._templateService
+      .getTemplateTypeByDocumentTypeCode(rowData?.documentTypeCode)
+      .subscribe((templateType) => {
+        if (templateType === TemplateService.TEMPLATE_TYPE_HTML) {
+          this.openHtmlContentModal();
+          return;
+        }
+        this.downloadDraft();
+      });
   }
+
+  /**
+   * Shows the saved content in the rich text modal. Only reached for a document type whose
+   * template is HTML -- for every other type the approver gets the merged .docx instead.
+   */
+  openHtmlContentModal(): void {
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '70%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
 
   onCellClicked(event: any): void {
     this.templateHtml = event.data?.proposedContent || '';

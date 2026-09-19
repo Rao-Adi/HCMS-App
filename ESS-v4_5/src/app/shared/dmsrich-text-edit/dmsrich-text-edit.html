@@ -11,7 +11,7 @@
 <!-- AI proofreading. Shown only when the server reports the assistant configured (see
      DmsAiService.isEnabled) -- an installation without a model gets no button at all rather
      than one that fails when pressed. Hidden in read-only mode: there is nothing to correct. -->
-<div class="row" *ngIf="aiEnabled && !IsReadyOnly">
+<div class="row" *ngIf="allowAiSpellCheck && aiEnabled && !IsReadyOnly">
   <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end">
     <button
       type="button"

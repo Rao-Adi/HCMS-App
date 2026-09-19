@@ -25,6 +25,7 @@ import { EmployeeDraftObservationService } from '@app/shared/services/employee-d
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { TemplateService } from '@app/shared/services/template.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { statusCellRenderer } from '@app/shared/utils/document-status';
 
@@ -304,6 +305,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     private _employeeDraftObservationService: EmployeeDraftObservationService,
     private _navigationCountsService: NavigationCountsService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _templateService: TemplateService,
   ) {}
 
   ngOnInit() {
@@ -640,12 +642,42 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     this.requestId = rowData?.requestId || rowData?.Id || rowData?.id;
     this.currentDocumentName = rowData?.documentName || '';
 
-    // Both the file-upload and type-manually paths now merge into the Document Type's saved
-    // Word template before downloading (see MergeDocumentRequestTemplateAsync on the backend) --
-    // previously the no-file/HTML-only case opened a raw, un-templated content-preview modal
-    // instead of the same merged download the file case already got.
-    this.downloadDraft();
+    // What the approver gets depends on the Document Type's template, not on whether a file
+    // happens to be attached: a Word template (with or without placeholders) is merged with this
+    // content and downloaded, so the approver reviews the document as it will actually be issued
+    // -- header, document number, version, signature block and all.
+    //
+    // An HTML template is the exception: there is no .docx to merge into, so its content is what
+    // the document IS, and it is shown in the rich text modal instead.
+    //
+    // The lookup is cached per document type (TemplateService), so a reviewer clicking through a
+    // list of the same type pays for it once. An unknown or failed lookup resolves to '' and falls
+    // through to the download, which is the behaviour every one of these screens had before.
+    this._templateService
+      .getTemplateTypeByDocumentTypeCode(rowData?.documentTypeCode)
+      .subscribe((templateType) => {
+        if (templateType === TemplateService.TEMPLATE_TYPE_HTML) {
+          this.openHtmlContentModal();
+          return;
+        }
+        this.downloadDraft();
+      });
   }
+
+  /**
+   * Shows the saved content in the rich text modal. Only reached for a document type whose
+   * template is HTML -- for every other type the approver gets the merged .docx instead.
+   */
+  openHtmlContentModal(): void {
+    this.modal.create({
+      nzTitle: 'Document Content',
+      nzContent: this.documentModalTpl,
+      nzFooter: null,
+      nzWidth: '70%',
+      nzStyle: { top: '20px' },
+    });
+  }
+
 
   onCellClicked(event: any): void {
     const row = event.data;

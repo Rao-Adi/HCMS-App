@@ -217,7 +217,18 @@ export class AgGridWrapper implements OnInit, OnChanges {
     if (this.loading !== null) {
       this.isLoading = this.loading;
     } else {
-      this.isLoading = true;
+      // Only assume "still loading" when there is nothing to show yet.
+      //
+      // Angular runs ngOnChanges BEFORE ngOnInit on the first binding, so a grid re-created with
+      // its data already in hand had the isLoading = false that ngOnChanges just set overwritten
+      // here -- and nothing cleared it again, because no new rowData ever arrives when the data
+      // was already there. That is the stuck spinner you get by leaving a tab and coming back:
+      // the parent component stays alive and keeps its rows, only the grid is torn down and
+      // rebuilt.
+      //
+      // Written as a check on the data rather than a reordering, so it holds whichever order the
+      // two hooks run in.
+      this.isLoading = !(this.rowData && this.rowData.length > 0);
     }
 
     this.isServerSide = this.serverQuery.observed;

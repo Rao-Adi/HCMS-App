@@ -16,6 +16,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { statusCellRenderer } from '@app/shared/utils/document-status';
+import { TemplateService } from '@app/shared/services/template.service';
 
 // The colours that used to live here as a lookup table now come from
 // shared/utils/document-status.ts, so this screen cannot drift from the rest of the product.
@@ -187,6 +188,7 @@ export class MyTotalRequests {
     private _notificationToastService: NotificationToastService,
     private modal: NzModalService,
     private _cabinetHierarchyService: CabinetHierarchyService,
+    private _templateService: TemplateService,
   ) {}
 
   ngOnInit() {
@@ -433,13 +435,32 @@ export class MyTotalRequests {
       this.draftFileUrl = '';
     }
 
-    if (this.draftFileUrl) {
-      // A real file exists -- download it directly instead of routing through a modal
-      // whose only content in that case was a "Download Document" button.
-      this.downloadDraft();
-      return;
-    }
+    // The Document Type's template decides what the reader gets, not whether a file happens to be
+    // attached. A Word template -- which is what Policy and SOP use -- is merged with this content
+    // and downloaded, so the document is read as it will actually be issued: header, document
+    // number, version, signature block and all.
+    //
+    // An HTML template is the exception: there is no .docx to merge into, so its content IS the
+    // document and it opens in the rich text modal.
+    //
+    // Cached per document type, and a failed lookup resolves to '' and falls through to the
+    // download -- the behaviour this screen already had for the file case.
+    this._templateService
+      .getTemplateTypeByDocumentTypeCode(rowData?.documentTypeCode)
+      .subscribe((templateType) => {
+        if (templateType === TemplateService.TEMPLATE_TYPE_HTML) {
+          this.openHtmlContentModal();
+          return;
+        }
+        this.downloadDraft();
+      });
+  }
 
+  /**
+   * Shows the saved content in the rich text modal. Only reached for a document type whose
+   * template is HTML -- every other type is downloaded as the merged .docx instead.
+   */
+  openHtmlContentModal(): void {
     this.modal.create({
       nzTitle: 'Document Content',
       nzContent: this.documentModalTpl,

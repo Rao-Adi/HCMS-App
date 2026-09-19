@@ -48,6 +48,22 @@ export class DMSRichTextEdit implements OnInit {
   @Output() contentHtmlChange = new EventEmitter<string>();
   @Input() contentHtml: string = '';
   @Input() IsReadyOnly: boolean = false;
+
+  /**
+   * Whether this editor may offer the AI spell check.
+   *
+   * Off by default, and opt-in per use, because the same editor component is used both to
+   * WRITE a document and to DISPLAY one. Most of its 24 uses are viewers -- an approver reading
+   * content, a report preview, the post-training authorisation modal -- and offering to rewrite
+   * text there makes no sense: there is nothing to save.
+   *
+   * Opt-in rather than opt-out on purpose. IsReadyOnly would have been the natural signal, but
+   * 23 of the 24 uses never set it, so keying off it would have shown the button almost
+   * everywhere -- and setting it on the viewers to hide the button would also have made those
+   * editors genuinely read-only, a much larger behaviour change than the one being asked for.
+   * With the default off, a new viewer added later gets no button without anyone remembering.
+   */
+  @Input() allowAiSpellCheck: boolean = false;
   @Input() editorStyle: any = {};
 
   @ViewChild('editor') editor!: QuillEditorComponent;

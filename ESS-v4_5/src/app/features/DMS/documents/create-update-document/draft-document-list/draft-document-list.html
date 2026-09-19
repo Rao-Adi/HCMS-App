@@ -171,6 +171,7 @@
             <!-- HTML template: edit the content directly -->
             <ng-container *ngIf="selectedTemplateType === '3'">
               <app-dmsrich-text-edit
+                [allowAiSpellCheck]="true"
                 [editorStyle]="{ width: '100%', height: '350px' }"
                 [contentHtml]="templateHtml"
                 (contentHtmlChange)="templateHtml = $event"
@@ -266,6 +267,7 @@
                   >
                 </div>
                 <app-dmsrich-text-edit
+                  [allowAiSpellCheck]="true"
                   [editorStyle]="{ width: '100%', height: '300px' }"
                   [contentHtml]="templateHtml"
                   (contentHtmlChange)="templateHtml = $event"

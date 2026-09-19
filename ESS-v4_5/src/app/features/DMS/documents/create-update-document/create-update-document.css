@@ -30,3 +30,31 @@
   color: #0d6efd;   /* Bootstrap primary */
 }
 /* .submit-hint lives in styles.css -- both this form and document-request-form use it. */
+
+/* The "Add" button beside the Additional Approver select.
+ *
+ * Scoped, not a change to the global button styles -- .btn and .btn-primary in styles.css are
+ * built for full-width primary actions and stamp four things on every primary button with
+ * !important, which is what made this one look like a banner next to a 27px dropdown:
+ *
+ *   .btn         { width: 100% !important; margin-bottom: 0.5rem !important; }
+ *   .btn-primary { border-radius: 50px !important; padding: 8px 24px !important; ... }
+ *
+ * Measured against the real stylesheet cascade: 36px tall and 202px wide (filling its column),
+ * sitting 7px above the select's baseline because of that margin. With this class it is 28px
+ * tall next to the 27px select, 66px wide -- sized to "Add" rather than to the column -- and
+ * level with the field beside it.
+ *
+ * The doubled class is what gives it enough specificity to beat those !important rules without
+ * resorting to an inline style.
+ */
+.adhoc-add-btn.adhoc-add-btn {
+  width: auto !important;
+  height: 28px !important;
+  margin-bottom: 0 !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
