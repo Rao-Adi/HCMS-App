@@ -56,7 +56,10 @@
 
 <div class="row" *ngIf="selectedDraftDocument">
   <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    <div>
+    <!-- The whole detail panel belongs to the row that is currently selected. Without this gate it
+         stayed on screen after a filter change removed that row from the grid, leaving an editable,
+         submittable form for a document the list no longer shows. -->
+    <div *ngIf="selectedDraftDocument">
       <!-- Why the document was sent back, shown before the editable fields so the user reads it
            first. The full history (who / role / when) stays one click away on the "Reverted"
            status cell. -->

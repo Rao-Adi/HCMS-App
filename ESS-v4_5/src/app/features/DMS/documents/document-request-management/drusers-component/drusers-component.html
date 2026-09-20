@@ -22,7 +22,7 @@
     [divisionList]="divisions"
     [departmentList]="departments"
     [subDepartmentList]="subDepartments"
-    [pinnedTopRowData]="pinnedTopRowDataPlanning"
+    [pinnedTopRowData]="readOnly ? [] : pinnedTopRowDataPlanning"
     [isSelectionRequired]="true"
     (rowAdded)="onRowAdded($event)"
     (rowUpdated)="onRowUpdated($event)"

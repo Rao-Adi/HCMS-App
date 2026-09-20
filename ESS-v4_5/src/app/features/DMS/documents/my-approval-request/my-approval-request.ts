@@ -70,6 +70,13 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
   selectedDocumentType?: string = '';
   templateHtml: string = '';
   draftFileUrl: string = '';
+  /**
+   * Every checked row, so an action can be applied to all of them at once. requestId / stepId
+   * below still track the FIRST selected row exactly as before, so the detail panel and the
+   * single-record path are untouched.
+   */
+  selectedRows: any[] = [];
+
   requestId: number = 0;
   currentDocumentName: string = '';
   selectedDocumentTypeCode: string = '';
@@ -599,6 +606,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
  
   // Handle selection changes
   onSelectionChange(selectedRows: any): void {
+    this.selectedRows = Array.isArray(selectedRows) ? selectedRows : [];
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     const row = selectedRows[0];
     if (row) {
@@ -822,45 +830,124 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       return;
     }
 
+    const targets = this.collectRequestTargets();
+
+    this.runRequestActions(action, observation, targets, 0, {
+      ok: 0,
+      failed: [],
+      lastMessage: 'Action completed successfully.',
+    });
+  }
+
+  /**
+   * One entry per checked row. When nothing is checked this falls back to the single request the
+   * panel is showing, so the existing one-at-a-time behaviour is unchanged.
+   *
+   * Keyed on stepId because that is what this endpoint takes -- the approval step being actioned,
+   * not the request itself.
+   */
+  private collectRequestTargets(): { stepId: number; name: string }[] {
+    const targets = (this.selectedRows || [])
+      .map((r: any) => ({
+        stepId: r?.stepId ?? r?.StepId ?? 0,
+        name: r?.documentName ?? r?.requestNumber ?? '',
+      }))
+      .filter((t: any) => t.stepId);
+
+    if (!targets.length) {
+      targets.push({ stepId: this.stepId, name: this.currentDocumentName || '' });
+    }
+
+    return targets;
+  }
+
+  /**
+   * Applies the action to each target in turn.
+   *
+   * Sequential, not parallel, and deliberately so: each call mutates workflow state, and firing
+   * them together would race the grid refresh and the badge counts. One failure does not abort
+   * the rest -- it is collected and reported at the end.
+   */
+  private runRequestActions(
+    action: string,
+    observation: string,
+    targets: { stepId: number; name: string }[],
+    index: number,
+    summary: { ok: number; failed: string[]; lastMessage: string },
+  ): void {
+    if (index >= targets.length) {
+      this.finishRequestActions(targets, summary);
+      return;
+    }
+
+    const target = targets[index];
+    const label = target.name || String(target.stepId);
+
     const payLoad = {
       empId: this.LoginEmpId,
-      stepId: this.stepId,
+      stepId: target.stepId,
       action: action,
       observation: observation,
     };
 
     this._documentRequestService.takeWorkflowActionOnDocumentRequest(payLoad).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response?.Success) {
-          // Message reflects the action actually taken -- backend derives it from the same
-          // decision value it just persisted (see DMSDocumentRequestController.TakeWorkflowAction),
-          // instead of duplicating that action-to-text mapping here where it could drift out
-          // of sync with what actually happened.
-          this._notificationToastService.createNotification(
-            'success',
-            'Request',
-            response.Message,
-          );
-          this.clearSelection();
-          // Every badge, not just this screen's: an approved request creates the document that
-          // the Create/Update and approval queues count.
-          this._navigationCountsService.refreshAfterAction('Request Workflow Action');
-          if (this.agGridWrapper) {
-            this.agGridWrapper.refresh();
-          } else {
-            this.GetAllPendingDocuments(this.currentGridQuery);
-          }
+          summary.ok++;
+          // Message reflects the action actually taken -- the backend derives it from the same
+          // decision value it just persisted, instead of duplicating that mapping here.
+          summary.lastMessage = response?.Message || summary.lastMessage;
+        } else {
+          summary.failed.push(label + ': ' + (response?.Message || 'failed'));
         }
+        this.runRequestActions(action, observation, targets, index + 1, summary);
       },
-      error: (err) => {
-        this._notificationToastService.createNotification(
-          'error',
-          'Request',
-          err.error?.Message || 'Failed to take action on the request.',
-          // 'Failed to create workflow step.',
+      error: (err: any) => {
+        summary.failed.push(
+          label + ': ' + (err?.error?.Message || 'Failed to take action on the request.'),
         );
+        this.runRequestActions(action, observation, targets, index + 1, summary);
       },
     });
+  }
+
+  /** Refreshes once, after every target has been attempted, and reports what happened. */
+  private finishRequestActions(
+    targets: { stepId: number; name: string }[],
+    summary: { ok: number; failed: string[]; lastMessage: string },
+  ): void {
+    if (summary.ok > 0) {
+      this._notificationToastService.createNotification(
+        'success',
+        'Request',
+        targets.length === 1
+          ? summary.lastMessage
+          : summary.ok + ' of ' + targets.length + ' request(s) processed successfully.',
+      );
+
+      this.clearSelection();
+      this.selectedRows = [];
+      this.hasSelectedRows = false;
+      // Every badge, not just this screen's: an approved request creates the document that the
+      // Create/Update and approval queues count.
+      this._navigationCountsService.refreshAfterAction('Request Workflow Action');
+
+      // Refreshed once here rather than per record -- inside the loop this would fire one list
+      // request per selected row.
+      if (this.agGridWrapper) {
+        this.agGridWrapper.refresh();
+      } else {
+        this.GetAllPendingDocuments(this.currentGridQuery);
+      }
+    }
+
+    if (summary.failed.length) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Request',
+        summary.failed.join(' | '),
+      );
+    }
   }
 
   exportDocumentRequests(): void {

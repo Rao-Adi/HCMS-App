@@ -18,7 +18,7 @@
  *     point.
  */
 
-export type DmsStatusTone = 'approved' | 'rejected' | 'reverted' | 'pending' | 'draft';
+export type DmsStatusTone = 'approved' | 'rejected' | 'reverted' | 'pending' | 'obsolete' | 'draft';
 
 /** Storage/workflow values that read differently to a user. */
 const EXPLICIT_LABELS: Record<string, string> = {
@@ -42,7 +42,7 @@ export function normalizeStatusLabel(raw: unknown): string {
 }
 
 /**
- * Which of the five tones a status belongs to.
+ * Which of the six tones a status belongs to.
  *
  * Matched on keywords, not an exact-string table, because several of these values are free-text
  * state names from the database rather than fixed codes -- so a state renamed from "Authorized" to
@@ -56,6 +56,10 @@ export function statusTone(raw: unknown): DmsStatusTone {
   const s = normalizeStatusLabel(raw).toLowerCase();
   if (!s) return 'draft';
 
+  // Terminal and tested first: a retired document must never read as anything else. Obsolete used
+  // to fall through to the grey 'draft' bucket, which made a withdrawn document look identical to
+  // an untouched one in the same grid -- the opposite of what a reader needs to notice.
+  if (s.includes('obsolete')) return 'obsolete';
   if (s.includes('revert') || s.includes('rework')) return 'reverted';
   if (s.includes('reject')) return 'rejected';
   if (s.includes('approv') || s.includes('effective') || s.includes('authoriz') || s.includes('authoris') || s.includes('complete')) {

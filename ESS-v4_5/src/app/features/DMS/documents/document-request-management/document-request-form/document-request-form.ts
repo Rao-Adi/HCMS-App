@@ -470,13 +470,32 @@ export class DocumentRequestForm {
     );
   }
 
+  /**
+   * True for both request types that act on an EXISTING document: Revision (DRT-0002) and
+   * Obsoletion (DRT-0003). Both must carry that document's Id to the backend as ParentDocumentId
+   * -- without it the request has no target and nothing downstream can ever obsolete/revise
+   * anything. isRevisionRequestType stays Revision-only, for wording that is specific to it.
+   */
+  get isDocumentTargetedRequestType(): boolean {
+    return (
+      this.isRevisionRequestType ||
+      this.selectedDocumentRequestType == '3' ||
+      this.selectedDocumentRequestType == 'DRT-0003'
+    );
+  }
+
+  /** "obsolete" vs "revise", for validation wording shared by the two targeted types. */
+  get targetedActionVerb(): string {
+    return this.isRevisionRequestType ? 'revise' : 'obsolete';
+  }
+
   get draftButtonLabel(): string {
     return this.isRevisionRequestType ? 'Submit Revision' : 'Draft';
   }
 
   get submitDisabledReason(): string | null {
     if (this.isSubmitting) return null;
-    if (this.isRevisionRequestType && !this.selectedDocumentRow)
+    if (this.isDocumentTargetedRequestType && !this.selectedDocumentRow)
       return 'Please select an existing document to revise.';
     if (!this.selectedDocumentType) return 'Please select a Document Type to continue.';
     if (!this.selectedTemplateType)
@@ -1136,8 +1155,12 @@ export class DocumentRequestForm {
     });
   }
 
+  // Serves BOTH Revision (DRT-0002) and Obsoletion (DRT-0003): it posts whatever
+  // DocumentRequestTypeCode is selected, and the only thing that made it revision-specific was
+  // which button called it. Obsoletion used to fall through to SubmitDocumentRequests(), which
+  // omits ParentDocumentId -- so every obsoletion request ever raised had no target document.
   SubmiteRevisionDocumentRequests() {
-    // The document the user picked from the "existing documents" grid is what's being revised.
+    // The document the user picked from the "existing documents" grid is what's being acted on.
     // Its own Id must travel to the backend as ParentDocumentId — it must NOT be confused with
     // selectedDocumentRow.requestId, which is the ORIGINAL Creation request's Id and would just
     // resubmit that already-approved request instead of creating a new revision.
@@ -1145,7 +1168,7 @@ export class DocumentRequestForm {
       this._notificationToastService.createNotification(
         'warning',
         'Validation',
-        'Please select an existing document to revise.',
+        `Please select an existing document to ${this.targetedActionVerb}.`,
       );
       return;
     }
@@ -1611,7 +1634,16 @@ export class DocumentRequestForm {
             division: item.Division || item.division,
             divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
             documentName: item.DocumentName || item.documentname || item.title,
-            proposedContent: item.ProposedContent || item.proposedcontent || item.content,
+            // VersionContent added here too: this screen only ever worked for documents that
+            // happen to have a file (via the mammoth fallback). A document authored purely in the
+            // editor has content but no file, and showed blank here as well.
+            proposedContent:
+              item.ProposedContent ||
+              item.proposedcontent ||
+              item.content ||
+              item.VersionContent ||
+              item.versionContent ||
+              item.versioncontent,
             department: item.Department || item.department,
             departmentCode: item.DepartmentCode || item.departmentCode || item.departmentcode,
             subdepartment: item.SubDepartment || item.subdepartment,
@@ -1715,8 +1747,12 @@ export class DocumentRequestForm {
     // ✅ Populate form fields
     this.documentName = row.documentName || row.title || '';
     this.inputJustificationValue = row.justification;
-    this.templateHtml = row.proposedContent || row.content || '';
-    this.originalContentHtml = row.proposedContent || row.content || '';
+    // The row's saved content comes back as VersionContent (Vw_Documents.versioncontent, mapped
+    // by DraftDocumentDto) -- not proposedContent/content, which are fields on the *request* row,
+    // not this one. Reading only those left the editor blank for every document. Casing is checked
+    // three ways because Program.cs registers three different JSON naming policies.
+    this.templateHtml = row?.VersionContent || row?.versionContent || row?.versioncontent || row?.proposedContent || row?.content || '';
+    this.originalContentHtml = this.templateHtml;
 
     this.selectedTemplateType = row.templateType?.toString() || '';
     this.templateFileUrl = row.templateFileUrl || '';

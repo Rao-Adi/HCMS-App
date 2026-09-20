@@ -449,7 +449,7 @@
                         [attributes]="attributes"
                         [attributeValues]="attributeValues"
                         (formReady)="dynamicForm = $event"
-                        mode="create"
+                        [mode]="isObsoletion ? 'view' : 'create'"
                       >
                       </app-dynamic-form-by-document-attribute>
                     </div>
@@ -477,6 +477,7 @@
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12">
                       <app-drusers-component
+                        [readOnly]="isObsoletion"
                         [selectedUsers]="distributionUserList"
                         [documentTypeCode]="selectedDocumentType"
                         (usersChanged)="distributionUserList = $event"
@@ -493,6 +494,7 @@
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12">
                       <app-drdistribution-list
+                        [readOnly]="isObsoletion"
                         [DocumentTypeCode]="selectedDocumentType"
                         [selectedDistributionList]="distributionListPayload"
                         (distributionChanged)="onDistributionChanged($event)"
@@ -548,6 +550,7 @@
                             <input
                               #fileInput
                               type="file"
+                              [disabled]="isObsoletion"
                               class="form-control input-sm"
                               (change)="onDraftFileSelected($event)"
                               [attr.accept]="
@@ -623,7 +626,8 @@
                         <div class="mt-3">
                           <label class="PnlHeading">Or type the content manually below (edit if needed after uploading, or leave as uploaded)</label>
                           <app-dmsrich-text-edit
-                            [allowAiSpellCheck]="true"
+                            [allowAiSpellCheck]="!isObsoletion"
+                            [IsReadyOnly]="isObsoletion"
                             [editorStyle]="{ width: '100%', height: '300px' }"
                             [contentHtml]="templateHtml"
                             (contentHtmlChange)="templateHtml = $event"
@@ -634,7 +638,8 @@
                       <!-- Case 2: HTML Template -->
                       <ng-container *ngIf="selectedTemplateType === '3'">
                         <app-dmsrich-text-edit
-                          [allowAiSpellCheck]="true"
+                          [allowAiSpellCheck]="!isObsoletion"
+                            [IsReadyOnly]="isObsoletion"
                           [editorStyle]="{ width: '100%', height: '350px' }"
                           [contentHtml]="templateHtml"
                           (contentHtmlChange)="templateHtml = $event"
@@ -674,6 +679,7 @@
                             <input
                               #fileInput
                               type="file"
+                              [disabled]="isObsoletion"
                               class="form-control input-sm"
                               (change)="onDraftFileSelected($event)"
                               [attr.accept]="
@@ -741,7 +747,8 @@
                         <div class="mt-3">
                           <label class="PnlHeading">Or type the content manually below (edit if needed after uploading, or leave as uploaded)</label>
                           <app-dmsrich-text-edit
-                            [allowAiSpellCheck]="true"
+                            [allowAiSpellCheck]="!isObsoletion"
+                            [IsReadyOnly]="isObsoletion"
                             [editorStyle]="{ width: '100%', height: '300px' }"
                             [contentHtml]="templateHtml"
                             (contentHtmlChange)="templateHtml = $event"

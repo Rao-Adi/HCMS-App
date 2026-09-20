@@ -55,6 +55,7 @@
 
     <quill-editor
       #editor
+      [class.dms-editor-readonly]="IsReadyOnly"
       format="html"
       [ngStyle]="editorStyle"
       (onEditorCreated)="editorCreated($event)"

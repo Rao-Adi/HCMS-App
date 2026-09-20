@@ -234,6 +234,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.applyCountToMenu('trainingauthorization', count);
       }),
     );
+    // Mirrors the "Draft/Reverted Documents" tab badge on the Create or Update Document screen.
+    // Both read the same shared count, so the sidebar and the tab can never disagree.
+    this.subscriptions.push(
+      this._navigationCountsService.myDraftDocumentsCount$.subscribe((count) => {
+        this.applyCountToMenu('create-update-document', count);
+      }),
+    );
     this.subscriptions.push(
       this._navigationCountsService.documentsPendingTrainingCounts$.subscribe((counts) => {
         this.applyCountToMenu('documents-pending-training', counts.total);
@@ -526,6 +533,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
               textLower.includes('post-training') ||
               textLower.includes('training authorization') ||
               textLower.includes('trainingauthorization');
+          } else if (navigateUrl === 'create-update-document') {
+            // Guarded against the Request menu item: "Request for Document Creation/Update"
+            // contains "document-creation-update", never "create-update-document", and its text
+            // never contains "create or update document" -- so the two badges can't cross-match.
+            matchesText =
+              textLower === 'create or update document' ||
+              textLower.includes('create or update document') ||
+              textLower.includes('create/update document');
           } else if (navigateUrl === 'documents-pending-training') {
             matchesText =
               textLower.includes('training for sop') ||

@@ -586,65 +586,119 @@ export class DocumentAuthorizationPostTraining {
       return;
     }
 
-    const documentToApprove = selectedRows[0]; // Processes one document at a time
-    const docId = documentToApprove.Id || documentToApprove.id || documentToApprove.documentId;
+    // Every checked row, not just the first. Previously this took selectedRows[0] and ignored
+    // the rest, so a multi-row selection silently actioned only one document.
+    const targets = selectedRows
+      .map((r: any) => ({
+        id: r?.Id || r?.id || r?.documentId,
+        name: r?.documentName || '',
+      }))
+      .filter((t: any) => !!t.id);
 
     const actionLabel =
       actionType === 'APPROVED' ? 'Approve' : actionType === 'REJECTED' ? 'Reject' : actionType;
     const actionColor = actionType === 'APPROVED' ? '#28a745' : '#dc3545';
 
+    const what =
+      targets.length === 1
+        ? 'the document: ' + targets[0].name
+        : targets.length + ' selected documents';
+
     this.modal.confirm({
-      nzTitle: `${actionLabel} Document`,
-      nzContent: `<b style="color: ${actionColor}">${actionLabel}</b> the document: ${documentToApprove.documentName}?`,
+      nzTitle: actionLabel + ' Document',
+      nzContent:
+        '<b style="color: ' + actionColor + '">' + actionLabel + '</b> ' + what + '?',
       nzOnOk: () => {
-        const payload = {
-          documentId: docId,
-          empId: this.loginEmpId,
-          action: actionType,
-          observation: `${actionType} via post-training screen`, // TODO: Collect via a form/modal wrapper if required by BL-011
-        };
-
         this.isProcessingAction = true;
-
-        this._documentService.AuthorizeDocumentPostTraining(payload).subscribe({
-          next: (res) => {
-            this.isProcessingAction = false;
-            if (res?.Success) {
-              this._notificationToastService.createNotification(
-                'success',
-                'Success',
-                `Document ${actionType} successfully.`,
-              );
-              // Clear the tracked selection state and the grid's own checkbox selection
-              // immediately -- don't rely on the approved/rejected row simply disappearing
-              // from the next fetch to disable the Approve/Reject buttons.
-              this.hasSelectedRows = false;
-              if (this.gridApi) {
-                this.gridApi.deselectAll();
-                this.gridApi.refreshInfiniteCache();
-              }
-              // Every badge, not just this screen's: authorizing a document after training
-              // makes it effective, which changes what the document queues count too.
-              this._navigationCountsService.refreshAfterAction('Document ' + actionType);
-            } else {
-              this._notificationToastService.createNotification(
-                'error',
-                'Error',
-                res?.Message || 'Failed to authorize document.',
-              );
-            }
-          },
-          error: () => {
-            this.isProcessingAction = false;
-            this._notificationToastService.createNotification(
-              'error',
-              'Error',
-              `Failed to ${actionType} document.`,
-            );
-          },
-        });
+        this.runAuthorizations(actionType, targets, 0, { ok: 0, failed: [] });
       },
     });
+  }
+
+  /**
+   * Authorizes each document in turn.
+   *
+   * Sequential, not parallel: each call makes a document effective and the backend refuses a
+   * second action on a completed workflow. One failure does not abort the rest -- failures are
+   * collected and reported at the end.
+   */
+  private runAuthorizations(
+    actionType: string,
+    targets: { id: any; name: string }[],
+    index: number,
+    summary: { ok: number; failed: string[] },
+  ): void {
+    if (index >= targets.length) {
+      this.finishAuthorizations(actionType, targets, summary);
+      return;
+    }
+
+    const target = targets[index];
+    const label = target.name || String(target.id);
+
+    const payload = {
+      documentId: target.id,
+      empId: this.loginEmpId,
+      action: actionType,
+      observation: actionType + ' via post-training screen', // TODO: Collect via a form/modal wrapper if required by BL-011
+    };
+
+    this._documentService.AuthorizeDocumentPostTraining(payload).subscribe({
+      next: (res: any) => {
+        if (res?.Success) {
+          summary.ok++;
+        } else {
+          summary.failed.push(label + ': ' + (res?.Message || 'Failed to authorize document.'));
+        }
+        this.runAuthorizations(actionType, targets, index + 1, summary);
+      },
+      error: (err: any) => {
+        summary.failed.push(
+          label + ': ' + (err?.error?.Message || 'Failed to ' + actionType + ' document.'),
+        );
+        this.runAuthorizations(actionType, targets, index + 1, summary);
+      },
+    });
+  }
+
+  /** Refreshes once, after every target has been attempted, and reports what happened. */
+  private finishAuthorizations(
+    actionType: string,
+    targets: { id: any; name: string }[],
+    summary: { ok: number; failed: string[] },
+  ): void {
+    this.isProcessingAction = false;
+
+    if (summary.ok > 0) {
+      this._notificationToastService.createNotification(
+        'success',
+        'Success',
+        targets.length === 1
+          ? 'Document ' + actionType + ' successfully.'
+          : summary.ok + ' of ' + targets.length + ' document(s) ' + actionType + ' successfully.',
+      );
+
+      // Clear the tracked selection state and the grid's own checkbox selection immediately --
+      // don't rely on the actioned rows simply disappearing from the next fetch to disable the
+      // Approve/Reject buttons. Refreshed once here rather than per record.
+      this.hasSelectedRows = false;
+      if (this.gridApi) {
+        this.gridApi.deselectAll();
+        this.gridApi.refreshInfiniteCache();
+      }
+
+      // Every badge, not just this screen's: authorizing a document after training makes it
+      // effective, which changes what the document queues count too.
+      this._navigationCountsService.refreshAfterAction('Document ' + actionType);
+    }
+
+    if (summary.failed.length) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Error',
+        summary.failed.join(' | '),
+      );
+    }
   }
 
   openAverageScoreModal(row: any): void {

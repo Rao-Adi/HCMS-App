@@ -100,6 +100,13 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   hasSelectedRows = false;
   observationData: any[] = [];
   stepId: number = 0;
+  /**
+   * Every checked row, so an action can be applied to all of them at once. documentId /
+   * executionId below still track the FIRST selected row exactly as before, so the detail
+   * panel and the single-record path are untouched.
+   */
+  selectedRows: any[] = [];
+
   documentId: number = 0;
   executionId: number = 0;
   totalRows = 0;
@@ -701,6 +708,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   }
 
   onSelectionChange(selectedRows: any): void {
+    this.selectedRows = Array.isArray(selectedRows) ? selectedRows : [];
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     this.templateHtml = selectedRows[0]?.proposedContent || '';
     this.draftFileUrl = selectedRows[0]?.draftFileUrl || '';
@@ -790,56 +798,143 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       return;
     }
 
+    const targets = this.collectWorkflowTargets();
+
+    this.runWorkflowActions(action, observation, targets, 0, {
+      ok: 0,
+      failed: [],
+      lastMessage: 'Action completed successfully.',
+    });
+  }
+
+  /**
+   * One entry per checked row. When nothing is checked this falls back to the single record the
+   * panel is showing, so the existing one-at-a-time behaviour is unchanged.
+   */
+  private collectWorkflowTargets(): { documentid: number; executionid: number; name: string }[] {
+    const targets = (this.selectedRows || [])
+      .map((r: any) => ({
+        documentid: r?.Id ?? r?.documentId ?? 0,
+        executionid: r?.ExecutionId ?? r?.executionId ?? 0,
+        name: r?.documentName ?? '',
+      }))
+      .filter((t: any) => t.documentid && t.executionid);
+
+    if (!targets.length) {
+      targets.push({
+        documentid: this.documentId,
+        executionid: this.executionId,
+        name: this.documentName || '',
+      });
+    }
+
+    return targets;
+  }
+
+  /** Builds the service call for one target -- the same payload shape the single path always sent. */
+  private buildWorkflowActionCall(
+    action: string,
+    observation: string,
+    target: { documentid: number; executionid: number },
+  ) {
     const payLoad = {
-      documentid: this.documentId,
-      executionid: this.executionId,
+      documentid: target.documentid,
+      executionid: target.executionid,
       action: action,
       observation: observation,
       empid: this.loginEmpId,
     };
 
-    let actionObservable;
-    if (action === 'Approve') {
-      actionObservable = this._documentService.approveDocument(payLoad);
-    } else if (action === 'Rejected') {
-      actionObservable = this._documentService.rejectDocument(payLoad);
-    } else if (action === 'Rework') {
-      actionObservable = this._documentService.revertDocument(payLoad);
-    }
-
-    if (actionObservable) {
-      actionObservable.subscribe({
-        next: (response: any) => {
-          if (response?.Success) {
-            this._notificationToastService.createNotification(
-              'success',
-              'Workflow',
-              response.Message,
-            );
-            // This grid binds (serverQuery), so it's server-side/infinite-row-model — calling
-            // GetAllPendingDocuments() directly only reassigns documentRequestsData, which
-            // doesn't reach AG Grid's rendered rows unless a fetch happens to be mid-flight.
-            // refresh() (via refreshInfiniteCache()) is what actually re-fetches what's on
-            // screen; calling both meant every action fired the list request twice.
-            this.agGridWrapper?.gridApi?.deselectAll();
-            this.agGridWrapper?.refresh();
-            this.emptyAllFileds();
-            // Every badge, not just this screen's: approving a document can also move it into
-            // a training queue, whose menu badge would otherwise stay stale until navigation.
-            this._navigationCountsService.refreshAfterAction('Document ' + action);
-          }
-        },
-        error: (err: any) => {
-          this._notificationToastService.createNotification(
-            'error',
-            'Workflow',
-            err?.error?.Message || err?.Message,
-          );
-        },
-      });
-    }
+    if (action === 'Approve') return this._documentService.approveDocument(payLoad);
+    if (action === 'Rejected') return this._documentService.rejectDocument(payLoad);
+    if (action === 'Rework') return this._documentService.revertDocument(payLoad);
+    return null;
   }
 
+  /**
+   * Applies the action to each target in turn.
+   *
+   * Sequential, not parallel, and deliberately so: each call mutates workflow state, and the
+   * backend refuses a second action on a workflow that has already completed. Firing them
+   * together would also race the grid refresh and the badge counts.
+   *
+   * One failure does not abort the rest -- it is collected and reported at the end, so approving
+   * eight documents does not silently stop at the second.
+   */
+  private runWorkflowActions(
+    action: string,
+    observation: string,
+    targets: { documentid: number; executionid: number; name: string }[],
+    index: number,
+    summary: { ok: number; failed: string[]; lastMessage: string },
+  ): void {
+    if (index >= targets.length) {
+      this.finishWorkflowActions(action, targets, summary);
+      return;
+    }
+
+    const target = targets[index];
+    const call = this.buildWorkflowActionCall(action, observation, target);
+
+    if (!call) {
+      this.finishWorkflowActions(action, targets, summary);
+      return;
+    }
+
+    const label = target.name || String(target.documentid);
+
+    call.subscribe({
+      next: (response: any) => {
+        if (response?.Success) {
+          summary.ok++;
+          summary.lastMessage = response?.Message || summary.lastMessage;
+        } else {
+          summary.failed.push(label + ': ' + (response?.Message || 'failed'));
+        }
+        this.runWorkflowActions(action, observation, targets, index + 1, summary);
+      },
+      error: (err: any) => {
+        summary.failed.push(label + ': ' + (err?.error?.Message || err?.Message || 'failed'));
+        this.runWorkflowActions(action, observation, targets, index + 1, summary);
+      },
+    });
+  }
+
+  /** Refreshes once, after every target has been attempted, and reports what happened. */
+  private finishWorkflowActions(
+    action: string,
+    targets: { documentid: number; executionid: number; name: string }[],
+    summary: { ok: number; failed: string[]; lastMessage: string },
+  ): void {
+    if (summary.ok > 0) {
+      this._notificationToastService.createNotification(
+        'success',
+        'Workflow',
+        targets.length === 1
+          ? summary.lastMessage
+          : summary.ok + ' of ' + targets.length + ' record(s) processed successfully.',
+      );
+
+      // Refreshed once here rather than per record: this grid binds (serverQuery), so refresh()
+      // is what re-fetches the rows on screen, and calling it inside the loop would fire one
+      // list request per selected row.
+      this.agGridWrapper?.gridApi?.deselectAll();
+      this.agGridWrapper?.refresh();
+      this.selectedRows = [];
+      this.hasSelectedRows = false;
+      this.emptyAllFileds();
+      // Every badge, not just this screen's.
+      this._navigationCountsService.refreshAfterAction('Document ' + action);
+    }
+
+    if (summary.failed.length) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Workflow',
+        summary.failed.join(' | '),
+      );
+    }
+  }
 
   exportDocuments(query?: any) {
     if (query && typeof query === 'object') {

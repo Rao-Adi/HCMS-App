@@ -7213,6 +7213,11 @@ html.ant-scrolling-effect {
 .dms-status-approved { background: #ecfdf5; color: #10b981; border-color: #d1fae5; }
 .dms-status-rejected { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
 .dms-status-pending  { background: #fffbeb; color: #f59e0b; border-color: #fef3c7; }
+/* Obsolete is violet rather than another shade of grey: a retired document is the one status a
+   reader must not mistake for a live one, and it previously shared the grey Draft pill. Violet is
+   used nowhere else in the DMS, so it cannot be confused with Rejected (red), Pending (amber) or
+   Draft (grey), and it stays in the same tinted-pill family as the rest. */
+.dms-status-obsolete { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
 .dms-status-draft    { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
 
 /* A status that is also a link (the draft lists make a Reverted row clickable to open its
@@ -7244,3 +7249,11 @@ html.ant-scrolling-effect {
   color: #f59e0b;
   flex: 0 0 auto;
 }
+
+/* A read-only rich text editor (e.g. Document Content on an Obsoletion, where FSD 4.1.3
+   makes the viewer read-only "as the purpose is retirement, not editing"). Quill.enable(false)
+   stops typing but leaves the toolbar on screen, offering buttons that do nothing -- hide it, and
+   drop the edit affordances so the box reads as a viewer. */
+.dms-editor-readonly .ql-toolbar { display: none; }
+.dms-editor-readonly .ql-container { border-top: 1px solid #ccc; background: #f8f9fa; }
+.dms-editor-readonly .ql-editor { cursor: default; }

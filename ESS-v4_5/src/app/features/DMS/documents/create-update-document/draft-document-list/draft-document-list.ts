@@ -242,17 +242,52 @@ export class DraftDocumentList implements OnInit {
     }
   }
 
+  /**
+   * Drops whatever row was open in the detail panel.
+   *
+   * Changing a filter re-queries the grid, so the row the panel is showing may no longer be in
+   * the results at all -- leaving its Justification, Cabinet, Users, Distribution, Content and
+   * attributes on screen under an empty grid, still editable and still submittable. Every field
+   * onCellClicked sets is reset here, so the two can never drift apart.
+   */
+  private clearSelectedDocument(): void {
+    this.selectedDraftDocument = null;
+    this.documentId = 0;
+    this.documentName = '';
+    this.inputJustificationValue = '';
+    this.templateHtml = '';
+    this.draftFileUrl = '';
+    this.draftFile = null;
+    this.templateFileUrl = '';
+    this.selectedTemplateType = '';
+    this.selectedDocumentType = '';
+    this.selectedDocumentTypeCode = '';
+    this.selectedDivisions = '';
+    this.selectedDepartment = '';
+    this.selectedSubDepartment = '';
+    this.selectedBusinessDomain = '';
+    this.distributionListPayload = [];
+    this.distributionUserList = [];
+    this.revertedObservations = [];
+    this.attributeValues = [];
+    this.trainingUsersData = [];
+    this.pendingDetailLoads = 0;
+    this.loadingDetail = false;
+  }
+
   onFilterHierarchyChange(values: CabinetSelection[]): void {
     this.cabinetHierarchy = values ?? [];
     this.filterDivision = values.find((v) => v.level === 1)?.value ?? null;
     this.filterDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.filterSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.filterBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    this.clearSelectedDocument();
     this.refreshGrid();
   }
 
   onDocumentTypeChange(value: string): void {
     this.filterDocumentType = value;
+    this.clearSelectedDocument();
     this.refreshGrid();
   }
 

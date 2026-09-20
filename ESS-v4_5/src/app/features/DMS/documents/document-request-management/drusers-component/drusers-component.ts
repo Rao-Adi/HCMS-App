@@ -44,6 +44,13 @@ export class DRUsersComponent {
 
   gridConfig: GridConfig = {} as GridConfig;
   // --- PERMISSION FLAGS ---
+  /**
+   * Read-only mode: no add row, no edit, no delete. Used by Obsoletion, where FSD 4.1.3
+   * disables the Users section "as no new users are assigned" -- the list is shown for
+   * confirmation only. Defaults to false so every other screen is unaffected.
+   */
+  @Input() readOnly = false;
+
   canAdd = false;
   canEdit = false;
   canDelete = false;
@@ -175,9 +182,9 @@ export class DRUsersComponent {
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
-      enableInlineAdd: this.canAdd,
-      enableInlineEdit: this.canEdit,
-      enableInlineDelete: this.canDelete,
+      enableInlineAdd: this.canAdd && !this.readOnly,
+      enableInlineEdit: this.canEdit && !this.readOnly,
+      enableInlineDelete: this.canDelete && !this.readOnly,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',

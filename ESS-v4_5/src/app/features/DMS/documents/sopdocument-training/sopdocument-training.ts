@@ -78,6 +78,12 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
   selectedSubDepartment?: string = '';
   selectedBusinessDomain?: string = '';
   selectedDocumentType?: string = '';
+  /**
+   * Every checked row, so the action can be applied to all of them at once. selectedDocumentId
+   * below still tracks the FIRST selected row exactly as before.
+   */
+  selectedRows: any[] = [];
+
   selectedDocumentId: string | null = null;
   isGridVisible = false;
   hasSelectedRows = false;
@@ -814,6 +820,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
   }
 
   onSelectionChange(selectedRows: any[]): void {
+    this.selectedRows = Array.isArray(selectedRows) ? selectedRows : [];
     this.hasSelectedRows = selectedRows && selectedRows.length > 0;
     if (selectedRows && selectedRows.length > 0) {
       this.selectedDocumentId =
@@ -824,7 +831,20 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
   }
 
   approve() {
-    if (!this.selectedDocumentId) {
+    // One entry per checked row, falling back to the single tracked id so the original
+    // one-at-a-time behaviour is unchanged when only one row is selected.
+    const targets = (this.selectedRows || [])
+      .map((r: any) => ({
+        id: r?.documentId || r?.DocumentId || r?.Id,
+        name: r?.documentName || r?.DocumentName || '',
+      }))
+      .filter((t: any) => !!t.id);
+
+    if (!targets.length && this.selectedDocumentId) {
+      targets.push({ id: this.selectedDocumentId, name: this.currentDocumentName || '' });
+    }
+
+    if (!targets.length) {
       this._notificationToastService.createNotification(
         'warning',
         'Validation',
@@ -833,46 +853,94 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
       return;
     }
 
-    this._documentTrainingService
-      .AcknowledgeAndSendForAuthorization(this.selectedDocumentId)
-      .subscribe({
-        next: (response) => {
-          if (response?.Success) {
-            this._notificationToastService.createNotification(
-              'success',
-              'Request',
-              response.Message,
-            );
-            this.selectedDocumentId = null;
-            // Clear both the tracked selection state and the grid's own checkbox
-            // selection immediately — don't rely on the approved record simply
-            // disappearing from the next fetch to disable the Approve button.
-            this.hasSelectedRows = false;
-            this.agGridWrapper?.gridApi?.deselectAll();
-            if (this.agGridWrapper) {
-              // Server-side (infinite-model) grid: refresh() invalidates AG Grid's
-              // own cache and re-requests data, unlike calling GetAllClassRooms()
-              // directly, which only updates the parent's array without AG Grid
-              // ever re-pulling it — the grid kept showing the stale, pre-approval
-              // rows even though the fetch itself succeeded.
-              this.agGridWrapper.refresh();
-            } else {
-              this.GetAllClassRooms({});
-            }
-            // Every badge, not just this screen's: acknowledging moves the document out of the
-            // training queue and into the authorization one.
-            this._navigationCountsService.refreshAfterAction('Classroom Training Acknowledged');
-          }
-        },
-        error: (err) => {
-          this._notificationToastService.createNotification(
-            'error',
-            'Request',
-            err.error?.Message || 'Failed to take action on the request.',
-            // 'Failed to create workflow step.',
-          );
-        },
-      });
+    this.runAcknowledgements(targets, 0, {
+      ok: 0,
+      failed: [],
+      lastMessage: 'Acknowledged successfully.',
+    });
+  }
+
+  /**
+   * Acknowledges each document in turn.
+   *
+   * Sequential, not parallel: each call moves a document out of the training queue and into the
+   * authorization one, and firing them together would race the grid refresh and the badge counts.
+   * One failure does not abort the rest -- failures are collected and reported at the end.
+   */
+  private runAcknowledgements(
+    targets: { id: any; name: string }[],
+    index: number,
+    summary: { ok: number; failed: string[]; lastMessage: string },
+  ): void {
+    if (index >= targets.length) {
+      this.finishAcknowledgements(targets, summary);
+      return;
+    }
+
+    const target = targets[index];
+    const label = target.name || String(target.id);
+
+    this._documentTrainingService.AcknowledgeAndSendForAuthorization(target.id).subscribe({
+      next: (response: any) => {
+        if (response?.Success) {
+          summary.ok++;
+          summary.lastMessage = response?.Message || summary.lastMessage;
+        } else {
+          summary.failed.push(label + ': ' + (response?.Message || 'failed'));
+        }
+        this.runAcknowledgements(targets, index + 1, summary);
+      },
+      error: (err: any) => {
+        summary.failed.push(
+          label + ': ' + (err?.error?.Message || 'Failed to take action on the request.'),
+        );
+        this.runAcknowledgements(targets, index + 1, summary);
+      },
+    });
+  }
+
+  /** Refreshes once, after every target has been attempted, and reports what happened. */
+  private finishAcknowledgements(
+    targets: { id: any; name: string }[],
+    summary: { ok: number; failed: string[]; lastMessage: string },
+  ): void {
+    if (summary.ok > 0) {
+      this._notificationToastService.createNotification(
+        'success',
+        'Request',
+        targets.length === 1
+          ? summary.lastMessage
+          : summary.ok + ' of ' + targets.length + ' document(s) acknowledged successfully.',
+      );
+
+      this.selectedDocumentId = null;
+      this.selectedRows = [];
+      // Clear both the tracked selection state and the grid's own checkbox selection immediately
+      // -- don't rely on the approved records simply disappearing from the next fetch to disable
+      // the Approve button.
+      this.hasSelectedRows = false;
+      this.agGridWrapper?.gridApi?.deselectAll();
+
+      // Server-side (infinite-model) grid: refresh() invalidates AG Grid's own cache and
+      // re-requests data. Done once here rather than per record.
+      if (this.agGridWrapper) {
+        this.agGridWrapper.refresh();
+      } else {
+        this.GetAllClassRooms({});
+      }
+
+      // Every badge, not just this screen's: acknowledging moves the document out of the
+      // training queue and into the authorization one.
+      this._navigationCountsService.refreshAfterAction('Classroom Training Acknowledged');
+    }
+
+    if (summary.failed.length) {
+      this._notificationToastService.createNotification(
+        'error',
+        'Request',
+        summary.failed.join(' | '),
+      );
+    }
   }
 
   openDocumentModal(rowData: any) {

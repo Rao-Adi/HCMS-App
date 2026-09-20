@@ -233,7 +233,22 @@ export class DMSRichTextEdit implements OnInit {
     this._cdr.markForCheck();
   }
 
+  /**
+   * Quill owns its own editable state -- it is NOT a form control here, so [disabled] does
+   * nothing. (The commented-out ngx-editor block above does bind [disabled], which is what made
+   * IsReadyOnly look wired up: that editor is not the one being rendered.) enable(false) is the
+   * only thing that actually stops typing, and the toolbar is hidden alongside it so a read-only
+   * editor does not offer formatting buttons that silently do nothing.
+   */
+  private applyReadOnly(): void {
+    this.editor?.quillEditor?.enable(!this.IsReadyOnly);
+  }
+
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['IsReadyOnly']) {
+      this.applyReadOnly();
+    }
+
     if (changes['contentHtml'] && this.editor?.quillEditor) {
       // Guard against a feedback loop: every keystroke emits contentHtmlChange, the parent
       // writes it straight back into [contentHtml], which re-triggers this hook. Re-pasting
@@ -260,6 +275,10 @@ export class DMSRichTextEdit implements OnInit {
   if (this.contentHtml) {
     quill.clipboard.dangerouslyPasteHTML(this.contentHtml);
   }
+
+  // The instance only exists from here on, so a read-only editor has to be locked at creation
+  // as well as on later changes.
+  quill.enable(!this.IsReadyOnly);
 }
   // Initial Text Editors
   // editorCreated(quill: any) {

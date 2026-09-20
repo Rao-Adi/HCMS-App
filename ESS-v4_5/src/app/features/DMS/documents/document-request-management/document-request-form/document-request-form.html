@@ -488,7 +488,7 @@
         Draft
       </button>
     </div>
-    <div class="col-sm-1" *ngIf="!isRevisionRequestType">
+    <div class="col-sm-1" *ngIf="!isDocumentTargetedRequestType">
       <button
         type="button"
         tabindex="0"
@@ -502,7 +502,7 @@
       </button>
     </div>
 
-    <div class="col-sm-1" *ngIf="isRevisionRequestType">
+    <div class="col-sm-1" *ngIf="isDocumentTargetedRequestType">
       <button
         type="button"
         tabindex="0"
@@ -512,7 +512,7 @@
         (click)="SubmiteRevisionDocumentRequests()"
       >
         <i class="bi bi-file-earmark-text me-2"></i>
-        Submit Revision
+        {{ isRevisionRequestType ? 'Submit Revision' : 'Submit Obsoletion' }}
       </button>
     </div>
   </div>

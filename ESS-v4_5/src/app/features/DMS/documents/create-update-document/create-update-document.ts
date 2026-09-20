@@ -3,6 +3,7 @@ import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/co
 import { Subscription } from 'rxjs';
 import * as mammoth from 'mammoth';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
+import { AppConfigService } from '@app/core/services/app-config';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -374,6 +375,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     private _peoplePartnerService: PeoplePartnersService,
     private _documentReviewPolicyService: DocumentReviewPolicyService,
     private _navigationCountsService: NavigationCountsService,
+    private _appConfig: AppConfigService,
   ) {}
 
   ngOnInit() {
@@ -448,6 +450,17 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // DRT-0002 (Revision) and DRT-0003 (Obsoletion) share the same "direct" treatment as DRT-0001
   // "Create Document Directly" once a document row is picked from their grid -- see onCellClicked,
   // SubmiteDocument, submitDisabledReason, and the shared card block in the template.
+  /**
+   * Obsoletion only. FSD 4.1.3 makes everything except Justification read-only for a
+   * retirement: the content viewer is "read-only… as the purpose is retirement, not editing",
+   * the Users section is disabled "as no new users are assigned", and the Cabinet fields are
+   * populated from the selected document and read-only. Nothing about the document being
+   * retired may be edited on the way out.
+   */
+  get isObsoletion(): boolean {
+    return this.selectedRequestType === 'DRT-0003';
+  }
+
   get isRevisionOrObsoletion(): boolean {
     return this.selectedRequestType === 'DRT-0002' || this.selectedRequestType === 'DRT-0003';
   }
@@ -486,9 +499,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // only accepted a file, so a document that already had real content (e.g. loaded from an
     // existing document when revising, or typed with no file ever uploaded) stayed permanently
     // disabled even though there was nothing left for the user to actually do. Applies uniformly
-    // to DRT-0003 too -- CreateBareDocumentForSubmissionAsync/AttachOrUpdateTemplateAsync treat
-    // Obsoletion identically to Revision (a fresh child Document with its own content either way).
-    if (this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) {
+    // NOT applied to an Obsoletion. A retirement supplies no content: it does not create a
+    // document (BL-001 issues a number only for Creation/Revision) and the backend skips
+    // AttachOrUpdateTemplateAsync for DRT-0003 precisely so the document being retired is never
+    // rewritten. Demanding a file here blocked Submit on a form where FSD 4.1.3 makes the content
+    // viewer read-only -- there was no way for the user to satisfy it.
+    if ((this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) && !this.isObsoletion) {
       if (this.selectedTemplateType !== '3') {
         if (!this.draftFileUrl && !this.draftFile && !this._hasRealContentCache) {
           return 'Please upload a document file, or add content in Document Content below.';
@@ -501,7 +517,10 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // dynamicForm never got set and this check would have blocked Submit forever. With the card
     // mounted the same rule applies: the backend enforces mandatory attributes either way, and
     // catching it here tells the author which field is missing instead of failing on submit.
-    if (this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) {
+    // Also skipped for an Obsoletion: its attribute form is rendered read-only (mode="view"),
+    // so the user cannot fill anything in, and the backend skips ValidateAndSaveAttributesAsync
+    // for DRT-0003. Requiring them would be an unsatisfiable condition.
+    if ((this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) && !this.isObsoletion) {
       if (this.attributes && this.attributes.length > 0) {
         if (!this.dynamicForm || this.dynamicForm.invalid) {
           return 'Please fill all required fields in Document Attributes.';
@@ -509,7 +528,11 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       }
     }
 
-    if (this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) {
+    // Never for an Obsoletion. Training exists so people are trained on a document coming into
+    // force; a retirement assigns no users at all (FSD 4.1.3), the Users card is hidden for it,
+    // and the backend skips both ValidateAndSaveTrainingUsersAsync and the whole training stage
+    // for DRT-0003. Requiring a trainer here would be impossible to satisfy on this form.
+    if ((this.selectedRequestType === 'DRT-0001' || this.isRevisionOrObsoletion) && !this.isObsoletion) {
       if (this.trainingRequired) {
         // The real requirement is just "at least one trainee assigned" -- selectedTrainingMode
         // is only the transient picker state AddTrainingUsers() uses to add ONE MORE row; it has
@@ -637,13 +660,31 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       return;
     }
 
-    this.templateHtml = data?.proposedContent || '';
-    this.draftFileUrl = data?.draftFileUrl || '';
+    // The row's saved content comes back as VersionContent (Vw_Documents.versioncontent, mapped
+    // by DraftDocumentDto) -- not proposedContent/content, which are fields on the *request* row,
+    // not this one. Reading only those left the editor blank for every document. Casing is checked
+    // three ways because Program.cs registers three different JSON naming policies.
+    this.templateHtml = data?.VersionContent || data?.versionContent || data?.versioncontent || data?.proposedContent || data?.content || '';
+
+    // The revision/obsoletion grid is fed by get-effective-documents-for-revision, whose query is
+    // `SELECT DISTINCT d.*` over Documents -- that carries DocumentURL but no content column at
+    // all, so proposedContent/content above are always empty here. "draftFileUrl" likewise isn't
+    // a field on this row, so this used to resolve to '' and the document's own file was lost.
+    const existingDocumentUrl: string =
+      data?.DocumentURL || data?.documenturl || data?.draftFileUrl || data?.url || '';
+    this.draftFileUrl = existingDocumentUrl;
     this.requestId = data?.requestId || data?.Id || data?.id || 0;
     this.documentName = data?.documentName || '';
     this.selectedDocumentType = data?.documentTypeCode || '';
     this.selectedTemplateType = data?.templateType?.toString() || '';
     this.showDocumentContent = true;
+
+    // This document was authored via file upload (no saved HTML content) -- convert its own file
+    // client-side so the rich text editor shows its actual current content instead of sitting
+    // blank, which is what the Request screen has always done and this screen never did.
+    if (!this.templateHtml && existingDocumentUrl) {
+      this.previewExistingDocumentContent(existingDocumentUrl);
+    }
 
     // Full field parity with DRT-0001 "Create Document Directly": the document actually being
     // revised/obsoleted (ParentDocumentId for SubmiteDocument -- distinct from requestId above,
@@ -1453,7 +1494,51 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // leaves templateHtml empty, so only the original file participates in the download-time merge
   // for those, exactly as before this feature. Never blocks the actual upload/submit on failure --
   // this only affects the in-form preview.
+  // Bumped by every previewUploadedFileContent/previewExistingDocumentContent call and captured
+  // at the start of each -- these are two independent async conversions (a freshly-picked local
+  // file vs. fetching the document-under-revision's own file) that can legitimately overlap:
+  // selecting a document to revise kicks off the latter, and the user can pick a *different* file
+  // to upload before it resolves. Without this guard, whichever finished last silently won.
+  private contentPreviewToken = 0;
+
+  /**
+   * Converts the document-being-revised's own .docx into HTML so the rich text editor opens with
+   * its real current content. Ported from document-request-form, which already did this -- the
+   * absence of it here is why Revision/Obsoletion showed an empty editor on this screen only.
+   */
+  private previewExistingDocumentContent(url: string): void {
+    const token = ++this.contentPreviewToken;
+    const ext = url.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase() || '';
+    if (ext !== 'docx') return;
+
+    // The stored path points at the API host, not the page -- fetching it relative returns the
+    // app shell instead of the .docx, and mammoth then silently produces nothing.
+    this.convertingUploadedFile = true;
+    fetch(this._appConfig.resolveFileUrl(url))
+      .then((response) => {
+        if (!response.ok) throw new Error('Fetch failed');
+        return response.arrayBuffer();
+      })
+      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((result) => {
+        if (token !== this.contentPreviewToken) return; // superseded by a newer selection
+        this.templateHtml = result.value;
+      })
+      .catch((err) => {
+        // Leave templateHtml empty -- the document's own file is still fully valid for
+        // download/merge regardless of whether this preview conversion succeeded.
+        if (token !== this.contentPreviewToken) return;
+        console.error('Failed to preview existing document content:', err);
+      })
+      .finally(() => {
+        if (token === this.contentPreviewToken) {
+          this.convertingUploadedFile = false;
+        }
+      });
+  }
+
   private previewUploadedFileContent(file: File): void {
+    const token = ++this.contentPreviewToken;
     this.templateHtml = '';
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     if (ext !== 'docx') {
@@ -1466,9 +1551,11 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       .arrayBuffer()
       .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
       .then((result) => {
+        if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
       })
       .catch((err) => {
+        if (token !== this.contentPreviewToken) return;
         // Leave templateHtml empty -- the uploaded file is still fully valid for submission.
         // Previously silent, which made a failed preview look identical to "nothing to show".
         console.error('Failed to preview uploaded document content:', err);
@@ -1479,7 +1566,9 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         );
       })
       .finally(() => {
-        this.convertingUploadedFile = false;
+        if (token === this.contentPreviewToken) {
+          this.convertingUploadedFile = false;
+        }
       });
   }
 
@@ -1686,6 +1775,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
             documentId: item.Id || item.id,
             documentNumber: item.documentNumber || item.DocumentNumber,
             documentName: item.DocumentName,
+            // DraftDocumentDto's content/file fields are VersionContent and DocumentURL --
+            // "ProposedContent"/"DraftFileUrl" are fields on the *request* DTO, not this one, so
+            // they mapped to undefined/'' and the document's content and file never reached the
+            // row at all. Casing is checked three ways because Program.cs registers three
+            // different JSON naming policies.
+            versionContent:
+              item.VersionContent || item.versionContent || item.versioncontent || '',
+            url: item.DocumentURL || item.documenturl || '',
             proposedContent: item.ProposedContent,
             department: item.Department,
             departmentId: item.DepartmentCode,
@@ -1713,6 +1810,8 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
               item.DraftFileUrl ||
               item.draftfileurl ||
               item.draftFileUrl ||
+              item.DocumentURL ||
+              item.documenturl ||
               '',
             // Map backend fields back to the frontend keys expected by the component
             distributionListPayload: (item.DistributionList || []).map((x: any) => ({

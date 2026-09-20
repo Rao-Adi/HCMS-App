@@ -107,7 +107,7 @@ export class DynamicFormByDocumentAttribute {
 
       const validators = attr.IsMandatory && this.mode === 'create' ? [Validators.required] : [];
 
-      const defaultValue = attr.ControlType === 'numeric' ? null : '';
+      const defaultValue = (attr.ControlType ?? '').toString().toLowerCase() === 'numeric' ? null : '';
 
       group[controlName] = [defaultValue, validators];
     });
@@ -136,14 +136,21 @@ export class DynamicFormByDocumentAttribute {
       // a real ValueDate on other rows. Select the field by the attribute's own ControlType.
       const attr = this.attributes?.find((a) => a.Id === val.DocumentAttributeId);
       let value: any;
-      switch (attr?.ControlType) {
+      // Compared lower-case because ControlTypes come from the ControlTypes table as "Date",
+      // "Numeric", "Textbox", "List" -- capitalised. Matching the lower-case literals directly
+      // meant EVERY attribute fell through to the default branch and read ValueText, which the API does
+      // not even return for a date or numeric attribute. The result was silent: a document with
+      // a real saved date and number patched nothing at all and the form just looked empty.
+      switch ((attr?.ControlType ?? '').toString().toLowerCase()) {
         case 'date':
           value = val.ValueDate ? new Date(val.ValueDate) : null;
           break;
         case 'numeric':
+        case 'number':
           value = val.ValueNumber;
           break;
         case 'checkbox':
+        case 'boolean':
           value = val.ValueBoolean;
           break;
         default:
