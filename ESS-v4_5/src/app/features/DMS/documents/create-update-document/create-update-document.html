@@ -460,8 +460,10 @@
                      (document-request-form.html), which shows both prefilled and editable when a
                      Revision/Obsoletion row is picked.
 
-                     'request' mode still never needs these here -- they were already captured and
-                     promoted onto the Document when its Request was approved.
+                     'request' mode shows them too, prefilled by onRequestIdChange from what
+                     approving the Request promoted onto the Document. Hiding them there left the
+                     person finalizing the document unable to see who had been tagged or how it
+                     would be distributed, let alone correct either before submitting.
 
                      They were previously hidden for Revision/Obsoletion as a demo scope reduction.
                      That left a document created through "Create Document Direct" with no way to
@@ -471,7 +473,6 @@
                      end to end with nothing on screen to read or change it. -->
                 <div
                   class="status-box-leftColmd6-standard mb-4"
-                  *ngIf="creationMode === 'direct' || isRevisionOrObsoletion"
                 >
                   <h3 class="PnlHeader" style="margin-top: 0">Document Users</h3>
                   <div class="row">
@@ -488,7 +489,6 @@
 
                 <div
                   class="status-box-leftColmd6-standard mb-4"
-                  *ngIf="creationMode === 'direct' || isRevisionOrObsoletion"
                 >
                   <h3 class="PnlHeader" style="margin-top: 0">Distribution List</h3>
                   <div class="row">

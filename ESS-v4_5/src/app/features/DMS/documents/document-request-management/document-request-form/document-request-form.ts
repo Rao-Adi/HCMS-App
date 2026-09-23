@@ -1746,7 +1746,13 @@ export class DocumentRequestForm {
     this.selectedCompany = row.companyId || row.company;
     // ✅ Populate form fields
     this.documentName = row.documentName || row.title || '';
-    this.inputJustificationValue = row.justification;
+
+    // Justification is deliberately NOT carried over from the selected document. Picking a
+    // document populates the Cabinet, Users, Distribution List and Content; Justification is
+    // "User Entry" with no default, and it has to say why THIS revision or THIS retirement is
+    // happening. Inheriting the previous one filled a mandatory audit field with the answer to
+    // a different question.
+    this.inputJustificationValue = '';
     // The row's saved content comes back as VersionContent (Vw_Documents.versioncontent, mapped
     // by DraftDocumentDto) -- not proposedContent/content, which are fields on the *request* row,
     // not this one. Reading only those left the editor blank for every document. Casing is checked

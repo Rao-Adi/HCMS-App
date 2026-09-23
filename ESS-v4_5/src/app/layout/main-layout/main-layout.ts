@@ -829,7 +829,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // never fights the title for space (long absolute dates were getting clipped).
   getRelativeTime(dateStr?: string): string {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
+
+    // The API sends CreatedAt as UTC. It arrives without an offset ("2026-09-22T14:45:30"),
+    // and `new Date` reads an offset-less string as LOCAL time -- so without the Z the
+    // reading is wrong by the distance between the server's timezone and the reader's, which
+    // is what showed "12h ago" on a notification raised a minute earlier. An offset that is
+    // already present (Z or +hh:mm) is left alone.
+    const hasOffset = /(?:Z|[+-]\d{2}:?\d{2})$/.test(dateStr);
+    const date = new Date(hasOffset ? dateStr : dateStr + 'Z');
     if (isNaN(date.getTime())) return '';
 
     const diffMs = Date.now() - date.getTime();

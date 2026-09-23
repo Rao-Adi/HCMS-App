@@ -728,9 +728,26 @@ export class DraftDocumentList implements OnInit {
       }))
       .filter((u: any) => !!u.employeeCode);
 
+    // The four typed value columns are forwarded individually, NOT flattened into one
+    // `value` field. SubmitDocument's attribute DTO binds ValueText / ValueNumber / ValueDate /
+    // ValueBoolean; a property named `value` binds to none of them, so every attribute arrived
+    // with all four null and ValidateAndSaveAttributesAsync rejected the submit with
+    // "Attribute '<label>' is mandatory" -- even though the draft had the value saved.
+    //
+    // get-document-attributes-by-documentId already returns exactly these four columns, so this
+    // is a pass-through. ?? (not ||) is deliberate: it preserves a false ValueBoolean and a zero
+    // ValueNumber, which || would have turned back into null.
+    // A blank is not a value. ?? only replaces null and undefined, so an empty string from
+    // the read API was forwarded verbatim -- and "" is not a date, which failed the submit
+    // outright. Anything blank becomes null here regardless of which end produced it.
+    const orNull = (v: any) => (v === null || v === undefined || v === '' ? null : v);
+
     const attributes = (this.attributeValues || []).map((a: any) => ({
       documentAttributeId: a.DocumentAttributeId ?? a.documentAttributeId ?? a.AttributeId,
-      value: a.Value ?? a.value ?? '',
+      valueText: orNull(a.ValueText ?? a.valueText),
+      valueNumber: orNull(a.ValueNumber ?? a.valueNumber),
+      valueDate: orNull(a.ValueDate ?? a.valueDate),
+      valueBoolean: orNull(a.ValueBoolean ?? a.valueBoolean),
     }));
 
     const trainingUsers = (this.trainingUsersData || []).map((t: any) => ({

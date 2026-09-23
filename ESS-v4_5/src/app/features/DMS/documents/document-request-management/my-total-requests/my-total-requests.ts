@@ -127,6 +127,7 @@ export class MyTotalRequests {
         this.openDocumentModal(event.data);
       },
     },
+    { field: 'rowVersion', headerName: 'Version' },
     {
       field: 'justification',
       headerName: 'Justification',
@@ -150,8 +151,7 @@ export class MyTotalRequests {
           this.openJustificationModal(val);
         }
       },
-    },
-    // { field: 'rowVersion', headerName: 'Version' },
+    }, 
   ];
 
   private readonly trailingColumnDefs: ColDef[] = [
@@ -175,6 +175,7 @@ export class MyTotalRequests {
     { field: 'requestNumber', label: 'Request Number', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
+    { field: 'rowVersion', label: 'Version', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
     { field: 'status', label: 'Status', visible: true },
     { field: 'createdOn', label: 'Created On', visible: true },
@@ -213,6 +214,7 @@ export class MyTotalRequests {
         { field: 'requestNumber', label: 'Request Number', visible: true },
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentName', label: 'Document Title', visible: true },
+        { field: 'rowVersion', label: 'Version', visible: true },
         { field: 'justification', label: 'Justification', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
         { field: 'status', label: 'Status', visible: true },
@@ -305,8 +307,8 @@ export class MyTotalRequests {
               requestNumber: item.RequestNumber || item.requestNumber,
               documentType: item.DocumentType || item.documentType,
               documentName: item.DocumentName || item.documentName,
-              justification: item.Justification || item.justification || '',
-              // rowVersion: item.RowVersion || item.rowVersion || '',
+              rowVersion: item.RowVersion || item.rowVersion || '',
+              justification: item.Justification || item.justification || '', 
               division: item.Division,
               department: item.Department,
               subdepartment: item.SubDepartment,

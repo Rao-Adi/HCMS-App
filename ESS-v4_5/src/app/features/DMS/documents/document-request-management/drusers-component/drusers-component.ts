@@ -194,10 +194,16 @@ export class DRUsersComponent {
   }
 
   private getColumns(): GridColumn[] {
-    return [
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
-      ...this.getRemainingColumns(),
-    ];
+    // A blank cabinet level here means "Any", the same as it does on the Distribution List --
+    // leaving Division/Department/SubDepartment/BusinessDomain unselected is how a user says
+    // the row is not scoped to one. Printed as an empty cell it read as missing data instead.
+    //
+    // buildCabinetColumns is shared with other grids, so the display is mapped here rather than
+    // in the service, exactly as drdistribution-list.getColumns already does it.
+    const cabinetColumns = this.cabinetGridService
+      .buildCabinetColumns(this.cabinetHierarchy)
+      .map((col) => ({ ...col, emptyValueDisplay: 'Any' }));
+    return [...cabinetColumns, ...this.getRemainingColumns()];
   }
 
   GetAllManuallyManageEmployee(query: any) {

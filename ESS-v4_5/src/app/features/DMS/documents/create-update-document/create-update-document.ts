@@ -1038,10 +1038,30 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
           res.Data[0].draftFileUrl ||
           '';
         this.documentName = res.Data[0].title || '';
+
+        // Document Users and the Distribution List the Request carried, promoted onto this
+        // Document when the Request was approved. Mapped exactly as the Draft/Reverted list
+        // maps them (draft-document-list.ts), since both feed the same two grids.
+        this.distributionListPayload = (
+          res.Data[0].DistributionList ??
+          res.Data[0].distributionList ??
+          []
+        ).map((x: any) => ({
+          ...x,
+          level1Id: x.DivisionCode ?? x.divisionCode,
+          level2Id: x.DepartmentCode ?? x.departmentCode,
+          level3Id: x.SubDepartmentCode ?? x.subDepartmentCode,
+          level4Id: x.BusinessDomainCode ?? x.businessDomainCode,
+          roleId: x.RoleId ?? x.roleId,
+          distributiontypeId: x.DistributionTypeId ?? x.distributionTypeId,
+        }));
+        this.distributionUserList = res.Data[0].UserList ?? res.Data[0].userList ?? [];
       } else {
         this.templateHtml = '';
         this.draftFileUrl = '';
         this.documentName = '';
+        this.distributionListPayload = [];
+        this.distributionUserList = [];
       }
     });
   }
@@ -1302,6 +1322,23 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
     } else {
       payLoad.documentid = this.documentId;
+
+      // "Use an Approved Request": title, cabinet and justification came from the Request and
+      // are not editable here, but these two grids are -- so whatever they hold at submit time
+      // is what the document should carry, including nothing if the person cleared one.
+      //
+      // replacedistributions is what says so. An empty list on its own cannot: callers that
+      // do not show these grids send empty lists meaning "leave them alone".
+      payLoad.replacedistributions = true;
+      payLoad.distributionlist = (this.distributionListPayload || []).map((x: any) => ({
+        divisionCode: x.level1Id || x.divisionCode,
+        departmentCode: x.level2Id || x.departmentCode,
+        subDepartmentCode: x.level3Id || x.subDepartmentCode,
+        businessDomainCode: x.level4Id || x.businessDomainCode,
+        roleId: x.roleId,
+        distributionTypeId: x.distributiontypeId || x.distributionTypeId,
+      }));
+      payLoad.userids = this.buildUserIdsPayload(this.distributionUserList);
     }
 
     // Append the new draft file if it exists
