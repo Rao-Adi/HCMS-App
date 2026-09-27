@@ -139,6 +139,134 @@
         </div>
       </div>
 
+      <!-- Editable, same as Create/Update Document -- previously this panel only carried the
+           document's existing training assignment through unchanged (see loadTrainingAssignments),
+           with no way to add or change a trainee from a reverted document. -->
+      <div class="row-space" *ngIf="trainingRequired">
+        <div class="status-box-leftColmd6-standard">
+          <h3 class="PnlHeader" style="margin-top: 0">Trainers (Document Training)</h3>
+          <div class="row">
+            <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+              <div class="PnlHeading">
+                <label
+                  >{{ 'labels.Training Mode' | safeTranslate }}
+                  <span class="text-danger">*</span></label
+                >
+              </div>
+              <div>
+                <nz-select
+                  name="trainingMode"
+                  style="width: 100%; max-width: 250px"
+                  [nzPlaceHolder]="'Select Training Mode'"
+                  [(ngModel)]="selectedTrainingMode"
+                  nzAllowClear
+                  nzShowSearch
+                >
+                  <nz-option
+                    *ngFor="let mode of trainingModes"
+                    [nzValue]="mode.CODE"
+                    [nzLabel]="mode.NAME"
+                  >
+                  </nz-option>
+                </nz-select>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+              <div class="PnlHeading">
+                <label
+                  >{{ 'labels.Trainers' | safeTranslate }} <span class="text-danger">*</span></label
+                >
+              </div>
+              <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px">
+                <div>
+                  <app-role-list
+                    name="trainerRole"
+                    valueKey="NAME"
+                    labelKey="NAME"
+                    [isMultiSelect]="false"
+                    placeholder="Select Role"
+                    [(ngModel)]="selectedRole"
+                    (ngModelChange)="loadUsersWhenRoleIdChanges()"
+                    width="100%"
+                  >
+                  </app-role-list>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 mb-10">
+              <div class="PnlHeading">
+                <label
+                  >{{ 'labels.User' | safeTranslate }}
+                  <span class="text-danger">*</span>
+                  <small class="text-muted fw-normal"
+                    >(pick a User, then click + to add)</small
+                  ></label
+                >
+              </div>
+              <div class="d-flex align-items-start w-100" style="max-width: 350px">
+                <nz-select
+                  name="trainingUser"
+                  style="width: 100%"
+                  [nzPlaceHolder]="'Select User'"
+                  [(ngModel)]="selectedUser"
+                  nzAllowClear
+                  [nzShowSearch]="true"
+                  nzMode="multiple"
+                  [nzMaxTagCount]="3"
+                >
+                  <nz-option *ngFor="let dep of users" [nzValue]="dep.CODE" [nzLabel]="dep.NAME">
+                  </nz-option>
+                </nz-select>
+                <button
+                  class="grid-icon-btn ms-2 flex-shrink-0"
+                  title="Add"
+                  (click)="AddTrainingUsers()"
+                >
+                  <i class="bi bi-plus-circle"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="showTrainingUserTable" class="row mt-4">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="table-responsive">
+                <table class="table mb-0" *ngIf="trainingUsersData && trainingUsersData.length > 0">
+                  <thead>
+                    <th>Training Mode</th>
+                    <th>Trainer</th>
+                    <th>User</th>
+                    <th></th>
+                  </thead>
+                  <tbody>
+                    @for (item of trainingUsersData; track $index; let i = $index) {
+                      <tr>
+                        <td>{{ item.TrainingMode }}</td>
+                        <td>{{ item.TrainerName }}</td>
+                        <td>
+                          {{
+                            item.UserCode && item.UserCode !== item.UserName
+                              ? '(' + item.UserCode + ') ' + item.UserName
+                              : item.UserName
+                          }}
+                        </td>
+                        <td>
+                          <i
+                            class="bi bi-trash text-danger"
+                            style="cursor: pointer"
+                            title="Remove"
+                            (click)="RemoveTrainingUser(i)"
+                          ></i>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="row-space col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="status-box-leftColmd6-standard">
           <h3 class="PnlHeader">Document Users</h3>
@@ -166,7 +294,7 @@
         </div>
       </div>
 
-      <div class="row mt-4">
+      <div class="row-space">
         <div class="status-box-leftColmd6-standard">
           <div class="col-lg-12 col-md-12 col-sm-12">
             <h3 class="PnlHeader">Document Content</h3>
@@ -192,8 +320,8 @@
                     the finalized version.</span
                   >
                   <span *ngIf="!draftFileUrl && !draftFile">
-                    Download the standard template, fill in the required details offline, and
-                    upload your finalized draft below.</span
+                    Download the standard template, fill in the required details offline, and upload
+                    your finalized draft below.</span
                   >
                 </div>
               </div>
@@ -265,8 +393,8 @@
               <div *ngIf="!convertingUploadedFile" class="mt-3">
                 <div class="PnlHeading">
                   <label
-                    >Or type the content manually below (edit if needed after uploading, or leave
-                    as uploaded)</label
+                    >Or type the content manually below (edit if needed after uploading, or leave as
+                    uploaded)</label
                   >
                 </div>
                 <app-dmsrich-text-edit
@@ -277,6 +405,84 @@
                 ></app-dmsrich-text-edit>
               </div>
             </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ad-hoc Approver Card: this-document-only, mirrors Create/Update Document's own card.
+           Needed here (not just as a preview) so an approver picked at creation and then only
+           Draft-saved -- which never made it into the workflow, since SaveDocumentAsDraftAsync
+           did not persist it until DocumentAdHocApprovers was added -- can be added back before
+           resubmitting. See AddAdHocApprover/RemoveAdHocApprover. -->
+      <div class="row-space">
+        <div class="status-box-leftColmd6-standard mb-4">
+          <h3 class="PnlHeader" style="margin-top: 0">Additional Approver (This Document Only)</h3>
+          <div class="row mb-2 align-items-end">
+            <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
+              <app-employee-list
+                #adHocEmployeeList
+                [isMultiSelect]="false"
+                placeholder="Select Approver"
+                width="100%"
+                [(ngModel)]="selectedAdHocApprover"
+              ></app-employee-list>
+            </div>
+            <div class="col-lg-2 col-md-3 col-sm-12 mb-10">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary adhoc-add-btn d-inline-flex align-items-center justify-content-center gap-1"
+                (click)="AddAdHocApprover()"
+                [disabled]="adHocApprovers.length > 0"
+              >
+                <i class="bi bi-plus-circle"></i> Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow Authorities -- policy-defined steps plus the ad-hoc approver above, merged
+           (see combinedWorkflowAuthorities), matching what SubmitDocumentAsync will actually
+           build. -->
+      <div class="row-space" *ngIf="combinedWorkflowAuthorities.length > 0">
+        <div class="status-box-leftColmd6-standard">
+          <h3 class="PnlHeader">Workflow Authorities</h3>
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="table-responsive">
+              <table class="table mb-0">
+                <thead>
+                  <th>Approval Sequence</th>
+                  <th>Employee Code</th>
+                  <th>Employee Name</th>
+                  <th>Role</th>
+                  <th></th>
+                </thead>
+                <tbody>
+                  @for (
+                    item of combinedWorkflowAuthorities;
+                    track item.EmployeeCode + '-' + item.StepOrder;
+                    let i = $index
+                  ) {
+                    <tr>
+                      <td>{{ item.StepOrder }}</td>
+                      <td>{{ item.EmployeeCode }}</td>
+                      <td>{{ item.EmployeeName }}</td>
+                      <td>{{ item.UserRole }}</td>
+                      <td>
+                        @if (adHocApprovers.length > 0 && i === combinedWorkflowAuthorities.length - 1) {
+                          <i
+                            class="bi bi-trash text-danger"
+                            style="cursor: pointer"
+                            title="Remove"
+                            (click)="RemoveAdHocApprover(0)"
+                          ></i>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

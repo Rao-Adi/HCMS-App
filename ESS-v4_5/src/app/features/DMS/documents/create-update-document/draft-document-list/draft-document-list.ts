@@ -23,6 +23,13 @@ import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
+import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
+import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
+import { SelectList } from '@app/shared/interfaces/interfaces';
+import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 
 // Documents the user created that are still in Draft: never submitted ("Draft"), or submitted and
 // then sent back for rework ("Reverted"). Mirrors document-request-management's draft-request-list
@@ -40,6 +47,9 @@ import { NavigationCountsService } from '@app/shared/services/navigation-counts.
     DMSRichTextEdit,
     DRUsersComponent,
     DRDistributionList,
+    NzSelectModule,
+    RoleList,
+    EmployeeList,
   ],
   templateUrl: './draft-document-list.html',
   styleUrl: './draft-document-list.css',
@@ -47,6 +57,9 @@ import { NavigationCountsService } from '@app/shared/services/navigation-counts.
 export class DraftDocumentList implements OnInit {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
   @ViewChild('fileInput') fileInput!: any;
+  // Reads its label from adHocEmployeeListRef.options -- see AddAdHocApprover, mirrored from
+  // create-update-document.ts's own picker.
+  @ViewChild('adHocEmployeeList') adHocEmployeeListRef?: EmployeeList;
 
   // Lets the parent (create-update-document.ts) refresh the "Document Draft" tab badge when a
   // draft is saved or submitted out of Draft status.
@@ -81,6 +94,252 @@ export class DraftDocumentList implements OnInit {
 
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
+
+  // Workflow Authorities preview. approvalSequenceData is the policy-resolved chain, fetched the
+  // same way create-update-document.ts's own preview does. adHocApprovers is this document's
+  // ad-hoc approver, editable here the same way it is on Create/Update Document -- previously
+  // this screen only showed whatever get-carried-adhoc-approver returned, with no way to add one
+  // back. That mattered because SaveDocumentAsDraftAsync did not persist an ad-hoc approver
+  // picked on Create/Update Document, so one added there and then only Draft-saved (rather than
+  // submitted immediately) was silently lost, and this screen -- the only other place a reverted
+  // or still-drafted document can be resubmitted from -- had no control to add it back. Confirmed
+  // on IT-II-SOP-012: an ad-hoc approver picked at creation never made it into the workflow, and
+  // after the document was reverted this screen offered no way to add them for resubmission.
+  // loadCarriedAdHocApprover seeds this array from whatever's already persisted
+  // (DocumentAdHocApprovers); AddAdHocApprover/RemoveAdHocApprover edit it from there. Capped at
+  // exactly one entry, matching Create/Update Document's own confirmed scope.
+  approvalSequenceData: any[] = [];
+  adHocApprovers: { EmployeeCode: string; EmployeeName: string; Role: string }[] = [];
+  selectedAdHocApprover: string = '';
+  combinedWorkflowAuthorities: any[] = [];
+
+  private rebuildCombinedWorkflowAuthorities(): void {
+    const policySteps = this.approvalSequenceData || [];
+    const adHocSteps = (this.adHocApprovers || []).map((a, idx) => ({
+      StepOrder: policySteps.length + idx + 1,
+      EmployeeCode: a.EmployeeCode,
+      EmployeeName: a.EmployeeName,
+      UserRole: a.Role,
+    }));
+    this.combinedWorkflowAuthorities = [...policySteps, ...adHocSteps];
+  }
+
+  // Mirrors create-update-document.ts's own AddAdHocApprover.
+  AddAdHocApprover(): void {
+    if (!this.selectedAdHocApprover) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select an approver.',
+      );
+      return;
+    }
+    if (this.adHocApprovers.length > 0) {
+      return;
+    }
+
+    const opt = this.adHocEmployeeListRef?.options.find(
+      (o) => o.value === this.selectedAdHocApprover,
+    );
+    const name = opt?.label ? opt.label.replace(/\s*\([^)]*\)\s*$/, '') : this.selectedAdHocApprover;
+    const employeeCode = this.selectedAdHocApprover;
+    this.adHocApprovers.push({
+      EmployeeCode: employeeCode,
+      EmployeeName: name,
+      Role: 'Ad-hoc Approver',
+    });
+    this.rebuildCombinedWorkflowAuthorities();
+    this.selectedAdHocApprover = '';
+
+    this._peoplePartnerService.GetEmployeeRoleByCode(employeeCode).subscribe({
+      next: (res) => {
+        const role = res?.Data;
+        if (!role) return;
+        const entry = this.adHocApprovers.find((a) => a.EmployeeCode === employeeCode);
+        if (entry) {
+          entry.Role = role;
+          this.adHocApprovers = [...this.adHocApprovers];
+          this.rebuildCombinedWorkflowAuthorities();
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  RemoveAdHocApprover(index: number): void {
+    this.adHocApprovers.splice(index, 1);
+    this.rebuildCombinedWorkflowAuthorities();
+  }
+
+  // Training Users -- editable here, same as on Create/Update Document. Previously this panel
+  // only fetched the document's existing assignment to carry it through unchanged on Submit
+  // (loadTrainingAssignments); there was no way to add or change a trainee from a reverted
+  // document, so a document reverted specifically for a training-assignment problem had no way
+  // to be corrected from this tab.
+  trainingRequired: boolean = false;
+  showTrainingUserTable = false;
+  selectedTrainingMode: string = '';
+  selectedRole?: string = '';
+  selectedUser: string[] = [];
+  trainingModes: SelectList[] = [
+    { CODE: 'Classroom', NAME: 'Classroom' },
+    { CODE: 'Online', NAME: 'Online' },
+  ];
+  users: any[] = [];
+  // Dedicated to the trainer/user picker's own lookup -- deliberately NOT the same totalRows the
+  // grid's own pagination uses above, so picking a trainer can never clobber the grid's state.
+  private trainingUserTotalRows = 0;
+
+  private CheckTrainingPolicy(documentTypeCode: string): void {
+    this.trainingRequired = false;
+    if (!documentTypeCode) return;
+    this._trainingPolicyService.GetTrainingPolicyByDocumentType(documentTypeCode).subscribe({
+      next: (res) => {
+        this.trainingRequired = !!res?.Data?.TrainingRequired;
+      },
+      error: () => {
+        this.trainingRequired = false;
+      },
+    });
+  }
+
+  // Verbatim from create-update-document.ts's own AddTrainingUsers -- same validation, same
+  // shape pushed into trainingUsersData, which SubmitDraftDocument already sends unchanged.
+  AddTrainingUsers(): void {
+    if (!this.selectedTrainingMode) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Training Mode.',
+      );
+      return;
+    }
+    if (!this.selectedRole) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select a Trainer.',
+      );
+      return;
+    }
+    if (!this.selectedUser || this.selectedUser.length === 0) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select at least one User.',
+      );
+      return;
+    }
+
+    this.showTrainingUserTable = true;
+
+    const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
+
+    this.selectedUser.forEach((userCode) => {
+      const user = this.users.find((u) => u.CODE === userCode);
+      this.trainingUsersData.push({
+        TrainingMode: mode?.NAME,
+        TrainerName: user?.role,
+        // RAW_NAME is the bare name; NAME is that same name pre-formatted as "(code) Name" for
+        // the picker's own dropdown label -- see the matching note on create-update-document.ts's
+        // own AddTrainingUsers. Kept bare here too so the table formats every row the same way,
+        // whether it was just added or prefilled from the document's existing assignment.
+        UserName: user?.RAW_NAME || user?.CODE,
+        TrainerCode: this.selectedRole,
+        UserCode: user?.CODE,
+      });
+    });
+
+    this.selectedRole = '';
+    this.selectedUser = [];
+  }
+
+  // Mirrors create-update-document.ts's own RemoveTrainingUser -- the table had no way to undo an
+  // add. Reported after a user added three trainees and had no way to remove the two they didn't
+  // mean to keep.
+  RemoveTrainingUser(index: number): void {
+    this.trainingUsersData.splice(index, 1);
+  }
+
+  // Verbatim from create-update-document.ts's own loadUsersWhenRoleIdChanges.
+  loadUsersWhenRoleIdChanges(query: any = {}): void {
+    const roleId = this.selectedRole;
+    if (!roleId) {
+      this.users = [];
+      this.trainingUserTotalRows = 0;
+      this.selectedUser = [];
+      return;
+    }
+    const sort = query.sortModel?.[0];
+    const payload = {
+      searchtext: query.searchTerm || query.searchText || '',
+      sortby: sort?.sort?.toUpperCase() || 'ASC',
+      sortcolumn: sort?.colId || 'empid',
+      isactive: true,
+      pagenumber: Number(query.pageNumber) || 1,
+      pagesize: Number(query.pageSize) || 50,
+      divisionCode: null,
+      departmentCode: null,
+      subDepartmentCode: null,
+      businessDomainCode: null,
+      documentTypeCode: this.selectedDocumentTypeCode,
+    };
+
+    this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe((res) => {
+      if (res?.Success && res.Data) {
+        const data = res.Data;
+        const users = (Array.isArray(data) ? data : data.Items || []).filter((u: any) => u != null);
+
+        if (users.length > 0) {
+          this.trainingUserTotalRows = data.TotalCount ?? users.length;
+          this.users = users
+            .map((u: any) => {
+              const code =
+                u.empcode ||
+                u.empCode ||
+                u.EmployeeCode ||
+                u.employeeCode ||
+                u.empid ||
+                u.empId ||
+                u.EmployeeId ||
+                u.id ||
+                u.Id ||
+                u.UserId ||
+                u.userId ||
+                u.UserCode ||
+                u.userCode ||
+                u.CODE;
+              const name = u.firstname
+                ? `${u.firstname} ${u.midname || ''} ${u.lastname || ''}`.trim().replace(/\s+/g, ' ')
+                : u.EmployeeName ||
+                  u.employeeName ||
+                  u.empName ||
+                  u.EmpName ||
+                  u.UserName ||
+                  u.userName ||
+                  u.Name ||
+                  u.name ||
+                  u.NAME ||
+                  code;
+
+              return {
+                ...u,
+                CODE: code,
+                NAME: '(' + code + ') ' + name,
+                RAW_NAME: name,
+              };
+            })
+            .sort((a: any, b: any) => (a.RAW_NAME || '').localeCompare(b.RAW_NAME || ''));
+        } else {
+          this.users = [];
+          this.trainingUserTotalRows = 0;
+        }
+      } else {
+        this.users = [];
+        this.trainingUserTotalRows = 0;
+      }
+    });
+  }
 
   templateHtml: string = '';
   selectedTemplateType: string = '';
@@ -188,6 +447,9 @@ export class DraftDocumentList implements OnInit {
     private modal: NzModalService,
     private _cabinetHierarchyService: CabinetHierarchyService,
     private _navigationCountsService: NavigationCountsService,
+    private _workflowStepService: WorkflowStepService,
+    private _trainingPolicyService: TrainingPolicyService,
+    private _peoplePartnerService: PeoplePartnersService,
   ) {}
 
   ngOnInit(): void {
@@ -271,6 +533,16 @@ export class DraftDocumentList implements OnInit {
     this.revertedObservations = [];
     this.attributeValues = [];
     this.trainingUsersData = [];
+    this.trainingRequired = false;
+    this.showTrainingUserTable = false;
+    this.selectedTrainingMode = '';
+    this.selectedRole = '';
+    this.selectedUser = [];
+    this.users = [];
+    this.approvalSequenceData = [];
+    this.adHocApprovers = [];
+    this.selectedAdHocApprover = '';
+    this.combinedWorkflowAuthorities = [];
     this.pendingDetailLoads = 0;
     this.loadingDetail = false;
   }
@@ -437,6 +709,14 @@ export class DraftDocumentList implements OnInit {
     this.distributionListPayload = row.distributionListPayload || [];
     this.distributionUserList = row.distributionUserList || [];
 
+    // Transient picker state for adding a trainer -- reset per row so leftover selections from
+    // whichever document was open before can't be added to this one by mistake.
+    this.selectedTrainingMode = '';
+    this.selectedRole = '';
+    this.selectedUser = [];
+    this.users = [];
+    this.CheckTrainingPolicy(this.selectedDocumentTypeCode);
+
     if (this.selectedDocumentTypeCode) {
       this.pendingDetailLoads++;
       this.GetTemplate(this.selectedDocumentTypeCode);
@@ -450,6 +730,12 @@ export class DraftDocumentList implements OnInit {
 
     this.pendingDetailLoads++;
     this.loadTrainingAssignments(row.Id);
+
+    this.pendingDetailLoads++;
+    this.loadWorkflowAuthorities(this.selectedDocumentTypeCode);
+
+    this.pendingDetailLoads++;
+    this.loadCarriedAdHocApprover(row.Id);
 
     if (this.pendingDetailLoads === 0) {
       this.loadingDetail = false;
@@ -514,17 +800,92 @@ export class DraftDocumentList implements OnInit {
 
   private loadTrainingAssignments(documentId: number): void {
     this.trainingUsersData = [];
+    this.showTrainingUserTable = false;
     if (!documentId) {
       this.finishDetailLoad();
       return;
     }
     this._documentService.GetDocumentTrainingAssignments(documentId).subscribe({
       next: (res) => {
-        this.trainingUsersData = res?.Data || [];
+        // The raw response shape (TrainingMode as a numeric code, Role/EmployeeName/EmployeeCode)
+        // does not match what the table below reads (TrainingMode as a name, TrainerName,
+        // UserName) -- same mapping create-update-document.ts's own onCellClicked applies to this
+        // same endpoint. Without it the table showed the bare numeric mode and blank Trainer/User
+        // cells, even though the assignment itself was loaded correctly.
+        const modeName = (m: number) => (m === 1 ? 'Classroom' : m === 2 ? 'Online' : '');
+        this.trainingUsersData = (res?.Data || []).map((t: any) => ({
+          TrainingMode: modeName(t.TrainingMode),
+          TrainerName: t.Role || '',
+          UserName: t.EmployeeName?.trim() || t.EmployeeCode,
+          TrainerCode: '',
+          UserCode: t.EmployeeCode,
+        }));
+        this.showTrainingUserTable = this.trainingUsersData.length > 0;
         this.finishDetailLoad();
       },
       error: () => {
         this.trainingUsersData = [];
+        this.showTrainingUserTable = false;
+        this.finishDetailLoad();
+      },
+    });
+  }
+
+  // The policy-resolved approval chain for this row's Document Type + Cabinet -- same call
+  // create-update-document.ts's own Workflow Authorities preview makes, so a document revised or
+  // resubmitted from either screen shows the identical sequence.
+  private loadWorkflowAuthorities(documentTypeCode: string): void {
+    this.approvalSequenceData = [];
+    if (!documentTypeCode) {
+      this.rebuildCombinedWorkflowAuthorities();
+      this.finishDetailLoad();
+      return;
+    }
+    const payLoad = {
+      EntityType: 'Document',
+      documentTypeCode,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
+    };
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe({
+      next: (res) => {
+        this.approvalSequenceData = res?.Data || [];
+        this.rebuildCombinedWorkflowAuthorities();
+        this.finishDetailLoad();
+      },
+      error: () => {
+        this.approvalSequenceData = [];
+        this.rebuildCombinedWorkflowAuthorities();
+        this.finishDetailLoad();
+      },
+    });
+  }
+
+  // Seeds adHocApprovers from whatever this document already has persisted (DocumentAdHocApprovers,
+  // via get-carried-adhoc-approver) -- either a prior execution's ad-hoc step, or one picked on
+  // Create/Update Document and only Draft-saved since. AddAdHocApprover/RemoveAdHocApprover edit
+  // it from there, same as on Create/Update Document.
+  private loadCarriedAdHocApprover(documentId: number): void {
+    this.adHocApprovers = [];
+    if (!documentId) {
+      this.rebuildCombinedWorkflowAuthorities();
+      this.finishDetailLoad();
+      return;
+    }
+    this._documentService.getCarriedAdHocApprover(documentId).subscribe({
+      next: (res) => {
+        const carried = res?.Data;
+        this.adHocApprovers = carried
+          ? [{ EmployeeCode: carried.EmployeeCode, EmployeeName: carried.EmployeeName, Role: carried.Role }]
+          : [];
+        this.rebuildCombinedWorkflowAuthorities();
+        this.finishDetailLoad();
+      },
+      error: () => {
+        this.adHocApprovers = [];
+        this.rebuildCombinedWorkflowAuthorities();
         this.finishDetailLoad();
       },
     });
@@ -750,9 +1111,29 @@ export class DraftDocumentList implements OnInit {
       valueBoolean: orNull(a.ValueBoolean ?? a.valueBoolean),
     }));
 
-    const trainingUsers = (this.trainingUsersData || []).map((t: any) => ({
-      trainingmode: t.TrainingMode ?? t.trainingmode ?? 0,
-      employeecode: t.EmployeeCode ?? t.employeecode ?? t.UserCode ?? '',
+    const trainingUsers = (this.trainingUsersData || []).map((t: any) => {
+      // TrainingMode on trainingUsersData rows is always the display name ("Classroom"/"Online",
+      // see AddTrainingUsers/loadTrainingAssignments above), never the numeric code the backend's
+      // TraningUsers.TrainingMode (int) expects -- forwarding it unconverted made
+      // save-document-as-draft's JSON.Deserialize fail with "The JSON value could not be
+      // converted to System.Int32" on $[0].trainingmode. Mirrors create-update-document.ts's own
+      // buildDocumentFormData.
+      const modeVal =
+        t.TrainingMode === 'Classroom' ? 1 : t.TrainingMode === 'Online' ? 2 : (t.trainingmode ?? 0);
+      return {
+        trainingmode: modeVal,
+        employeecode: t.EmployeeCode ?? t.employeecode ?? t.UserCode ?? '',
+      };
+    });
+
+    // employeecode only, matching create-update-document.ts's own buildDocumentFormData -- the
+    // backend re-resolves everything else (active check, responsibility transfer, job Role) at
+    // Draft-save/Submit time. Sending this.adHocApprovers explicitly (rather than always []) is
+    // what lets an ad-hoc approver added or removed here actually take effect -- previously this
+    // screen hardcoded an empty list, relying entirely on the backend's own carry-over, which
+    // could not restore one that had never made it into a workflow execution in the first place.
+    const adHocApprovers = (this.adHocApprovers || []).map((a) => ({
+      employeecode: a.EmployeeCode,
     }));
 
     const formData = new FormData();
@@ -768,7 +1149,7 @@ export class DraftDocumentList implements OnInit {
     formData.append('userids', JSON.stringify(userIds));
     formData.append('attributes', JSON.stringify(attributes));
     formData.append('trainingusers', JSON.stringify(trainingUsers));
-    formData.append('adhocapprovers', JSON.stringify([]));
+    formData.append('adhocapprovers', JSON.stringify(adHocApprovers));
 
     if (this.draftFile) {
       formData.append('DocumentFile', this.draftFile, this.draftFile.name);

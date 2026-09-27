@@ -1188,7 +1188,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       this.trainingUsersData.push({
         TrainingMode: mode?.NAME,
         TrainerName: user?.role, // valueKey="NAME" bounds the actual role name
-        UserName: user?.NAME,
+        // RAW_NAME is the bare name (see loadUsersWhenRoleIdChanges); NAME is that same name
+        // pre-formatted as "(code) Name" for the PICKER's own dropdown label -- storing NAME here
+        // instead put that formatting in the data itself, so a row added through this form showed
+        // "(code) Name" while a row prefilled from the document's existing assignment (see
+        // onCellClicked's GetDocumentTrainingAssignments mapping) showed only the name, with no
+        // way to tell they were the same kind of row. The table now formats both alike, from the
+        // bare name plus UserCode.
+        UserName: user?.RAW_NAME || user?.CODE,
         TrainerCode: this.selectedRole,
         UserCode: user?.CODE,
       });
@@ -1196,6 +1203,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
     this.selectedRole = '';
     this.selectedUser = [];
+  }
+
+  // Mirrors RemoveAdHocApprover -- the table had no way to undo an add. Reported after a user
+  // added three trainees and had no way to remove the two they didn't mean to keep.
+  RemoveTrainingUser(index: number): void {
+    this.trainingUsersData.splice(index, 1);
   }
 
   // This-document-only approver, appended after the policy-resolved workflow sequence at submit
@@ -1430,27 +1443,16 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // enforced here -- everything else is exactly what a draft is allowed to still be missing.
   // Mirrors the Document Request form's own DraftDocumentRequests() bar.
   SaveAsDraft(): void {
-    if (!this.selectedDocumentType) {
+    // Client-confirmed: Save as Draft now requires the same complete form Submit does (see the
+    // [disabled] binding on its button in the template) -- a draft that was missing Training
+    // Users, or anything else Submit checks for, used to save without complaint and only failed
+    // when the person came back later to actually submit it. This guard is the click-time
+    // backstop for that same rule; submitDisabledReason is the single source of truth both share.
+    if (this.submitDisabledReason) {
       this._notificationToastService.createNotification(
         'warning',
         'Save as Draft',
-        'Please select a Document Type.',
-      );
-      return;
-    }
-    if (!this.documentName?.trim()) {
-      this._notificationToastService.createNotification(
-        'warning',
-        'Save as Draft',
-        'Please enter a Document Name.',
-      );
-      return;
-    }
-    if (!this.justification?.trim()) {
-      this._notificationToastService.createNotification(
-        'warning',
-        'Save as Draft',
-        'Please enter a Justification.',
+        this.submitDisabledReason,
       );
       return;
     }

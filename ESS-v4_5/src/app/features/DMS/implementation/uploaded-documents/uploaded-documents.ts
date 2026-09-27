@@ -244,47 +244,90 @@ export class UploadedDocuments {
   }
 
   GetAllUploadedDocuments(query: any) {
-    const sort = query.sortModel?.[0];
+    // AG Grid's own infinite-row-model datasource is what calls this, once per block it needs
+    // (see ag-grid-wrapper.ts's getRows) -- query.pageNumber/pageSize are the actual page AG Grid
+    // is asking for right now. This used to build payLoad from this.currentGridQuery instead,
+    // which nothing in this component ever updated past its {pageNumber:1, pageSize:10} initial
+    // value -- every request the backend saw asked for page 1 of 10, regardless of what page size
+    // was actually selected. Selecting 50 then got back only the 10 rows the backend was (still)
+    // asked for, while AG Grid's infinite row model expected up to 50 to fill the block, leaving
+    // the remaining slots blank rather than genuinely loading (and, worse, not requesting them).
+    const sort = query?.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || 10;
+    const pageSize = Number(query?.pageSize) || this.selectedPageSize || 10;
+    const sortBy = sort?.sort === 'asc' ? 'ASC' : 'DESC';
+    const sortColumn = sort?.colId || 'Id';
+    const searchTerm = query?.searchText || query?.searchTerm || '';
+
+    const payLoad = {
+      pageNumber,
+      pageSize,
+      sortModel: query?.sortModel || [],
+      filterModel: query?.filterModel || {},
+      searchTerm,
+      // Map to satisfy backend validation
+      sortBy,
+      sortColumn,
+      searchText: searchTerm,
+    };
 
     this._documentService
-      .GetAllDocument(
-        query?.searchText || query?.searchTerm || query?.filterModel?.Name?.filter || '',
-        sort?.sort?.toUpperCase() || 'DESC',
-        sort?.colId || 'CreatedAT',
-        true,
-        pageNumber,
-        pageSize,
-      )
+      .GetApprovedEffectiveDocuments(payLoad)
       .subscribe((res) => {
         const items = res?.Data?.Items;
         if (res?.Success && res.Data?.Items) {
           if (Array.isArray(items)) {
+            // GetApprovedEffectiveDocumentsAsync returns raw dynamic rows off VW_Documents
+            // (Postgres, unquoted identifiers -> lowercase JSON keys: "documentnumber",
+            // "title", "division", ...), unlike GetAllDocument's typed DTO this screen used to
+            // call, which came back PascalCase. The .map() below still only read the PascalCase
+            // names, so every field except Version (which happened to have a lowercase
+            // fallback) rendered blank. Same case-insensitive get() helper approval-documents.ts
+            // already uses for this identical endpoint.
+            const get = (item: any, keys: string[], defaultValue: any = ''): any => {
+              for (const key of keys) {
+                if (item[key] !== undefined && item[key] !== null) return item[key];
+                const lower = key.toLowerCase();
+                if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+              }
+              return defaultValue;
+            };
+
             this.uploadedDocumentsData = items.map((item: any) => ({
-              Id: item.Id,
-              documentType: item.DocumentType,
-              documentTypeName: item.DocumentType,
-              version: item.Version || item.version || '',
-              divisionName: item.Division,
-              divisionId: item.DivisionCode,
-              documentId: item.DocumentNumber,
-              documentName: item.Title || item.DocumentName,
-              DocumentCode: item.DocumentCode,
-              departmentName: item.Department,
-              departmentId: item.DepartmentCode,
-              subDepartmentName: item.SubDepartment,
-              subDepartmentId: item.SubDepartmentCode,
-              businessDomainName: item.BusinessDomain,
-              businessDomainId: item.BusinessDomainCode,
-              EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
-              EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
-              DocumentURL: item.DocumentURL,
-              nextReviewDate: new CustomDateFormatPipe().transform(item.NextReviewDate),
-              CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
-              CreatedBy: item.CreatedBy,
-              LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
-              LastModifiedBy: item.LastModifiedBy,
+              Id: get(item, ['Id', 'id']),
+              documentType: get(item, ['DocumentType', 'documenttype']),
+              documentTypeName: get(item, ['DocumentType', 'documenttype']),
+              version: get(item, ['Version', 'version']),
+              divisionName: get(item, ['Division', 'division']),
+              divisionId: get(item, ['DivisionCode', 'divisioncode']),
+              documentId: get(item, ['DocumentNumber', 'documentnumber']),
+              documentName: get(item, ['Title', 'title', 'DocumentName', 'documentname']),
+              DocumentCode: get(item, ['DocumentCode', 'documentcode']),
+              departmentName: get(item, ['Department', 'department']),
+              departmentId: get(item, ['DepartmentCode', 'departmentcode']),
+              subDepartmentName: get(item, ['SubDepartment', 'subdepartment']),
+              subDepartmentId: get(item, ['SubDepartmentCode', 'subdepartmentcode']),
+              businessDomainName: get(item, ['BusinessDomain', 'businessdomain']),
+              businessDomainId: get(item, ['BusinessDomainCode', 'businessdomaincode']),
+              proposedContent: get(item, ['VersionContent', 'versioncontent'], ''),
+              EffectiveFrom: new CustomDateFormatPipe().transform(
+                get(item, ['EffectiveFrom', 'effectivefrom'], ''),
+              ),
+              EffectiveTo: new CustomDateFormatPipe().transform(
+                get(item, ['EffectiveTo', 'effectiveto'], ''),
+              ),
+              DocumentURL: get(item, ['DocumentURL', 'documenturl']),
+              nextReviewDate: new CustomDateFormatPipe().transform(
+                get(item, ['NextReviewDate', 'nextreviewdate']),
+              ),
+              CreatedAt: new CustomDateFormatPipe().transform(
+                get(item, ['CreatedAt', 'createdat'], ''),
+              ),
+              CreatedBy: get(item, ['CreatedBy', 'createdby']),
+              LastModifiedAt: new CustomDateFormatPipe().transform(
+                get(item, ['LastModifiedAt', 'lastmodifiedat'], ''),
+              ),
+              LastModifiedBy: get(item, ['LastModifiedBy', 'lastmodifiedby']),
             }));
             this.totalUplodedDocument = res?.Data?.TotalCount ?? items.length;
           } else {
@@ -298,16 +341,19 @@ export class UploadedDocuments {
       });
   }
 
+  // Only syncs local state for display -- does NOT re-fetch. ag-grid-wrapper's own
+  // onPaginationChanged already changes the grid's cacheBlockSize right after emitting this
+  // event, which on its own makes AG Grid discard its cache and call back into
+  // GetAllUploadedDocuments (via (serverQuery)) at the new page size. Calling it again here too
+  // was a second, redundant fetch racing the grid's own -- whichever response's ngOnChanges ran
+  // second found ag-grid-wrapper's getRowsParams already consumed (and nulled) by the first, so
+  // the grid never got fed this response and was left showing blank rows for however many of the
+  // new, larger page's slots the first-arriving response didn't happen to fill. Matches
+  // draft-document-list.ts's own onPageSizeChanged, which never re-fetches either.
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
-    const { gridId, pageSize } = event;
-
-    this.selectedPageSize = pageSize;
-    this.GetAllUploadedDocuments({
-      pageNumber: 1,
-      pageSize: this.selectedPageSize,
-      sortModel: [], // or your current sort/filter model
-      filterModel: {},
-    });
+    if (event?.pageSize) {
+      this.selectedPageSize = event.pageSize;
+    }
   }
 
   openDocumentModal(rowData: any) { 

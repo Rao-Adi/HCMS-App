@@ -217,8 +217,12 @@ export class ManageWorkflowPolicyModal {
       .subscribe({
         next: (res) => {
           const data = res?.Data;
-          const items = data?.Items || (Array.isArray(data) ? data : []);
-          this.totalRows = data?.TotalCount ?? items.length;
+          const items = data?.Items || data?.items || (Array.isArray(data) ? data : []);
+          // Program.cs registers several JSON naming policies, so the total comes back as
+          // TotalCount or totalCount depending on the endpoint. Reading only one spelling left
+          // this falling back to items.length -- the page size -- so the grid reported "10 of 10"
+          // on a list of sixteen and its paging controls were dead.
+          this.totalRows = data?.TotalCount ?? data?.totalCount ?? data?.totalcount ?? items.length;
 
           if (Array.isArray(items)) {
             this.workflowPoliciesData = items.map((item: any) => ({

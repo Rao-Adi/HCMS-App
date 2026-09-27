@@ -302,13 +302,28 @@
                             <th>Training Mode</th>
                             <th>Trainer</th>
                             <th>User</th>
+                            <th></th>
                           </thead>
                           <tbody>
                             @for (item of trainingUsersData; track $index; let i = $index) {
                               <tr>
                                 <td>{{ item.TrainingMode }}</td>
                                 <td>{{ item.TrainerName }}</td>
-                                <td>{{ item.UserName }}</td>
+                                <td>
+                                  {{
+                                    item.UserCode && item.UserCode !== item.UserName
+                                      ? '(' + item.UserCode + ') ' + item.UserName
+                                      : item.UserName
+                                  }}
+                                </td>
+                                <td>
+                                  <i
+                                    class="bi bi-trash text-danger"
+                                    style="cursor: pointer"
+                                    title="Remove"
+                                    (click)="RemoveTrainingUser(i)"
+                                  ></i>
+                                </td>
                               </tr>
                             }
                           </tbody>
@@ -865,10 +880,12 @@
                     class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center gap-3 px-4 pb-3"
                   >
                     <!-- Save as Draft: only for a directly-created document (the 'request' mode
-                         document already exists, created when its Request was approved). Not
-                         bound to isSubmitDisabled on purpose -- an incomplete document is exactly
-                         what a draft is for; SaveAsDraft() enforces only the minimum the backend
-                         needs to create the row at all. -->
+                         document already exists, created when its Request was approved).
+                         Client-confirmed: gated by the SAME isSubmitDisabled check as Submit --
+                         a draft that is missing Training Users (or anything else Submit requires)
+                         previously saved without complaint, and only failed later when the person
+                         came back to actually submit it. Requiring the full form here surfaces
+                         that at save time instead. -->
                     <div *ngIf="creationMode === 'direct' && !isRevisionOrObsoletion">
                       <button
                         type="button"
@@ -876,8 +893,8 @@
                         class="btn btn-sm btn-outline-secondary shadow-sm"
                         style="min-width: 140px; height: 35px"
                         (click)="SaveAsDraft()"
-                        [disabled]="savingDraft || submitting"
-                        title="Save your progress without starting the approval workflow"
+                        [disabled]="savingDraft || isSubmitDisabled"
+                        [title]="submitDisabledReason || 'Save your progress without starting the approval workflow'"
                       >
                         <span
                           class="spinner-border spinner-border-sm me-2"

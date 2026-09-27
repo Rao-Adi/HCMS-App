@@ -1,9 +1,9 @@
-import { Component, ViewChild } from '@angular/core'; 
+import { Component, ViewChild } from '@angular/core';
 import {
   EditableAgGridWrapper,
   GridColumn,
   GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper'; 
+} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { CabinetLevel } from '@app/shared/interfaces/interfaces';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -64,7 +64,7 @@ export class UploadDocuments {
   dropdownDataSources: Record<number, any[]> = {};
   cabinetHierarchy: CabinetLevel[] = [];
   levelTitles: Record<number, string> = {};
- 
+
   constructor(
     private _documentService: DocumentService,
     private _documentTypeService: DocumentTypeCacheService,
@@ -91,15 +91,16 @@ export class UploadDocuments {
       this.hierarchyService.loadDropdownHierarchy().subscribe((levels) => {
         this.cabinetHierarchy = levels;
 
-        this.cabinetGridService.loadDropdownData(levels).subscribe(() => this.buildGrid());
+        this.cabinetGridService.loadDropdownData(levels).subscribe(() => {
+          this.buildGrid();
+          // this.GetAllUploadedDocuments({
+          //   pageNumber: 1,
+          //   pageSize: this.selectedPageSize,
+          //   sortModel: [],
+          //   filterModel: {},
+          // });
+        });
       });
-
-      // this.GetAllUploadedDocuments({
-      //   pageNumber: 1,
-      //   pageSize: this.selectedPageSize,
-      //   sortModel: [], // or your current sort/filter model
-      //   filterModel: {},
-      // });
     });
   }
 
@@ -181,70 +182,81 @@ export class UploadDocuments {
       suppressCellFocus: true,
     };
   }
- 
 
   private getColumns(): GridColumn[] {
-    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
-      ...col,
-      minWidth: 230
-    }));
+    const cabinetCols = this.cabinetGridService
+      .buildCabinetColumns(this.cabinetHierarchy)
+      .map((col) => ({
+        ...col,
+        minWidth: 230,
+      }));
 
-    return [
-      ...this.getFixedColumns(),
-      ...cabinetCols,
-      ...this.getRemainingColumns(),
-    ];
+    return [...this.getFixedColumns(), ...cabinetCols, ...this.getRemainingColumns()];
   }
 
-
   GetAllUploadedDocuments(query: any) {
-    const sort = query.sortModel?.[0];
+    // Build the payload from the actual query passed in, not this.currentGridQuery -- nothing in
+    // this component ever updated that field past its {pageNumber:1, pageSize:10} initial value,
+    // so every request silently asked for page 1 of 10 regardless of what was actually requested.
+    // See the matching fix/comment in uploaded-documents.ts's own GetAllUploadedDocuments, which
+    // called this same endpoint with the same bug.
+    const sort = query?.sortModel?.[0];
     const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || this.selectedPageSize;
+    const pageSize = Number(query?.pageSize) || this.selectedPageSize || 10;
+    const sortBy = sort?.sort === 'asc' ? 'ASC' : 'DESC';
+    const sortColumn = sort?.colId || 'Id';
+    const searchTerm = query?.searchText || query?.searchTerm || '';
+
+    const payLoad = {
+      pageNumber,
+      pageSize,
+      sortModel: query?.sortModel || [],
+      filterModel: query?.filterModel || {},
+      searchTerm,
+      // Map to satisfy backend validation
+      sortBy,
+      sortColumn,
+      searchText: searchTerm,
+    };
 
     this._documentService
-      .GetAllDocument(
-        query?.searchText || query?.searchTerm || query?.filterModel?.Name?.filter || '',
-        sort?.sort?.toUpperCase() || 'ASC',
-        sort?.colId || 'Name',
-        true,
-        pageNumber,
-        pageSize,
-      )
+      .GetApprovedEffectiveDocuments(payLoad)
       .subscribe((res) => {
         const items = res?.Data?.Items;
-        //console.log(items);
+
         if (Array.isArray(items)) {
+          // GetApprovedEffectiveDocumentsAsync returns raw dynamic rows off VW_Documents
+          // (Postgres, unquoted identifiers -> lowercase JSON keys), not the PascalCase a typed
+          // DTO would give -- same case-insensitive get() helper approval-documents.ts and
+          // uploaded-documents.ts already use for this identical endpoint. level{N}Id (not
+          // divisionName/departmentName) is what this grid's own dynamic cabinet columns read --
+          // see CabinetGridService.buildCabinetColumns -- the column resolves the display text
+          // itself from the matching dropdown option once given the code.
+          const get = (item: any, keys: string[], defaultValue: any = ''): any => {
+            for (const key of keys) {
+              if (item[key] !== undefined && item[key] !== null) return item[key];
+              const lower = key.toLowerCase();
+              if (item[lower] !== undefined && item[lower] !== null) return item[lower];
+            }
+            return defaultValue;
+          };
+
           this.uploadedDocumentsData = items.map((item: any) => ({
-            Id: item.Id,
-            documentType: item.DocumentTypeCode,
-            documentTypeName: item.DocumentTypeCode,
-            version: item.Version,
-            divisionName: item.Division,
-            level1Id: item.DivisionCode,
-            documentNumber: item.DocumentNumber,
-            documentName: item.Title,
-            DocumentCode: item.DocumentCode,
-            level2Id: item.Department,
-            departmentId: item.DepartmentCode,
-            level3Id: item.SubDepartment,
-            subDepartmentId: item.SubDepartmentCode,
-            level4Id: item.BusinessDomain,
-            businessDomainId: item.BusinessDomainCode,
-            EffectiveFrom: new CustomDateFormatPipe().transform(item.EffectiveFrom || ''),
-            EffectiveTo: new CustomDateFormatPipe().transform(item.EffectiveTo || ''),
-            DocumentURL: item.DocumentURL,
-            nextReviewDate: item.NextReviewDate,
-            CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),
-            CreatedBy: item.CreatedBy,
-            LastModifiedAt: new CustomDateFormatPipe().transform(item.LastModifiedAt || ''),
-            LastModifiedBy: item.LastModifiedBy,
+            id: get(item, ['Id', 'id']),
+            documentNumber: get(item, ['DocumentNumber', 'documentnumber']),
+            documentName: get(item, ['Title', 'title', 'DocumentName', 'documentname']),
+            version: get(item, ['Version', 'version']),
+            documentType: get(item, ['DocumentTypeCode', 'documenttypecode']),
+            level1Id: get(item, ['DivisionCode', 'divisioncode']),
+            level2Id: get(item, ['DepartmentCode', 'departmentcode']),
+            level3Id: get(item, ['SubDepartmentCode', 'subdepartmentcode']),
+            level4Id: get(item, ['BusinessDomainCode', 'businessdomaincode']),
+            nextReviewDate: get(item, ['NextReviewDate', 'nextreviewdate']),
+            uploadDocument: get(item, ['DocumentURL', 'documenturl']) ? 'Uploaded' : null,
           }));
         } else {
           this.uploadedDocumentsData = [];
         }
-
-        //console.log('RowData length:', this.uploadedDocumentsData.length);
       });
   }
 
