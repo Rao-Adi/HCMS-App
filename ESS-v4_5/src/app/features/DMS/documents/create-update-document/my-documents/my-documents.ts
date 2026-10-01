@@ -124,6 +124,9 @@ export class MyDocuments implements OnInit {
     // Same column the Request side's "My Requests Pending Approval" shows. Status alone says a
     // document is in a workflow; this says who it is actually sitting with.
     { field: 'pendingWith', headerName: 'Pending with', minWidth: 170, cellClass: 'audit-cell' },
+    // Client requirement: only populated once a document has actually been obsoleted
+    // (CompleteObsoletionAsync's own DocumentStateHistory -> OBSOLETE transition); blank otherwise.
+    { field: 'obsoletionDate', headerName: 'Obsoletion Date', minWidth: 160, cellClass: 'audit-cell' },
     { field: 'createdOn', headerName: 'Created On', minWidth: 160, cellClass: 'audit-cell' },
     { field: 'createdBy', headerName: 'Created By', minWidth: 150, cellClass: 'audit-cell' },
     { field: 'lastModifiedOn', headerName: 'Last Modified On', minWidth: 160, cellClass: 'audit-cell' },
@@ -276,6 +279,9 @@ export class MyDocuments implements OnInit {
               item.VersionContent ||
               item.versioncontent ||
               item.content,
+            obsoletionDate: new CustomDateFormatPipe().transform(
+              item.ObsoletionDate || item.obsoletiondate || '',
+            ),
             createdOn: new CustomDateFormatPipe().transform(item.CreatedAt || item.createdat || ''),
             createdBy: item.CreatedByName || item.createdbyname || item.CreatedBy || item.createdby,
             lastModifiedOn: new CustomDateFormatPipe().transform(

@@ -309,7 +309,7 @@
                           class="btn btn-outline-secondary btn-lg shadow-sm"
                           (click)="downloadDraftTemplate()"
                         >
-                          <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Template
+                          <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Existing Document
                         </button>
                       </div>
                     </div>
@@ -502,7 +502,7 @@
       </button>
     </div>
 
-    <div class="col-sm-1" *ngIf="isDocumentTargetedRequestType">
+    <div class="col-sm-1" *ngIf="isDocumentTargetedRequestType && selectedDocumentRow">
       <button
         type="button"
         tabindex="0"

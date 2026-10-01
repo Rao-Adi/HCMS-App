@@ -152,6 +152,18 @@ export class DocumentService {
     );
   }
 
+  // Obsoletion distribution retrieval tracking -- see DocumentComponent.MarkDistributionRetrievedAsync.
+  MarkDistributionRetrieved(
+    distributionId: number,
+    retrieved: boolean = true,
+  ): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/mark-distribution-retrieved/${distributionId}?retrieved=${retrieved}`,
+      {},
+      { headers: this.getHeaders() },
+    );
+  }
+
   GetMyDocumentCounts(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-my-document-counts`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
@@ -212,6 +224,18 @@ export class DocumentService {
   GetEffectiveDocumentsForRevision(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-effective-documents-for-revision`,
+      payload,
+    );
+  }
+
+  // Create/Update Document's Revision/Obsoletion grids -- payload.documentRequestTypeCode is
+  // "DRT-0002" or "DRT-0003". Returns only documents with an APPROVED, not-yet-finalized Request
+  // of that type (still Draft) -- distinct from GetEffectiveDocumentsForRevision above, which
+  // DocumentRequestForm uses to pick the target document for a brand-new Revision/Obsoletion
+  // request in the first place.
+  GetApprovedRevisionObsoletionRequests(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-approved-revision-obsoletion-requests`,
       payload,
     );
   }

@@ -202,137 +202,6 @@
                   </div>
                 </div>
 
-                <!-- Trainers Card -- always editable, including for Revision/Obsoletion (the
-                     prefilled Training Users table below just reflects the document's existing
-                     assignment as a starting point; the user can still add/change trainees).
-                     Hidden for Revision/Obsoletion (demo scope reduction, per explicit request) --
-                     onCellClicked still silently prefills trainingUsersData from the document's
-                     existing assignment, so submitDisabledReason's training-required check keeps
-                     passing without this card; the original document's training carries over
-                     unchanged instead of being user-editable here. -->
-                <div class="status-box-leftColmd6-standard mb-4" *ngIf="trainingRequired && !isRevisionOrObsoletion">
-                  <h3 class="PnlHeader" style="margin-top: 0">Trainers (Document Training)</h3>
-                  <div class="row">
-                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Training Mode' | safeTranslate }} <span class="text-danger">*</span></label>
-                      </div>
-                      <div>
-                        <nz-select
-                          name="trainingMode"
-                          style="width: 100%; max-width: 250px"
-                          [nzPlaceHolder]="'Select Training Mode'"
-                          [(ngModel)]="selectedTrainingMode"
-                          nzAllowClear
-                          nzShowSearch
-                        >
-                          <nz-option
-                            *ngFor="let mode of trainingModes"
-                            [nzValue]="mode.CODE"
-                            [nzLabel]="mode.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
-                      </div>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Trainers' | safeTranslate }} <span class="text-danger">*</span></label>
-                      </div>
-                      <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px">
-                        <div>
-                          <app-role-list
-                            name="trainerRole"
-                            valueKey="NAME"
-                            labelKey="NAME"
-                            [isMultiSelect]="false"
-                            placeholder="Select Role"
-                            [(ngModel)]="selectedRole"
-                            (ngModelChange)="loadUsersWhenRoleIdChanges()"
-                            width="100%"
-                          >
-                          </app-role-list>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-lg-4 col-md-4 col-sm-12 mb-10">
-                      <div class="PnlHeading">
-                        <label
-                          >{{ 'labels.User' | safeTranslate }}
-                          <span class="text-danger">*</span>
-                          <small class="text-muted fw-normal">(pick a User, then click + to add)</small></label
-                        >
-                      </div>
-                      <div class="d-flex align-items-start w-100" style="max-width: 350px">
-                        <nz-select
-                          name="trainingUser"
-                          style="width: 100%"
-                          [nzPlaceHolder]="'Select User'"
-                          [(ngModel)]="selectedUser"
-                          nzAllowClear
-                          [nzShowSearch]="true"
-                          nzMode="multiple"
-                          [nzMaxTagCount]="3"
-                        >
-                          <nz-option
-                            *ngFor="let dep of users"
-                            [nzValue]="dep.CODE"
-                            [nzLabel]="dep.NAME"
-                          >
-                          </nz-option>
-                        </nz-select>
-                        <button
-                          class="grid-icon-btn ms-2 flex-shrink-0"
-                          title="Add"
-                          (click)="AddTrainingUsers()"
-                        >
-                          <i class="bi bi-plus-circle"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div *ngIf="showTrainingUserTable" class="row mt-4">
-                    <div class="col-lg-12 col-md-12 col-sm-12">
-                      <div class="table-responsive">
-                        <table
-                          class="table mb-0"
-                          *ngIf="trainingUsersData && trainingUsersData.length > 0"
-                        >
-                          <thead>
-                            <th>Training Mode</th>
-                            <th>Trainer</th>
-                            <th>User</th>
-                            <th></th>
-                          </thead>
-                          <tbody>
-                            @for (item of trainingUsersData; track $index; let i = $index) {
-                              <tr>
-                                <td>{{ item.TrainingMode }}</td>
-                                <td>{{ item.TrainerName }}</td>
-                                <td>
-                                  {{
-                                    item.UserCode && item.UserCode !== item.UserName
-                                      ? '(' + item.UserCode + ') ' + item.UserName
-                                      : item.UserName
-                                  }}
-                                </td>
-                                <td>
-                                  <i
-                                    class="bi bi-trash text-danger"
-                                    style="cursor: pointer"
-                                    title="Remove"
-                                    (click)="RemoveTrainingUser(i)"
-                                  ></i>
-                                </td>
-                              </tr>
-                            }
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Request Profile & Attributes Card -->
                 <div class="status-box-leftColmd6-standard mb-4">
                   <h3 class="PnlHeader" style="margin-top: 0">Request & Document Attributes</h3>
@@ -436,14 +305,160 @@
                   <!-- Justification: parity with the Document Request form's own required
                        field (document-request-form.html) -- 'request' mode never needs this
                        here since it was already captured when the Request was created. A
-                       Revision/Obsoletion always needs a fresh reason of its own (onCellClicked
-                       resets justification to '' -- never inherited from the original document). -->
+                       Revision always needs a fresh reason of its own (onCellClicked resets
+                       justification to '' -- never inherited from the original document).
+                       Obsoletion is the exception: onCellClicked prefills this from the ORIGINAL
+                       Document Request's own Justification, shown read-only here per the client's
+                       explicit ask -- there is no new reason to give on the way out. -->
                   <div class="row mb-4" *ngIf="creationMode === 'direct' || isRevisionOrObsoletion">
                     <div class="col-lg-9 col-md-9 col-sm-12 mb-10">
                       <div class="PnlHeading">
                         <label>{{ 'labels.Justification' | safeTranslate }} <span class="text-danger">*</span></label>
                       </div>
-                      <textarea class="w-100" rows="3" nz-input [(ngModel)]="justification"></textarea>
+                      <textarea
+                        class="w-100"
+                        rows="3"
+                        nz-input
+                        [(ngModel)]="justification"
+                        [disabled]="isObsoletion"
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Trainers Card -- always editable, including for Revision (the prefilled
+                       Training Users table below just reflects the document's existing assignment
+                       as a starting point; the user can still add/change trainees). Gated on
+                       trainingRequired alone, same as Creation -- shown only for a Document Type
+                       whose policy actually requires training.
+                       Still hidden for Obsoletion specifically: that is a firm business rule (FSD
+                       4.1.3 -- retiring a document must never touch training/content/attributes),
+                       not the demo scope exclusion this used to also apply to Revision.
+                       Placed between Justification and Document Attributes, per explicit request. -->
+                  <div class="row mb-4" *ngIf="trainingRequired && !isObsoletion">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                      <div class="status-box-leftColmd6-standard mb-0">
+                        <h3 class="PnlHeader" style="margin-top: 0">Trainers (Document Training)</h3>
+                        <div class="row">
+                          <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+                            <div class="PnlHeading">
+                              <label>{{ 'labels.Training Mode' | safeTranslate }} <span class="text-danger">*</span></label>
+                            </div>
+                            <div>
+                              <nz-select
+                                name="trainingMode"
+                                style="width: 100%; max-width: 250px"
+                                [nzPlaceHolder]="'Select Training Mode'"
+                                [(ngModel)]="selectedTrainingMode"
+                                nzAllowClear
+                                nzShowSearch
+                              >
+                                <nz-option
+                                  *ngFor="let mode of trainingModes"
+                                  [nzValue]="mode.CODE"
+                                  [nzLabel]="mode.NAME"
+                                >
+                                </nz-option>
+                              </nz-select>
+                            </div>
+                          </div>
+                          <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
+                            <div class="PnlHeading">
+                              <label>{{ 'labels.Trainers' | safeTranslate }} <span class="text-danger">*</span></label>
+                            </div>
+                            <div class="Divtxtemployeeschright" style="width: 100%; max-width: 250px">
+                              <div>
+                                <app-role-list
+                                  name="trainerRole"
+                                  valueKey="NAME"
+                                  labelKey="NAME"
+                                  [isMultiSelect]="false"
+                                  placeholder="Select Role"
+                                  [(ngModel)]="selectedRole"
+                                  (ngModelChange)="loadUsersWhenRoleIdChanges()"
+                                  width="100%"
+                                >
+                                </app-role-list>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-lg-4 col-md-4 col-sm-12 mb-10">
+                            <div class="PnlHeading">
+                              <label
+                                >{{ 'labels.User' | safeTranslate }}
+                                <span class="text-danger">*</span>
+                                <small class="text-muted fw-normal">(pick a User, then click + to add)</small></label
+                              >
+                            </div>
+                            <div class="d-flex align-items-start w-100" style="max-width: 350px">
+                              <nz-select
+                                name="trainingUser"
+                                class="training-user-select"
+                                style="width: 100%"
+                                [nzPlaceHolder]="'Select User'"
+                                [(ngModel)]="selectedUser"
+                                nzAllowClear
+                                [nzShowSearch]="true"
+                                nzMode="multiple"
+                                [nzMaxTagCount]="3"
+                              >
+                                <nz-option
+                                  *ngFor="let dep of users"
+                                  [nzValue]="dep.CODE"
+                                  [nzLabel]="dep.NAME"
+                                >
+                                </nz-option>
+                              </nz-select>
+                              <button
+                                class="grid-icon-btn ms-2 flex-shrink-0"
+                                title="Add"
+                                (click)="AddTrainingUsers()"
+                              >
+                                <i class="bi bi-plus-circle"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div *ngIf="showTrainingUserTable" class="row mt-4">
+                          <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="table-responsive">
+                              <table
+                                class="table mb-0"
+                                *ngIf="trainingUsersData && trainingUsersData.length > 0"
+                              >
+                                <thead>
+                                  <th>Training Mode</th>
+                                  <th>Trainer</th>
+                                  <th>User</th>
+                                  <th></th>
+                                </thead>
+                                <tbody>
+                                  @for (item of trainingUsersData; track $index; let i = $index) {
+                                    <tr>
+                                      <td>{{ item.TrainingMode }}</td>
+                                      <td>{{ item.TrainerName }}</td>
+                                      <td>
+                                        {{
+                                          item.UserCode && item.UserCode !== item.UserName
+                                            ? '(' + item.UserCode + ') ' + item.UserName
+                                            : item.UserName
+                                        }}
+                                      </td>
+                                      <td>
+                                        <i
+                                          class="bi bi-trash text-danger"
+                                          style="cursor: pointer"
+                                          title="Remove"
+                                          (click)="RemoveTrainingUser(i)"
+                                        ></i>
+                                      </td>
+                                    </tr>
+                                  }
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -519,6 +534,52 @@
                   </div>
                 </div>
 
+                <!-- Obsoletion only: before this can be submitted, each Distribution List entry's
+                     copy must be confirmed retrieved -- the physical copy collected, or the
+                     document disabled digitally, per its own Distribution Type above. Client
+                     requirement (Ayesha Naz) -- see DocumentComponent.MarkDistributionRetrievedAsync
+                     for the server-side enforcement this mirrors. -->
+                <div class="status-box-leftColmd6-standard mb-4" *ngIf="isObsoletion && distributionListPayload.length > 0">
+                  <h3 class="PnlHeader" style="margin-top: 0">Distribution List &ndash; Retrieval Status</h3>
+                  <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                      <div class="table-responsive">
+                        <table class="table mb-0">
+                          <thead>
+                            <th>Role</th>
+                            <th>Distribution Type</th>
+                            <th>Retrieved</th>
+                            <th>Retrieved By</th>
+                          </thead>
+                          <tbody>
+                            @for (item of distributionListPayload; track $index) {
+                              <tr>
+                                <td>{{ item.Role || item.role || 'Any' }}</td>
+                                <td>{{ item.DistributionType || item.distributiontype }}</td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    class="btn btn-sm retrieval-status-btn"
+                                    [class.btn-success]="item.IsRetrieved || item.isRetrieved"
+                                    [class.btn-outline-secondary]="!(item.IsRetrieved || item.isRetrieved)"
+                                    [disabled]="item.retrieving"
+                                    (click)="markDistributionRetrieved(item)"
+                                  >
+                                    <span *ngIf="item.retrieving" class="spinner-border spinner-border-sm"></span>
+                                    <i *ngIf="!item.retrieving" class="bi" [class.bi-check-circle-fill]="item.IsRetrieved || item.isRetrieved" [class.bi-circle]="!(item.IsRetrieved || item.isRetrieved)"></i>
+                                    {{ item.retrieving ? 'Saving...' : ((item.IsRetrieved || item.isRetrieved) ? 'Retrieved' : 'Mark Retrieved') }}
+                                  </button>
+                                </td>
+                                <td>{{ item.RetrievedBy || item.retrievedBy }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="status-box-leftColmd6-standard mb-4">
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12">
@@ -533,8 +594,25 @@
                       <ng-container
                         *ngIf="selectedTemplateType === '1' || selectedTemplateType === '2'"
                       >
+                        <!-- An Obsoletion supplies no content (FSD 4.1.3 -- read-only, "as the
+                             purpose is retirement, not editing"), and submitDisabledReason never
+                             requires a file for it. The "Action Required" / "*" below were showing
+                             regardless, telling the person retiring a document that one was
+                             missing and marking it required -- true for Creation/Revision, never
+                             true here, and there was no file for them to upload to satisfy it. -->
                         <div
-                          *ngIf="!draftFile && !draftFileUrl"
+                          *ngIf="isObsoletion"
+                          class="alert alert-info d-flex align-items-center mb-4"
+                          style="font-size: 14px"
+                        >
+                          <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                          <div>
+                            <strong>Read-only:</strong> this is the document being retired. Its
+                            content is not editable here.
+                          </div>
+                        </div>
+                        <div
+                          *ngIf="!isObsoletion && !draftFile && !draftFileUrl"
                           class="alert alert-warning d-flex align-items-center mb-4"
                           style="font-size: 14px"
                         >
@@ -545,7 +623,7 @@
                           </div>
                         </div>
                         <div
-                          *ngIf="draftFile || draftFileUrl"
+                          *ngIf="!isObsoletion && (draftFile || draftFileUrl)"
                           class="alert alert-info d-flex align-items-center mb-4"
                           style="font-size: 14px"
                         >
@@ -559,7 +637,7 @@
                         <div class="mt-3">
                           <label class="PnlHeading">
                             Document File (DOCX/PDF)
-                            <span *ngIf="!draftFileUrl" class="text-danger">*</span>
+                            <span *ngIf="!draftFileUrl && !isObsoletion" class="text-danger">*</span>
                           </label>
                           <div class="d-flex align-items-center gap-3 mt-2">
                             <input
@@ -663,8 +741,20 @@
 
                       <!-- Case 3: No Template Defined (Fallback) -->
                       <ng-container *ngIf="!selectedTemplateType">
+                        <!-- Same Obsoletion carve-out as Case 1 above. -->
                         <div
-                          *ngIf="!draftFile && !draftFileUrl"
+                          *ngIf="isObsoletion"
+                          class="alert alert-info d-flex align-items-center mb-4"
+                          style="font-size: 14px"
+                        >
+                          <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+                          <div>
+                            <strong>Read-only:</strong> this is the document being retired. Its
+                            content is not editable here.
+                          </div>
+                        </div>
+                        <div
+                          *ngIf="!isObsoletion && !draftFile && !draftFileUrl"
                           class="alert alert-warning d-flex align-items-center mb-4"
                           style="font-size: 14px"
                         >
@@ -675,7 +765,7 @@
                           </div>
                         </div>
                         <div
-                          *ngIf="draftFile || draftFileUrl"
+                          *ngIf="!isObsoletion && (draftFile || draftFileUrl)"
                           class="alert alert-info d-flex align-items-center mb-4"
                           style="font-size: 14px"
                         >
@@ -688,7 +778,7 @@
                         <div class="mt-3">
                           <label class="PnlHeading">
                             Document File (DOCX/PDF)
-                            <span *ngIf="!draftFileUrl" class="text-danger">*</span>
+                            <span *ngIf="!draftFileUrl && !isObsoletion" class="text-danger">*</span>
                           </label>
                           <div class="d-flex align-items-center gap-3 mt-2">
                             <input

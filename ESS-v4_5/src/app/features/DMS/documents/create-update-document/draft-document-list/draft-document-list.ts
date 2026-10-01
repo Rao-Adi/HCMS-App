@@ -203,8 +203,9 @@ export class DraftDocumentList implements OnInit {
     });
   }
 
-  // Verbatim from create-update-document.ts's own AddTrainingUsers -- same validation, same
-  // shape pushed into trainingUsersData, which SubmitDraftDocument already sends unchanged.
+  // Verbatim from create-update-document.ts's own AddTrainingUsers -- same validation (including
+  // the same-User+same-Training-Mode duplicate check), same shape pushed into trainingUsersData,
+  // which SubmitDraftDocument already sends unchanged.
   AddTrainingUsers(): void {
     if (!this.selectedTrainingMode) {
       this._notificationToastService.createNotification(
@@ -231,11 +232,35 @@ export class DraftDocumentList implements OnInit {
       return;
     }
 
-    this.showTrainingUserTable = true;
-
     const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
 
-    this.selectedUser.forEach((userCode) => {
+    // Mirrors create-update-document.ts's own duplicate check: a user already assigned for this
+    // SAME Training Mode is a duplicate; the same person under a DIFFERENT mode stays allowed.
+    const alreadyAssigned = this.selectedUser.filter((userCode) =>
+      this.trainingUsersData.some(
+        (row: any) => row.UserCode === userCode && row.TrainingMode === mode?.NAME,
+      ),
+    );
+    const usersToAdd = this.selectedUser.filter((userCode) => !alreadyAssigned.includes(userCode));
+
+    if (alreadyAssigned.length > 0) {
+      const names = alreadyAssigned
+        .map((code) => this.users.find((u) => u.CODE === code)?.RAW_NAME || code)
+        .join(', ');
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        `${names} ${alreadyAssigned.length > 1 ? 'are' : 'is'} already assigned for ${mode?.NAME} training.`,
+      );
+    }
+
+    if (usersToAdd.length === 0) {
+      return;
+    }
+
+    this.showTrainingUserTable = true;
+
+    usersToAdd.forEach((userCode) => {
       const user = this.users.find((u) => u.CODE === userCode);
       this.trainingUsersData.push({
         TrainingMode: mode?.NAME,

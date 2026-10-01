@@ -157,6 +157,13 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         this.openDocumentModal(event.data);
       },
     },
+    // The actual document this request is against -- so the approver can tell WHICH document a
+    // Revision/Obsoletion request is for. Blank for a plain Creation request (no target document
+    // exists yet), per the client's explicit ask.
+    {
+      field: 'documentNumber',
+      headerName: 'Document Number',
+    },
     {
       field: 'proposedContent',
       headerName: 'ProposedContent',
@@ -291,9 +298,10 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentRequestId', label: 'Request ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
+    { field: 'documentNumber', label: 'Document Number', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
-    { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+    // { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
     { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -378,9 +386,10 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentRequestId', label: 'Request ID', visible: true },
         { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'documentNumber', label: 'Document Number', visible: true },
         { field: 'observation', label: 'Observation', visible: true },
         { field: 'justification', label: 'Justification', visible: true },
-        { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
+        // { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
         { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
         { field: 'requestCreatedBy', label: 'Request Created By', visible: true },
@@ -523,7 +532,12 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
                 documentName: get(['DocumentName', 'documentName', 'Title', 'title']),
                 observation: '',
                 justification: get(['Justification', 'justification', 'Reason', 'reason'], ''),
-                proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+                //proposedDocumentNumber: get(['DocumentNumber', 'documentNumber']),
+                // The document actually being revised/obsoleted (blank for a plain Creation
+                // request, which has no target document yet) -- distinct from
+                // proposedDocumentNumber above, which shows a still-movable PROPOSED number even
+                // for a Creation request.
+                documentNumber: get(['TargetDocumentNumber', 'targetDocumentNumber']),
                 proposedVersionNumber: get(
                   ['ProposedVersionNumber', 'proposedVersionNumber', 'RowVersion', 'rowVersion'],
                   '1.0',

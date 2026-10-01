@@ -445,9 +445,13 @@ export class DocumentAuthorizationPostTraining {
               divisionCode: item.DivisionCode || item.divisionCode || item.divisioncode,
               documentId: item.DocumentNumber || item.documentid,
               documentName: item.DocumentName || item.documentname || item.title,
+              // Same PendingVersion fix as the version field above -- the content actually being
+              // authorized is the pending Draft's, not the still-Effective version's.
               proposedContent:
                 item.ProposedContent ||
                 item.proposedcontent ||
+                item.PendingVersionContent ||
+                item.pendingversioncontent ||
                 item.VersionContent ||
                 item.versioncontent ||
                 item.content,
@@ -478,7 +482,18 @@ export class DocumentAuthorizationPostTraining {
                   item.PreviousVersionCreatedon ||
                   '',
               ),
-              version: item.Version || item.version || item.RowVersion || item.rowVersion,
+              // PendingVersion (from GetPendingAuthorizationsAsync) is the Draft version actually
+              // awaiting this authorization -- Version/RowVersion fall back to the still-Effective
+              // one, which is about to be superseded, not what's being authorized. Reported live:
+              // this screen showed 1.0 for IT-II-SOP-011's revision (document 253), which was
+              // already sitting at pending version 2.1.
+              version:
+                item.PendingVersion ||
+                item.pendingversion ||
+                item.Version ||
+                item.version ||
+                item.RowVersion ||
+                item.rowVersion,
               nextReviewDate: new CustomDateFormatPipe().transform(
                 item.NextReviewDate || item.nextreviewdate || '',
               ),

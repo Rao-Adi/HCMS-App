@@ -27,6 +27,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { getWorkflowActionLabel } from '@app/shared/utils/workflow-action-label';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { DistributionListModal } from '../distribution-list-modal/distribution-list-modal';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
@@ -157,6 +158,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
+    { field: 'distributionList', label: 'Distribution List', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     { field: 'status', label: 'Status', visible: true },
@@ -233,6 +235,39 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         if (val) {
           this.openJustificationModal(val);
         }
+      },
+    },
+    // Obsoletion distribution retrieval tracking (client requirement, Ayesha Naz, step 9 of her
+    // Obsoletion workflow email): "The approver approves the requests after reviewing that
+    // document retrieval according to the distribution list is done... should see the
+    // distribution list and retrieved status." That requirement names Obsoletion only -- Creation
+    // and Revision were never asked for this column, and every document carries a Distribution
+    // List (who receives it once Effective) regardless of activity type, so showing it
+    // unconditionally put a "Distribution List" link -- that opened a retrieval checklist nothing
+    // ever retrieves -- on every row. Gated on activityTypeCode (WorkflowExecutions.ActivityTypeCode
+    // via fn_get_my_inbox_documents) so the column is blank for anything but Obsoletion.
+    {
+      field: 'distributionList',
+      headerName: 'Distribution List',
+      editable: false,
+      cellRenderer: (params: any) => {
+        if (String(params.data?.activityTypeCode || '').toUpperCase() !== 'DRT-0003')
+          return '<span>-</span>';
+        const list = params.value || (params.data && params.data.distributionList) || [];
+        if (!list.length) return '<span>-</span>';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-distribution-list"
+          >
+            Distribution List
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        if (String(event.data?.activityTypeCode || '').toUpperCase() !== 'DRT-0003') return;
+        const list = event.value || (event.data && event.data.distributionList) || [];
+        this.openDistributionListModal(list, event.data?.activityTypeCode);
       },
     },
     { field: 'company', headerName: 'Company'},
@@ -387,6 +422,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         { field: 'documentName', label: 'Document Name', visible: true },
         { field: 'observation', label: 'Observation', visible: true },
         { field: 'justification', label: 'Justification', visible: true },
+        { field: 'distributionList', label: 'Distribution List', visible: true },
         { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
         { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
         { field: 'status', label: 'Status', visible: true },
@@ -588,6 +624,17 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
               requestedBy: get(['RequestedBy', 'requestedBy'], get(['CreatedBy'])),
               dateOfApproval: '', // ← not present
               approvalHistory: '', //get(['VersionContent'], ''), // or format rich text if needed
+
+              // Obsoletion distribution retrieval tracking (client requirement, Ayesha Naz): the
+              // approver must be able to see each Distribution List entry's retrieval status
+              // before approving. Creation/Revision carry the SAME distribution list (who the
+              // document goes out to once Effective), but nothing ever retrieves it -- so showing
+              // the Status/Retrieved By columns against those rows read as a permanently-stuck
+              // checklist that was never actually there. activityTypeCode (from
+              // WorkflowExecutions.ActivityTypeCode, fn_get_my_inbox_documents) tells the modal
+              // which case it's in -- see openDistributionListModal.
+              distributionList: get(['DistributionList', 'distributionList'], []),
+              activityTypeCode: get(['ActivityTypeCode', 'activityTypeCode'], ''),
             };
           });
         } else {
@@ -604,6 +651,34 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
           'Failed to fetch documents.',
         );
       },
+    });
+  }
+
+  // Obsoletion distribution retrieval tracking: shows the Distribution List this document's
+  // request carried, including each entry's retrieval status, so the approver can verify
+  // retrieval was actually done (not just asserted) before approving. Creation/Revision carry
+  // the same Distribution List (who the document goes out to once Effective) but nothing ever
+  // retrieves it -- the Status/Retrieved By columns only mean anything for Obsoletion (client
+  // requirement, Ayesha Naz), so DistributionListModal hides those two columns entirely rather
+  // than showing "Not Retrieved" against a checklist that was never actually there.
+  //
+  // A hand-built HTML string previously lived here (nzContent as a plain string) -- its <table>
+  // ignored width:100% and kept shrink-wrapping to content width instead of filling the modal, for
+  // reasons not worth chasing further. Moved to a real component (DistributionListModal, same
+  // pattern as RevisionHistoryModal/UsersInRoleModal), using the exact Bootstrap `table` markup
+  // that already renders correctly elsewhere in this app.
+  openDistributionListModal(distributionList: any[], activityTypeCode?: string): void {
+    const modalRef = this.modal.create({
+      nzTitle: 'Distribution List',
+      nzContent: DistributionListModal,
+      nzData: {
+        distributionList: distributionList || [],
+        isObsoletion: String(activityTypeCode || '').toUpperCase() === 'DRT-0003',
+      },
+      nzFooter: null, // custom footer handled inside the component
+      nzClosable: true,
+      nzMaskClosable: true,
+      nzWidth: 700,
     });
   }
 

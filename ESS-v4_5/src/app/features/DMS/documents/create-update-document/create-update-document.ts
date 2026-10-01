@@ -548,6 +548,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         }
       }
     }
+
+    // Client requirement: every Distribution List entry must be confirmed retrieved (physical
+    // copy collected, or the document disabled digitally) before an Obsoletion can be submitted
+    // for approval. Same rule SubmitDocumentAsync enforces server-side.
+    if (this.isObsoletion && !this.allDistributionsRetrieved) {
+      return 'Confirm every Distribution List entry has been retrieved (digitally disabled or physical copy collected) before submitting.';
+    }
     return null;
   }
 
@@ -631,7 +638,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         //this.trainingRequired = false;
         this.selectedEntityType = 'Revision';
         this.showExclusionTable = false;
-        this.GetEffectiveDocumentsForRevision('');
+        this.GetApprovedRevisionObsoletionRequests('DRT-0002');
         break;
       case 'DRT-0003': // Obsoletion of existing document
         //this.trainingRequired = false;
@@ -689,13 +696,17 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // Full field parity with DRT-0001 "Create Document Directly": the document actually being
     // revised/obsoleted (ParentDocumentId for SubmiteDocument -- distinct from requestId above,
     // which historically doubled for this but is misleadingly named for this purpose), a fresh
-    // Justification (a Revision/Obsoletion needs its own reason, not the original document's),
+    // Justification for Revision (a Revision needs its own reason, not the original document's),
     // its Cabinet location (shown disabled/prefilled in the relocated Cabinet Filters card -- see
     // onHierarchyChange/[disabled]="isRevisionOrObsoletion" in the template), and its current
     // Distribution List / Document Users, prefilled from the same fields DRT-0001 direct-create
     // already uses so app-drusers-component/app-drdistribution-list need no changes.
+    //
+    // Obsoletion is the one exception: the client wants the ORIGINAL Document Request's own
+    // Justification shown here (read-only -- see the template's [disabled]="isObsoletion" on the
+    // textarea), not a fresh one typed on this screen.
     this.documentId = newDocId;
-    this.justification = '';
+    this.justification = this.isObsoletion ? data?.requestJustification || '' : '';
     this.selectedDivisions = data?.divisionCode || '';
     this.selectedDepartment = data?.departmentId || data?.departmentCode || '';
     this.selectedSubDepartment = data?.subDepartmentCode || '';
@@ -790,19 +801,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   }
 
   loadObsoletionData() {
-    // Same source as Revision. Obsoleting a document and revising one both act on a document
-    // that is actually in force, so both grids ask the same question -- and their column
-    // definitions are already identical, field for field.
-    //
-    // This used to call GetAllApprovedDocuments(), which asks get-document-by-status for
-    // RequestStatus 'Approved'. APPROVED is a transient state on the way to EFFECTIVE, so the
-    // grid was empty in practice: against the live data that query returns 0 documents while
-    // this one returns 12.
+    // Same source as Revision (get-approved-revision-obsoletion-requests, just DRT-0003 instead
+    // of DRT-0002) -- both must only ever offer a document with an approved, not-yet-resubmitted
+    // Obsoletion/Revision Request, not any Effective document directly.
     //
     // Like the Revision grid, this one has no (serverQuery) binding -- it is a plain
     // client-side grid that shows whatever rowData it is given, so the fetch has to be made
     // here or the loading spinner never clears.
-    this.GetEffectiveDocumentsForRevision('');
+    this.GetApprovedRevisionObsoletionRequests('DRT-0003');
   }
 
   // Helper method to get display text
@@ -871,6 +877,60 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
   onDistributionChanged(list: any[]): void {
     this.distributionListPayload = list;
+  }
+
+  // Obsoletion distribution retrieval tracking (client requirement, Ayesha Naz): before
+  // submitting, the user must confirm each Distribution List entry's copy has actually been
+  // retrieved -- the physical copy collected, or the document disabled digitally -- which
+  // SubmitDocumentAsync's own isObsoletionSubmission branch now enforces server-side too.
+  // Identifies the row by Id (DocumentRoleDistributions.Id, carried through untouched by the
+  // spread in GetApprovedRevisionObsoletionRequests' mapping); a row with no Id yet (freshly
+  // typed, never saved) has nothing to persist against, so this is skipped for it.
+  markDistributionRetrieved(item: any): void {
+    const distributionId = item?.Id ?? item?.id;
+    if (!distributionId || item.retrieving) return;
+
+    const nextState = !(item.IsRetrieved ?? item.isRetrieved);
+    // Visible feedback while the request is in flight -- previously the button gave no
+    // indication a click had registered at all until the response came back.
+    item.retrieving = true;
+    this._documentService.MarkDistributionRetrieved(distributionId, nextState).subscribe({
+      next: (res) => {
+        item.retrieving = false;
+        if (res?.Success) {
+          item.IsRetrieved = nextState;
+          item.isRetrieved = nextState;
+          // The backend now returns who/when (resolved to a display name, not the raw employee
+          // code) -- without reading it here, "Retrieved By" stayed blank until the whole grid
+          // was reloaded from scratch, which read as the click having done nothing.
+          const data = res?.Data;
+          item.RetrievedBy = nextState ? (data?.RetrievedByName ?? data?.retrievedByName) : '';
+          item.retrievedBy = item.RetrievedBy;
+        } else {
+          this._notificationToastService.createNotification(
+            'error',
+            'Distribution List',
+            res?.Message || 'Failed to update retrieval status.',
+          );
+        }
+      },
+      error: (err) => {
+        item.retrieving = false;
+        this._notificationToastService.createNotification(
+          'error',
+          'Distribution List',
+          err?.error?.Message || 'Failed to update retrieval status.',
+        );
+      },
+    });
+  }
+
+  // Same rule SubmitDocumentAsync enforces server-side -- checked here too so the Submit button
+  // tells the user why, rather than letting them hit Submit and only then see a server error.
+  get allDistributionsRetrieved(): boolean {
+    return (this.distributionListPayload || []).every(
+      (x: any) => x.IsRetrieved ?? x.isRetrieved,
+    );
   }
 
   // Mirrors document-request-form.ts's appendUserIdsToFormData field resolution (DRUsersComponent
@@ -1179,11 +1239,37 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       return;
     }
 
-    this.showTrainingUserTable = true;
-
     const mode = this.trainingModes.find((m) => m.CODE === this.selectedTrainingMode);
 
-    this.selectedUser.forEach((userCode) => {
+    // A user already assigned for this SAME Training Mode is a duplicate -- the same person
+    // under a DIFFERENT mode (e.g. already Classroom, now also Online) is legitimate and stays
+    // allowed. Checked by UserCode + TrainingMode (the display name, matching what's already on
+    // each row) since that's the only pair genuinely unique per intent here.
+    const alreadyAssigned = this.selectedUser.filter((userCode) =>
+      this.trainingUsersData.some(
+        (row: any) => row.UserCode === userCode && row.TrainingMode === mode?.NAME,
+      ),
+    );
+    const usersToAdd = this.selectedUser.filter((userCode) => !alreadyAssigned.includes(userCode));
+
+    if (alreadyAssigned.length > 0) {
+      const names = alreadyAssigned
+        .map((code) => this.users.find((u) => u.CODE === code)?.RAW_NAME || code)
+        .join(', ');
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        `${names} ${alreadyAssigned.length > 1 ? 'are' : 'is'} already assigned for ${mode?.NAME} training.`,
+      );
+    }
+
+    if (usersToAdd.length === 0) {
+      return;
+    }
+
+    this.showTrainingUserTable = true;
+
+    usersToAdd.forEach((userCode) => {
       const user = this.users.find((u) => u.CODE === userCode);
       this.trainingUsersData.push({
         TrainingMode: mode?.NAME,
@@ -1793,93 +1879,146 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     };
 
     this._documentService.GetEffectiveDocumentsForRevision(payload).subscribe({
-      next: (response) => {
-        if (response?.Success || response?.Data) {
-          const data = response?.Data;
-          const items = data?.Items || (Array.isArray(data) ? data : []);
-
-          this.totalRows = data?.TotalCount ?? items.length;
-          this.documentRevisionData = items.map((item: any) => ({
-            Id: item.id || item.Id,
-            companyId: item.companyId || item.CompanyId,
-            requestNumber: item.RequestNumber || item.requestNumber,
-            documentType: item.DocumentType || item.documentType,
-            proposedDocumentNumber: item.RequestNumber || item.requestNumber,
-            stepId: item.StepId || item.stepId,
-            stepOrder: item.StepOrder || item.stepOrder,
-            startedAt: item.StartedAt || item.startedAt,
-            version: item.Version,
-            division: item.Division,
-            divisionCode: item.DivisionCode,
-            documentId: item.Id || item.id,
-            documentNumber: item.documentNumber || item.DocumentNumber,
-            documentName: item.DocumentName,
-            // DraftDocumentDto's content/file fields are VersionContent and DocumentURL --
-            // "ProposedContent"/"DraftFileUrl" are fields on the *request* DTO, not this one, so
-            // they mapped to undefined/'' and the document's content and file never reached the
-            // row at all. Casing is checked three ways because Program.cs registers three
-            // different JSON naming policies.
-            versionContent:
-              item.VersionContent || item.versionContent || item.versioncontent || '',
-            url: item.DocumentURL || item.documenturl || '',
-            proposedContent: item.ProposedContent,
-            department: item.Department,
-            departmentId: item.DepartmentCode,
-            subdepartment: item.SubDepartment,
-            subDepartmentCode: item.SubDepartmentCode,
-            justification: item.Justification,
-            businessdomain: item.BusinessDomain,
-            businessDomainCode: item.BusinessDomainCode,
-            documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
-            pendingWith: item.CurrentAssignedUser,
-            requestCreatedBy: item.LastModifiedByName,
-            status: item.IsReworked ? 'Reverted' : 'Draft',
-            requestCreatedOn: new CustomDateFormatPipe().transform(
-              item.CreatedAt || item.CreatedAt || '',
-            ),
-            // previousVersionCreatedOn: new CustomDateFormatPipe().transform(
-            //   item.createdAt || item.CreatedAt || '',
-            // ),
-            // previousVersionCreatedOn:
-            //   item.draftContentLastModifiedAt || item.DraftContentLastModifiedAt || '', 
-            templateType: item.TemplateType || item.templateType,
-            templateFileUrl:
-              item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
-            draftFileUrl:
-              item.DraftFileUrl ||
-              item.draftfileurl ||
-              item.draftFileUrl ||
-              item.DocumentURL ||
-              item.documenturl ||
-              '',
-            // Map backend fields back to the frontend keys expected by the component
-            distributionListPayload: (item.DistributionList || []).map((x: any) => ({
-              ...x,
-              level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
-              level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
-              level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
-              level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
-              roleId: x.roleId || x.RoleId,
-              distributiontypeId:
-                x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
-            })),
-            distributionUserList: item.UserList,
-          }));
-        } else {
-          this.documentRevisionData = [];
-          this.totalRows = 0;
-        }
-      },
-      error: (err) => {
-        this.documentRevisionData = [];
-        this.totalRows = 0;
-        this._notificationToastService.createNotification(
-          'error',
-          'Error',
-          err?.Message || 'Failed to fetch draft documents.',
-        );
-      },
+      next: (response) => this.applyRevisionObsoletionResponse(response),
+      error: (err) => this.handleRevisionObsoletionError(err),
     });
+  }
+
+  // Client requirement: a Revision/Obsoletion of an already-Effective document must only be
+  // raised through DocumentRequestForm, go through that Request's own approval, and only THEN be
+  // picked up here. This grid (get-approved-revision-obsoletion-requests) replaces
+  // GetEffectiveDocumentsForRevision for that purpose -- that one still lets a user pick ANY
+  // Effective document directly, bypassing the Request/approval step entirely, which is exactly
+  // what DocumentRequestForm's OWN Revision/Obsoletion picker still correctly uses it for. Same
+  // row shape (EffectiveDocumentDetailsDto) as that endpoint, so the mapping below and everything
+  // downstream (onCellClicked, Submit) needs no changes beyond swapping the data source.
+  GetApprovedRevisionObsoletionRequests(documentRequestTypeCode: string, query?: any) {
+    if (query && typeof query === 'object') {
+      this.currentGridQuery = query;
+    } else {
+      this.currentGridQuery.pageNumber = 1;
+    }
+
+    const sortModel = this.currentGridQuery.sortModel || [];
+    let sortBy = 'DESC';
+    let sortColumn = 'Id';
+    if (sortModel.length > 0) {
+      sortColumn = sortModel[0].colId;
+      sortBy = sortModel[0].sort === 'asc' ? 'ASC' : 'DESC';
+    }
+
+    const payload = {
+      documentRequestTypeCode,
+      pageNumber: this.currentGridQuery.pageNumber,
+      pageSize: this.currentGridQuery.pageSize,
+      sortModel: this.currentGridQuery.sortModel || [],
+      filterModel: this.currentGridQuery.filterModel || {},
+      sortBy,
+      sortColumn,
+      searchText: this.currentGridQuery.searchText || '',
+    };
+
+    this._documentService.GetApprovedRevisionObsoletionRequests(payload).subscribe({
+      next: (response) => this.applyRevisionObsoletionResponse(response),
+      error: (err) => this.handleRevisionObsoletionError(err),
+    });
+  }
+
+  // Shared by GetEffectiveDocumentsForRevision and GetApprovedRevisionObsoletionRequests -- both
+  // backend endpoints return the identical EffectiveDocumentDetailsDto row shape, so the mapping
+  // that fills documentRevisionData (read by onCellClicked and the two grids' columnDefs) is the
+  // same either way.
+  private applyRevisionObsoletionResponse(response: any): void {
+    if (response?.Success || response?.Data) {
+      const data = response?.Data;
+      const items = data?.Items || (Array.isArray(data) ? data : []);
+
+      this.totalRows = data?.TotalCount ?? items.length;
+      this.documentRevisionData = items.map((item: any) => ({
+        Id: item.id || item.Id,
+        companyId: item.companyId || item.CompanyId,
+        requestNumber: item.RequestNumber || item.requestNumber,
+        documentType: item.DocumentType || item.documentType,
+        proposedDocumentNumber: item.RequestNumber || item.requestNumber,
+        stepId: item.StepId || item.stepId,
+        stepOrder: item.StepOrder || item.stepOrder,
+        startedAt: item.StartedAt || item.startedAt,
+        version: item.Version,
+        division: item.Division,
+        divisionCode: item.DivisionCode,
+        documentId: item.Id || item.id,
+        // RequestId is the approved Revision/Obsoletion Request this row is fulfilling (see
+        // GetApprovedRevisionObsoletionRequestsAsync) -- not populated at all before, so
+        // onCellClicked's `data?.requestId || data?.Id || data?.id` fell through to the
+        // document's own id. Kept here too (unused by GetEffectiveDocumentsForRevision's own
+        // rows, which never set RequestId) purely for that shared mapping.
+        requestId: item.RequestId || item.requestId,
+        documentNumber: item.documentNumber || item.DocumentNumber,
+        documentName: item.DocumentName,
+        // DraftDocumentDto's content/file fields are VersionContent and DocumentURL --
+        // "ProposedContent"/"DraftFileUrl" are fields on the *request* DTO, not this one, so
+        // they mapped to undefined/'' and the document's content and file never reached the
+        // row at all. Casing is checked three ways because Program.cs registers three
+        // different JSON naming policies.
+        versionContent:
+          item.VersionContent || item.versionContent || item.versioncontent || '',
+        url: item.DocumentURL || item.documenturl || '',
+        proposedContent: item.ProposedContent,
+        department: item.Department,
+        departmentId: item.DepartmentCode,
+        subdepartment: item.SubDepartment,
+        subDepartmentCode: item.SubDepartmentCode,
+        justification: item.Justification,
+        // Only populated by get-approved-revision-obsoletion-requests -- the ORIGINAL Document
+        // Request's own Justification. Used to prefill (read-only) for Obsoletion specifically;
+        // Revision still starts from a blank, fresh reason (see onCellClicked).
+        requestJustification: item.RequestJustification || item.requestJustification,
+        businessdomain: item.BusinessDomain,
+        businessDomainCode: item.BusinessDomainCode,
+        documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
+        pendingWith: item.CurrentAssignedUser,
+        requestCreatedBy: item.LastModifiedByName,
+        status: item.IsReworked ? 'Reverted' : 'Draft',
+        requestCreatedOn: new CustomDateFormatPipe().transform(
+          item.CreatedAt || item.CreatedAt || '',
+        ),
+        templateType: item.TemplateType || item.templateType,
+        templateFileUrl:
+          item.TemplateFileUrl || item.TemplateFileURL || item.templateFileUrl || '',
+        draftFileUrl:
+          item.DraftFileUrl ||
+          item.draftfileurl ||
+          item.draftFileUrl ||
+          item.DocumentURL ||
+          item.documenturl ||
+          '',
+        // Map backend fields back to the frontend keys expected by the component
+        distributionListPayload: (item.DistributionList || []).map((x: any) => ({
+          ...x,
+          level1Id: x.divisionCode || x.DivisionCode || x.level1Id,
+          level2Id: x.departmentCode || x.DepartmentCode || x.level2Id,
+          level3Id: x.subDepartmentCode || x.SubDepartmentCode || x.level3Id,
+          level4Id: x.businessDomainCode || x.BusinessDomainCode || x.level4Id,
+          roleId: x.roleId || x.RoleId,
+          distributiontypeId:
+            x.distributionTypeId || x.DistributionTypeId || x.distributiontypeId,
+        })),
+        distributionUserList: item.UserList,
+      }));
+    } else {
+      this.documentRevisionData = [];
+      this.totalRows = 0;
+    }
+  }
+
+  private handleRevisionObsoletionError(err: any): void {
+    this.documentRevisionData = [];
+    this.totalRows = 0;
+    this._notificationToastService.createNotification(
+      'error',
+      'Error',
+      err?.Message || 'Failed to fetch draft documents.',
+    );
   }
 
   // Option 1: Simple custom method (no pipe dependency)

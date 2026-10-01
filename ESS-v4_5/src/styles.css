@@ -6552,6 +6552,43 @@ html.ant-scrolling-effect {
   display: none !important;
 }
 
+/* ...except the Training Users picker (create-update-document.html / draft-document-list.html's
+   "User" multi-select) -- the global rule above meant removing one selected trainee required
+   clearing the whole picker and reselecting everyone else from scratch. Scoped back on via the
+   .training-user-select class those two templates add to that one nz-select, not restored
+   globally, since whatever else this was hidden for might genuinely want it hidden. */
+.training-user-select .ant-select-selection-item-remove {
+  display: inline-flex !important;
+}
+
+/* The global .btn rule above (width:100% !important, border-radius:1.875rem !important,
+   border:none !important) stretches every plain Bootstrap button full-width and fully pill-shaped
+   -- fine for the big CTA buttons it was written for, but it turned the Obsoletion Distribution
+   List's small "Mark Retrieved"/"Retrieved" button (create-update-document.html, client
+   requirement, Ayesha Naz) into a wide dark pill with centered text and a circle icon that read as
+   a broken toggle switch rather than a button. Scoped back to a normal small button via its own
+   .retrieval-status-btn class, not fixed on .btn globally since other buttons may rely on that
+   same stretched/pill look. Reused as-is by distribution-list-modal's Previous/Next pager
+   buttons, which hit the exact same problem for the exact same reason. */
+/* Same root cause as .retrieval-status-btn above (the global .btn rule's width:100% !important),
+   but for a button that should otherwise keep its normal .btn-primary/.btn-outline-* look (color,
+   pill radius, padding) and only needs the stretch-to-full-width part undone -- e.g. a modal's
+   "Close" button sitting in a right-aligned footer row, which width:100% stretched across the
+   whole row instead of sizing to its own label. */
+.btn-auto-width.btn {
+  width: auto !important;
+}
+
+.retrieval-status-btn.btn {
+  width: auto !important;
+  border-radius: 0.25rem !important;
+  border: 1px solid currentColor !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px;
+  margin-bottom: 0 !important;
+}
+
 .txtOnError {
   height: 2.0000rem !important;
   padding: 0.3125rem 10px !important;
