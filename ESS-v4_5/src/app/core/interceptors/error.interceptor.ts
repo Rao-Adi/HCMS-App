@@ -75,7 +75,13 @@ export const errorInterceptor: HttpInterceptorFn = (
         extractedMessage = error.message;
       }
 
-      notificationToastService.setLastBackendError(extractedMessage);
+      // A file download asks for a Blob, so even a JSON error body arrives as a Blob that cannot be
+      // read here -- extractedMessage would only be the generic fallback above, and it was then
+      // appended to the real message the caller reads out of the blob itself ("...not found.
+      // Details: An unknown server error occurred."). Leave it to the caller in that case.
+      if (!(error.error instanceof Blob)) {
+        notificationToastService.setLastBackendError(extractedMessage);
+      }
 
       return throwError(() => error);
     })

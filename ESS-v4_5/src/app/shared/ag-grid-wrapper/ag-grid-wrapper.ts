@@ -444,22 +444,50 @@ export class AgGridWrapper implements OnInit, OnChanges {
     // instead, same as the reference Users grid.
     const allColumnIds = columns.map((col: any) => col.getId());
     this.gridApi.autoSizeColumns(allColumnIds);
+  }
 
-    // The one case the note above does not cover: a grid with few or short columns, whose
-    // content-sized columns end well short of the container and leave an empty strip on the
-    // right (e.g. the three-column "Users in Role" modal). Only then are the columns spread out
-    // to fill the width -- never when the content already fills or overflows it, which is the
-    // case where sizeColumnsToFit() would shrink columns below what auto-size just gave them.
-    // Measured against the scrollable (non-pinned) area, since pinned columns keep their width.
+  // A grid with few or short columns ends well short of its container and leaves an empty strip
+  // on the right (e.g. the three-column "Users in Role" modal). This hands that spare width out
+  // to the columns -- and ONLY ever widens them.
+  //
+  // It is deliberately not sizeColumnsToFit(). That call rescales every column to an exact total,
+  // so run against widths that were not final yet (an early pass, before every row had painted --
+  // see scheduleAutoSize) it squeezed columns below what their text needs, and long values
+  // started showing "..." (the "Information Technology123..." report). Adding to the widths the
+  // auto-size pass already settled can at worst leave some of the strip unfilled; it can never
+  // take space away from content.
+  //
+  // Called once, after the last auto-size pass, not on every pass. Skips columns that size
+  // themselves (flex) or opt out (suppressSizeToFit), and anything pinned (not in the scrollable
+  // centre area measured here).
+  private fillSpareWidth(): void {
+    if (!this.gridApi) return;
+
     const range = this.gridApi.getHorizontalPixelRange();
     const viewportWidth = range.right - range.left;
-    const scrollableColumnsWidth = this.gridApi
-      .getDisplayedCenterColumns()
-      .reduce((sum, col) => sum + col.getActualWidth(), 0);
+    if (viewportWidth <= 0) return;
 
-    if (viewportWidth > 0 && scrollableColumnsWidth < viewportWidth) {
-      this.gridApi.sizeColumnsToFit();
-    }
+    const columns = this.gridApi.getDisplayedCenterColumns();
+    const totalWidth = columns.reduce((sum, col) => sum + col.getActualWidth(), 0);
+
+    // A few pixels of tolerance so rounding never triggers a pointless resize (or, worse, a
+    // horizontal scrollbar for a 1px overshoot).
+    const spare = viewportWidth - totalWidth - 4;
+    if (spare <= 0) return;
+
+    const growable = columns.filter((col) => {
+      const def = col.getColDef();
+      return !def.flex && !def.suppressSizeToFit;
+    });
+    const growableWidth = growable.reduce((sum, col) => sum + col.getActualWidth(), 0);
+    if (growable.length === 0 || growableWidth <= 0) return;
+
+    this.gridApi.applyColumnState({
+      state: growable.map((col) => ({
+        colId: col.getColId(),
+        width: Math.floor(col.getActualWidth() + (spare * col.getActualWidth()) / growableWidth),
+      })),
+    });
   }
 
   onFirstDataRendered(event: any): void {
@@ -508,6 +536,8 @@ export class AgGridWrapper implements OnInit, OnChanges {
       setTimeout(() => {
         this.autoSizeGridColumns();
         this.autoSizeScheduled = false;
+        // Only now, once content widths are as settled as they will get, spend any spare width.
+        this.fillSpareWidth();
       }, 400);
     });
   }

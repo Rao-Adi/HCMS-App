@@ -262,6 +262,10 @@ export class UploadedDocuments {
     const payLoad = {
       pageNumber,
       pageSize,
+      // This tab is for documents brought in by legacy upload / bulk import only. It reads the
+      // same endpoint as View Approved Documents, which also returns everything approved through
+      // the workflow, so without this flag the two were mixed together.
+      importedOnly: true,
       sortModel: query?.sortModel || [],
       filterModel: query?.filterModel || {},
       searchTerm,
@@ -462,13 +466,13 @@ export class UploadedDocuments {
             try {
               const res = JSON.parse(text);
               this._notificationToastService.createNotification(
-                'error',
+                'warning',
                 'Draft',
                 res.Message || 'Failed to download draft.',
               );
             } catch {
               this._notificationToastService.createNotification(
-                'error',
+                'warning',
                 'Draft',
                 'Failed to download draft.',
               );
@@ -476,7 +480,7 @@ export class UploadedDocuments {
           });
         } else {
           this._notificationToastService.createNotification(
-            'error',
+            'warning',
             'Draft',
             'Failed to download draft.',
           );
