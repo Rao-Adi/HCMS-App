@@ -188,6 +188,9 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // them onto the Document at approval time (Documents.Justification, DocumentRoleDistributions,
   // DocumentUserDistributions) before this screen ever saw that Request ID.
   justification: string = '';
+  // The Justification entered on the approved Revision REQUEST for the picked document -- read-only,
+  // shown under the grid so the person finishing the revision sees why it was asked for.
+  requestJustification: string = '';
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
 
@@ -707,6 +710,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // textarea), not a fresh one typed on this screen.
     this.documentId = newDocId;
     this.justification = this.isObsoletion ? data?.requestJustification || '' : '';
+    this.requestJustification = data?.requestJustification || data?.RequestJustification || '';
     this.selectedDivisions = data?.divisionCode || '';
     this.selectedDepartment = data?.departmentId || data?.departmentCode || '';
     this.selectedSubDepartment = data?.subDepartmentCode || '';
@@ -875,6 +879,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.draftFileUrl = '';
     this.draftFile = null;
     this.justification = '';
+    this.requestJustification = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];
     if (this.fileInput) {
@@ -1480,6 +1485,21 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     return formData;
   }
 
+  // Success wording per activity type (DRT-0001 Create, DRT-0002 Revise, DRT-0003 Obsolete).
+  // Null for anything else, so the caller falls back to the server's message.
+  private submitSuccessMessage(activityTypeCode: string | null | undefined): string | null {
+    switch (activityTypeCode) {
+      case 'DRT-0001':
+        return 'Document Created Successfully!';
+      case 'DRT-0002':
+        return 'Document Revised Successfully!';
+      case 'DRT-0003':
+        return 'Document Obsoleted Successfully!';
+      default:
+        return null;
+    }
+  }
+
   SubmiteDocument() {
     this.submitting = true;
     const formData = this.buildDocumentFormData();
@@ -1490,7 +1510,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
           this._notificationToastService.createNotification(
             'success',
             'Document Create',
-            response.Message,
+            this.submitSuccessMessage(this.selectedRequestType) || response.Message,
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
@@ -1559,7 +1579,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
           this._notificationToastService.createNotification(
             'success',
             'Save as Draft',
-            response.Message || 'Document saved as draft.',
+            'Document saved as draft successfully!',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
@@ -2075,6 +2095,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.rebuildCombinedWorkflowAuthorities();
     this.selectedAdHocApprover = '';
     this.justification = '';
+    this.requestJustification = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];
     this.attributeValues = [];

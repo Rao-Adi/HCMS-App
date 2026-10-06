@@ -1195,7 +1195,7 @@ export class DraftDocumentList implements OnInit {
           this._notificationToastService.createNotification(
             'success',
             'Document Draft',
-            response.Message || 'Draft saved successfully.',
+            'Document saved as draft successfully!',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
@@ -1214,6 +1214,19 @@ export class DraftDocumentList implements OnInit {
     });
   }
 
+  // Success wording per activity type, matching the Create/Update Document screen.
+  private submitSuccessMessage(): string | null {
+    const code = this.selectedDraftDocument?.activityTypeCode || this.selectedDraftDocument?.ActivityTypeCode;
+    switch (code) {
+      case 'DRT-0002':
+        return 'Document Revised Successfully!';
+      case 'DRT-0003':
+        return 'Document Obsoleted Successfully!';
+      default:
+        return 'Document Created Successfully!';
+    }
+  }
+
   SubmitDraftDocument(): void {
     this.loadingSubmit = true;
     this._documentService.submitDocument(this.buildFormData()).subscribe({
@@ -1223,7 +1236,7 @@ export class DraftDocumentList implements OnInit {
           this._notificationToastService.createNotification(
             'success',
             'Document',
-            response.Message || 'Document submitted successfully.',
+            this.submitSuccessMessage() || response.Message || 'Document submitted successfully.',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.

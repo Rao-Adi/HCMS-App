@@ -123,6 +123,18 @@
                       </app-ag-grid-wrapper>
                     </div>
                   </div>
+
+                  <!-- The Justification given when the Revision Request was raised, for the document
+                       picked above. Read-only; the Justification field further down is this
+                       revision's own. -->
+                  <div class="row mt-3" *ngIf="showDocumentContent && requestJustification">
+                    <div class="col-lg-9 col-md-9 col-sm-12">
+                      <div class="PnlHeading">
+                        <label>Request Justification</label>
+                      </div>
+                      <textarea class="w-100" rows="3" nz-input [value]="requestJustification" disabled></textarea>
+                    </div>
+                  </div>
                 </div>
               </ng-container>
 
@@ -1012,7 +1024,7 @@
                           aria-hidden="true"
                           *ngIf="submitting"
                         ></span>
-                        <i class="bi bi-file-earmark-text me-2" *ngIf="!submitting"></i>
+                        <i class="bi bi-send me-2" *ngIf="!submitting"></i>
                         Submit
                       </button>
                     </div>

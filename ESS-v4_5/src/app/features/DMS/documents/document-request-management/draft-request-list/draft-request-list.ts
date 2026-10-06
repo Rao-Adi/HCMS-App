@@ -291,6 +291,18 @@ export class DraftRequestList {
   }
 
   /** True when the selected draft revises an existing document. */
+  /** Success wording for submitting a draft, by the request type it was saved as. */
+  private submittedRequestMessage(): string {
+    switch ((this.selectedDraftRequest?.requestTypeCode || '').toUpperCase()) {
+      case 'DRT-0002':
+        return 'Document Revision Request Submitted Successfully!';
+      case 'DRT-0003':
+        return 'Document Obsoletion Request Submitted Successfully!';
+      default:
+        return 'Document Creation Request Submitted Successfully!';
+    }
+  }
+
   get isRevisionDraft(): boolean {
     return this.selectedDraftRequest?.requestTypeCode === 'DRT-0002' && !!this.selectedDraftRequest?.parentDocumentId;
   }
@@ -953,7 +965,7 @@ export class DraftRequestList {
           this._notificationToasService.createNotification(
             'success',
             'Document Request',
-            'Document submitted successfully!',
+            this.submittedRequestMessage(),
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
@@ -1030,7 +1042,7 @@ export class DraftRequestList {
           this._notificationToasService.createNotification(
             'success',
             'Document Request (Draft)',
-            'Document updated successfully!',
+            'Document saved as draft successfully!',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.

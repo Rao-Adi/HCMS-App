@@ -709,22 +709,13 @@ export class DocumentAuthorizationPostTraining {
   ): string {
     if ((actionType || '').toUpperCase() !== 'APPROVED') {
       return totalTargets === 1
-        ? 'Document ' + this.actionPastTense(actionType) + ' successfully.'
+        ? 'Document ' + this.actionPastTense(actionType) + ' successfully!'
         : summary.ok + ' of ' + totalTargets + ' document(s) ' + this.actionPastTense(actionType) + ' successfully.';
     }
 
-    // "Oct 06, 2026" -- month name, day, year -- the same style the merged document templates and
-    // the Authorized & Effective notification use.
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const now = new Date();
-    const date = `${months[now.getMonth()]} ${String(now.getDate()).padStart(2, '0')}, ${now.getFullYear()}`;
+    if (totalTargets === 1) return 'The document has authorized successfully!';
 
-    if (totalTargets === 1 && summary.done.length === 1) {
-      const d = summary.done[0];
-      return 'Document ' + d.name + ' (V:' + d.version + ') is now authorized and effective as of ' + date + '.';
-    }
-
-    return summary.ok + ' of ' + totalTargets + ' document(s) are now authorized and effective as of ' + date + '.';
+    return summary.ok + ' of ' + totalTargets + ' documents are authorized successfully!';
   }
 
   /** Refreshes once, after every target has been attempted, and reports what happened. */

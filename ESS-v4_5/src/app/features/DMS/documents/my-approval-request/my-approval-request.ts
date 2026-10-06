@@ -18,7 +18,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
-import { getWorkflowActionLabel } from '@app/shared/utils/workflow-action-label';
+import { getWorkflowActionLabel, getWorkflowSuccessMessage } from '@app/shared/utils/workflow-action-label';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
@@ -890,7 +890,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     summary: { ok: number; failed: string[]; lastMessage: string },
   ): void {
     if (index >= targets.length) {
-      this.finishRequestActions(targets, summary);
+      this.finishRequestActions(action, targets, summary);
       return;
     }
 
@@ -927,6 +927,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
 
   /** Refreshes once, after every target has been attempted, and reports what happened. */
   private finishRequestActions(
+    action: string,
     targets: { stepId: number; name: string }[],
     summary: { ok: number; failed: string[]; lastMessage: string },
   ): void {
@@ -935,7 +936,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         'success',
         'Request',
         targets.length === 1
-          ? summary.lastMessage
+          ? getWorkflowSuccessMessage(action, 'request') || summary.lastMessage
           : summary.ok + ' of ' + targets.length + ' request(s) processed successfully.',
       );
 

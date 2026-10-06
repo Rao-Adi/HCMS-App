@@ -25,7 +25,7 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
-import { getWorkflowActionLabel } from '@app/shared/utils/workflow-action-label';
+import { getWorkflowActionLabel, getWorkflowSuccessMessage } from '@app/shared/utils/workflow-action-label';
 import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DistributionListModal } from '../distribution-list-modal/distribution-list-modal';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
@@ -986,7 +986,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         'success',
         'Workflow',
         targets.length === 1
-          ? summary.lastMessage
+          ? getWorkflowSuccessMessage(action, 'document') || summary.lastMessage
           : summary.ok + ' of ' + targets.length + ' record(s) processed successfully.',
       );
 

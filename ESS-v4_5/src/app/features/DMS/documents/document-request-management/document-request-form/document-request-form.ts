@@ -998,7 +998,7 @@ export class DocumentRequestForm {
           this._notificationToastService.createNotification(
             'success',
             'Document Request',
-            'Document drafted successfully!',
+            'Document saved as draft successfully!',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
@@ -1148,8 +1148,8 @@ export class DocumentRequestForm {
           this.requestCreated.emit();
           this._notificationToastService.createNotification(
             'success',
-            'User',
-            'Document Request submitted successfully!',
+            'Document Request',
+            'Document Creation Request Submitted Successfully!',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
@@ -1277,6 +1277,9 @@ export class DocumentRequestForm {
       formData.append('DraftFile', this.uploadedFile);
     }
 
+    // Read before emptyFields() below resets the selected request type.
+    const isRevision = this.isRevisionRequestType;
+
     this.isSubmitting = true;
     this._doumentRequestService.CreateAndSubmitRevisionDocumentRequest(formData).subscribe({
       next: (response) => {
@@ -1287,11 +1290,16 @@ export class DocumentRequestForm {
           this._notificationToastService.createNotification(
             'success',
             'Document Request',
-            'Revision submitted successfully!',
+            // This submit serves both Revision and Obsoletion; say which one was raised.
+            isRevision
+              ? 'Document Revision Request Submitted Successfully!'
+              : 'Document Obsoletion Request Submitted Successfully!',
           );
           // Every badge, not just this screen's: a workflow transition can empty one inbox and
           // fill a queue on a screen the user is not looking at.
-          this._navigationCountsService.refreshAfterAction('Revision Request Submitted');
+          this._navigationCountsService.refreshAfterAction(
+            isRevision ? 'Revision Request Submitted' : 'Obsolete Request Submitted',
+          );
           setTimeout(() => {
             window.location.reload();
           }, 1000);
@@ -1302,7 +1310,10 @@ export class DocumentRequestForm {
         this._notificationToastService.createNotification(
           'error',
           'Error',
-          err?.error?.Message || err?.Message || 'Failed to submit revision.',
+          err?.error?.Message || err?.Message ||
+            (isRevision
+              ? 'Failed to submit revision request.'
+              : 'Failed to submit obsolete request.'),
         );
       },
     });

@@ -509,11 +509,11 @@
         type="button"
         tabindex="0"
         [disabled]="!!submitDisabledReason || isSubmitting"
-        class="btn btn-info shadow-sm"
+        class="btn btn-primary shadow-sm"
         style="min-width: 150px; height: 35px"
         (click)="SubmiteRevisionDocumentRequests()"
       >
-        <i class="bi bi-file-earmark-text me-2"></i>
+        <i class="bi bi-send me-2"></i>
         {{ isRevisionRequestType ? 'Submit Revision' : 'Submit Obsoletion' }}
       </button>
     </div>
