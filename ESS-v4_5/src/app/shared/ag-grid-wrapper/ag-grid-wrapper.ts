@@ -94,8 +94,17 @@ export class AgGridWrapper implements OnInit, OnChanges {
       // every column in every grid using this wrapper, without having to widen columns (which
       // just pushes the same problem onto grids with many columns). A column's own
       // tooltipValueGetter/tooltipField in columnDefs still overrides this normally.
-      tooltipValueGetter: (params: any) =>
-        params.value != null && params.value !== '' ? String(params.value) : null,
+      //
+      // A cell whose value is an object or a list (e.g. the Distribution List link, whose value is
+      // the array of distribution rows) has no readable single-string form: String() on it gave the
+      // tooltip "[object Object]". Those get no tooltip -- the column's own renderer is what shows
+      // them. Dates are objects too and still read fine as text, so they are kept.
+      tooltipValueGetter: (params: any) => {
+        const value = params.value;
+        if (value == null || value === '') return null;
+        if (typeof value === 'object' && !(value instanceof Date)) return null;
+        return String(value);
+      },
       // The tooltip above only helps on hover -- the underlying complaint (e.g. "Muhammad
       // Wajahat Shahid" showing as "Muhammad Wajahat Sh...") is that values are hard clipped at
       // a glance. wrapText lets a cell that doesn't fit wrap onto a second line. autoHeight

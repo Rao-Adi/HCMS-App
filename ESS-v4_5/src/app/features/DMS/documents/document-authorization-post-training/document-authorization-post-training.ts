@@ -607,6 +607,7 @@ export class DocumentAuthorizationPostTraining {
       .map((r: any) => ({
         id: r?.Id || r?.id || r?.documentId,
         name: r?.documentName || '',
+        version: String(r?.version ?? r?.Version ?? ''),
       }))
       .filter((t: any) => !!t.id);
 
@@ -625,7 +626,7 @@ export class DocumentAuthorizationPostTraining {
         '<b style="color: ' + actionColor + '">' + actionLabel + '</b> ' + what + '?',
       nzOnOk: () => {
         this.isProcessingAction = true;
-        this.runAuthorizations(actionType, targets, 0, { ok: 0, failed: [] });
+        this.runAuthorizations(actionType, targets, 0, { ok: 0, failed: [], done: [] });
       },
     });
   }
@@ -639,9 +640,9 @@ export class DocumentAuthorizationPostTraining {
    */
   private runAuthorizations(
     actionType: string,
-    targets: { id: any; name: string }[],
+    targets: { id: any; name: string; version: string }[],
     index: number,
-    summary: { ok: number; failed: string[] },
+    summary: { ok: number; failed: string[]; done: { name: string; version: string }[] },
   ): void {
     if (index >= targets.length) {
       this.finishAuthorizations(actionType, targets, summary);
@@ -662,6 +663,7 @@ export class DocumentAuthorizationPostTraining {
       next: (res: any) => {
         if (res?.Success) {
           summary.ok++;
+          summary.done.push({ name: target.name, version: target.version });
         } else {
           summary.failed.push(label + ': ' + (res?.Message || 'Failed to authorize document.'));
         }
@@ -694,11 +696,42 @@ export class DocumentAuthorizationPostTraining {
     }
   }
 
+  /**
+   * The success toast. An approval here is the authorization that makes the document effective, so
+   * it says that -- the same wording as the "Document Authorized & Effective" notification the
+   * initiator receives: Document [name] (V:[version]) is now authorized and effective as of [date].
+   * Rejections keep the plain wording.
+   */
+  private authorizationSuccessMessage(
+    actionType: string,
+    totalTargets: number,
+    summary: { ok: number; done: { name: string; version: string }[] },
+  ): string {
+    if ((actionType || '').toUpperCase() !== 'APPROVED') {
+      return totalTargets === 1
+        ? 'Document ' + this.actionPastTense(actionType) + ' successfully.'
+        : summary.ok + ' of ' + totalTargets + ' document(s) ' + this.actionPastTense(actionType) + ' successfully.';
+    }
+
+    // "Oct 06, 2026" -- month name, day, year -- the same style the merged document templates and
+    // the Authorized & Effective notification use.
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    const date = `${months[now.getMonth()]} ${String(now.getDate()).padStart(2, '0')}, ${now.getFullYear()}`;
+
+    if (totalTargets === 1 && summary.done.length === 1) {
+      const d = summary.done[0];
+      return 'Document ' + d.name + ' (V:' + d.version + ') is now authorized and effective as of ' + date + '.';
+    }
+
+    return summary.ok + ' of ' + totalTargets + ' document(s) are now authorized and effective as of ' + date + '.';
+  }
+
   /** Refreshes once, after every target has been attempted, and reports what happened. */
   private finishAuthorizations(
     actionType: string,
-    targets: { id: any; name: string }[],
-    summary: { ok: number; failed: string[] },
+    targets: { id: any; name: string; version: string }[],
+    summary: { ok: number; failed: string[]; done: { name: string; version: string }[] },
   ): void {
     this.isProcessingAction = false;
 
@@ -706,9 +739,7 @@ export class DocumentAuthorizationPostTraining {
       this._notificationToastService.createNotification(
         'success',
         'Success',
-        targets.length === 1
-          ? 'Document ' + this.actionPastTense(actionType) + ' successfully.'
-          : summary.ok + ' of ' + targets.length + ' document(s) ' + this.actionPastTense(actionType) + ' successfully.',
+        this.authorizationSuccessMessage(actionType, targets.length, summary),
       );
 
       // Clear the tracked selection state and the grid's own checkbox selection immediately --

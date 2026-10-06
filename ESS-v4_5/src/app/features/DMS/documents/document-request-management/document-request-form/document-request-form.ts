@@ -843,6 +843,16 @@ export class DocumentRequestForm {
   }
 
   DraftDocumentRequests() {
+    // A Revision draft must say which existing document it revises -- picked from the grid above.
+    if (this.isRevisionRequestType && !this.selectedDocumentRow?.Id) {
+      this._notificationToastService.createNotification(
+        'warning',
+        'Validation',
+        'Please select an existing document to revise.',
+      );
+      return;
+    }
+
     if (!this.selectedDocumentRequestType) {
       this._notificationToastService.createNotification(
         'warning',
@@ -964,6 +974,11 @@ export class DocumentRequestForm {
           item.distributionTypeId.toString(),
         );
     });
+
+    // The document being revised. Without it a saved Revision draft was indistinguishable from a
+    // new-document draft: it lost its link to the document and could not be submitted as a revision.
+    if (this.isRevisionRequestType && this.selectedDocumentRow?.Id)
+      formData.append('ParentDocumentId', String(this.selectedDocumentRow.Id));
 
     this.appendUserIdsToFormData(formData, this.distributionUserList);
 

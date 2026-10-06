@@ -29,6 +29,12 @@ import { Subject, takeUntil } from 'rxjs';
 import { VERSION } from '@angular/core';
 import { DmsAiService } from '@app/shared/services/dms-ai.service';
 
+/** One run of text in the AI review dialog: unchanged, removed by the AI, or added by it. */
+export interface DiffSegment {
+  type: 'same' | 'del' | 'add';
+  text: string;
+}
+
 @Component({
   selector: 'app-dmsrich-text-edit',
   imports: [FormsModule, CommonModule, NgxEditorModule, ReactiveFormsModule, QuillEditorComponent],
@@ -126,6 +132,10 @@ export class DMSRichTextEdit implements OnInit {
   aiSuggestion: string | null = null;
   aiMessage = '';
   aiIsError = false;
+  /** What the AI changed, as the original text with each edit marked -- shown in the review dialog. */
+  aiDiff: DiffSegment[] = [];
+  aiChangeCount = 0;
+  aiReviewOpen = false;
 
   ngOnInit() {
     this._dmsAi.isEnabled().subscribe((enabled) => {
@@ -172,7 +182,21 @@ export class DMSRichTextEdit implements OnInit {
           return;
         }
 
+        // What actually changed, word by word. The server flags a result as changed when the HTML
+        // differs at all, which includes the model merely re-wrapping or re-spacing markup -- if
+        // no words differ there is nothing for the author to review.
+        const diff = this.buildWordDiff(current, result.correctedHtml);
+        if (diff.changeCount === 0) {
+          this.showAiMessage('No spelling or grammar issues were found.', false);
+          return;
+        }
+
         this.aiSuggestion = result.correctedHtml;
+        this.aiDiff = diff.segments;
+        this.aiChangeCount = diff.changeCount;
+        // Opened straight away: the author is shown exactly what will change before anything is
+        // written, instead of a bar offering to apply a correction they cannot see.
+        this.aiReviewOpen = true;
         this.aiIsError = false;
         this.aiMessage = result.notice || 'AI-generated correction. Review before applying.';
         this._cdr.markForCheck();
@@ -195,6 +219,7 @@ export class DMSRichTextEdit implements OnInit {
 
     const corrected = this.aiSuggestion;
     this.aiSuggestion = null;
+    this.clearReview();
 
     let applied = corrected;
     if (this.editor?.quillEditor) {
@@ -221,13 +246,173 @@ export class DMSRichTextEdit implements OnInit {
 
   dismissProofread(): void {
     this.aiSuggestion = null;
+    this.clearReview();
     this.aiMessage = '';
     this.aiIsError = false;
     this._cdr.markForCheck();
   }
 
+  /** Closes the review dialog but keeps the suggestion, so it can still be applied from the bar. */
+  closeReview(): void {
+    this.aiReviewOpen = false;
+    this._cdr.markForCheck();
+  }
+
+  /** Reopens the review dialog for a suggestion that is still waiting. */
+  openReview(): void {
+    if (this.aiSuggestion === null) return;
+    this.aiReviewOpen = true;
+    this._cdr.markForCheck();
+  }
+
+  private clearReview(): void {
+    this.aiReviewOpen = false;
+    this.aiDiff = [];
+    this.aiChangeCount = 0;
+  }
+
+  // ── Word diff for the review dialog ───────────────────────────────────────
+
+  /** Plain text of an HTML fragment, keeping paragraph and line breaks as newlines. */
+  private htmlToText(html: string): string {
+    const withBreaks = (html || '').replace(/<\/(p|div|li|h[1-6]|tr)>|<br\s*\/?>/gi, '\n');
+    return new DOMParser().parseFromString(withBreaks, 'text/html').body.textContent ?? '';
+  }
+
+  /**
+   * The original text with every word the AI removed or added marked.
+   *
+   * Compared as plain text, word by word: the dialog's job is to show which words changed, not to
+   * reproduce formatting. (Applying the correction still writes the AI's HTML, as before.) A word
+   * counts as the same if it matches ignoring surrounding whitespace, so a line break moving does
+   * not read as an edit.
+   */
+  private buildWordDiff(originalHtml: string, correctedHtml: string): { segments: DiffSegment[]; changeCount: number } {
+    const tokenise = (text: string) => text.match(/\S+\s*/g) ?? [];
+    const a = tokenise(this.htmlToText(originalHtml));
+    const b = tokenise(this.htmlToText(correctedHtml));
+    const key = (t: string) => t.trim();
+
+    // Most of a document is untouched, so peel the common start and end off first; the diff proper
+    // then only has to look at the stretch where something differs.
+    let start = 0;
+    while (start < a.length && start < b.length && key(a[start]) === key(b[start])) start++;
+    let endA = a.length;
+    let endB = b.length;
+    while (endA > start && endB > start && key(a[endA - 1]) === key(b[endB - 1])) {
+      endA--;
+      endB--;
+    }
+
+    const edits: DiffSegment[] = [];
+    for (let i = 0; i < start; i++) edits.push({ type: 'same', text: a[i] });
+
+    const middle = this.myersDiff(a.slice(start, endA), b.slice(start, endB), key);
+    if (middle === null) {
+      // Too many differences to lay out word by word: show the middle as one removal and one
+      // addition rather than not showing the review at all.
+      const removed = a.slice(start, endA).join('');
+      const added = b.slice(start, endB).join('');
+      if (removed) edits.push({ type: 'del', text: removed });
+      if (added) edits.push({ type: 'add', text: added });
+    } else {
+      edits.push(...middle);
+    }
+
+    for (let i = endA; i < a.length; i++) edits.push({ type: 'same', text: a[i] });
+
+    // Merge neighbours of the same kind so the view is a few runs, not one span per word.
+    const segments: DiffSegment[] = [];
+    for (const edit of edits) {
+      const last = segments[segments.length - 1];
+      if (last && last.type === edit.type) last.text += edit.text;
+      else segments.push({ ...edit });
+    }
+
+    // A change is a run of removals and/or additions between stretches of unchanged text.
+    let changeCount = 0;
+    let inChange = false;
+    for (const s of segments) {
+      if (s.type === 'same') inChange = false;
+      else if (!inChange) {
+        changeCount++;
+        inChange = true;
+      }
+    }
+
+    return { segments, changeCount };
+  }
+
+  /**
+   * Myers' O(ND) shortest-edit-script diff. Fast when the edit is small, which is the normal case
+   * for a proofreading pass. Returns null once the edit grows past a limit, so a document the AI
+   * rewrote wholesale cannot make the browser grind.
+   */
+  private myersDiff(a: string[], b: string[], key: (t: string) => string): DiffSegment[] | null {
+    const n = a.length;
+    const m = b.length;
+    if (n === 0 && m === 0) return [];
+
+    const max = n + m;
+    const limit = Math.min(max, 1500);
+    const offset = max + 1;
+    const v = new Int32Array(2 * max + 3);
+    const trace: Int32Array[] = [];
+    let found = false;
+
+    for (let d = 0; d <= limit && !found; d++) {
+      trace.push(v.slice());
+      for (let k = -d; k <= d; k += 2) {
+        let x: number;
+        if (k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1])) x = v[offset + k + 1];
+        else x = v[offset + k - 1] + 1;
+        let y = x - k;
+        while (x < n && y < m && key(a[x]) === key(b[y])) {
+          x++;
+          y++;
+        }
+        v[offset + k] = x;
+        if (x >= n && y >= m) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) return null;
+
+    // Walk the trace backwards to recover the edits.
+    const reversed: DiffSegment[] = [];
+    let x = n;
+    let y = m;
+    for (let d = trace.length - 1; d >= 0; d--) {
+      const vv = trace[d];
+      const k = x - y;
+      const prevK =
+        k === -d || (k !== d && vv[offset + k - 1] < vv[offset + k + 1]) ? k + 1 : k - 1;
+      const prevX = vv[offset + prevK];
+      const prevY = prevX - prevK;
+
+      while (x > prevX && y > prevY) {
+        reversed.push({ type: 'same', text: a[x - 1] });
+        x--;
+        y--;
+      }
+      if (d > 0) {
+        if (x === prevX) {
+          reversed.push({ type: 'add', text: b[y - 1] });
+          y--;
+        } else {
+          reversed.push({ type: 'del', text: a[x - 1] });
+          x--;
+        }
+      }
+    }
+    return reversed.reverse();
+  }
+
   private showAiMessage(message: string, isError: boolean): void {
     this.aiSuggestion = null;
+    this.clearReview();
     this.aiMessage = message;
     this.aiIsError = isError;
     this._cdr.markForCheck();

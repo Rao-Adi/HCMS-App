@@ -473,7 +473,9 @@
     <div
       class="col-sm-1"
       *ngIf="
-        this.selectedDocumentRequestType == '1' || this.selectedDocumentRequestType == 'DRT-0001'
+        this.selectedDocumentRequestType == '1' ||
+        this.selectedDocumentRequestType == 'DRT-0001' ||
+        (isRevisionRequestType && selectedDocumentRow)
       "
     >
       <button

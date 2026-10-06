@@ -15,6 +15,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
+import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
@@ -159,6 +160,10 @@ export class DraftRequestList {
       field: 'requestNumber',
       headerName: 'Request Number',
     },
+    // What kind of request the draft is, and for a Revision which document it revises -- without
+    // these a saved Revision draft looked exactly like a new-document draft.
+    { field: 'requestTypeLabel', headerName: 'Request Type' },
+    { field: 'targetDocumentNumber', headerName: 'Revising Document' },
     { field: 'documentType', headerName: 'Document Type' },
     { field: 'documentName', headerName: 'Document Title' },
     {
@@ -212,6 +217,8 @@ export class DraftRequestList {
 
   columnToggles?: ColumnToggle[] = [
     { field: 'requestNumber', label: 'Request Number', visible: true },
+    { field: 'requestTypeLabel', label: 'Request Type', visible: true },
+    { field: 'targetDocumentNumber', label: 'Revising Document', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'justification', label: 'Justification', visible: true },
@@ -229,6 +236,7 @@ export class DraftRequestList {
     private _cabinetHierarchyService: CabinetHierarchyService,
     private _appConfig: AppConfigService,
     private _navigationCountsService: NavigationCountsService,
+    private _workflowStepService: WorkflowStepService,
   ) {}
 
   ngOnInit() {
@@ -258,6 +266,8 @@ export class DraftRequestList {
 
       this.columnToggles = [
         { field: 'requestNumber', label: 'Request Number', visible: true },
+        { field: 'requestTypeLabel', label: 'Request Type', visible: true },
+        { field: 'targetDocumentNumber', label: 'Revising Document', visible: true },
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentName', label: 'Document Title', visible: true },
         { field: 'justification', label: 'Justification', visible: true },
@@ -266,6 +276,56 @@ export class DraftRequestList {
         { field: 'status', label: 'Status', visible: true },
       ];
     });
+  }
+
+  /** Request type codes are fixed lookup values (DocumentRequestTypes). */
+  private requestTypeLabelFor(code?: string): string {
+    switch ((code || '').toUpperCase()) {
+      case 'DRT-0002':
+        return 'Revision';
+      case 'DRT-0003':
+        return 'Obsoletion';
+      default:
+        return 'New Document';
+    }
+  }
+
+  /** True when the selected draft revises an existing document. */
+  get isRevisionDraft(): boolean {
+    return this.selectedDraftRequest?.requestTypeCode === 'DRT-0002' && !!this.selectedDraftRequest?.parentDocumentId;
+  }
+
+  /**
+   * The approvers for the selected draft -- the same table the request form shows. A Revision uses
+   * the Revision policy, a new document the Request policy, exactly as the form (and the submit)
+   * resolve them, so what is shown here is who will actually receive it.
+   */
+  private loadWorkflowAuthorities(): void {
+    if (!this.selectedDocumentTypeCode) {
+      this.approvalSequenceData = [];
+      this.showExclusionTable = false;
+      return;
+    }
+
+    this._workflowStepService
+      .getWorkflowStepByDocumentTypeCode({
+        EntityType: this.isRevisionDraft ? 'Revision' : 'Request',
+        documentTypeCode: this.selectedDocumentTypeCode,
+        divisionCode: this.selectedDivisions || '',
+        departmentCode: this.selectedDepartment || '',
+        subDepartmentCode: this.selectedSubDepartment || '',
+        businessDomainCode: this.selectedBusinessDomain || '',
+      })
+      .subscribe({
+        next: (res) => {
+          this.showExclusionTable = true;
+          this.approvalSequenceData = res?.Data ? res.Data : [];
+        },
+        error: () => {
+          this.showExclusionTable = false;
+          this.approvalSequenceData = [];
+        },
+      });
   }
 
   GetAllDraftDocuments(query?: any) {
@@ -307,6 +367,11 @@ export class DraftRequestList {
             Id: item.id || item.Id,
             companyId: item.companyId || item.CompanyId,
             requestNumber: item.RequestNumber || item.requestNumber,
+            requestTypeCode: item.DocumentRequestTypeCode || item.documentRequestTypeCode,
+            requestTypeLabel: this.requestTypeLabelFor(item.DocumentRequestTypeCode || item.documentRequestTypeCode),
+            // The document a Revision draft is against (blank for a new-document draft).
+            parentDocumentId: item.ParentDocumentId ?? item.parentDocumentId ?? null,
+            targetDocumentNumber: item.TargetDocumentNumber || item.targetDocumentNumber || '',
             documentType: item.DocumentType || item.documentType,
             proposedDocumentNumber: item.RequestNumber || item.requestNumber,
             stepId: item.StepId || item.stepId,
@@ -398,11 +463,40 @@ export class DraftRequestList {
     }
   }
 
+  // The cabinet as edited on the draft. ApplyCabinet tells the API these were really sent -- an empty
+  // value is a valid "Any" and cannot be told apart from "not sent" once model binding runs. The API
+  // ignores them for a Revision draft, which stays in its document's cabinet.
+  private appendCabinetToFormData(formData: FormData): void {
+    formData.append('ApplyCabinet', 'true');
+    formData.append('DivisionCode', this.selectedDivisions || '');
+    formData.append('DepartmentCode', this.selectedDepartment || '');
+    formData.append('SubDepartmentCode', this.selectedSubDepartment || '');
+    formData.append('BusinessDomainCode', this.selectedBusinessDomain || '');
+  }
+
   onHierarchyChange(values: CabinetSelection[]) {
-    this.selectedDivisions = values.find((v) => v.level === 1)?.value ?? null;
-    this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
-    this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
-    this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
+    const division = values.find((v) => v.level === 1)?.value ?? null;
+    const department = values.find((v) => v.level === 2)?.value ?? null;
+    const subDepartment = values.find((v) => v.level === 3)?.value ?? null;
+    const businessDomain = values.find((v) => v.level === 4)?.value ?? null;
+
+    // The component also reports the values it was just given when a draft is opened; only a real
+    // change should refresh anything.
+    const changed =
+      (this.selectedDivisions || null) !== division ||
+      (this.selectedDepartment || null) !== department ||
+      (this.selectedSubDepartment || null) !== subDepartment ||
+      (this.selectedBusinessDomain || null) !== businessDomain;
+
+    this.selectedDivisions = division as any;
+    this.selectedDepartment = department as any;
+    this.selectedSubDepartment = subDepartment as any;
+    this.selectedBusinessDomain = businessDomain as any;
+
+    // The approval chain is chosen by cabinet, so the Workflow Authorities shown must follow it.
+    if (changed && this.selectedDraftRequest) {
+      this.loadWorkflowAuthorities();
+    }
   }
 
   onPageSizeChanged(event: { gridId: string; pageSize: number }) {
@@ -447,6 +541,8 @@ export class DraftRequestList {
     this.selectedDepartment = row.departmentId || row.department;
     this.selectedSubDepartment = row.subDepartmentCode || row.subdepartment;
     this.selectedBusinessDomain = row.businessdomainId;
+
+    this.loadWorkflowAuthorities();
 
     if (this.selectedDocumentTypeCode) {
       this.pendingDetailLoads++;
@@ -824,6 +920,7 @@ export class DraftRequestList {
     formData.append('RequestId', this.requestId?.toString() || '');
     formData.append('DocumentRequestType', 'Request');
     formData.append('ProposedContent', this.templateHtml || '');
+    this.appendCabinetToFormData(formData);
 
     cleanDistributionList.forEach((item: any, index: number) => {
       if (item.divisionCode)
@@ -900,6 +997,7 @@ export class DraftRequestList {
     formData.append('Justification', this.inputJustificationValue || '');
     formData.append('ProposedContent', this.templateHtml || '');
     formData.append('ModifiedByUserId', '1'); // this will be bind with UserId
+    this.appendCabinetToFormData(formData);
 
     cleanDistributionList.forEach((item: any, index: number) => {
       if (item.divisionCode)
