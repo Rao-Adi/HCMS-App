@@ -669,11 +669,29 @@ export class DocumentAuthorizationPostTraining {
       },
       error: (err: any) => {
         summary.failed.push(
-          label + ': ' + (err?.error?.Message || 'Failed to ' + actionType + ' document.'),
+          label + ': ' + (err?.error?.Message || 'Failed to ' + this.actionVerb(actionType) + ' document.'),
         );
         this.runAuthorizations(actionType, targets, index + 1, summary);
       },
     });
+  }
+
+  // The action constants the API takes (APPROVED / REJECTED) are not meant to be read aloud --
+  // dropped straight into a toast they shouted "Document APPROVED successfully." These give the
+  // sentence-case wording for messages shown to the user; the constants themselves are unchanged.
+  private actionPastTense(actionType: string): string {
+    return (actionType || '').toLowerCase();
+  }
+
+  private actionVerb(actionType: string): string {
+    switch ((actionType || '').toUpperCase()) {
+      case 'APPROVED':
+        return 'approve';
+      case 'REJECTED':
+        return 'reject';
+      default:
+        return (actionType || '').toLowerCase();
+    }
   }
 
   /** Refreshes once, after every target has been attempted, and reports what happened. */
@@ -689,8 +707,8 @@ export class DocumentAuthorizationPostTraining {
         'success',
         'Success',
         targets.length === 1
-          ? 'Document ' + actionType + ' successfully.'
-          : summary.ok + ' of ' + targets.length + ' document(s) ' + actionType + ' successfully.',
+          ? 'Document ' + this.actionPastTense(actionType) + ' successfully.'
+          : summary.ok + ' of ' + targets.length + ' document(s) ' + this.actionPastTense(actionType) + ' successfully.',
       );
 
       // Clear the tracked selection state and the grid's own checkbox selection immediately --

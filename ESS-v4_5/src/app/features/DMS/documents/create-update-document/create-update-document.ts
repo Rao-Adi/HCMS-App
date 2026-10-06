@@ -854,6 +854,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       this.lastLoadedAttributesDocumentType = '';
       this.emptyFields();
     }
+
+    // Revision / Obsoletion list approved requests, which is a separate fetch from the Creation
+    // flow's GetAllApprovedRequests above -- without this the grid never heard about the change.
+    // Runs after emptyFields() so a cleared type reloads the unfiltered list.
+    if (this.isRevisionOrObsoletion) {
+      this.GetApprovedRevisionObsoletionRequests(this.selectedRequestType);
+    }
   }
 
   // Switching between "Use an Approved Request" and "Create Document Directly" changes what
@@ -1909,6 +1916,9 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
     const payload = {
       documentRequestTypeCode,
+      // The Document Type picked above the grid. It was never sent, so the grid kept showing
+      // every approved request whatever type was chosen.
+      documentTypeCode: this.selectedDocumentType || null,
       pageNumber: this.currentGridQuery.pageNumber,
       pageSize: this.currentGridQuery.pageSize,
       sortModel: this.currentGridQuery.sortModel || [],

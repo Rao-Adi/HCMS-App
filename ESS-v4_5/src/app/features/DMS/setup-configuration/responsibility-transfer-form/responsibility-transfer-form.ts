@@ -631,7 +631,7 @@ export class ResponsibilityTransferForm implements OnInit, OnDestroy {
           this._notificationToastService.createNotification(
             'success',
             'Action Successful',
-            res?.Message || `Request has been ${actionType.toLowerCase()}d.`,
+            res?.Message || `Request has been ${actionType.toLowerCase()}.`,
           );
           this.GetAllResponsibilityTransferForms(); // Automatically refresh Grid
           // Refreshes every badge, including this screen's own tab count.

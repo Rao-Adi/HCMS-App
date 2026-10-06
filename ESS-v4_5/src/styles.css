@@ -7294,3 +7294,37 @@ html.ant-scrolling-effect {
 .dms-editor-readonly .ql-toolbar { display: none; }
 .dms-editor-readonly .ql-container { border-top: 1px solid #ccc; background: #f8f9fa; }
 .dms-editor-readonly .ql-editor { cursor: default; }
+
+
+/* ---------------------------------------------------------------------------------------------
+   nz-select dropdowns open as wide as their longest option, so a full value such as
+   "Information Technology" is readable instead of being cut to the width of the closed select.
+
+   Equivalent to [nzDropdownMatchSelectWidth]="false" on every nz-select, done globally because
+   that is a per-component input with no global config. ng-zorro sets an inline width equal to the
+   trigger on the overlay pane, and (while it matches the trigger) lays the virtual-scroll rows out
+   absolutely, which gives the panel no intrinsic width to grow to -- both are undone here, the
+   same way the library's own .full-width mode does it. The 200px floor stands in for the trigger
+   width the inline style carried, so a short list never opens narrower than a normal field.
+   --------------------------------------------------------------------------------------------- */
+.cdk-overlay-pane:has(> .ant-select-dropdown) {
+  width: auto !important;
+  min-width: 200px;
+  max-width: min(90vw, 640px);
+}
+.ant-select-dropdown .cdk-virtual-scroll-viewport {
+  contain: initial !important;
+}
+.ant-select-dropdown .cdk-virtual-scroll-content-wrapper {
+  position: static !important;
+}
+.ant-select-dropdown .cdk-virtual-scroll-spacer {
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+.ant-select-dropdown .ant-select-item-option-content {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}

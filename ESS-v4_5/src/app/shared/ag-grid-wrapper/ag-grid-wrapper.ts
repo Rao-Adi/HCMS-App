@@ -444,6 +444,22 @@ export class AgGridWrapper implements OnInit, OnChanges {
     // instead, same as the reference Users grid.
     const allColumnIds = columns.map((col: any) => col.getId());
     this.gridApi.autoSizeColumns(allColumnIds);
+
+    // The one case the note above does not cover: a grid with few or short columns, whose
+    // content-sized columns end well short of the container and leave an empty strip on the
+    // right (e.g. the three-column "Users in Role" modal). Only then are the columns spread out
+    // to fill the width -- never when the content already fills or overflows it, which is the
+    // case where sizeColumnsToFit() would shrink columns below what auto-size just gave them.
+    // Measured against the scrollable (non-pinned) area, since pinned columns keep their width.
+    const range = this.gridApi.getHorizontalPixelRange();
+    const viewportWidth = range.right - range.left;
+    const scrollableColumnsWidth = this.gridApi
+      .getDisplayedCenterColumns()
+      .reduce((sum, col) => sum + col.getActualWidth(), 0);
+
+    if (viewportWidth > 0 && scrollableColumnsWidth < viewportWidth) {
+      this.gridApi.sizeColumnsToFit();
+    }
   }
 
   onFirstDataRendered(event: any): void {
