@@ -123,18 +123,6 @@
                       </app-ag-grid-wrapper>
                     </div>
                   </div>
-
-                  <!-- The Justification given when the Revision Request was raised, for the document
-                       picked above. Read-only; the Justification field further down is this
-                       revision's own. -->
-                  <div class="row mt-3" *ngIf="showDocumentContent && requestJustification">
-                    <div class="col-lg-9 col-md-9 col-sm-12">
-                      <div class="PnlHeading">
-                        <label>Request Justification</label>
-                      </div>
-                      <textarea class="w-100" rows="3" nz-input [value]="requestJustification" disabled></textarea>
-                    </div>
-                  </div>
                 </div>
               </ng-container>
 
@@ -316,11 +304,9 @@
 
                   <!-- Justification: parity with the Document Request form's own required
                        field (document-request-form.html) -- 'request' mode never needs this
-                       here since it was already captured when the Request was created. A
-                       Revision always needs a fresh reason of its own (onCellClicked resets
-                       justification to '' -- never inherited from the original document).
-                       Obsoletion is the exception: onCellClicked prefills this from the ORIGINAL
-                       Document Request's own Justification, shown read-only here per the client's
+                       here since it was already captured when the Request was created.
+                       For Revision and Obsoletion onCellClicked prefills this from the Document
+                       Request's own Justification, shown read-only here per the client's
                        explicit ask -- there is no new reason to give on the way out. -->
                   <div class="row mb-4" *ngIf="creationMode === 'direct' || isRevisionOrObsoletion">
                     <div class="col-lg-9 col-md-9 col-sm-12 mb-10">
@@ -332,7 +318,7 @@
                         rows="3"
                         nz-input
                         [(ngModel)]="justification"
-                        [disabled]="isObsoletion"
+                        [disabled]="isRevisionOrObsoletion"
                       ></textarea>
                     </div>
                   </div>

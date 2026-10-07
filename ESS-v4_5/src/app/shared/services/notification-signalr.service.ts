@@ -176,6 +176,12 @@ export interface AppNotification {
   title: string;
   message: string;
   type?: 'success' | 'info' | 'warning' | 'error';
+  // Carried through from the server so a notification that arrives live can be marked read and
+  // opened exactly like one loaded from the list.
+  id?: number;
+  redirectionUrl?: string;
+  relatedEntityType?: string;
+  createdAt?: string;
 }
 
 @Injectable({
@@ -340,6 +346,9 @@ export class NotificationSignalrService {
           title,
           message,
           type: (type === 'success' || type === 'warning' || type === 'error') ? type : 'info',
+          id: payload.id ?? payload.Id,
+          redirectionUrl: payload.redirectionUrl || payload.RedirectionUrl || undefined,
+          relatedEntityType: payload.relatedEntityType || payload.RelatedEntityType || undefined,
         };
 
         // Push the notification to any subscribed components (e.g., a notification bell).

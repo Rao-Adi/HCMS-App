@@ -1,0 +1,67 @@
+<div class="nm-toolbar">
+  <div class="nm-tabs" role="tablist">
+    <button type="button" class="nm-tab" [class.active]="activeTab === 'all'" (click)="setTab('all')">
+      All <span class="nm-count">{{ items.length }}</span>
+    </button>
+    <button type="button" class="nm-tab" [class.active]="activeTab === 'unread'" (click)="setTab('unread')">
+      Unread <span class="nm-count nm-count-unread" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </button>
+    <button type="button" class="nm-tab" [class.active]="activeTab === 'read'" (click)="setTab('read')">
+      Read <span class="nm-count">{{ readCount }}</span>
+    </button>
+  </div>
+
+  <button type="button" class="nm-markall" [disabled]="unreadCount === 0 || markingAll" (click)="markAllAsRead()">
+    <i class="bi bi-check2-all me-1"></i>Mark all as read
+  </button>
+</div>
+
+<div class="nm-body">
+  <div *ngIf="loading" class="nm-empty">
+    <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+    <div>Loading notifications...</div>
+  </div>
+
+  <div *ngIf="!loading && loadFailed" class="nm-empty">
+    <i class="bi bi-exclamation-circle fs-2 text-danger mb-2"></i>
+    <div>Could not load notifications.</div>
+    <button type="button" class="btn btn-link btn-sm" (click)="load()">Try again</button>
+  </div>
+
+  <div *ngIf="!loading && !loadFailed && filtered.length === 0" class="nm-empty">
+    <i class="bi bi-bell-slash fs-2 mb-2"></i>
+    <div>{{ activeTab === 'all' ? 'You have no notifications.' : 'You have no ' + activeTab + ' notifications.' }}</div>
+  </div>
+
+  <ul class="nm-list" *ngIf="!loading && !loadFailed && filtered.length > 0">
+    <li
+      *ngFor="let n of visible; trackBy: trackById"
+      class="nm-item"
+      [class.unread]="!n.isRead"
+      tabindex="0"
+      role="button"
+      (click)="open(n)"
+      (keydown.enter)="open(n)"
+    >
+      <div class="nm-icon"><i class="bi bi-bell-fill"></i></div>
+      <div class="nm-content">
+        <div class="nm-head">
+          <strong class="nm-title">{{ n.title }}</strong>
+          <small class="nm-time" [title]="absoluteTime(n.createdAt)">{{ relativeTime(n.createdAt) }}</small>
+        </div>
+        <p class="nm-message">{{ n.message }}</p>
+        <div class="nm-foot">
+          <span class="nm-date">{{ absoluteTime(n.createdAt) }}</span>
+          <span class="nm-go">Open <i class="bi bi-arrow-right-short"></i></span>
+        </div>
+      </div>
+      <span class="nm-dot" *ngIf="!n.isRead" title="Unread"></span>
+    </li>
+  </ul>
+
+  <div class="nm-more" *ngIf="!loading && filtered.length > visibleCount">
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="showMore()">
+      Show more ({{ filtered.length - visibleCount }} remaining)
+    </button>
+  </div>
+</div>

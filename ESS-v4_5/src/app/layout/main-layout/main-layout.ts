@@ -30,6 +30,11 @@ import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import {
+  NotificationsModalComponent,
+  NotificationsModalData,
+  ModalNotification,
+} from '@app/shared/Dialog/notifications-modal/notifications-modal';
 
 interface HeaderDetailsResponse {
   formName: string;
@@ -44,6 +49,7 @@ interface DisplayNotification extends AppNotification {
   isRead: boolean;
   createdAt?: string;
   relatedEntityType?: string;
+  redirectionUrl?: string;
 }
 
 @Component({
@@ -761,6 +767,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             isRead: n.IsRead !== undefined ? n.IsRead : n.isRead !== undefined ? n.isRead : false,
             createdAt: n.createdAt || n.CreatedAt,
             relatedEntityType: n.RelatedEntityType || n.relatedEntityType,
+            redirectionUrl: n.RedirectionUrl || n.redirectionUrl,
           }));
           if (!this.isRead) {
             this.unreadNotificationCount = this.notifications.filter((n) => !n.isRead).length;
@@ -784,12 +791,46 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       if (notification.id) this.notificationHttpService.markAsRead(notification.id).subscribe();
     }
 
-    if (notification.relatedEntityType === 'Request') {
+    this.goToNotification(notification);
+    this.isNotificationOpen = false;
+  }
+
+  // Opens the page a notification is about. The server stores the exact target (including the
+  // tab, e.g. /documents/my-approvals-request?tab=Approved) on every notification, so that is
+  // used when present; the entity-type guess is only the fallback for ones without it.
+  goToNotification(notification: { relatedEntityType?: string; redirectionUrl?: string }): void {
+    const url = (notification.redirectionUrl || '').trim();
+    if (url.startsWith('/')) {
+      this.router.navigateByUrl(url);
+    } else if (notification.relatedEntityType === 'Request') {
       this.router.navigate(['/documents/my-approvals-request']);
     } else {
       this.router.navigate(['/documents/my-approvals-documents']);
     }
+  }
+
+  // "View all notifications": a modal with every notification, read and unread, from which the
+  // person can open the page one is about or mark them all read.
+  openAllNotifications(): void {
     this.isNotificationOpen = false;
+    const ref = this.modal.create({
+      nzTitle: 'Notifications',
+      nzContent: NotificationsModalComponent,
+      nzData: {
+        // Keeps the bell badge and the dropdown in step with what happens in the modal.
+        onChange: (unreadCount: number) => {
+          this.unreadNotificationCount = unreadCount;
+          if (unreadCount === 0) this.notifications.forEach((n) => (n.isRead = true));
+          this.cdRef.detectChanges();
+        },
+        navigate: (n: ModalNotification) => this.goToNotification(n),
+      } as NotificationsModalData,
+      nzFooter: null,
+      nzWidth: 760,
+      nzCentered: true,
+    });
+    // Anything read or opened inside the modal should be reflected in the dropdown afterwards.
+    ref.afterClose.subscribe(() => this.fetchExistingNotifications());
   }
 
   markAllAsRead(): void {

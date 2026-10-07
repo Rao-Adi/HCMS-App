@@ -188,9 +188,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // them onto the Document at approval time (Documents.Justification, DocumentRoleDistributions,
   // DocumentUserDistributions) before this screen ever saw that Request ID.
   justification: string = '';
-  // The Justification entered on the approved Revision REQUEST for the picked document -- read-only,
-  // shown under the grid so the person finishing the revision sees why it was asked for.
-  requestJustification: string = '';
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
 
@@ -271,7 +268,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     { field: 'version', headerName: 'Version' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
+    { field: 'subdepartment', headerName: 'Sub-Department' },
     // Business Domain removed -- this cabinet level is configured inactive for this company
     // (CabinetHierarchyService's active-levels list), so the column always showed empty/
     // irrelevant data. Scoped to just these two grids, not a general "hide inactive cabinet
@@ -327,7 +324,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     { field: 'version', headerName: 'Version' },
     { field: 'division', headerName: 'Division' },
     { field: 'department', headerName: 'Department' },
-    { field: 'subDepartment', headerName: 'Sub-Department' },
+    { field: 'subdepartment', headerName: 'Sub-Department' },
     // Business Domain removed -- see documentRevisionColumnDefs' comment above.
 
     { field: 'requestCreatedBy', headerName: 'Request Created By', minWidth: 150 },
@@ -705,12 +702,11 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // Distribution List / Document Users, prefilled from the same fields DRT-0001 direct-create
     // already uses so app-drusers-component/app-drdistribution-list need no changes.
     //
-    // Obsoletion is the one exception: the client wants the ORIGINAL Document Request's own
-    // Justification shown here (read-only -- see the template's [disabled]="isObsoletion" on the
+    // Revision and Obsoletion alike: the client wants the Document Request's own
+    // Justification shown here (read-only -- see the template's [disabled]="isRevisionOrObsoletion" on the
     // textarea), not a fresh one typed on this screen.
     this.documentId = newDocId;
-    this.justification = this.isObsoletion ? data?.requestJustification || '' : '';
-    this.requestJustification = data?.requestJustification || data?.RequestJustification || '';
+    this.justification = this.isRevisionOrObsoletion ? data?.requestJustification || '' : '';
     this.selectedDivisions = data?.divisionCode || '';
     this.selectedDepartment = data?.departmentId || data?.departmentCode || '';
     this.selectedSubDepartment = data?.subDepartmentCode || '';
@@ -879,7 +875,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.draftFileUrl = '';
     this.draftFile = null;
     this.justification = '';
-    this.requestJustification = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];
     if (this.fileInput) {
@@ -2095,7 +2090,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.rebuildCombinedWorkflowAuthorities();
     this.selectedAdHocApprover = '';
     this.justification = '';
-    this.requestJustification = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];
     this.attributeValues = [];
