@@ -188,6 +188,8 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // them onto the Document at approval time (Documents.Justification, DocumentRoleDistributions,
   // DocumentUserDistributions) before this screen ever saw that Request ID.
   justification: string = '';
+  // document:request of the grid row currently loaded -- see onCellClicked.
+  private loadedRowKey = '';
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
 
@@ -263,6 +265,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   documentRevisionData: [] = [];
   documentRevisionColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'requestNumber', headerName: 'Request ID' },
     { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
@@ -319,6 +322,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
   DocumentObsoletionGridColumnDefs = [
     { field: 'documentType', headerName: 'Document Type' },
+    { field: 'requestNumber', headerName: 'Request ID' },
     { field: 'documentNumber', headerName: 'Document Number' },
     { field: 'documentName', headerName: 'Document Name' },
     { field: 'version', headerName: 'Version' },
@@ -663,9 +667,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // AG-Grid's cellClicked fires once per cell, not once per row -- re-clicking within an
     // already-loaded row (or a stray second event for the same click) previously re-ran every
     // fetch below from scratch. Skip entirely when this row is already the one loaded.
-    if (newDocId && newDocId === this.documentId && this.showDocumentContent) {
+    // Keyed on the REQUEST as well as the document: a document can get a newer approved request
+    // while this page is open, and clicking that row must load that request's justification and
+    // content, not keep what the previous request for the same document loaded.
+    const newRowKey = newDocId + ':' + String(data?.requestId || '');
+    if (newDocId && newRowKey === this.loadedRowKey && newDocId === this.documentId && this.showDocumentContent) {
       return;
     }
+    this.loadedRowKey = newRowKey;
 
     // The row's saved content comes back as VersionContent (Vw_Documents.versioncontent, mapped
     // by DraftDocumentDto) -- not proposedContent/content, which are fields on the *request* row,
@@ -2002,10 +2011,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         businessDomainCode: item.BusinessDomainCode,
         documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
         pendingWith: item.CurrentAssignedUser,
-        requestCreatedBy: item.LastModifiedByName,
+        // The Revision/Obsoletion grids carry the Request's own number, creator and date; the
+        // document's own fields are the fallback for the other lists sharing this mapping.
+        requestCreatedBy: item.RequestCreatedByName || item.requestCreatedByName || item.LastModifiedByName,
         status: item.IsReworked ? 'Reverted' : 'Draft',
         requestCreatedOn: new CustomDateFormatPipe().transform(
-          item.CreatedAt || item.CreatedAt || '',
+          item.RequestCreatedAt || item.requestCreatedAt || item.CreatedAt || '',
         ),
         templateType: item.TemplateType || item.templateType,
         templateFileUrl:

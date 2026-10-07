@@ -300,8 +300,11 @@ export class DocumentService {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/DMSDocument/delete-document/${code}`);
   }
 
-  DownloadDocumentTemplate(id: any) {
-    const uri = `${this.apiUrl}/DMSDocument/download-submitted-document-template/${id}`;
+  // pending: the caller works on the version still being prepared (approver, authorizer, author),
+  // so a document under revision downloads as the NEW version, with that version's approvals --
+  // not the version in force. Left off, the download is the version in force.
+  DownloadDocumentTemplate(id: any, pending = false) {
+    const uri = `${this.apiUrl}/DMSDocument/download-submitted-document-template/${id}${pending ? '?pending=true' : ''}`;
     return this.http.get(uri, {
       observe: 'response',
       responseType: 'blob',

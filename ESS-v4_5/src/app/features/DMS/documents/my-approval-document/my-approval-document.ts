@@ -1226,7 +1226,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       return;
     }
 
-    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+    this._documentService.DownloadDocumentTemplate(idToDownload, true).subscribe({
       next: (response: any) => {
         const body = response?.body || response;
         let blob: Blob | null = null;

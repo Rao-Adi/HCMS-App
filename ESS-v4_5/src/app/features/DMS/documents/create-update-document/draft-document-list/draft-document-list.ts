@@ -1048,7 +1048,7 @@ export class DraftDocumentList implements OnInit {
 
   downloadDraft(): void {
     if (!this.documentId) return;
-    this._documentService.DownloadDocumentTemplate(this.documentId).subscribe({
+    this._documentService.DownloadDocumentTemplate(this.documentId, true).subscribe({
       next: (response: any) => {
         const body = response?.body || response;
         const blob = body instanceof Blob ? body : body instanceof ArrayBuffer ? new Blob([body]) : null;

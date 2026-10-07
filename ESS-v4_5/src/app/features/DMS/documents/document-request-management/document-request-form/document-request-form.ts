@@ -1174,7 +1174,7 @@ export class DocumentRequestForm {
   // DocumentRequestTypeCode is selected, and the only thing that made it revision-specific was
   // which button called it. Obsoletion used to fall through to SubmitDocumentRequests(), which
   // omits ParentDocumentId -- so every obsoletion request ever raised had no target document.
-  SubmiteRevisionDocumentRequests(confirmed = false) {
+  SubmiteRevisionDocumentRequests() {
     // The document the user picked from the "existing documents" grid is what's being acted on.
     // Its own Id must travel to the backend as ParentDocumentId — it must NOT be confused with
     // selectedDocumentRow.requestId, which is the ORIGINAL Creation request's Id and would just
@@ -1209,23 +1209,6 @@ export class DocumentRequestForm {
         'Validation',
         'Please enter Justification.',
       );
-      return;
-    }
-
-    // Revision and Obsoletion share this form and this submit, and the request type chosen at the
-    // top is what decides which one gets raised -- the two read almost identically on screen, and
-    // an Obsoletion saved by mistake is approved down the Obsoletion path (no revision draft is
-    // ever opened). So the type is stated back once, in words, before anything is created.
-    if (!confirmed) {
-      const requestTypeLabel = this.isRevisionRequestType ? 'Revision' : 'Obsoletion';
-      const targetName = this.selectedDocumentRow.title || this.documentName || '';
-      this.modal.confirm({
-        nzTitle: 'Submit ' + requestTypeLabel + ' Request',
-        nzContent:
-          'You are submitting a <b>' + requestTypeLabel + '</b> request for <b>' + targetName + '</b>. Continue?',
-        nzOkText: 'Submit ' + requestTypeLabel,
-        nzOnOk: () => this.SubmiteRevisionDocumentRequests(true),
-      });
       return;
     }
 

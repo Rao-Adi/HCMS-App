@@ -1003,7 +1003,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
 
   downloadDraft(): void {
     const idToDownload = this.documentId;
-    this._documentService.DownloadDocumentTemplate(idToDownload).subscribe({
+    this._documentService.DownloadDocumentTemplate(idToDownload, true).subscribe({
       next: (response: any) => {
         const body = response?.body || response;
         let blob: Blob | null = null;

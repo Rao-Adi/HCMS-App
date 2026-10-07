@@ -307,6 +307,16 @@ export class DraftRequestList {
     return this.selectedDraftRequest?.requestTypeCode === 'DRT-0002' && !!this.selectedDraftRequest?.parentDocumentId;
   }
 
+  get isObsoletionDraft(): boolean {
+    return this.selectedDraftRequest?.requestTypeCode === 'DRT-0003' && !!this.selectedDraftRequest?.parentDocumentId;
+  }
+
+  // A request about an existing document (Revision or Obsoletion): it stays in that document's
+  // cabinet and goes to the Revision approvers, so the cabinet is shown but not editable.
+  get isTargetedDraft(): boolean {
+    return this.isRevisionDraft || this.isObsoletionDraft;
+  }
+
   /**
    * The approvers for the selected draft -- the same table the request form shows. A Revision uses
    * the Revision policy, a new document the Request policy, exactly as the form (and the submit)
@@ -321,7 +331,7 @@ export class DraftRequestList {
 
     this._workflowStepService
       .getWorkflowStepByDocumentTypeCode({
-        EntityType: this.isRevisionDraft ? 'Revision' : 'Request',
+        EntityType: this.isTargetedDraft ? 'Revision' : 'Request',
         documentTypeCode: this.selectedDocumentTypeCode,
         divisionCode: this.selectedDivisions || '',
         departmentCode: this.selectedDepartment || '',
@@ -931,6 +941,10 @@ export class DraftRequestList {
     formData.append('CompanyId', this.selectedCompany?.toString() || '');
     formData.append('RequestId', this.requestId?.toString() || '');
     formData.append('DocumentRequestType', 'Request');
+    // As typed on the form right now, same as Update sends them. Left out, Submit used the text
+    // saved by the last Update, so an edit made after it was silently dropped.
+    formData.append('DocumentName', this.documentName || '');
+    formData.append('Justification', this.inputJustificationValue || '');
     formData.append('ProposedContent', this.templateHtml || '');
     this.appendCabinetToFormData(formData);
 
