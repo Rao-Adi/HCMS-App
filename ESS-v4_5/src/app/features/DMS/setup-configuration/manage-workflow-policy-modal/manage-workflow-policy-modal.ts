@@ -168,7 +168,11 @@ export class ManageWorkflowPolicyModal {
       enableInlineAdd: this.canAdd,
       enableInlineEdit: this.canEdit,
       enableInlineDelete: this.canDelete,
-      serverSide: true,
+      // Client-side paging: the grid wrapper has no input for the server's total row count, so
+      // server-side mode only ever knew about the single page it had loaded ("1 to 10 of 10")
+      // and the pager could never reach the remaining policies. Load them all and let the grid
+      // page, sort, filter and search them itself.
+      serverSide: false,
       rowHeight: 47,
       headerHeight: 40,
       domLayout: 'autoHeight',
@@ -178,42 +182,11 @@ export class ManageWorkflowPolicyModal {
   }
 
   GetAllWorkflowPolicies(query: any = {}) {
-    const sort = query.sortModel?.[0];
-    const pageNumber = Number(query?.pageNumber) || 1;
-    const pageSize = Number(query?.pageSize) || this.pageSize;
-
-    const searchText = query?.searchText || query?.filterModel?.policyName?.filter || '';
-
-    // Map frontend column IDs to backend properties
-    let sortColumn = sort?.colId || 'Id';
-    const sortMapping: Record<string, string> = {
-      policyName: 'Name',
-      documentTypeId: 'DocumentType',
-      documentTypeName: 'DocumentType',
-      level1Id: 'Division',
-      divisionName: 'Division',
-      level2Id: 'Department',
-      departmentName: 'Department',
-      level3Id: 'SubDepartment',
-      subDepartmentName: 'SubDepartment',
-      level4Id: 'BusinessDomain',
-      businessDomainName: 'BusinessDomain',
-    };
-    if (sortMapping[sortColumn]) {
-      sortColumn = sortMapping[sortColumn];
-    }
-
+    // The grid is client-side (see buildGrid), so always fetch every active policy of this
+    // entity type; paging, sorting and filtering happen in the grid. Newest first.
     this.loading = true;
     this._workflowPolicyService
-      .GetAllWorkflowPolicies(
-        searchText,
-        sort?.sort?.toUpperCase() || 'DESC',
-        sortColumn,
-        true,
-        pageNumber,
-        pageSize,
-        this.modalData?.entityType,
-      )
+      .GetAllWorkflowPolicies('', 'DESC', 'Id', true, 1, 10000, this.modalData?.entityType)
       .subscribe({
         next: (res) => {
           const data = res?.Data;
@@ -246,12 +219,6 @@ export class ManageWorkflowPolicyModal {
               LastModifiedBy: item.LastModifiedBy,
             }));
 
-            // Jump grid to the exact required page so the newly padded data shows up
-            setTimeout(() => {
-              if (this.gridApi) {
-                this.gridApi.paginationGoToPage(pageNumber - 1);
-              }
-            }, 0);
           } else {
             this.workflowPoliciesData = [];
             this.totalRows = 0;

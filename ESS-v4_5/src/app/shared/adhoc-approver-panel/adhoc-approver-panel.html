@@ -1,0 +1,71 @@
+<!-- Shown only when this person's step allows adding an ad-hoc approver (decided by the server). -->
+<div class="adhoc-panel" *ngIf="canAddAdHoc">
+  <h3 class="PnlHeader" style="margin-top: 0">Add an ad-hoc approver (optional)</h3>
+  <div class="row align-items-end g-2">
+    <div class="col-lg-4 col-md-6 col-sm-12">
+      <app-employee-list
+        #adHocEmployeeList
+        [isMultiSelect]="false"
+        placeholder="Select approver"
+        width="100%"
+        [(ngModel)]="selectedAdHocEmployee"
+        [ngModelOptions]="{ standalone: true }"
+      ></app-employee-list>
+    </div>
+    <div class="col-auto">
+      <button
+        type="button"
+        class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+        [disabled]="!selectedAdHocEmployee"
+        (click)="addAdHoc()"
+      >
+        <i class="bi bi-plus-circle"></i> Add
+      </button>
+    </div>
+  </div>
+
+  <div class="adhoc-hint mt-2">
+    The new approver is placed right after you. Drag it (<i class="bi bi-grip-vertical"></i>) to move
+    it, or use <strong>Next</strong> / <strong>End</strong>. It takes effect when you approve.
+  </div>
+
+  <div class="adhoc-seq mt-2" cdkDropList (cdkDropListDropped)="dropAdHoc($event)">
+    <div
+      *ngFor="let row of sequence; let i = index"
+      class="adhoc-row"
+      cdkDrag
+      [cdkDragDisabled]="!row.isNew"
+      [class.is-new]="row.isNew"
+      [class.is-current]="row.isCurrent"
+    >
+      <span class="adhoc-handle" *ngIf="row.isNew" cdkDragHandle title="Drag to move">
+        <i class="bi bi-grip-vertical"></i>
+      </span>
+      <span class="adhoc-handle placeholder" *ngIf="!row.isNew"></span>
+      <span class="adhoc-no">{{ i + 1 }}</span>
+      <span class="adhoc-name">
+        {{ row.name }}
+        <small class="text-muted" *ngIf="row.designation"> – {{ row.designation }}</small>
+      </span>
+      <span class="adhoc-tag you" *ngIf="row.isCurrent">You</span>
+      <span class="adhoc-tag" *ngIf="row.isAdHoc && !row.isNew">Ad-hoc</span>
+      <span class="adhoc-tag new" *ngIf="row.isNew">New ad-hoc</span>
+      <span class="adhoc-actions" *ngIf="row.isNew">
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="moveToNext(row)">
+          Next
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="moveToEnd(row)">
+          End
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-danger"
+          title="Remove"
+          (click)="removeAdHoc(row)"
+        >
+          <i class="bi bi-trash"></i>
+        </button>
+      </span>
+    </div>
+  </div>
+</div>

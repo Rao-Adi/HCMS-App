@@ -57,10 +57,6 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
 export class DraftDocumentList implements OnInit {
   @ViewChild(AgGridWrapper) agGridWrapper!: AgGridWrapper;
   @ViewChild('fileInput') fileInput!: any;
-  // Reads its label from adHocEmployeeListRef.options -- see AddAdHocApprover, mirrored from
-  // create-update-document.ts's own picker.
-  @ViewChild('adHocEmployeeList') adHocEmployeeListRef?: EmployeeList;
-
   // Lets the parent (create-update-document.ts) refresh the "Document Draft" tab badge when a
   // draft is saved or submitted out of Draft status.
   @Output() draftDocumentChanged = new EventEmitter<void>();
@@ -95,80 +91,13 @@ export class DraftDocumentList implements OnInit {
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
 
-  // Workflow Authorities preview. approvalSequenceData is the policy-resolved chain, fetched the
-  // same way create-update-document.ts's own preview does. adHocApprovers is this document's
-  // ad-hoc approver, editable here the same way it is on Create/Update Document -- previously
-  // this screen only showed whatever get-carried-adhoc-approver returned, with no way to add one
-  // back. That mattered because SaveDocumentAsDraftAsync did not persist an ad-hoc approver
-  // picked on Create/Update Document, so one added there and then only Draft-saved (rather than
-  // submitted immediately) was silently lost, and this screen -- the only other place a reverted
-  // or still-drafted document can be resubmitted from -- had no control to add it back. Confirmed
-  // on IT-II-SOP-012: an ad-hoc approver picked at creation never made it into the workflow, and
-  // after the document was reverted this screen offered no way to add them for resubmission.
-  // loadCarriedAdHocApprover seeds this array from whatever's already persisted
-  // (DocumentAdHocApprovers); AddAdHocApprover/RemoveAdHocApprover edit it from there. Capped at
-  // exactly one entry, matching Create/Update Document's own confirmed scope.
+  // Workflow Authorities preview: the policy-resolved approval sequence. Ad-hoc approvers are no longer
+  // chosen here -- an approver whose step allows it adds them while approving.
   approvalSequenceData: any[] = [];
-  adHocApprovers: { EmployeeCode: string; EmployeeName: string; Role: string }[] = [];
-  selectedAdHocApprover: string = '';
   combinedWorkflowAuthorities: any[] = [];
 
   private rebuildCombinedWorkflowAuthorities(): void {
-    const policySteps = this.approvalSequenceData || [];
-    const adHocSteps = (this.adHocApprovers || []).map((a, idx) => ({
-      StepOrder: policySteps.length + idx + 1,
-      EmployeeCode: a.EmployeeCode,
-      EmployeeName: a.EmployeeName,
-      UserRole: a.Role,
-    }));
-    this.combinedWorkflowAuthorities = [...policySteps, ...adHocSteps];
-  }
-
-  // Mirrors create-update-document.ts's own AddAdHocApprover.
-  AddAdHocApprover(): void {
-    if (!this.selectedAdHocApprover) {
-      this._notificationToastService.createNotification(
-        'warning',
-        'Validation',
-        'Please select an approver.',
-      );
-      return;
-    }
-    if (this.adHocApprovers.length > 0) {
-      return;
-    }
-
-    const opt = this.adHocEmployeeListRef?.options.find(
-      (o) => o.value === this.selectedAdHocApprover,
-    );
-    const name = opt?.label ? opt.label.replace(/\s*\([^)]*\)\s*$/, '') : this.selectedAdHocApprover;
-    const employeeCode = this.selectedAdHocApprover;
-    this.adHocApprovers.push({
-      EmployeeCode: employeeCode,
-      EmployeeName: name,
-      Role: 'Ad-hoc Approver',
-    });
-    this.rebuildCombinedWorkflowAuthorities();
-    this.selectedAdHocApprover = '';
-
-    this._peoplePartnerService.GetEmployeeRoleByCode(employeeCode).subscribe({
-      next: (res) => {
-        const role = res?.Data;
-        if (!role) return;
-        const entry = this.adHocApprovers.find((a) => a.EmployeeCode === employeeCode);
-        if (entry) {
-          entry.Role = role;
-          this.adHocApprovers = [...this.adHocApprovers];
-          this.rebuildCombinedWorkflowAuthorities();
-        }
-      },
-      error: () => {},
-    });
-  }
-
-  RemoveAdHocApprover(index: number): void {
-    this.adHocApprovers.splice(index, 1);
-    this.rebuildCombinedWorkflowAuthorities();
+    this.combinedWorkflowAuthorities = [...(this.approvalSequenceData || [])];
   }
 
   // Training Users -- editable here, same as on Create/Update Document. Previously this panel
@@ -565,8 +494,6 @@ export class DraftDocumentList implements OnInit {
     this.selectedUser = [];
     this.users = [];
     this.approvalSequenceData = [];
-    this.adHocApprovers = [];
-    this.selectedAdHocApprover = '';
     this.combinedWorkflowAuthorities = [];
     this.pendingDetailLoads = 0;
     this.loadingDetail = false;
@@ -759,9 +686,6 @@ export class DraftDocumentList implements OnInit {
     this.pendingDetailLoads++;
     this.loadWorkflowAuthorities(this.selectedDocumentTypeCode);
 
-    this.pendingDetailLoads++;
-    this.loadCarriedAdHocApprover(row.Id);
-
     if (this.pendingDetailLoads === 0) {
       this.loadingDetail = false;
     }
@@ -882,34 +806,6 @@ export class DraftDocumentList implements OnInit {
       },
       error: () => {
         this.approvalSequenceData = [];
-        this.rebuildCombinedWorkflowAuthorities();
-        this.finishDetailLoad();
-      },
-    });
-  }
-
-  // Seeds adHocApprovers from whatever this document already has persisted (DocumentAdHocApprovers,
-  // via get-carried-adhoc-approver) -- either a prior execution's ad-hoc step, or one picked on
-  // Create/Update Document and only Draft-saved since. AddAdHocApprover/RemoveAdHocApprover edit
-  // it from there, same as on Create/Update Document.
-  private loadCarriedAdHocApprover(documentId: number): void {
-    this.adHocApprovers = [];
-    if (!documentId) {
-      this.rebuildCombinedWorkflowAuthorities();
-      this.finishDetailLoad();
-      return;
-    }
-    this._documentService.getCarriedAdHocApprover(documentId).subscribe({
-      next: (res) => {
-        const carried = res?.Data;
-        this.adHocApprovers = carried
-          ? [{ EmployeeCode: carried.EmployeeCode, EmployeeName: carried.EmployeeName, Role: carried.Role }]
-          : [];
-        this.rebuildCombinedWorkflowAuthorities();
-        this.finishDetailLoad();
-      },
-      error: () => {
-        this.adHocApprovers = [];
         this.rebuildCombinedWorkflowAuthorities();
         this.finishDetailLoad();
       },
@@ -1151,16 +1047,6 @@ export class DraftDocumentList implements OnInit {
       };
     });
 
-    // employeecode only, matching create-update-document.ts's own buildDocumentFormData -- the
-    // backend re-resolves everything else (active check, responsibility transfer, job Role) at
-    // Draft-save/Submit time. Sending this.adHocApprovers explicitly (rather than always []) is
-    // what lets an ad-hoc approver added or removed here actually take effect -- previously this
-    // screen hardcoded an empty list, relying entirely on the backend's own carry-over, which
-    // could not restore one that had never made it into a workflow execution in the first place.
-    const adHocApprovers = (this.adHocApprovers || []).map((a) => ({
-      employeecode: a.EmployeeCode,
-    }));
-
     const formData = new FormData();
     formData.append('documentid', String(this.documentId || 0));
     formData.append('documenttypecode', this.selectedDocumentTypeCode || '');
@@ -1174,7 +1060,6 @@ export class DraftDocumentList implements OnInit {
     formData.append('userids', JSON.stringify(userIds));
     formData.append('attributes', JSON.stringify(attributes));
     formData.append('trainingusers', JSON.stringify(trainingUsers));
-    formData.append('adhocapprovers', JSON.stringify(adHocApprovers));
 
     if (this.draftFile) {
       formData.append('DocumentFile', this.draftFile, this.draftFile.name);

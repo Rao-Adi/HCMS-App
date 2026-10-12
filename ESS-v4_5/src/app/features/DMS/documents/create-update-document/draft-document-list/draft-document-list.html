@@ -410,41 +410,7 @@
         </div>
       </div>
 
-      <!-- Ad-hoc Approver Card: this-document-only, mirrors Create/Update Document's own card.
-           Needed here (not just as a preview) so an approver picked at creation and then only
-           Draft-saved -- which never made it into the workflow, since SaveDocumentAsDraftAsync
-           did not persist it until DocumentAdHocApprovers was added -- can be added back before
-           resubmitting. See AddAdHocApprover/RemoveAdHocApprover. -->
-      <div class="row-space">
-        <div class="status-box-leftColmd6-standard mb-4">
-          <h3 class="PnlHeader" style="margin-top: 0">Additional Approver (This Document Only)</h3>
-          <div class="row mb-2 align-items-end">
-            <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
-              <app-employee-list
-                #adHocEmployeeList
-                [isMultiSelect]="false"
-                placeholder="Select Approver"
-                width="100%"
-                [(ngModel)]="selectedAdHocApprover"
-              ></app-employee-list>
-            </div>
-            <div class="col-lg-2 col-md-3 col-sm-12 mb-10">
-              <button
-                type="button"
-                class="btn btn-sm btn-primary adhoc-add-btn d-inline-flex align-items-center justify-content-center gap-1"
-                (click)="AddAdHocApprover()"
-                [disabled]="adHocApprovers.length > 0"
-              >
-                <i class="bi bi-plus-circle"></i> Add
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Workflow Authorities -- policy-defined steps plus the ad-hoc approver above, merged
-           (see combinedWorkflowAuthorities), matching what SubmitDocumentAsync will actually
-           build. -->
+      <!-- Workflow Authorities -- the approval sequence this document will follow. -->
       <div class="row-space" *ngIf="combinedWorkflowAuthorities.length > 0">
         <div class="status-box-leftColmd6-standard">
           <h3 class="PnlHeader">Workflow Authorities</h3>
@@ -456,7 +422,6 @@
                   <th>Employee Code</th>
                   <th>Employee Name</th>
                   <th>Role</th>
-                  <th></th>
                 </thead>
                 <tbody>
                   @for (
@@ -469,16 +434,6 @@
                       <td>{{ item.EmployeeCode }}</td>
                       <td>{{ item.EmployeeName }}</td>
                       <td>{{ item.UserRole }}</td>
-                      <td>
-                        @if (adHocApprovers.length > 0 && i === combinedWorkflowAuthorities.length - 1) {
-                          <i
-                            class="bi bi-trash text-danger"
-                            style="cursor: pointer"
-                            title="Remove"
-                            (click)="RemoveAdHocApprover(0)"
-                          ></i>
-                        }
-                      </td>
                     </tr>
                   }
                 </tbody>

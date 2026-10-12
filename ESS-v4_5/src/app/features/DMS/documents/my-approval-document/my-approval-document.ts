@@ -37,6 +37,7 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { AdHocApproverPanel, AdHocPlacement } from '@app/shared/adhoc-approver-panel/adhoc-approver-panel';
 
 // WorkflowExecutions.Status as stored, translated into what the business calls it. 'Reworked' is
 // the stored value for a revert; nothing user-facing has ever called it that. 'Completed' means
@@ -72,6 +73,7 @@ const MY_APPROVAL_STATUS_CLASSES: Record<string, string> = {
     AgGridWrapper,
     DynamicFormByDocumentAttribute,
     NzModalModule,
+    AdHocApproverPanel,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -859,11 +861,34 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       if (!isApprove && (!result.observation || result.observation.trim() === '')) {
         return;
       }
-      this.submitWorkflowAction(action, result.observation || '');
+      this.submitWorkflowAction(action, result.observation || '', this.adHocPlacements);
     });
   }
 
-  submitWorkflowAction(action: string, observation: string) {
+  // The ad-hoc panel (under Filters) is only for ONE document's workflow, so it follows the single
+  // Pending row selected -- or, with nothing selected, the only Pending document the approver has, so it
+  // is already on screen when they arrive, before they click anything. With several pending documents it
+  // waits for one to be selected. It shows itself only if the server says this approver may add one.
+  get adHocExecutionId(): number {
+    if (this.selectedTab !== 'Pending') return 0;
+    if (this.selectedRows.length === 1) return Number(this.executionId) || 0;
+    if (this.selectedRows.length === 0 && this.documentRequestsData.length === 1) {
+      return Number(this.documentRequestsData[0]?.ExecutionId) || 0;
+    }
+    return 0;
+  }
+
+  // What the panel currently holds; sent with the Approve call.
+  adHocPlacements: AdHocPlacement[] = [];
+
+  // Held for the duration of the (sequential) action run; cleared when it finishes.
+  private pendingAdHocApprovers: AdHocPlacement[] = [];
+
+  submitWorkflowAction(
+    action: string,
+    observation: string,
+    adHocApprovers: { EmployeeCode: string; InsertAfterStepId: number }[] = [],
+  ) {
     if (action !== 'Approve' && (!observation || observation.trim() === '')) {
       this._notificationToastService.createNotification(
         'error',
@@ -874,6 +899,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     }
 
     const targets = this.collectWorkflowTargets();
+    this.pendingAdHocApprovers = targets.length === 1 ? adHocApprovers : [];
 
     this.runWorkflowActions(action, observation, targets, 0, {
       ok: 0,
@@ -920,7 +946,11 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       empid: this.loginEmpId,
     };
 
-    if (action === 'Approve') return this._documentService.approveDocument(payLoad);
+    if (action === 'Approve')
+      return this._documentService.approveDocument({
+        ...payLoad,
+        adHocApprovers: this.pendingAdHocApprovers,
+      });
     if (action === 'Rejected') return this._documentService.rejectDocument(payLoad);
     if (action === 'Rework') return this._documentService.revertDocument(payLoad);
     return null;
@@ -981,6 +1011,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     targets: { documentid: number; executionid: number; name: string }[],
     summary: { ok: number; failed: string[]; lastMessage: string },
   ): void {
+    this.pendingAdHocApprovers = [];
     if (summary.ok > 0) {
       this._notificationToastService.createNotification(
         'success',

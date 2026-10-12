@@ -103,6 +103,9 @@ export class ApprovalWorkflowPolicyManagement {
 
   selectedTab: string = 'RequestForDocumentCreation';
   switchValue1 = false;
+  // "Can add ad-hoc approver" for the authorities about to be added with the + button. Stored per step,
+  // so it is chosen when the authority is defined and can be changed later in the sequence table.
+  canAddAdHocForNew = false;
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
@@ -227,6 +230,23 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedSubDepartment = '';
   }
 
+  // The Request policy has no approval dialog that offers it; the document and revision/obsoletion
+  // policies do (see ApproveDocumentAsync).
+  get adHocApplicable(): boolean {
+    return this.selectedPolicyId !== PolicyId.RequestForDocumentCreation;
+  }
+
+  // The ad-hoc permission belongs to a step added as a specific Employee, not to Role/Designation steps.
+  isEmployeeStep(item: any): boolean {
+    return !item?.RoleId && !item?.DesignationId;
+  }
+
+  // Re-saves the sequence so the checkbox ticked on a row is stored. The sequence is rewritten as a
+  // whole, so every step's flag is sent along with its position (see saveUpdatedSequence).
+  onAdHocFlagChange(): void {
+    this.saveUpdatedSequence();
+  }
+
   clickSwitch(): void {
     if (this.loading) return;
 
@@ -295,6 +315,8 @@ export class ApprovalWorkflowPolicyManagement {
       CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
       RequireCrossFunctionalHead: false,
       IsParallelApproval: this.switchValue1,
+      CanAddAdHocApprover:
+        this.adHocApplicable && this.selectedAuthorityType == 2 && this.canAddAdHocForNew,
     };
 
     this._workflowStepService.create(payLoad).subscribe({
@@ -332,6 +354,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedAuthorityType = null;
     this.selectedWorkflowExclude = null;
     this.approvalPolicy = null;
+    this.canAddAdHocForNew = false;
     this.selectedEmployeeSingle = null;
     this.selectedDesignationSingle = null;
     this.selectedRoleSingle = null;
@@ -363,6 +386,7 @@ export class ApprovalWorkflowPolicyManagement {
     this.selectedAuthorityType = null;
     this.selectedWorkflowExclude = null;
     this.approvalPolicy = null;
+    this.canAddAdHocForNew = false;
     this.selectedEmployeeSingle = null;
     this.selectedDesignationSingle = null;
     this.selectedRoleSingle = null;
@@ -556,6 +580,7 @@ export class ApprovalWorkflowPolicyManagement {
         designationid: item.DesignationId || 0,
         userid: item.EmployeeCode || item.UserId?.toString() || '',
         requiresallapprovals: item.RequiresAllApprovals || false,
+        canaddadhocapprover: this.isEmployeeStep(item) && !!item.CanAddAdHocApprover,
       })),
     };
 

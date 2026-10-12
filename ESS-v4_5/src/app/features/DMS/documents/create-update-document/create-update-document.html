@@ -204,48 +204,10 @@
 
                 <!-- Request Profile & Attributes Card -->
                 <div class="status-box-leftColmd6-standard mb-4">
-                  <h3 class="PnlHeader" style="margin-top: 0">Request & Document Attributes</h3>
+                  <h3 class="PnlHeader" style="margin-top: 0">Document Attributes</h3>
 
                   <div class="row mb-4" *ngIf="selectedRequestType === 'DRT-0001'">
-                    <div class="col-lg-12 mb-10">
-                      <nz-radio-group
-                        [(ngModel)]="creationMode"
-                        (ngModelChange)="onCreationModeChange()"
-                      >
-                        <label
-                          nz-radio
-                          nzValue="request"
-                          [nzDisabled]="requestIds.length === 0"
-                          [title]="requestIds.length === 0 ? 'No approved requests available for this Document Type' : ''"
-                          >Use an Approved Request</label
-                        >
-                        <label nz-radio nzValue="direct">Create Document Directly</label>
-                      </nz-radio-group>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10" *ngIf="creationMode === 'request'">
-                      <div class="PnlHeading">
-                        <label>{{ 'labels.Request ID' | safeTranslate }} </label>
-                      </div>
-                      <div>
-                        <nz-select
-                          style="width: 100%; max-width: 250px"
-                          [(ngModel)]="selectedRequestId"
-                          nzPlaceHolder="Select Request ID"
-                          (ngModelChange)="onRequestIdChange($event)"
-                          [nzDisabled]="requestIds.length === 0"
-                          nzAllowClear
-                          nzShowSearch
-                        >
-                          <nz-option
-                            *ngFor="let dep of requestIds"
-                            [nzValue]="dep.id"
-                            [nzLabel]="dep.text"
-                          >
-                          </nz-option>
-                        </nz-select>
-                      </div>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10" *ngIf="creationMode === 'direct'">
+                    <div class="col-lg-3 col-md-4 col-sm-12 mb-10">
                       <div class="PnlHeading">
                         <label>Document Name</label>
                       </div>
@@ -861,45 +823,7 @@
                     </div>
                   </div>
                 </div>
-                <!-- Ad-hoc Approver Card: this-document-only, never saved to the reusable
-                     Workflow Policy config. Once added it shows up directly in the Workflow
-                     Authorities table below (see combinedWorkflowAuthorities) -- no separate
-                     results table here, to avoid showing the same approver twice. -->
-                <div class="status-box-leftColmd6-standard mb-4">
-                  <h3 class="PnlHeader" style="margin-top: 0">
-                    Additional Approver (This Document Only)
-                  </h3>
-                  <!-- align-items-end bottom-aligns the two columns; adhoc-add-btn (see the
-                       component stylesheet) is what actually lines the button up with the select,
-                       by undoing the full-width and 7px bottom margin the global .btn rule puts on
-                       every button. Without it the two columns lined up correctly while the button
-                       floated 7px above its own column's bottom edge. -->
-                  <div class="row mb-2 align-items-end">
-                    <div class="col-lg-4 col-md-5 col-sm-12 mb-10">
-                      <app-employee-list
-                        #adHocEmployeeList
-                        [isMultiSelect]="false"
-                        placeholder="Select Approver"
-                        width="100%"
-                        [(ngModel)]="selectedAdHocApprover"
-                      ></app-employee-list>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-sm-12 mb-10">
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-primary adhoc-add-btn d-inline-flex align-items-center justify-content-center gap-1"
-                        (click)="AddAdHocApprover()"
-                        [disabled]="adHocApprovers.length > 0"
-                      >
-                        <i class="bi bi-plus-circle"></i> Add
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Workflow Authorities Card -- policy-defined steps plus any ad-hoc approver,
-                     merged (see combinedWorkflowAuthorities), so this preview matches exactly
-                     what SubmitDocumentAsync will actually build. -->
+                <!-- Workflow Authorities Card -- the approval sequence this document will follow. -->
                 <div
                   *ngIf="showExclusionTable && combinedWorkflowAuthorities.length > 0"
                   class="status-box-leftColmd6-standard mb-4"
@@ -916,7 +840,6 @@
                             <th>Employee Code</th>
                             <th>Employee Name</th>
                             <th>Role</th>
-                            <th></th>
                           </thead>
                           <tbody>
                             @for (
@@ -928,16 +851,6 @@
                                 <td>{{ item.EmployeeCode }}</td>
                                 <td>{{ item.EmployeeName }}</td>
                                 <td>{{ item.UserRole }}</td>
-                                <td>
-                                  @if (item.UserRole === 'Ad-hoc Approver') {
-                                    <i
-                                      class="bi bi-trash text-danger"
-                                      style="cursor: pointer"
-                                      title="Remove"
-                                      (click)="RemoveAdHocApprover(0)"
-                                    ></i>
-                                  }
-                                </td>
                               </tr>
                             }
                           </tbody>

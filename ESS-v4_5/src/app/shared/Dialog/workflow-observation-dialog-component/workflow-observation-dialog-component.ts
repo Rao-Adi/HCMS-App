@@ -25,7 +25,12 @@ export interface WorkflowObservationDialogData {
 
 @Component({
   selector: 'app-workflow-observation-dialog-component',
-  imports: [FormsModule, CommonModule, NgxEditorModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    FormsModule,
+    CommonModule,
+    NgxEditorModule,
+    ReactiveFormsModule,
+  ],
   templateUrl: './workflow-observation-dialog-component.html',
   styleUrl: './workflow-observation-dialog-component.css',
 })

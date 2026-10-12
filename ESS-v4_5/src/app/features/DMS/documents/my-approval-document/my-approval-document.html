@@ -30,6 +30,11 @@
           </div>
         </div>
       </div>
+      <!-- Renders nothing unless the approver this document is with may add an ad-hoc approver. -->
+      <app-adhoc-approver-panel
+        [executionId]="adHocExecutionId"
+        (placementsChange)="adHocPlacements = $event"
+      ></app-adhoc-approver-panel>
       <div class="status-box-leftColmd6-standard">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="main-content d-flex flex-column min-vw-0">

@@ -230,6 +230,10 @@ export const routes: Routes = [
       // page for the private (guarded) section.
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 
+      // DataService navigates to '/error' when an API call fails; no such page exists,
+      // so send the user back to the dashboard instead of showing a 404.
+      { path: 'error', redirectTo: 'dashboard', pathMatch: 'full' },
+
       // ⬇️ Private 404 (no redirect; preserves original bad URL)
       {
         path: '**',

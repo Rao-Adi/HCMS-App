@@ -9,7 +9,6 @@ import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import {
   CabinetSelection,
@@ -72,7 +71,6 @@ interface RequestType {
     AgGridWrapper,
     NzIconModule,
     NzSwitchModule,
-    NzRadioModule,
     NzButtonModule,
     NzDatePickerModule,
     DocumentTypeList,
@@ -177,10 +175,10 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   approvalSequenceData: any[] = [];
   trainingUsersData: any[] = [];
 
-  // "Use an Approved Request" vs "Create Document Directly" (DRT-0001 only) -- defaults to
-  // 'request' so existing users see no change in default behavior. See isSubmitDisabled and
-  // SubmiteDocument() for how each mode is gated/submitted differently.
-  creationMode: 'request' | 'direct' = 'request';
+  // A new document (DRT-0001) is always created directly -- there is no approved-request step for
+  // creation any more, so the screen no longer offers a choice. The 'request' value is only kept for
+  // the legacy branches below that still read it.
+  creationMode: 'request' | 'direct' = 'direct';
 
   // Justification / Document Users / Distribution List -- only used in 'direct' mode. The
   // 'request' path never needs these here: they were already captured when the Request itself
@@ -192,18 +190,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   private loadedRowKey = '';
   distributionListPayload: any[] = [];
   distributionUserList: any[] = [];
-
-  // This-document-only approver, appended after the policy-resolved workflow sequence at submit
-  // time (never persisted to the reusable WorkflowPolicies/WorkflowStepDefinitions config).
-  // Capped at exactly one entry -- see AddAdHocApprover.
-  selectedAdHocApprover: string = '';
-  adHocApprovers: { EmployeeCode: string; EmployeeName: string; Role: string }[] = [];
-  // Reads its label from adHocEmployeeListRef.options (the SAME data app-employee-list already
-  // fetched for its own dropdown) instead of this component doing its own separate
-  // GetEmployeeList() call -- an earlier version did that, and doing the full employee-list
-  // fetch+sort a second time on top of app-employee-list's own internal one was the actual cause
-  // of the reported UI hang when opening this picker.
-  @ViewChild('adHocEmployeeList') adHocEmployeeListRef?: EmployeeList;
 
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
@@ -562,34 +548,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     return null;
   }
 
-  // "Workflow Authorities" preview merged with the this-document-only ad-hoc approver(s), so the
-  // sequence shown here matches what SubmitDocumentAsync will actually build (policy-defined
-  // steps first, ad-hoc appended after -- see EnsureAdHocApproverStepDefinitionAsync). Built as a
-  // getter (not copied into a stored field) so it re-evaluates automatically whenever
-  // approvalSequenceData is re-fetched or adHocApprovers changes, with no extra wiring needed.
-  // Policy steps plus any ad-hoc approvers, as one list for the Workflow Authorities table.
-  //
-  // This is a plain field, rebuilt only when one of its two inputs changes -- deliberately NOT a
-  // getter. As a getter it returned a freshly spread array on every call, and the template binds
-  // it twice (the *ngIf and the @for). Every change-detection pass therefore built new arrays and
-  // made @for re-diff a collection it had no way to recognise as unchanged -- doubled again by
-  // dev mode running each pass twice to verify stability. With a keystroke in any field on this
-  // page triggering that cycle, typing had become unusable (measured ~5s per keystroke).
+  // Workflow Authorities preview: the policy-resolved approval sequence. Ad-hoc approvers are no longer
+  // chosen here -- an approver whose step allows it adds them while approving.
   combinedWorkflowAuthorities: any[] = [];
 
   private rebuildCombinedWorkflowAuthorities(): void {
-    const policySteps = this.approvalSequenceData || [];
-    const adHocSteps = (this.adHocApprovers || []).map((a, idx) => ({
-      StepOrder: policySteps.length + idx + 1,
-      EmployeeCode: a.EmployeeCode,
-      EmployeeName: a.EmployeeName,
-      // The approver's actual job Role, resolved in AddAdHocApprover -- matches what this same
-      // person's Role will show once the document is submitted (backend resolves it identically
-      // in EnsureAdHocApproverStepDefinitionAsync), instead of a generic "Ad-hoc Approver" label
-      // that said nothing about who they actually are.
-      UserRole: a.Role,
-    }));
-    this.combinedWorkflowAuthorities = [...policySteps, ...adHocSteps];
+    this.combinedWorkflowAuthorities = [...(this.approvalSequenceData || [])];
   }
 
   // A rich-text editor with no real user content can still carry Quill's empty-state markup
@@ -855,7 +819,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       this.lastLoadedAttributesDocumentType = value;
       this.CheckTrainingPolicy(value);
       this.GetDocumentAttributes(value);
-      this.GetAllApprovedRequests();
       this.loadWorkflowAuthorities(this.selectedDocumentType);
       this.GetDocumentReviewPolicy();
       this.GetTemplate(this.selectedDocumentType);
@@ -1200,8 +1163,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.selectedDepartment = values.find((v) => v.level === 2)?.value ?? null;
     this.selectedSubDepartment = values.find((v) => v.level === 3)?.value ?? null;
     this.selectedBusinessDomain = values.find((v) => v.level === 4)?.value ?? null;
-    this.GetAllApprovedRequests();
-
     if (this.selectedDocumentType) {
       this.loadWorkflowAuthorities(this.selectedDocumentType);
     }
@@ -1313,63 +1274,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.trainingUsersData.splice(index, 1);
   }
 
-  // This-document-only approver, appended after the policy-resolved workflow sequence at submit
-  // time -- see SubmiteDocument()'s adhocapprovers payload. Capped at exactly one entry (per
-  // confirmed scope); the Add button is disabled once one exists (see the template), and
-  // RemoveAdHocApprover exists specifically so a mis-pick doesn't trap the user under that cap.
-  AddAdHocApprover(): void {
-    if (!this.selectedAdHocApprover) {
-      this._notificationToastService.createNotification(
-        'warning',
-        'Validation',
-        'Please select an approver.',
-      );
-      return;
-    }
-    if (this.adHocApprovers.length > 0) {
-      return;
-    }
-
-    // options labels are "Name (Code)" (see EmployeeList.getAllUsersList) -- strip the trailing
-    // " (Code)" back off for a clean display name.
-    const opt = this.adHocEmployeeListRef?.options.find((o) => o.value === this.selectedAdHocApprover);
-    const name = opt?.label ? opt.label.replace(/\s*\([^)]*\)\s*$/, '') : this.selectedAdHocApprover;
-    const employeeCode = this.selectedAdHocApprover;
-    this.adHocApprovers.push({
-      EmployeeCode: employeeCode,
-      EmployeeName: name,
-      // Placeholder until the actual lookup below resolves.
-      Role: 'Ad-hoc Approver',
-    });
-    this.rebuildCombinedWorkflowAuthorities();
-    this.selectedAdHocApprover = '';
-
-    // Resolved separately (not blocking the Add click) so the Workflow Authorities preview
-    // shows this person's actual job Role -- matches what the backend resolves identically at
-    // submit time (DocumentComponent.EnsureAdHocApproverStepDefinitionAsync), instead of the
-    // generic "Ad-hoc Approver" label that said nothing about who they actually are.
-    this._peoplePartnerService.GetEmployeeRoleByCode(employeeCode).subscribe({
-      next: (res) => {
-        const role = res?.Data;
-        if (!role) return;
-        const entry = this.adHocApprovers.find((a) => a.EmployeeCode === employeeCode);
-        if (entry) {
-          entry.Role = role;
-          this.adHocApprovers = [...this.adHocApprovers];
-          this.rebuildCombinedWorkflowAuthorities();
-        }
-      },
-      // Leave the placeholder Role in place on failure -- this preview cell just stays less
-      // precise; nothing about actually submitting the document depends on this lookup.
-      error: () => {},
-    });
-  }
-
-  RemoveAdHocApprover(index: number): void {
-    this.adHocApprovers.splice(index, 1);
-    this.rebuildCombinedWorkflowAuthorities();
-  }
-
   // Shared by SubmiteDocument and SaveAsDraft -- both send the exact same multipart payload and
   // differ only in which endpoint receives it (submit-document kicks off the approval workflow,
   // save-document-as-draft doesn't).
@@ -1385,14 +1289,9 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       };
     });
 
-    const adHocApprovers = (this.adHocApprovers || []).map((a) => ({
-      employeecode: a.EmployeeCode,
-    }));
-
     const payLoad: any = {
       attributes: attributeValues,
       trainingusers: trainingUsers,
-      adhocapprovers: adHocApprovers,
     };
 
     // "Create Document Directly" (creationMode === 'direct', DRT-0001) and a direct
@@ -1463,7 +1362,6 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         key === 'trainingusers' ||
         key === 'TrainingUsers' ||
         key === 'attributes' ||
-        key === 'adhocapprovers' ||
         key === 'distributionlist' ||
         key === 'userids'
       ) {
@@ -2096,10 +1994,8 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.selectedTrainingMode = '';
     this.selectedRole = '';
     this.selectedUser = [];
-    this.creationMode = 'request';
-    this.adHocApprovers = [];
+    this.creationMode = 'direct';
     this.rebuildCombinedWorkflowAuthorities();
-    this.selectedAdHocApprover = '';
     this.justification = '';
     this.distributionListPayload = [];
     this.distributionUserList = [];

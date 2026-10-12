@@ -1,0 +1,103 @@
+:host {
+  display: block;
+}
+
+.adhoc-panel {
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #f8fbff;
+  margin-bottom: 16px;
+}
+
+.adhoc-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.adhoc-seq {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.adhoc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f1f4;
+  background: #fff;
+}
+
+.adhoc-row:last-child {
+  border-bottom: 0;
+}
+
+.adhoc-row.is-current {
+  background: #eef4ff;
+}
+
+.adhoc-row.is-new {
+  background: #fffaf0;
+}
+
+.adhoc-handle {
+  cursor: grab;
+  color: #9ca3af;
+  width: 16px;
+}
+
+.adhoc-handle.placeholder {
+  cursor: default;
+}
+
+.adhoc-no {
+  width: 22px;
+  text-align: right;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.adhoc-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.adhoc-tag {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #4b5563;
+}
+
+.adhoc-tag.you {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.adhoc-tag.new {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.adhoc-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  background: #fff;
+  border-radius: 6px;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}

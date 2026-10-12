@@ -206,11 +206,10 @@ export class DocumentService {
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
-  // The ad-hoc approver carried over from before a document was reverted, if there is one -- for
-  // the Draft/Reverted Documents tab's Workflow Authorities preview. Returns Data: null when the
-  // document has never had one.
-  getCarriedAdHocApprover(documentId: number): Observable<ApiResponse<any>> {
-    const uri = `${this.apiUrl}/DMSDocument/get-carried-adhoc-approver/${documentId}`;
+  // For the approval dialog: may the signed-in approver add an ad-hoc approver on this workflow right
+  // now, and what is the remaining sequence (their own step first) so they can pick a position.
+  getAdHocOptions(executionId: number): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-adhoc-options/${executionId}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

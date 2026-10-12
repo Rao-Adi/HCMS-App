@@ -295,6 +295,21 @@
                           </nz-option>
                         </nz-select>
                       </div>
+
+                      <!-- Stored on the authority added with the + button. That approver may then, while
+                           approving, add an ad-hoc approver to the rest of the sequence and choose where
+                           they go. Only for an Employee authority, and not for the Request policy. -->
+                      <div class="d-flex align-items-center gap-2 mt-3" *ngIf="adHocApplicable">
+                        <input
+                          class="form-check-input m-0"
+                          type="checkbox"
+                          id="canAddAdHocForNew"
+                          [(ngModel)]="canAddAdHocForNew"
+                        />
+                        <label class="ctrllbl mb-0" for="canAddAdHocForNew">
+                          Can add an ad-hoc approver while approving
+                        </label>
+                      </div>
                     </div>
                   </ng-container>
 
@@ -414,6 +429,9 @@
                 <thead>
                   <th>Approval Sequence</th>
                   <th>Details</th>
+                  <th *ngIf="adHocApplicable" title="This approver may add an ad-hoc approver while approving">
+                    Can add ad-hoc approver
+                  </th>
                   <th>Action</th>
                 </thead>
                 <tbody cdkDropList (cdkDropListDropped)="drop($event)">
@@ -432,6 +450,17 @@
                         {{ item.EmployeeName }}<br />
                         <strong>Role:</strong> {{ item.UserRole }}<br />
                         <strong>Designation:</strong> {{ item.Designation }}
+                      </td>
+                      <td *ngIf="adHocApplicable" class="text-center">
+                        <input
+                          *ngIf="isEmployeeStep(item)"
+                          class="form-check-input"
+                          type="checkbox"
+                          [(ngModel)]="item.CanAddAdHocApprover"
+                          (ngModelChange)="onAdHocFlagChange()"
+                          [disabled]="!canEdit"
+                          title="Can add an ad-hoc approver while approving"
+                        />
                       </td>
                       <td>
                         <button
