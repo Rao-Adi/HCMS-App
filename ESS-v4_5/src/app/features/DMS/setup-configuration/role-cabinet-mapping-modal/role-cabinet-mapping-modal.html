@@ -1,0 +1,22 @@
+<div style="position: relative">
+  <p class="text-muted mb-3" style="font-size: 13px">
+    Map a People Partners Role to a DMS Cabinet. Division is required; Department, Sub-Department and
+    Business Domain are optional &mdash; leave them blank for <strong>All</strong>.
+  </p>
+  <app-editable-ag-grid-wrapper
+    *ngIf="gridConfig.columns"
+    [gridStyle]="{ width: '100%', height: '500px' }"
+    class="ag-theme-alpine"
+    [gridId]="'role-cabinet-mapping-grid'"
+    [autoSizeColumns]="true"
+    [config]="gridConfig"
+    [rowData]="mappingsData"
+    [pinnedTopRowData]="pinnedTopRowData"
+    [isSelectionRequired]="true"
+    (rowAdded)="onRowAdded($event)"
+    (rowUpdated)="onRowUpdated($event)"
+    (rowDeleted)="onRowDeleted($event)"
+  >
+  </app-editable-ag-grid-wrapper>
+  <app-spinner *ngIf="loading"></app-spinner>
+</div>

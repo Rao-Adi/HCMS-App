@@ -71,6 +71,12 @@ export interface GridColumn<T = any> {
   // dropdownDisplayField?: string;
 
   dropdownOptions?: T[];
+  // Options that depend on the row being edited (e.g. a Role limited to the row's Cabinet). When set,
+  // it is asked for the options every time the cell renders; dropdownOptions is still what a saved
+  // row's value is shown against.
+  dropdownOptionsForRow?: (rowData: any) => T[];
+  // Fields whose change clears this column's value, because its options depend on them.
+  clearWhenChanged?: string[];
   dropdownValueField?: keyof T;
   dropdownDisplayField?: keyof T;
   showSearch?: boolean; // Allows enabling/disabling search per column
@@ -117,6 +123,9 @@ export interface GridColumn<T = any> {
 export interface GridConfig {
   columns: GridColumn[];
   enablePagination?: boolean;
+  // Keeps paging underneath but does not draw the page-size / page-number bar. With a page size larger
+  // than the data the grid shows every row on one page and looks unpaged.
+  hidePaginationPanel?: boolean;
   pageSize?: number;
   pageSizeOptions?: number[];
   enableSorting?: boolean;
@@ -544,7 +553,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
             return {
               component: column.customRenderer || rendererComponent,
               params: {
-                options: column.dropdownOptions || [],
+                options: column.dropdownOptionsForRow
+                  ? column.dropdownOptionsForRow(params.data)
+                  : column.dropdownOptions || [],
                 value: params.data?.[column.field], // ← ID (1)
                 valueField: column.dropdownValueField, // 'id'
                 displayField: column.dropdownDisplayField, // 'text'
@@ -575,6 +586,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
 
                   // 2️⃣ Clear children
                   this.clearDependentFields(data, column.field);
+                  this.config.columns
+                    .filter((c) => c.clearWhenChanged?.includes(column.field))
+                    .forEach((c) => (data[c.field] = null));
 
                   // 3️⃣ FORCE REFRESH ROW (🔥 REQUIRED)
                   params.api.refreshCells({

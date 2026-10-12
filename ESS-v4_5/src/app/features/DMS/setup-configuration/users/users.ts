@@ -3,11 +3,12 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { ManualManageEmployee } from './manual-manage-employee/manual-manage-employee';
 import { PeoplePartnersEmployee } from './people-partners-employee/people-partners-employee';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
+import { RoleCabinetMappingModal } from '../role-cabinet-mapping-modal/role-cabinet-mapping-modal';
 
 @Component({
   selector: 'app-users',
@@ -38,7 +39,17 @@ export class Users {
   pageSize = 10;
   manualUserData: any[] = [];
 
-  constructor() {}
+  constructor(private modal: NzModalService) {}
+
+  // People Partners Role <-> DMS Cabinet mapping.
+  openRoleCabinetMapping(): void {
+    this.modal.create({
+      nzTitle: 'Role Cabinet Mapping',
+      nzContent: RoleCabinetMappingModal,
+      nzFooter: null,
+      nzWidth: '70%',
+    });
+  }
 
   ngOnInit() {
     this.loadDataByTab('manual');

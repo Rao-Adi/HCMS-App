@@ -4,7 +4,7 @@
   [defaultColDef]="defaultColDef"
   [isSelectionRequired]="true"
   [showDisplayOption]="false"
-  [autoSizeColumns]="true"
+  [autoSizeColumns]="false"
   [rowData]="workflowAuthoritiesData"
   [pageSize]="pageSize"
   [totalRows]="totalRows"
@@ -40,6 +40,7 @@
         type="button"
         tabindex="0"
         class="btn btn-sm btn-primary shadow-sm"
+        [disabled]="!canSave"
         (click)="save()"
       >
         <i class="bi bi-file-earmark-text me-2"></i>

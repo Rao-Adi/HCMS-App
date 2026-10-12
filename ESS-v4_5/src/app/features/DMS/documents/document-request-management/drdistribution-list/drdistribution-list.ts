@@ -16,7 +16,9 @@ import { DistributionTypeService } from '@app/shared/services/distribution-type.
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service'; 
 import { ColDef } from 'ag-grid-community';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
+import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-mapping.service';
+import { mappedRoleIdsForCabinet, RoleCabinetMappingRow } from '@app/shared/utils/role-cabinet-scope';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
@@ -63,6 +65,8 @@ export class DRDistributionList {
 
   distributionListData: DistributionGridRow[] = [];
   userRoles: { id: any; text: string; rawName?: string }[] = [];
+  // Role <-> Cabinet mapping: a row's Role dropdown only offers the roles mapped to the cabinet picked on it.
+  roleMappings: RoleCabinetMappingRow[] = [];
   divisions: any[] = [];
   departments: any[] = [];
   subDepartments: any[]=[];
@@ -102,7 +106,8 @@ export class DRDistributionList {
     private cabinetGridService: CabinetGridService,
     private _permissionService: PermissionService,
     private _peoplePartnerService: PeoplePartnersService,
-    private modal: NzModalService
+    private modal: NzModalService,
+    private _roleCabinetMappingService: RoleCabinetMappingService,
   ) {
     
   }
@@ -175,6 +180,11 @@ export class DRDistributionList {
         headerName: 'Role',
         type: 'dropdown',
         dropdownOptions: this.userRoles,
+        // Only the roles mapped to this row's cabinet. A change to any cabinet level clears the Role, since
+        // the one picked may no longer be mapped to it. Left unselected it still means "Any" -- every role
+        // mapped to that cabinet (the server expands it the same way).
+        dropdownOptionsForRow: (row: any) => this.rolesForRow(row),
+        clearWhenChanged: this.cabinetFieldNames(),
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -205,9 +215,13 @@ export class DRDistributionList {
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
+      // No paging bar: every row is shown and the grid grows with them. Paging itself stays on (with a
+      // page size no list will reach) because the auto-height grid only re-measures itself reliably that
+      // way -- turning it off outright left everything past the second row out of sight.
       enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
+      hidePaginationPanel: true,
+      pageSize: 1000,
+      pageSizeOptions: [1000],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
@@ -222,6 +236,21 @@ export class DRDistributionList {
     };
   }
 
+  private cabinetFieldNames(): string[] {
+    return this.cabinetHierarchy.filter((l) => l.isActive).map((l) => `level${l.level}Id`);
+  }
+
+  // The roles mapped to the cabinet this row has picked (Role Cabinet Mapping).
+  private rolesForRow(row: any): { id: any; text: string }[] {
+    const ids = mappedRoleIdsForCabinet(this.roleMappings, {
+      division: row?.level1Id,
+      department: row?.level2Id,
+      subDepartment: row?.level3Id,
+      businessDomain: row?.level4Id,
+    });
+    return this.userRoles.filter((r) => ids.has(String(r.id)));
+  }
+
   private getColumns(): GridColumn[] {
     // buildCabinetColumns is a shared service used by other grids too -- mapping its result
     // locally here (instead of changing the service itself) shows "Any" for a blank cabinet
@@ -229,7 +258,12 @@ export class DRDistributionList {
     // its own blank cabinet-level cells.
     const cabinetColumns = this.cabinetGridService
       .buildCabinetColumns(this.cabinetHierarchy)
-      .map((col) => ({ ...col, emptyValueDisplay: 'Any' }));
+      .map((col) =>
+        col.field === 'level1Id'
+          ? { ...col, emptyValueDisplay: 'Any' }
+          : // Department / Sub-Department / Business Domain: blank means every one under the level above.
+            { ...col, emptyValueDisplay: 'All', placeholder: 'All' },
+      );
     return [...cabinetColumns, ...this.getRemainingColumns()];
   }
 
@@ -444,7 +478,11 @@ export class DRDistributionList {
       userRoles: this._peoplePartnerService.GetAllRoles(),
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
-    }).subscribe(({ userRoles, distributionTypes, hierarchy }) => {
+      // If the mapping cannot be read the grid still loads; its Role list is simply empty.
+      mappings: this._roleCabinetMappingService.getAll().pipe(catchError(() => of(null))),
+    }).subscribe(({ userRoles, distributionTypes, hierarchy, mappings }) => {
+      this.roleMappings = Array.isArray(mappings?.Data) ? mappings!.Data : [];
+
       // ✅ Normalize Roles. No "Any"/"All" entry here -- leaving Role unselected already means
       // "Any role", same as Division/Department/SubDepartment/BusinessDomain.
       this.userRoles =

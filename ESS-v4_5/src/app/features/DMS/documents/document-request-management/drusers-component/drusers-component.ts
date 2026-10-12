@@ -18,7 +18,9 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
+import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-mapping.service';
+import { mappedRoleIdsForCabinet, RoleCabinetMappingRow } from '@app/shared/utils/role-cabinet-scope';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 // Identifies which "Document Users" grid row (Role + Cabinet scope) a selectedEmployeeList
@@ -61,6 +63,8 @@ export class DRUsersComponent {
   departments: any[] = [];
   subDepartments: any[] = [];
   userRoles: any[] = [];
+  // Role <-> Cabinet mapping: a row's Role dropdown only offers the roles mapped to the cabinet picked on it.
+  roleMappings: RoleCabinetMappingRow[] = [];
   selectedEmployeeList: any[] = [];
 
   totalManullayManageEmployees = 0;
@@ -95,6 +99,7 @@ export class DRUsersComponent {
     private _UtilitiesService: UtilitiesService,
     private _peoplePartnerService: PeoplePartnersService,
     private _permissionService: PermissionService,
+    private _roleCabinetMappingService: RoleCabinetMappingService,
   ) {}
 
   ngOnInit() {
@@ -154,6 +159,10 @@ export class DRUsersComponent {
         headerName: 'User Role',
         type: 'dropdown',
         dropdownOptions: this.userRoles,
+        // Only the roles mapped to this row's cabinet. A change to any cabinet level clears the Role, since
+        // the one picked may no longer be mapped to it.
+        dropdownOptionsForRow: (row: any) => this.rolesForRow(row),
+        clearWhenChanged: this.cabinetFieldNames(),
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -176,9 +185,13 @@ export class DRUsersComponent {
   private buildGrid(): void {
     this.gridConfig = {
       columns: this.getColumns(),
+      // No paging bar: every row is shown and the grid grows with them. Paging itself stays on (with a
+      // page size no list will reach) because the auto-height grid only re-measures itself reliably that
+      // way -- turning it off outright left everything past the second row out of sight.
       enablePagination: true,
-      pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
+      hidePaginationPanel: true,
+      pageSize: 1000,
+      pageSizeOptions: [1000],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
@@ -193,6 +206,21 @@ export class DRUsersComponent {
     };
   }
 
+  private cabinetFieldNames(): string[] {
+    return this.cabinetHierarchy.filter((l) => l.isActive).map((l) => `level${l.level}Id`);
+  }
+
+  // The roles mapped to the cabinet this row has picked (Role Cabinet Mapping).
+  private rolesForRow(row: any): any[] {
+    const ids = mappedRoleIdsForCabinet(this.roleMappings, {
+      division: row?.level1Id,
+      department: row?.level2Id,
+      subDepartment: row?.level3Id,
+      businessDomain: row?.level4Id,
+    });
+    return this.userRoles.filter((r) => ids.has(String(r.id)));
+  }
+
   private getColumns(): GridColumn[] {
     // A blank cabinet level here means "Any", the same as it does on the Distribution List --
     // leaving Division/Department/SubDepartment/BusinessDomain unselected is how a user says
@@ -202,7 +230,12 @@ export class DRUsersComponent {
     // in the service, exactly as drdistribution-list.getColumns already does it.
     const cabinetColumns = this.cabinetGridService
       .buildCabinetColumns(this.cabinetHierarchy)
-      .map((col) => ({ ...col, emptyValueDisplay: 'Any' }));
+      .map((col) =>
+        col.field === 'level1Id'
+          ? { ...col, emptyValueDisplay: 'Any' }
+          : // Department / Sub-Department / Business Domain: blank means every one under the level above.
+            { ...col, emptyValueDisplay: 'All', placeholder: 'All' },
+      );
     return [...cabinetColumns, ...this.getRemainingColumns()];
   }
 
@@ -722,7 +755,11 @@ export class DRUsersComponent {
     forkJoin({
       userRoles: this._peoplePartnerService.GetAllRoles(),
       hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
-    }).subscribe(({ userRoles, hierarchy }) => {
+      // If the mapping cannot be read the grid still loads; its Role list is simply empty.
+      mappings: this._roleCabinetMappingService.getAll().pipe(catchError(() => of(null))),
+    }).subscribe(({ userRoles, hierarchy, mappings }) => {
+      this.roleMappings = Array.isArray(mappings?.Data) ? mappings!.Data : [];
+
       // ✅ Normalize Roles. No "ALL" option here -- Role is mandatory on this grid and every
       // row must resolve to one specific real role.
       this.userRoles =

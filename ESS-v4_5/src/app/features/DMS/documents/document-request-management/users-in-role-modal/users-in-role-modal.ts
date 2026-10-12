@@ -20,11 +20,18 @@ export class UsersInRoleModal {
   selectedRows: any[] = [];
   private gridApi: any;
 
+  // Save only does something once the selection actually differs from what the modal opened with, so it
+  // stays disabled until someone checks or unchecks a user (and goes back to disabled if they undo it).
+  canSave = false;
+  private initialSelectedCodes = new Set<string>();
+
   // Default Column Definitions: Apply configuration across all columns
   defaultColDef: ColDef = {
     filter: true,
     cellDataType: false,
     editable: false,
+    // Columns can be dragged wider or narrower.
+    resizable: true,
   };
 
   documentColumnDefs = [
@@ -74,6 +81,24 @@ export class UsersInRoleModal {
 
   onSelectionChange(selectedRows: any[]) {
     this.selectedRows = selectedRows;
+
+    const current = new Set(
+      (selectedRows || []).map((r) => r?.employeeCode).filter((c) => c != null) as string[],
+    );
+    const unchanged =
+      current.size === this.initialSelectedCodes.size &&
+      [...current].every((c) => this.initialSelectedCodes.has(c));
+    this.canSave = !unchanged;
+  }
+
+  // What the grid will show as checked once preselectRows() has run: the already-selected employees that
+  // are actually in the rows just loaded. The selection is compared against this to decide canSave.
+  private resetSelectionBaseline(): void {
+    const preSelected: string[] = this.modalData?.preSelectedEmployeeCodes || [];
+    this.initialSelectedCodes = new Set(
+      preSelected.filter((code) => this.workflowAuthoritiesData.some((r) => r.employeeCode === code)),
+    );
+    this.canSave = false;
   }
 
   onGridReady(event: any): void {
@@ -137,14 +162,17 @@ export class UsersInRoleModal {
               u.DesignationName ||
               (u.dsgid ? String(u.dsgid) : ''),
           }));
+          this.resetSelectionBaseline();
           this.preselectRows();
         } else {
           this.workflowAuthoritiesData = [];
           this.totalRows = 0;
+          this.resetSelectionBaseline();
         }
       } else {
         this.workflowAuthoritiesData = [];
         this.totalRows = 0;
+        this.resetSelectionBaseline();
       }
     });
   }
