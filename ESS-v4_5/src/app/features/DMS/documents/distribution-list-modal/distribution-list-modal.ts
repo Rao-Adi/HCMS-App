@@ -57,6 +57,11 @@ export class DistributionListModal {
     return !!(item.IsRetrieved ?? item.isRetrieved);
   }
 
+  // A Digital entry has no copy to collect, so "Not Retrieved" would never clear for it.
+  isDigital(item: any): boolean {
+    return this.distributionType(item).trim().toUpperCase() === 'DIGITAL';
+  }
+
   distributionType(item: any): string {
     return String(item.DistributionType || item.distributionType || '');
   }

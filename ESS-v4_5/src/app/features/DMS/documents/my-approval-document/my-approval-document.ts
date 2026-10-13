@@ -537,8 +537,14 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       empid: this.loginEmpId,
     };
 
+    // The tab this request is for. Each tab has its own grid but they all write into the same row list, so
+    // a slow reply for a tab the user has already left (e.g. Approved, then back to Pending) used to land
+    // afterwards and replace the Pending rows with the Approved ones -- Pending showed old approved items.
+    const requestedTab = this.selectedTab;
+
     this._documentService.GetDocumentByStatus(payLoad).subscribe({
       next: (response) => {
+        if (requestedTab !== this.selectedTab) return;
         if (response?.Success) {
           const data = response?.Data;
           const items = data?.Items || (Array.isArray(data) ? data : []);

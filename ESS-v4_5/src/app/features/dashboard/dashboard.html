@@ -43,6 +43,15 @@
 -->
 
 <div class="container-fluid py-4" *ngIf="!isLoading">
+  <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert" *ngIf="loadError">
+    <span>
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      The dashboard could not be loaded, so the figures below are not real. Your session may have expired or
+      the server could not be reached.
+    </span>
+    <button type="button" class="btn btn-sm btn-outline-dark ms-3" (click)="GetDashbaordData()">Retry</button>
+  </div>
+
   <div class="row mb-4">
     <div class="col-12">
       <h2 class="fw-bold mb-1">{{ welcomeMessage }}</h2>

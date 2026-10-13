@@ -325,12 +325,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     {
       field: 'approvalHistory',
       headerName: 'Approval History',
-      cellRendererSelector: () => ({
+      // LinkRenderer calls onClick() with no arguments, so the row has to come from this cell's own
+      // params -- onClick(rowData) always received undefined and threw on rowData.Id.
+      cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
           label: 'Approval History',
-          onClick: (rowData: any) => {
-            this.openWorkflowDetailsModal(rowData);
+          onClick: () => {
+            this.openWorkflowDetailsModal(params.data);
           },
         },
       }),
@@ -338,12 +340,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     {
       field: 'revisionHistory',
       headerName: 'Revision History',
-      cellRendererSelector: () => ({
+      cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
           label: 'Revision History',
-          onClick: (rowData: any) => {
-            this.openRevisionHistoryModal(rowData);
+          onClick: () => {
+            this.openRevisionHistoryModal(params.data);
           },
         },
       }),
@@ -908,8 +910,16 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // tells the user why, rather than letting them hit Submit and only then see a server error.
   get allDistributionsRetrieved(): boolean {
     return (this.distributionListPayload || []).every(
-      (x: any) => x.IsRetrieved ?? x.isRetrieved,
+      (x: any) => this.isDigitalDistribution(x) || (x.IsRetrieved ?? x.isRetrieved),
     );
+  }
+
+  // A Digital entry has no physical copy to collect, so it is never marked retrieved by hand and does not
+  // hold up an Obsoletion (SubmitDocumentAsync skips it the same way).
+  isDigitalDistribution(item: any): boolean {
+    return String(item?.DistributionType || item?.distributiontype || item?.distributionType || '')
+      .trim()
+      .toUpperCase() === 'DIGITAL';
   }
 
   // Mirrors document-request-form.ts's appendUserIdsToFormData field resolution (DRUsersComponent
@@ -1915,6 +1925,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         status: item.IsReworked ? 'Reverted' : 'Draft',
         requestCreatedOn: new CustomDateFormatPipe().transform(
           item.RequestCreatedAt || item.requestCreatedAt || item.CreatedAt || '',
+        ),
+        // The version this one supersedes. The endpoint has always sent both, and the Revision and
+        // Obsoletion grids both have columns for them (previousVersionCreatedBy/On), but this mapping
+        // never copied them onto the row, so those two columns were empty for every record.
+        previousVersionCreatedBy:
+          item.PreviousVersionCreatedBy || item.previousVersionCreatedBy || item.previousversioncreatedby || '',
+        previousVersionCreatedOn: new CustomDateFormatPipe().transform(
+          item.PreviousVersionCreatedOn || item.previousVersionCreatedOn || item.previousversioncreatedon || '',
         ),
         templateType: item.TemplateType || item.templateType,
         templateFileUrl:

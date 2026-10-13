@@ -28,6 +28,10 @@ export class DashboardComponent implements OnInit {
   recentActivities: any[] = [];
   documentsApproachingReview: any[] = [];
   isLoading: boolean = true;
+  // The dashboard request failed (session expired, API unreachable, server error). Without this the
+  // screen fell back to the same empty summary a user with no data sees, so a failed load looked like a
+  // blank dashboard.
+  loadError: boolean = false;
   isApprover: boolean = false;
   isInitiator: boolean = false;
   isAuthorizer: boolean = false;
@@ -69,6 +73,7 @@ export class DashboardComponent implements OnInit {
 
   GetDashbaordData() {
     this.isLoading = true;
+    this.loadError = false;
     this._dashboardService.GetDashboardData().subscribe({
       next: (res: any) => {
         if (res?.Success && res?.Data) {
@@ -82,11 +87,14 @@ export class DashboardComponent implements OnInit {
           }));
           this.recentActivities = res.Data.RecentActivities || [];
           this.documentsApproachingReview = res.Data.DocumentsApproachingReview || [];
+        } else {
+          this.loadError = true;
         }
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error fetching dashboard data:', err);
+        this.loadError = true;
         this.isLoading = false;
       },
     });

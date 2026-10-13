@@ -23,7 +23,9 @@
         </td>
         <ng-container *ngIf="isObsoletion">
           <td>
+            <span *ngIf="isDigital(item)" class="badge rounded-pill text-bg-secondary">Not applicable</span>
             <span
+              *ngIf="!isDigital(item)"
               class="badge rounded-pill"
               [ngClass]="isRetrieved(item) ? 'text-bg-success' : 'text-bg-danger'"
             >

@@ -269,7 +269,7 @@ export class DocumentAttributes {
 
     this._documentAttribute.delete(row.Id).subscribe(() => {
       this._notificationToastService.createNotification(
-        'sucess',
+        'success',
         'Document Attribute',
         'Document Attribute deleted successfully!',
       );

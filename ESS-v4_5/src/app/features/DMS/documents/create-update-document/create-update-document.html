@@ -517,7 +517,11 @@
                                 <td>{{ item.Role || item.role || 'Any' }}</td>
                                 <td>{{ item.DistributionType || item.distributiontype }}</td>
                                 <td>
+                                  <!-- A Digital copy has nothing to collect: it is disabled in the system, not
+                                       handed back -- so there is no "Mark Retrieved" for it. -->
+                                  <span *ngIf="isDigitalDistribution(item)" class="text-muted">Not applicable</span>
                                   <button
+                                    *ngIf="!isDigitalDistribution(item)"
                                     type="button"
                                     class="btn btn-sm retrieval-status-btn"
                                     [class.btn-success]="item.IsRetrieved || item.isRetrieved"
