@@ -20,7 +20,14 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
 import { catchError, forkJoin, of } from 'rxjs';
 import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-mapping.service';
-import { mappedRoleIdsForCabinet, RoleCabinetMappingRow } from '@app/shared/utils/role-cabinet-scope';
+import {
+  buildOrgColumns,
+  emptyOrgStructure,
+  ORG_FIELDS,
+  OrgStructure,
+  parseOrgStructure,
+  rolesFor,
+} from '@app/shared/utils/org-structure';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
 // Identifies which "Document Users" grid row (Role + Cabinet scope) a selectedEmployeeList
@@ -64,7 +71,8 @@ export class DRUsersComponent {
   subDepartments: any[] = [];
   userRoles: any[] = [];
   // Role <-> Cabinet mapping: a row's Role dropdown only offers the roles mapped to the cabinet picked on it.
-  roleMappings: RoleCabinetMappingRow[] = [];
+  // People Partners organisation (Division > Department > Sub-Department, and the roles held in each).
+  org: OrgStructure = emptyOrgStructure();
   selectedEmployeeList: any[] = [];
 
   totalManullayManageEmployees = 0;
@@ -207,27 +215,23 @@ export class DRUsersComponent {
   }
 
   private cabinetFieldNames(): string[] {
-    return this.cabinetHierarchy.filter((l) => l.isActive).map((l) => `level${l.level}Id`);
+    return ORG_FIELDS;
   }
 
-  // The roles mapped to the cabinet this row has picked (Role Cabinet Mapping).
+  // The roles held inside the organisation unit this row has picked.
   private rolesForRow(row: any): any[] {
-    const ids = mappedRoleIdsForCabinet(this.roleMappings, {
+    return rolesFor(this.org, {
       division: row?.level1Id,
       department: row?.level2Id,
       subDepartment: row?.level3Id,
-      businessDomain: row?.level4Id,
     });
-    return this.userRoles.filter((r) => ids.has(String(r.id)));
   }
 
   private getColumns(): GridColumn[] {
-    // A blank cabinet level here means every one -- the same as on the Distribution List. The
-    // dropdowns read "Any"; a saved row with the level blank reads "All".
-    const cabinetColumns = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, {
-      blankMeansAll: true,
-    });
-    return [...cabinetColumns, ...this.getRemainingColumns()];
+    // Division > Department > Sub-Department come from People Partners (the hierarchy the Users screen shows) and
+    // cascade; a blank level means every one, the same as on the Distribution List. The dropdowns read "Any"; a
+    // saved row with the level blank reads "All".
+    return [...buildOrgColumns(this.org), ...this.getRemainingColumns()];
   }
 
   GetAllManuallyManageEmployee(query: any) {
@@ -745,11 +749,10 @@ export class DRUsersComponent {
   private loadDropdownsAndGrid(): void {
     forkJoin({
       userRoles: this._peoplePartnerService.GetAllRoles(),
-      hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
-      // If the mapping cannot be read the grid still loads; its Role list is simply empty.
-      mappings: this._roleCabinetMappingService.getAll().pipe(catchError(() => of(null))),
-    }).subscribe(({ userRoles, hierarchy, mappings }) => {
-      this.roleMappings = Array.isArray(mappings?.Data) ? mappings!.Data : [];
+      // If the organisation cannot be read the grid still loads; its Division / Department / Role lists are empty.
+      org: this._peoplePartnerService.GetOrgStructure().pipe(catchError(() => of(null))),
+    }).subscribe(({ userRoles, org }) => {
+      this.org = parseOrgStructure(org?.Data);
 
       // ✅ Normalize Roles. No "ALL" option here -- Role is mandatory on this grid and every
       // row must resolve to one specific real role.
@@ -759,17 +762,11 @@ export class DRUsersComponent {
           text: d.Value,
         })) ?? [];
 
-      // ✅ Cabinet hierarchy
-      this.cabinetHierarchy = hierarchy;
-
-      // ✅ Load hierarchy dropdown data
-      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => {
-        this.buildGrid();
-        // Rebuilds the "Document Users" grid rows from selectedUsers now that userRoles/
-        // cabinet dropdown options (needed to resolve display text) are actually loaded.
-        this.reconstructManualUserData();
-        this.loading = false;
-      });
+      this.buildGrid();
+      // Rebuilds the "Document Users" grid rows from selectedUsers now that userRoles/
+      // organisation dropdown options (needed to resolve display text) are actually loaded.
+      this.reconstructManualUserData();
+      this.loading = false;
     });
   }
 

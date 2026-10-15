@@ -19,6 +19,14 @@ import { ColDef } from 'ag-grid-community';
 import { catchError, forkJoin, of } from 'rxjs';
 import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-mapping.service';
 import { mappedRoleIdsForCabinet, RoleCabinetMappingRow } from '@app/shared/utils/role-cabinet-scope';
+import {
+  buildOrgColumns,
+  emptyOrgStructure,
+  ORG_FIELDS,
+  OrgStructure,
+  parseOrgStructure,
+  rolesFor,
+} from '@app/shared/utils/org-structure';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
@@ -65,8 +73,9 @@ export class DRDistributionList {
 
   distributionListData: DistributionGridRow[] = [];
   userRoles: { id: any; text: string; rawName?: string }[] = [];
-  // Role <-> Cabinet mapping: a row's Role dropdown only offers the roles mapped to the cabinet picked on it.
-  roleMappings: RoleCabinetMappingRow[] = [];
+  // People Partners organisation (Division > Department > Sub-Department, and the roles held in each): a row's
+  // Role dropdown only offers the roles held inside the organisation unit picked on it.
+  org: OrgStructure = emptyOrgStructure();
   divisions: any[] = [];
   departments: any[] = [];
   subDepartments: any[]=[];
@@ -236,27 +245,23 @@ export class DRDistributionList {
   }
 
   private cabinetFieldNames(): string[] {
-    return this.cabinetHierarchy.filter((l) => l.isActive).map((l) => `level${l.level}Id`);
+    return ORG_FIELDS;
   }
 
-  // The roles mapped to the cabinet this row has picked (Role Cabinet Mapping).
+  // The roles held inside the organisation unit this row has picked.
   private rolesForRow(row: any): { id: any; text: string }[] {
-    const ids = mappedRoleIdsForCabinet(this.roleMappings, {
+    return rolesFor(this.org, {
       division: row?.level1Id,
       department: row?.level2Id,
       subDepartment: row?.level3Id,
-      businessDomain: row?.level4Id,
     });
-    return this.userRoles.filter((r) => ids.has(String(r.id)));
   }
 
   private getColumns(): GridColumn[] {
-    // Dropdowns read "Any"; a row whose level was left blank (the whole division / department / ...)
+    // Division > Department > Sub-Department come from People Partners (the hierarchy the Users screen shows) and
+    // cascade. Dropdowns read "Any"; a row whose level was left blank (the whole division / department / ...)
     // reads "All".
-    const cabinetColumns = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, {
-      blankMeansAll: true,
-    });
-    return [...cabinetColumns, ...this.getRemainingColumns()];
+    return [...buildOrgColumns(this.org), ...this.getRemainingColumns()];
   }
 
   GetAllDistributionList(query: any) {
@@ -469,11 +474,10 @@ export class DRDistributionList {
     forkJoin({
       userRoles: this._peoplePartnerService.GetAllRoles(),
       distributionTypes: this._distributionTypeService.getDistributionTypeList(),
-      hierarchy: this._cabinetHirarchyService.loadDropdownHierarchy(),
-      // If the mapping cannot be read the grid still loads; its Role list is simply empty.
-      mappings: this._roleCabinetMappingService.getAll().pipe(catchError(() => of(null))),
-    }).subscribe(({ userRoles, distributionTypes, hierarchy, mappings }) => {
-      this.roleMappings = Array.isArray(mappings?.Data) ? mappings!.Data : [];
+      // If the organisation cannot be read the grid still loads; its Division / Department / Role lists are empty.
+      org: this._peoplePartnerService.GetOrgStructure().pipe(catchError(() => of(null))),
+    }).subscribe(({ userRoles, distributionTypes, org }) => {
+      this.org = parseOrgStructure(org?.Data);
 
       // ✅ Normalize Roles. No "Any"/"All" entry here -- leaving Role unselected already means
       // "Any role", same as Division/Department/SubDepartment/BusinessDomain.
@@ -490,14 +494,8 @@ export class DRDistributionList {
           text: d.Value,
         })) ?? [];
 
-      // ✅ Cabinet hierarchy
-      this.cabinetHierarchy = hierarchy;
-
-      // ✅ Load hierarchy dropdown data
-      this.cabinetGridService.loadDropdownData(hierarchy).subscribe(() => {
-        this.buildGrid();
-        this.loading = false;
-      });
+      this.buildGrid();
+      this.loading = false;
     });
   }
 

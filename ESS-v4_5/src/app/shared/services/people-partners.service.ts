@@ -80,6 +80,12 @@ export class PeoplePartnersService {
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
   
+  // Division > Department > Sub-Department > Role as People Partners holds them -- the hierarchy the Users screen shows.
+  GetOrgStructure(): Observable<GenericResponse<any>> {
+    const uri = `${this.apiUrl}/DMSPeoplePartners/get-org-structure`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   GetEmployeeList(): Observable<GenericResponse<any>> {
     const uri = `${this.apiUrl}/DMSPeoplePartners/get-all-employee-list`;
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
