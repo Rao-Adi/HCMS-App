@@ -57,7 +57,13 @@ export class DistributionListModal {
     return !!(item.IsRetrieved ?? item.isRetrieved);
   }
 
-  // A Digital entry has no copy to collect, so "Not Retrieved" would never clear for it.
+  // Physical entries are "Retrieved"; Digital ones are "Disabled" (access withdrawn).
+  statusLabel(item: any): string {
+    const done = this.isRetrieved(item);
+    if (this.isDigital(item)) return done ? 'Disabled' : 'Not Disabled';
+    return done ? 'Retrieved' : 'Not Retrieved';
+  }
+
   isDigital(item: any): boolean {
     return this.distributionType(item).trim().toUpperCase() === 'DIGITAL';
   }

@@ -545,7 +545,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // copy collected, or the document disabled digitally) before an Obsoletion can be submitted
     // for approval. Same rule SubmitDocumentAsync enforces server-side.
     if (this.isObsoletion && !this.allDistributionsRetrieved) {
-      return 'Confirm every Distribution List entry has been retrieved (digitally disabled or physical copy collected) before submitting.';
+      return 'Mark every Physical Distribution List entry retrieved and disable every Digital one before submitting.';
     }
     return null;
   }
@@ -909,13 +909,18 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   // Same rule SubmitDocumentAsync enforces server-side -- checked here too so the Submit button
   // tells the user why, rather than letting them hit Submit and only then see a server error.
   get allDistributionsRetrieved(): boolean {
-    return (this.distributionListPayload || []).every(
-      (x: any) => this.isDigitalDistribution(x) || (x.IsRetrieved ?? x.isRetrieved),
-    );
+    return (this.distributionListPayload || []).every((x: any) => x.IsRetrieved ?? x.isRetrieved);
   }
 
-  // A Digital entry has no physical copy to collect, so it is never marked retrieved by hand and does not
-  // hold up an Obsoletion (SubmitDocumentAsync skips it the same way).
+  // Physical entries are marked retrieved; Digital ones are disabled, which withdraws access to the document
+  // (and can be undone).
+  distributionButtonLabel(item: any): string {
+    if (item.retrieving) return 'Saving...';
+    const done = !!(item.IsRetrieved ?? item.isRetrieved);
+    if (this.isDigitalDistribution(item)) return done ? 'Disabled' : 'Disable';
+    return done ? 'Retrieved' : 'Mark Retrieved';
+  }
+
   isDigitalDistribution(item: any): boolean {
     return String(item?.DistributionType || item?.distributiontype || item?.distributionType || '')
       .trim()
@@ -1866,6 +1871,20 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     });
   }
 
+  // "Request Created By / On" belong to the revision / obsoletion workflow (a Request first, then the
+  // document). When none of the listed documents came from a Request -- documents created directly --
+  // the two columns are hidden instead of showing empty (or the document's own) values.
+  private showRequestColumns(visible: boolean): void {
+    const apply = (defs: any[]) =>
+      defs.map((c) =>
+        c.field === 'requestCreatedBy' || c.field === 'requestCreatedOn' ? { ...c, hide: !visible } : c,
+      );
+    const current = this.documentRevisionColumnDefs.find((c: any) => c.field === 'requestCreatedBy') as any;
+    if (current && !!current.hide === !visible) return; // already in that state
+    this.documentRevisionColumnDefs = apply(this.documentRevisionColumnDefs);
+    this.DocumentObsoletionGridColumnDefs = apply(this.DocumentObsoletionGridColumnDefs);
+  }
+
   // Shared by GetEffectiveDocumentsForRevision and GetApprovedRevisionObsoletionRequests -- both
   // backend endpoints return the identical EffectiveDocumentDetailsDto row shape, so the mapping
   // that fills documentRevisionData (read by onCellClicked and the two grids' columnDefs) is the
@@ -1876,6 +1895,9 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       const items = data?.Items || (Array.isArray(data) ? data : []);
 
       this.totalRows = data?.TotalCount ?? items.length;
+      this.showRequestColumns(
+        items.some((i: any) => i.RequestCreatedByName || i.requestCreatedByName || i.RequestCreatedAt || i.requestCreatedAt),
+      );
       this.documentRevisionData = items.map((item: any) => ({
         Id: item.id || item.Id,
         companyId: item.companyId || item.CompanyId,
@@ -1919,12 +1941,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         businessDomainCode: item.BusinessDomainCode,
         documentTypeCode: item.DocumentTypeCode || item.documentTypeCode,
         pendingWith: item.CurrentAssignedUser,
-        // The Revision/Obsoletion grids carry the Request's own number, creator and date; the
-        // document's own fields are the fallback for the other lists sharing this mapping.
-        requestCreatedBy: item.RequestCreatedByName || item.requestCreatedByName || item.LastModifiedByName,
+        // The Request's own creator and date -- only present when the document came out of a Request
+        // (revision / obsoletion workflow). A document created directly has no request, so these stay
+        // blank rather than falling back to the document's own creator/date.
+        requestCreatedBy: item.RequestCreatedByName || item.requestCreatedByName || '',
         status: item.IsReworked ? 'Reverted' : 'Draft',
         requestCreatedOn: new CustomDateFormatPipe().transform(
-          item.RequestCreatedAt || item.requestCreatedAt || item.CreatedAt || '',
+          item.RequestCreatedAt || item.requestCreatedAt || '',
         ),
         // The version this one supersedes. The endpoint has always sent both, and the Revision and
         // Obsoletion grids both have columns for them (previousVersionCreatedBy/On), but this mapping

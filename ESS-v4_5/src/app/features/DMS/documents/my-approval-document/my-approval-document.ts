@@ -37,7 +37,8 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
-import { AdHocApproverPanel, AdHocPlacement } from '@app/shared/adhoc-approver-panel/adhoc-approver-panel';
+import { AdHocChoice } from '@app/shared/adhoc-approver-panel/adhoc-approver-panel';
+import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
 
 // WorkflowExecutions.Status as stored, translated into what the business calls it. 'Reworked' is
 // the stored value for a revert; nothing user-facing has ever called it that. 'Completed' means
@@ -73,7 +74,6 @@ const MY_APPROVAL_STATUS_CLASSES: Record<string, string> = {
     AgGridWrapper,
     DynamicFormByDocumentAttribute,
     NzModalModule,
-    AdHocApproverPanel,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -338,6 +338,39 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   // just leaves a switch that does nothing.
   columnTogglesWithoutStatus?: ColumnToggle[];
 
+  // The Pending tab's own columns: the shared set plus the "Ad-hoc Approver" link, which only means
+  // something where the approver can still act, so Approved and Reverted/Rejected do not carry it.
+  pendingTabColumnDefs: ColDef[] = [];
+  pendingTabColumnToggles?: ColumnToggle[];
+
+  // "Ad-hoc Approver" link: opens a modal to add approvers to this document's workflow. Shown only on rows the
+  // server says the approver may add to (canAddAdHoc, see loadAdHocAuthority); the label carries how many
+  // have been chosen so far.
+  private readonly adHocColumnDef: ColDef = {
+    field: 'adHocApprover',
+    headerName: 'Ad-hoc Approver',
+    editable: false,
+    sortable: false,
+    filter: false,
+    cellRenderer: (params: any) => {
+      if (!params.data?.canAddAdHoc) return '<span>-</span>';
+      const count = params.data?.adHocCount || 0;
+      const label = count > 0 ? 'Ad-hoc Approver (' + count + ')' : 'Add Ad-hoc Approver';
+      return (
+        '<span style="color:#1976d2; cursor:pointer; text-decoration:underline" data-action="open-adhoc">' +
+        label +
+        '</span>'
+      );
+    },
+    onCellClicked: (event: any) => {
+      if (!event.data?.canAddAdHoc) return;
+      this.openAdHocModal(event.data);
+    },
+  };
+
+  // What the approver has chosen to add, by workflow run, until Approve sends it.
+  private adHocChoices: Record<number, AdHocChoice[]> = {};
+
   // The same columns without Status, for the tabs where every row necessarily has the same one.
   // On Pending every row is Pending and on Approved every row is Approved, so the column says
   // nothing there and only costs width. It earns its place on Reverted/Rejected, which is the one
@@ -417,6 +450,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       this.documentColumnDefsWithoutStatus = this.pendingDocumentsGridColumnDefs.filter(
         (col) => col.field !== 'status',
       );
+      this.pendingTabColumnDefs = this.withAdHocColumn(this.documentColumnDefsWithoutStatus);
 
       this.columnToggles = [
         { field: 'documentType', label: 'Document Type', visible: true },
@@ -440,6 +474,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       this.columnTogglesWithoutStatus = this.columnToggles.filter(
         (toggle) => toggle.field !== 'status',
       );
+      this.pendingTabColumnToggles = this.withAdHocToggle(this.columnTogglesWithoutStatus);
     });
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
@@ -645,6 +680,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
               activityTypeCode: get(['ActivityTypeCode', 'activityTypeCode'], ''),
             };
           });
+          if (requestedTab === 'Pending') this.loadAdHocAuthority();
         } else {
           this.documentRequestsData = [];
           this.totalRows = 0;
@@ -659,6 +695,75 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
           'Failed to fetch documents.',
         );
       },
+    });
+  }
+
+  // Puts the "Ad-hoc Approver" column right after "Distribution List" (or at the end if that one is not
+  // on the grid).
+  private withAdHocColumn(defs: ColDef[]): ColDef[] {
+    const at = defs.findIndex((c) => c.field === 'distributionList');
+    const copy = [...defs];
+    copy.splice(at >= 0 ? at + 1 : copy.length, 0, this.adHocColumnDef);
+    return copy;
+  }
+
+  private withAdHocToggle(toggles: ColumnToggle[]): ColumnToggle[] {
+    const at = toggles.findIndex((t) => t.field === 'distributionList');
+    const copy = [...toggles];
+    copy.splice(at >= 0 ? at + 1 : copy.length, 0, {
+      field: 'adHocApprover',
+      label: 'Ad-hoc Approver',
+      visible: true,
+    });
+    return copy;
+  }
+
+  // Asks the server, in one call, which of the rows just loaded the approver may add an ad-hoc approver to,
+  // and flags those rows. The rows are updated in place (not replaced) so a selection already made stays.
+  private loadAdHocAuthority(): void {
+    const rows = this.documentRequestsData || [];
+    const ids = rows.map((r: any) => Number(r.ExecutionId)).filter((id: number) => id > 0);
+    if (!ids.length) return;
+
+    this._documentService.getAdHocAuthority(ids).subscribe({
+      next: (res: any) => {
+        const allowed = new Set<number>((Array.isArray(res?.Data) ? res.Data : []).map(Number));
+        for (const row of rows) {
+          row.canAddAdHoc = allowed.has(Number(row.ExecutionId));
+          row.adHocCount = (this.adHocChoices[Number(row.ExecutionId)] || []).length;
+        }
+        this.agGridWrapper?.gridApi?.refreshCells({ force: true });
+      },
+      // Only the link is missing if this fails; approving itself is unaffected.
+      error: () => {},
+    });
+  }
+
+  openAdHocModal(row: any): void {
+    const executionId = Number(row?.ExecutionId);
+    if (!executionId) return;
+
+    const modalRef = this.modal.create({
+      nzTitle: 'Add Ad-hoc Approver',
+      nzContent: AdHocApproverModal,
+      nzData: {
+        executionId,
+        documentName: row?.documentName || '',
+        initial: this.adHocChoices[executionId] || [],
+      },
+      nzFooter: null,
+      nzWidth: '60%',
+    });
+
+    modalRef.afterClose.subscribe((result: AdHocChoice[] | undefined) => {
+      // Cancel / close without Save leaves what was chosen before as it was.
+      if (!Array.isArray(result)) return;
+
+      if (result.length) this.adHocChoices[executionId] = result;
+      else delete this.adHocChoices[executionId];
+
+      row.adHocCount = result.length;
+      this.agGridWrapper?.gridApi?.refreshCells({ force: true });
     });
   }
 
@@ -867,34 +972,11 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       if (!isApprove && (!result.observation || result.observation.trim() === '')) {
         return;
       }
-      this.submitWorkflowAction(action, result.observation || '', this.adHocPlacements);
+      this.submitWorkflowAction(action, result.observation || '');
     });
   }
 
-  // The ad-hoc panel (under Filters) is only for ONE document's workflow, so it follows the single
-  // Pending row selected -- or, with nothing selected, the only Pending document the approver has, so it
-  // is already on screen when they arrive, before they click anything. With several pending documents it
-  // waits for one to be selected. It shows itself only if the server says this approver may add one.
-  get adHocExecutionId(): number {
-    if (this.selectedTab !== 'Pending') return 0;
-    if (this.selectedRows.length === 1) return Number(this.executionId) || 0;
-    if (this.selectedRows.length === 0 && this.documentRequestsData.length === 1) {
-      return Number(this.documentRequestsData[0]?.ExecutionId) || 0;
-    }
-    return 0;
-  }
-
-  // What the panel currently holds; sent with the Approve call.
-  adHocPlacements: AdHocPlacement[] = [];
-
-  // Held for the duration of the (sequential) action run; cleared when it finishes.
-  private pendingAdHocApprovers: AdHocPlacement[] = [];
-
-  submitWorkflowAction(
-    action: string,
-    observation: string,
-    adHocApprovers: { EmployeeCode: string; InsertAfterStepId: number }[] = [],
-  ) {
+  submitWorkflowAction(action: string, observation: string) {
     if (action !== 'Approve' && (!observation || observation.trim() === '')) {
       this._notificationToastService.createNotification(
         'error',
@@ -905,7 +987,6 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     }
 
     const targets = this.collectWorkflowTargets();
-    this.pendingAdHocApprovers = targets.length === 1 ? adHocApprovers : [];
 
     this.runWorkflowActions(action, observation, targets, 0, {
       ok: 0,
@@ -955,7 +1036,12 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     if (action === 'Approve')
       return this._documentService.approveDocument({
         ...payLoad,
-        adHocApprovers: this.pendingAdHocApprovers,
+        // What was chosen for THIS document in its "Ad-hoc Approver" modal (nothing if it was not opened).
+        // The server re-checks that this approver may add them; only code and position are sent.
+        adHocApprovers: (this.adHocChoices[Number(target.executionid)] || []).map((c) => ({
+          EmployeeCode: c.EmployeeCode,
+          InsertAfterStepId: c.InsertAfterStepId,
+        })),
       });
     if (action === 'Rejected') return this._documentService.rejectDocument(payLoad);
     if (action === 'Rework') return this._documentService.revertDocument(payLoad);
@@ -999,6 +1085,8 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         if (response?.Success) {
           summary.ok++;
           summary.lastMessage = response?.Message || summary.lastMessage;
+          // The approvers chosen for this document went in with its approval.
+          if (action === 'Approve') delete this.adHocChoices[Number(target.executionid)];
         } else {
           summary.failed.push(label + ': ' + (response?.Message || 'failed'));
         }
@@ -1017,7 +1105,6 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     targets: { documentid: number; executionid: number; name: string }[],
     summary: { ok: number; failed: string[]; lastMessage: string },
   ): void {
-    this.pendingAdHocApprovers = [];
     if (summary.ok > 0) {
       this._notificationToastService.createNotification(
         'success',

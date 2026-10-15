@@ -136,7 +136,7 @@ export class ManualManageEmployee {
   private getColumns(): GridColumn[] {
     return [
       ...this.getFixedColumns(),
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, { blankMeansAll: true }),
       ...this.getRemainingColumns(),
     ];
   }

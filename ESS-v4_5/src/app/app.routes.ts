@@ -234,11 +234,14 @@ export const routes: Routes = [
       // so send the user back to the dashboard instead of showing a 404.
       { path: 'error', redirectTo: 'dashboard', pathMatch: 'full' },
 
-      // ⬇️ Private 404 (no redirect; preserves original bad URL)
-      {
-        path: '**',
-        loadComponent: () => import('./features/notfound/notfound').then((m) => m.Notfound),
-      },
+      // Any address this app has no page for goes to the dashboard instead of a 404.
+      //
+      // The usual way to land on one is the return address saved when a session ended (login.ts
+      // navigates back to it after the next login): it can be a page of another application that
+      // shares this browser's storage -- e.g. /lms/learner/course-module, which exists in the ESS
+      // portal but not in this build -- as can a stale bookmark or an old notification link. Showing
+      // "404 Page not found" straight after a successful login was the wrong answer to all of them.
+      { path: '**', redirectTo: 'dashboard' },
     ],
   },
 

@@ -192,9 +192,8 @@ export class DRDistributionList {
         // "Any" here means no filter, matching how those cabinet levels already work rather than
         // being a distinct selectable option.
         placeholder: 'Any',
-        // Shows "Any" for an already-saved row's blank Role too, not just as the editor's
-        // placeholder -- matches getColumns()'s same emptyValueDisplay on the cabinet columns.
-        emptyValueDisplay: 'Any',
+        // A saved row whose Role was left blank covers every role: shown as "All", like the cabinet columns.
+        emptyValueDisplay: 'All',
         required: false,
       },
       // DOCUMENT TYPES
@@ -252,18 +251,11 @@ export class DRDistributionList {
   }
 
   private getColumns(): GridColumn[] {
-    // buildCabinetColumns is a shared service used by other grids too -- mapping its result
-    // locally here (instead of changing the service itself) shows "Any" for a blank cabinet
-    // level only in this grid, exactly as asked, without touching how any other grid displays
-    // its own blank cabinet-level cells.
-    const cabinetColumns = this.cabinetGridService
-      .buildCabinetColumns(this.cabinetHierarchy)
-      .map((col) =>
-        col.field === 'level1Id'
-          ? { ...col, emptyValueDisplay: 'Any' }
-          : // Department / Sub-Department / Business Domain: blank means every one under the level above.
-            { ...col, emptyValueDisplay: 'All', placeholder: 'All' },
-      );
+    // Dropdowns read "Any"; a row whose level was left blank (the whole division / department / ...)
+    // reads "All".
+    const cabinetColumns = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, {
+      blankMeansAll: true,
+    });
     return [...cabinetColumns, ...this.getRemainingColumns()];
   }
 

@@ -83,7 +83,7 @@ export class ManageWorkflowPolicyModal {
   ];
 
   private getColumns(): GridColumn[] {
-    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy).map(col => ({
+    const cabinetCols = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, { blankMeansAll: true }).map(col => ({
       ...col,
       minWidth: 140
     }));

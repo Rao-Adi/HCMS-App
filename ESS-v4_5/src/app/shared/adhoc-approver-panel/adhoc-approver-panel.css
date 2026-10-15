@@ -39,6 +39,16 @@
   background: #eef4ff;
 }
 
+.adhoc-row.is-decided {
+  background: #fafafa;
+  color: #6b7280;
+}
+
+.adhoc-tag.done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .adhoc-row.is-new {
   background: #fffaf0;
 }
@@ -100,4 +110,19 @@
 
 .cdk-drag-animating {
   transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Same height as the approver dropdown beside it. */
+.adhoc-add-btn {
+  height: 28px; /* nz-select height */
+  line-height: 1;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* The dropdown host collapses to 18px while its select is 28px, which pushes it below the button. */
+.adhoc-panel :host ::ng-deep app-employee-list,
+:host ::ng-deep .adhoc-panel app-employee-list {
+  display: block;
+  height: 28px;
 }

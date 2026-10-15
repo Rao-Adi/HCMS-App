@@ -222,20 +222,11 @@ export class DRUsersComponent {
   }
 
   private getColumns(): GridColumn[] {
-    // A blank cabinet level here means "Any", the same as it does on the Distribution List --
-    // leaving Division/Department/SubDepartment/BusinessDomain unselected is how a user says
-    // the row is not scoped to one. Printed as an empty cell it read as missing data instead.
-    //
-    // buildCabinetColumns is shared with other grids, so the display is mapped here rather than
-    // in the service, exactly as drdistribution-list.getColumns already does it.
-    const cabinetColumns = this.cabinetGridService
-      .buildCabinetColumns(this.cabinetHierarchy)
-      .map((col) =>
-        col.field === 'level1Id'
-          ? { ...col, emptyValueDisplay: 'Any' }
-          : // Department / Sub-Department / Business Domain: blank means every one under the level above.
-            { ...col, emptyValueDisplay: 'All', placeholder: 'All' },
-      );
+    // A blank cabinet level here means every one -- the same as on the Distribution List. The
+    // dropdowns read "Any"; a saved row with the level blank reads "All".
+    const cabinetColumns = this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, {
+      blankMeansAll: true,
+    });
     return [...cabinetColumns, ...this.getRemainingColumns()];
   }
 

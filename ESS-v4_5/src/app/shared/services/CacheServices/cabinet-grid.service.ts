@@ -22,7 +22,10 @@ export class CabinetGridService {
   ) {}
 
   // 🔥 UNIVERSAL column builder
-  buildCabinetColumns(levels: CabinetLevel[]): GridColumn[] { 
+  // blankMeansAll: for grids where a cabinet level left blank is a scope (the whole division / department
+  // ...). The editor's dropdown then reads 'Any' and a saved row with the level blank reads 'All'. Leave it
+  // off where a blank level is just missing data (e.g. the document upload grids).
+  buildCabinetColumns(levels: CabinetLevel[], options?: { blankMeansAll?: boolean }): GridColumn[] { 
     return levels
       .filter(level => level.isActive)
       .map((level, index) => {
@@ -39,6 +42,7 @@ export class CabinetGridService {
           filterKey: parentLevel ? 'parentId' : undefined,
           minWidth: 230,
           required: false,
+          ...(options?.blankMeansAll ? { placeholder: 'Any', emptyValueDisplay: 'All' } : {}),
         } as GridColumn;
       });
   }

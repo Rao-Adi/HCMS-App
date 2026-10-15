@@ -63,7 +63,7 @@ export class AccessLevelModalDialog {
 
   private getColumns(): GridColumn[] {
     return [
-      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy),
+      ...this.cabinetGridService.buildCabinetColumns(this.cabinetHierarchy, { blankMeansAll: true }),
       ...this.getRemainingColumns(),
     ];
   }

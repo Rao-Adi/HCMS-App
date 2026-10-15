@@ -67,6 +67,16 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  // Of these workflow runs, the ones the signed-in approver may add an ad-hoc approver to right now
+  // (the My Approvals grid shows its "Ad-hoc Approver" link only for those).
+  getAdHocAuthority(executionIds: number[]): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-adhoc-authority`,
+      { ExecutionIds: executionIds },
+      { headers: this.getHeaders() },
+    );
+  }
+
   approveDocument(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/approve-document`,
@@ -210,6 +220,11 @@ export class DocumentService {
   // now, and what is the remaining sequence (their own step first) so they can pick a position.
   getAdHocOptions(executionId: number): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-adhoc-options/${executionId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
+  getAdHocApproverDesignation(empCode: string): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-adhoc-approver-designation/${encodeURIComponent(empCode)}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 

@@ -6,7 +6,7 @@
         <th>Distribution Type</th>
         <ng-container *ngIf="isObsoletion">
           <th>Status</th>
-          <th>Retrieved By</th>
+          <th>Done By</th>
         </ng-container>
       </tr>
     </thead>
@@ -17,20 +17,18 @@
         </td>
       </tr>
       <tr *ngFor="let item of pagedItems">
-        <td>{{ item.Role || item.role || 'Any' }}</td>
+        <td>{{ item.Role || item.role || 'All' }}</td>
         <td>
           <i class="bi me-1 text-muted" [ngClass]="typeIcon(item)"></i>{{ distributionType(item) }}
         </td>
         <ng-container *ngIf="isObsoletion">
           <td>
-            <span *ngIf="isDigital(item)" class="badge rounded-pill text-bg-secondary">Not applicable</span>
             <span
-              *ngIf="!isDigital(item)"
               class="badge rounded-pill"
               [ngClass]="isRetrieved(item) ? 'text-bg-success' : 'text-bg-danger'"
             >
               <i class="bi" [ngClass]="isRetrieved(item) ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
-              {{ isRetrieved(item) ? 'Retrieved' : 'Not Retrieved' }}
+              {{ statusLabel(item) }}
             </span>
           </td>
           <td>{{ retrievedByName(item) || '-' }}</td>

@@ -494,11 +494,10 @@
                   </div>
                 </div>
 
-                <!-- Obsoletion only: before this can be submitted, each Distribution List entry's
-                     copy must be confirmed retrieved -- the physical copy collected, or the
-                     document disabled digitally, per its own Distribution Type above. Client
-                     requirement (Ayesha Naz) -- see DocumentComponent.MarkDistributionRetrievedAsync
-                     for the server-side enforcement this mirrors. -->
+                <!-- Obsoletion only: before this can be submitted, each Distribution List entry needs a
+                     decision -- a Physical copy marked retrieved, a Digital one disabled (which withdraws
+                     access to the document). Both can be undone. Client requirement (Ayesha Naz) -- see
+                     DocumentComponent.MarkDistributionRetrievedAsync for the server-side enforcement. -->
                 <div class="status-box-leftColmd6-standard mb-4" *ngIf="isObsoletion && distributionListPayload.length > 0">
                   <h3 class="PnlHeader" style="margin-top: 0">Distribution List &ndash; Retrieval Status</h3>
                   <div class="row">
@@ -508,20 +507,16 @@
                           <thead>
                             <th>Role</th>
                             <th>Distribution Type</th>
-                            <th>Retrieved</th>
-                            <th>Retrieved By</th>
+                            <th>Status</th>
+                            <th>Done By</th>
                           </thead>
                           <tbody>
                             @for (item of distributionListPayload; track $index) {
                               <tr>
-                                <td>{{ item.Role || item.role || 'Any' }}</td>
+                                <td>{{ item.Role || item.role || 'All' }}</td>
                                 <td>{{ item.DistributionType || item.distributiontype }}</td>
                                 <td>
-                                  <!-- A Digital copy has nothing to collect: it is disabled in the system, not
-                                       handed back -- so there is no "Mark Retrieved" for it. -->
-                                  <span *ngIf="isDigitalDistribution(item)" class="text-muted">Not applicable</span>
                                   <button
-                                    *ngIf="!isDigitalDistribution(item)"
                                     type="button"
                                     class="btn btn-sm retrieval-status-btn"
                                     [class.btn-success]="item.IsRetrieved || item.isRetrieved"
@@ -531,7 +526,7 @@
                                   >
                                     <span *ngIf="item.retrieving" class="spinner-border spinner-border-sm"></span>
                                     <i *ngIf="!item.retrieving" class="bi" [class.bi-check-circle-fill]="item.IsRetrieved || item.isRetrieved" [class.bi-circle]="!(item.IsRetrieved || item.isRetrieved)"></i>
-                                    {{ item.retrieving ? 'Saving...' : ((item.IsRetrieved || item.isRetrieved) ? 'Retrieved' : 'Mark Retrieved') }}
+                                    {{ distributionButtonLabel(item) }}
                                   </button>
                                 </td>
                                 <td>{{ item.RetrievedBy || item.retrievedBy }}</td>

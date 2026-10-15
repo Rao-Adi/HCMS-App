@@ -102,14 +102,14 @@ export class RoleCabinetMappingModal implements OnInit {
     // Division is the first cabinet level and is the only one that must be chosen; the others stay
     // optional and read "Any" when blank.
     const cabinetColumns = this.cabinetGridService
-      .buildCabinetColumns(this.cabinetHierarchy)
+      .buildCabinetColumns(this.cabinetHierarchy, { blankMeansAll: true })
       .map((col, index) => ({
         ...col,
         minWidth: 160,
         required: index === 0,
-        // Department / Sub-Department / Business Domain: blank means every one under the level above.
-        emptyValueDisplay: index === 0 ? undefined : 'All',
-        placeholder: index === 0 ? col.placeholder : 'All',
+        // Division is required, so it never reads blank; its dropdown keeps the usual placeholder.
+        emptyValueDisplay: index === 0 ? undefined : col.emptyValueDisplay,
+        placeholder: index === 0 ? undefined : col.placeholder,
       }));
 
     return [

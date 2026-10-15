@@ -1,7 +1,12 @@
+<div class="text-muted py-2" *ngIf="loading">Loading&hellip;</div>
+<div class="alert alert-warning mb-0" *ngIf="!loading && !canAddAdHoc && loaded">
+  You cannot add an ad-hoc approver on this document &mdash; it is not with you, or your step does not allow it.
+</div>
+
 <!-- Shown only when this person's step allows adding an ad-hoc approver (decided by the server). -->
 <div class="adhoc-panel" *ngIf="canAddAdHoc">
-  <h3 class="PnlHeader" style="margin-top: 0">Add an ad-hoc approver (optional)</h3>
-  <div class="row align-items-end g-2">
+  <h3 class="PnlHeader" style="margin-top: 0">Approval hierarchy &amp; ad-hoc approver (optional)</h3>
+  <div class="row align-items-start g-2">
     <div class="col-lg-4 col-md-6 col-sm-12">
       <app-employee-list
         #adHocEmployeeList
@@ -15,7 +20,7 @@
     <div class="col-auto">
       <button
         type="button"
-        class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+        class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 adhoc-add-btn"
         [disabled]="!selectedAdHocEmployee"
         (click)="addAdHoc()"
       >
@@ -25,8 +30,8 @@
   </div>
 
   <div class="adhoc-hint mt-2">
-    The new approver is placed right after you. Drag it (<i class="bi bi-grip-vertical"></i>) to move
-    it, or use <strong>Next</strong> / <strong>End</strong>. It takes effect when you approve.
+    A new approver is added at the <strong>end</strong> of the approval hierarchy. Drag it
+    (<i class="bi bi-grip-vertical"></i>) to move it up &mdash; never above you. It takes effect when you approve.
   </div>
 
   <div class="adhoc-seq mt-2" cdkDropList (cdkDropListDropped)="dropAdHoc($event)">
@@ -37,6 +42,7 @@
       [cdkDragDisabled]="!row.isNew"
       [class.is-new]="row.isNew"
       [class.is-current]="row.isCurrent"
+      [class.is-decided]="row.isDecided"
     >
       <span class="adhoc-handle" *ngIf="row.isNew" cdkDragHandle title="Drag to move">
         <i class="bi bi-grip-vertical"></i>
@@ -47,16 +53,11 @@
         {{ row.name }}
         <small class="text-muted" *ngIf="row.designation"> – {{ row.designation }}</small>
       </span>
+      <span class="adhoc-tag done" *ngIf="row.isDecided">{{ row.decision || 'Done' }}</span>
       <span class="adhoc-tag you" *ngIf="row.isCurrent">You</span>
       <span class="adhoc-tag" *ngIf="row.isAdHoc && !row.isNew">Ad-hoc</span>
       <span class="adhoc-tag new" *ngIf="row.isNew">New ad-hoc</span>
       <span class="adhoc-actions" *ngIf="row.isNew">
-        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="moveToNext(row)">
-          Next
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="moveToEnd(row)">
-          End
-        </button>
         <button
           type="button"
           class="btn btn-sm btn-outline-danger"
