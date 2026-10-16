@@ -1,20 +1,31 @@
 @if (documentName) {
   <p class="adhoc-modal-note">Document: <strong>{{ documentName }}</strong></p>
 }
-<p class="adhoc-modal-note text-muted">
-  Pick an approver and where they go after you. They are added to this document's workflow when you click
-  <strong>Approve</strong>.
-</p>
+@if (canAdd) {
+  <p class="adhoc-modal-note text-muted">
+    Pick an approver and where they go after you. They are added to this document's workflow when you click
+    <strong>Approve</strong>.
+  </p>
+} @else {
+  <p class="adhoc-modal-note text-muted">The people who sign this document, in order.</p>
+}
 
 <app-adhoc-approver-panel
   [executionId]="executionId"
   [initialChoices]="initial"
   (placementsChange)="choices = $event"
+  (canAddChange)="canAdd = $event"
 ></app-adhoc-approver-panel>
 
 <div class="d-flex justify-content-center gap-3 mt-3 pb-2">
-  <button type="button" class="btn btn-primary shadow-sm" style="min-width: 120px" (click)="save()">Save</button>
-  <button type="button" class="btn btn-secondary shadow-sm" style="min-width: 120px" (click)="cancel()">
-    Cancel
-  </button>
+  @if (canAdd) {
+    <button type="button" class="btn btn-primary shadow-sm" style="min-width: 120px" (click)="save()">Save</button>
+    <button type="button" class="btn btn-secondary shadow-sm" style="min-width: 120px" (click)="cancel()">
+      Cancel
+    </button>
+  } @else {
+    <button type="button" class="btn btn-secondary shadow-sm" style="min-width: 120px" (click)="close()">
+      Close
+    </button>
+  }
 </div>

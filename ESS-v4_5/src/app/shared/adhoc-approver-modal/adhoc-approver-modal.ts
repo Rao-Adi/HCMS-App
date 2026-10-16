@@ -25,6 +25,8 @@ export class AdHocApproverModal {
   documentName: string;
   initial: AdHocChoice[];
   choices: AdHocChoice[];
+  // Whether this approver may add one (known once the panel has loaded). Without it the modal is a read-only view.
+  canAdd = false;
 
   constructor(
     private modalRef: NzModalRef,
@@ -41,6 +43,10 @@ export class AdHocApproverModal {
   }
 
   cancel(): void {
+    this.modalRef.close(undefined);
+  }
+
+  close(): void {
     this.modalRef.close(undefined);
   }
 }

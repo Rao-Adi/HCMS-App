@@ -45,6 +45,8 @@ export interface AdHocChoice extends AdHocPlacement {
 export class AdHocApproverPanel {
   @ViewChild('adHocEmployeeList') adHocEmployeeListRef?: EmployeeList;
   @Output() placementsChange = new EventEmitter<AdHocChoice[]>();
+  // Tells the host whether this approver may add one (known once the chain has loaded).
+  @Output() canAddChange = new EventEmitter<boolean>();
 
   // Ad-hoc approvers chosen earlier for this same workflow run (the modal was opened before). They are put
   // back in the sequence once it has loaded; one whose position or person no longer fits is dropped.
@@ -89,10 +91,11 @@ export class AdHocApproverPanel {
         this.loading = false;
         this.loaded = true;
         const data = res?.Data;
-        if (!data?.CanAddAdHocApprover) return;
 
-        this.canAddAdHoc = true;
-        this.sequence = (data.Steps || []).map((s: any) => ({
+        // Everyone sees the signing authorities; only the approver whose step allows it gets the controls to add one.
+        this.canAddAdHoc = !!data?.CanAddAdHocApprover;
+        this.canAddChange.emit(this.canAddAdHoc);
+        this.sequence = (data?.Steps || []).map((s: any) => ({
           key: 'step-' + s.StepId,
           stepId: Number(s.StepId),
           employeeCode: (s.EmployeeCode || '').trim(),
@@ -104,8 +107,10 @@ export class AdHocApproverPanel {
           decision: s.Decision || '',
           isNew: false,
         }));
-        this.restoreInitialChoices();
-        this.emitPlacements();
+        if (this.canAddAdHoc) {
+          this.restoreInitialChoices();
+          this.emitPlacements();
+        }
       },
       // A failure here only means the option is not shown; approving itself is unaffected.
       error: (err: any) => {

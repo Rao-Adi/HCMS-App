@@ -201,9 +201,9 @@ export class DRDistributionList {
         // "Any" here means no filter, matching how those cabinet levels already work rather than
         // being a distinct selectable option.
         placeholder: 'Any',
-        // A saved row whose Role was left blank covers every role: shown as "All", like the cabinet columns.
+        // A saved row whose Role is blank (an older "any role" row) covers every role: shown as "All".
         emptyValueDisplay: 'All',
-        required: false,
+        required: true,
       },
       // DOCUMENT TYPES
       {
@@ -259,9 +259,12 @@ export class DRDistributionList {
 
   private getColumns(): GridColumn[] {
     // Division > Department > Sub-Department come from People Partners (the hierarchy the Users screen shows) and
-    // cascade. Dropdowns read "Any"; a row whose level was left blank (the whole division / department / ...)
-    // reads "All".
-    return [...buildOrgColumns(this.org), ...this.getRemainingColumns()];
+    // cascade. Dropdowns read "Any"; a row whose level was left blank reads "All". Division, Role and Distribution
+    // Type are mandatory here; Department and Sub-Department are optional ("All" when left blank).
+    const orgColumns = buildOrgColumns(this.org).map((col) =>
+      col.field === 'level1Id' ? { ...col, required: true } : col,
+    );
+    return [...orgColumns, ...this.getRemainingColumns()];
   }
 
   GetAllDistributionList(query: any) {

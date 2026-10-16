@@ -239,22 +239,16 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         }
       },
     },
-    // Obsoletion distribution retrieval tracking (client requirement, Ayesha Naz, step 9 of her
-    // Obsoletion workflow email): "The approver approves the requests after reviewing that
-    // document retrieval according to the distribution list is done... should see the
-    // distribution list and retrieved status." That requirement names Obsoletion only -- Creation
-    // and Revision were never asked for this column, and every document carries a Distribution
-    // List (who receives it once Effective) regardless of activity type, so showing it
-    // unconditionally put a "Distribution List" link -- that opened a retrieval checklist nothing
-    // ever retrieves -- on every row. Gated on activityTypeCode (WorkflowExecutions.ActivityTypeCode
-    // via fn_get_my_inbox_documents) so the column is blank for anything but Obsoletion.
+    // The Distribution List the document carries, shown to the approver on every row that has one -- Creation,
+    // Revision and Obsoletion alike (client: "Distribution list should be shown to the approver"). This used to be
+    // limited to Obsoletion, the only case where the approver has to verify retrieval; the modal still shows the
+    // retrieval Status / Retrieved By columns for Obsoletion only (see openDistributionListModal), since nothing
+    // retrieves a Creation or Revision list.
     {
       field: 'distributionList',
       headerName: 'Distribution List',
       editable: false,
       cellRenderer: (params: any) => {
-        if (String(params.data?.activityTypeCode || '').toUpperCase() !== 'DRT-0003')
-          return '<span>-</span>';
         const list = params.value || (params.data && params.data.distributionList) || [];
         if (!list.length) return '<span>-</span>';
         return `
@@ -267,8 +261,8 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         `;
       },
       onCellClicked: (event: any) => {
-        if (String(event.data?.activityTypeCode || '').toUpperCase() !== 'DRT-0003') return;
         const list = event.value || (event.data && event.data.distributionList) || [];
+        if (!list.length) return;
         this.openDistributionListModal(list, event.data?.activityTypeCode);
       },
     },
@@ -343,19 +337,19 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   pendingTabColumnDefs: ColDef[] = [];
   pendingTabColumnToggles?: ColumnToggle[];
 
-  // "Ad-hoc Approver" link: opens a modal to add approvers to this document's workflow. Shown only on rows the
-  // server says the approver may add to (canAddAdHoc, see loadAdHocAuthority); the label carries how many
-  // have been chosen so far.
+  // "Signing Authorities" link: opens a modal showing everyone who signs this document, in order. Every approver gets
+  // it; only on rows the server says the approver may add to (canAddAdHoc, see loadAdHocAuthority) does the modal also
+  // offer adding an ad-hoc approver, and the label then carries how many have been chosen so far.
   private readonly adHocColumnDef: ColDef = {
     field: 'adHocApprover',
-    headerName: 'Ad-hoc Approver',
+    headerName: 'Signing Authorities',
     editable: false,
     sortable: false,
     filter: false,
     cellRenderer: (params: any) => {
-      if (!params.data?.canAddAdHoc) return '<span>-</span>';
-      const count = params.data?.adHocCount || 0;
-      const label = count > 0 ? 'Ad-hoc Approver (' + count + ')' : 'Add Ad-hoc Approver';
+      if (!Number(params.data?.ExecutionId)) return '<span>-</span>';
+      const count = params.data?.canAddAdHoc ? params.data?.adHocCount || 0 : 0;
+      const label = count > 0 ? 'Signing Authorities (' + count + ')' : 'Signing Authorities';
       return (
         '<span style="color:#1976d2; cursor:pointer; text-decoration:underline" data-action="open-adhoc">' +
         label +
@@ -363,7 +357,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       );
     },
     onCellClicked: (event: any) => {
-      if (!event.data?.canAddAdHoc) return;
+      if (!Number(event.data?.ExecutionId)) return;
       this.openAdHocModal(event.data);
     },
   };
@@ -698,7 +692,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     });
   }
 
-  // Puts the "Ad-hoc Approver" column right after "Distribution List" (or at the end if that one is not
+  // Puts the "Signing Authorities" column right after "Distribution List" (or at the end if that one is not
   // on the grid).
   private withAdHocColumn(defs: ColDef[]): ColDef[] {
     const at = defs.findIndex((c) => c.field === 'distributionList');
@@ -712,7 +706,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     const copy = [...toggles];
     copy.splice(at >= 0 ? at + 1 : copy.length, 0, {
       field: 'adHocApprover',
-      label: 'Ad-hoc Approver',
+      label: 'Signing Authorities',
       visible: true,
     });
     return copy;
@@ -744,7 +738,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     if (!executionId) return;
 
     const modalRef = this.modal.create({
-      nzTitle: 'Add Ad-hoc Approver',
+      nzTitle: 'Signing Authorities',
       nzContent: AdHocApproverModal,
       nzData: {
         executionId,

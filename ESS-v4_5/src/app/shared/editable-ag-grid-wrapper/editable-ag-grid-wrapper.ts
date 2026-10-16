@@ -98,6 +98,10 @@ export interface GridColumn<T = any> {
   // wrapper displays its own blank dropdown cells.
   emptyValueDisplay?: string;
 
+  // Same as emptyValueDisplay, but decided per row -- for a blank that means "all" only when there is something to
+  // be "all" of. Takes precedence over emptyValueDisplay when set.
+  emptyValueDisplayForRow?: (rowData: any) => string;
+
   // For numbers
   decimalPlaces?: number;
 
@@ -627,7 +631,10 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
         };
 
         colDef.valueFormatter = (params) => {
-          if (!params.value) return column.emptyValueDisplay ?? '';
+          if (!params.value)
+            return column.emptyValueDisplayForRow
+              ? column.emptyValueDisplayForRow(params.data)
+              : (column.emptyValueDisplay ?? '');
 
           const options = column.dropdownOptions || [];
           const match = options.find((opt) => opt.id == params.value);

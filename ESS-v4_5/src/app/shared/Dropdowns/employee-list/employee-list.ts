@@ -3,6 +3,8 @@ import {
   Component,
   EventEmitter,
   forwardRef,
+  NgZone,
+  OnDestroy,
   Input,
   Output,
   Pipe,
@@ -47,6 +49,7 @@ export class HighlightSearchPipe implements PipeTransform {
     [(ngModel)]="selectedUser"
     (ngModelChange)="onSelectionChange($event)"
     (nzOnSearch)="onSearch($event)"
+    (nzOpenChange)="onOpenChange($event)"
     nzVirtualHeight="300px"
     nzVirtualItemSize="32"
   >
@@ -84,7 +87,7 @@ export class HighlightSearchPipe implements PipeTransform {
     },
   ],
 })
-export class EmployeeList {
+export class EmployeeList implements OnDestroy {
   @Input() valueKey!: string;
   @Input() labelKey!: string;
   @Input() placeholder = 'Select';
@@ -109,9 +112,13 @@ export class EmployeeList {
   // the *ngFor that creates the option components in the first place.
   visibleOptions: Array<{ label: string; value: string }> = [];
 
-  // Enough to fill the 300px virtual-scroll panel several times over while staying trivial to
-  // render. Narrowing further is the search box's job.
-  private static readonly MaxVisibleOptions = 50;
+  // How many options are rendered at first, and how many more each time the list is scrolled to its end. The first
+  // batch is enough to fill the 300px panel several times over while staying trivial to render; scrolling to the
+  // bottom loads the next batch, so the whole company's list stays reachable without ever rendering it all at once
+  // (which is what froze the page). The search box narrows the list from the full set in memory.
+  private static readonly PageSize = 50;
+  private static readonly ScrollStep = 100;
+  private renderLimit = EmployeeList.PageSize;
 
   @Output() valueChange = new EventEmitter<any>();
 
@@ -127,7 +134,10 @@ export class EmployeeList {
   // Approver" picker on create-update-document.html, which was throwing the same NG01203 error.
   nzMode: 'multiple' | 'default' = 'multiple';
 
-  constructor(private _peoplePartnerService: PeoplePartnersService) {}
+  constructor(
+    private _peoplePartnerService: PeoplePartnersService,
+    private zone: NgZone,
+  ) {}
 
   private onChange = (_: any) => {};
   private onTouched = () => {};
@@ -168,6 +178,45 @@ export class EmployeeList {
 
   onSearch(value: string): void {
     this.searchTerm = value;
+    this.renderLimit = EmployeeList.PageSize; // a new search starts from the first batch again
+    this.refreshVisibleOptions();
+  }
+
+  private stopWatchingScroll?: () => void;
+
+  ngOnDestroy(): void {
+    this.stopWatchingScroll?.();
+  }
+
+  // While the dropdown is open, watches its scroll position and loads the next batch near the end. ng-zorro's own
+  // nzScrollToBottom is not used: it fires only when the scroll position hits one exact index, so a mouse-wheel step
+  // that jumps over it never loads anything.
+  onOpenChange(open: boolean): void {
+    this.stopWatchingScroll?.();
+    this.stopWatchingScroll = undefined;
+    if (!open) return;
+
+    // The panel is created a moment after the select opens.
+    setTimeout(() => {
+      const viewport = document.querySelector(
+        '.ant-select-dropdown:not(.ant-select-dropdown-hidden) cdk-virtual-scroll-viewport',
+      ) as HTMLElement | null;
+      if (!viewport) return;
+
+      const onScroll = () => {
+        if (viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 96)
+          this.zone.run(() => this.onScrollToBottom());
+      };
+      // Outside Angular: a scroll event fires many times a second and must not trigger change detection each time.
+      this.zone.runOutsideAngular(() => viewport.addEventListener('scroll', onScroll, { passive: true }));
+      this.stopWatchingScroll = () => viewport.removeEventListener('scroll', onScroll);
+    }, 50);
+  }
+
+  // Scrolled to the end of what is rendered: render the next batch, if there is one.
+  onScrollToBottom(): void {
+    if (this.visibleOptions.length < this.renderLimit) return; // nothing more to show
+    this.renderLimit += EmployeeList.ScrollStep;
     this.refreshVisibleOptions();
   }
 
@@ -192,7 +241,7 @@ export class EmployeeList {
     }
 
     for (const opt of this.options) {
-      if (shown.length >= EmployeeList.MaxVisibleOptions) break;
+      if (shown.length >= this.renderLimit) break;
       if (selected.has(opt.value)) continue;
       if (term && !(opt.label || '').toLowerCase().includes(term)) continue;
       shown.push(opt);

@@ -100,8 +100,12 @@ export function rolesFor(
 
 /**
  * The Division / Department / Sub-Department columns, as cascading dropdowns: Department follows the Division,
- * Sub-Department follows the Department, and changing a level clears the ones below it. The dropdowns read "Any"; a
- * saved row with a level left blank reads "All".
+ * Sub-Department follows the Department, and changing a level clears the ones below it. The dropdowns read "Any".
+ *
+ * A saved row with a level left blank reads "All" only when there is something to be "all" of: a Department left blank
+ * under a Division that has departments, a Sub-Department left blank under a Department that has sub-departments. Where
+ * the level above has none (a department with no sub-departments), the blank stays empty -- "All" there would claim
+ * a choice that does not exist.
  */
 export function buildOrgColumns(org: OrgStructure): GridColumn[] {
   const common = {
@@ -129,6 +133,8 @@ export function buildOrgColumns(org: OrgStructure): GridColumn[] {
       dropdownOptions: org.departments,
       dropdownOptionsForRow: (row: any) => departmentsFor(org, row?.level1Id),
       clearWhenChanged: ['level1Id'],
+      emptyValueDisplayForRow: (row: any) =>
+        str(row?.level1Id) && departmentsFor(org, row?.level1Id).length === 0 ? '' : 'All',
     },
     {
       ...common,
@@ -137,6 +143,8 @@ export function buildOrgColumns(org: OrgStructure): GridColumn[] {
       dropdownOptions: org.subDepartments,
       dropdownOptionsForRow: (row: any) => subDepartmentsFor(org, row?.level2Id),
       clearWhenChanged: ['level1Id', 'level2Id'],
+      emptyValueDisplayForRow: (row: any) =>
+        str(row?.level2Id) && subDepartmentsFor(org, row?.level2Id).length === 0 ? '' : 'All',
     },
   ] as GridColumn[];
 }
