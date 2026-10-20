@@ -99,6 +99,77 @@ export function rolesFor(
 }
 
 /**
+ * After a Role is picked on a row: fill in the Department and Sub-Department it belongs to, so the row says where the role
+ * actually sits instead of "All". Looks at where people holding that role are placed, inside the Division (and
+ * Department) already chosen:
+ *   - if they are all in one Department, and none was chosen, that Department is filled in;
+ *   - likewise for the Sub-Department -- but only when every one of them has the same one. A role whose holders have
+ *     no Sub-Department (or a mix) leaves it blank.
+ * Anything the person already chose is never changed, and a role that spreads over several Departments leaves them as "All".
+ * A Department / Sub-Department is only filled in when it is one the dropdown actually offers for the row (an inactive or
+ * placeholder unit that people happen to be recorded under is not), otherwise the cell would show a bare id.
+ */
+export function fillUnitFromRole(org: OrgStructure, row: any, roleField: string): void {
+  // Whatever an earlier Role filled in goes first: clearing the Role (or choosing another) gives the Department and
+  // Sub-Department back, so the Role list is again the one for the Division alone. Units the person chose themselves stay.
+  clearAutoFilledUnits(row);
+
+  const role = Number(row?.[roleField]);
+  if (!role) return;
+
+  const division = str(row.level1Id);
+  const inDivision = org.roles.filter((r) => r.roleId === role && (!division || r.divisionId === division));
+
+  const only = (values: string[]): string => {
+    const distinct = new Set(values);
+    return distinct.size === 1 ? [...distinct][0] : '';
+  };
+
+  if (!str(row.level2Id)) {
+    const department = only(inDivision.map((r) => r.departmentId));
+    const offered = division
+      ? departmentsFor(org, division).some((d) => d.id === department)
+      : org.departments.some((d) => d.id === department);
+    if (department && offered) {
+      row.level2Id = department;
+      row.autoFilledDepartment = true;
+    }
+  }
+
+  if (!str(row.level3Id)) {
+    const department = str(row.level2Id);
+    const inDepartment = inDivision.filter((r) => !department || r.departmentId === department);
+    const subDepartment = only(inDepartment.map((r) => r.subDepartmentId));
+    const offered = department
+      ? subDepartmentsFor(org, department).some((s) => s.id === subDepartment)
+      : org.subDepartments.some((s) => s.id === subDepartment);
+    if (subDepartment && offered) {
+      row.level3Id = subDepartment;
+      row.autoFilledSubDepartment = true;
+    }
+  }
+}
+
+/** Takes back the Department / Sub-Department that a Role filled in (and only those -- never one the person chose). */
+export function clearAutoFilledUnits(row: any): void {
+  if (!row) return;
+  if (row.autoFilledSubDepartment) row.level3Id = null;
+  if (row.autoFilledDepartment) row.level2Id = null;
+  row.autoFilledDepartment = false;
+  row.autoFilledSubDepartment = false;
+}
+
+/**
+ * The person has chosen a Division, Department or Sub-Department themselves: from now on those belong to them, so a
+ * later change of Role must not take them away.
+ */
+export function unitChosenByPerson(row: any): void {
+  if (!row) return;
+  row.autoFilledDepartment = false;
+  row.autoFilledSubDepartment = false;
+}
+
+/**
  * The Division / Department / Sub-Department columns, as cascading dropdowns: Department follows the Division,
  * Sub-Department follows the Department, and changing a level clears the ones below it. The dropdowns read "Any".
  *
@@ -125,6 +196,7 @@ export function buildOrgColumns(org: OrgStructure): GridColumn[] {
       field: 'level1Id',
       headerName: 'Division',
       dropdownOptions: org.divisions,
+      afterValueChange: unitChosenByPerson,
     },
     {
       ...common,
@@ -133,6 +205,7 @@ export function buildOrgColumns(org: OrgStructure): GridColumn[] {
       dropdownOptions: org.departments,
       dropdownOptionsForRow: (row: any) => departmentsFor(org, row?.level1Id),
       clearWhenChanged: ['level1Id'],
+      afterValueChange: unitChosenByPerson,
       emptyValueDisplayForRow: (row: any) =>
         str(row?.level1Id) && departmentsFor(org, row?.level1Id).length === 0 ? '' : 'All',
     },
@@ -143,6 +216,7 @@ export function buildOrgColumns(org: OrgStructure): GridColumn[] {
       dropdownOptions: org.subDepartments,
       dropdownOptionsForRow: (row: any) => subDepartmentsFor(org, row?.level2Id),
       clearWhenChanged: ['level1Id', 'level2Id'],
+      afterValueChange: unitChosenByPerson,
       emptyValueDisplayForRow: (row: any) =>
         str(row?.level2Id) && subDepartmentsFor(org, row?.level2Id).length === 0 ? '' : 'All',
     },

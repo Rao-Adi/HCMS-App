@@ -23,6 +23,7 @@ import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-map
 import {
   buildOrgColumns,
   emptyOrgStructure,
+  fillUnitFromRole,
   ORG_FIELDS,
   OrgStructure,
   parseOrgStructure,
@@ -171,6 +172,8 @@ export class DRUsersComponent {
         // the one picked may no longer be mapped to it.
         dropdownOptionsForRow: (row: any) => this.rolesForRow(row),
         clearWhenChanged: this.cabinetFieldNames(),
+        // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole).
+        afterValueChange: (row: any) => fillUnitFromRole(this.org, row, 'userId'),
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -211,7 +214,35 @@ export class DRUsersComponent {
       domLayout: 'autoHeight',
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
+      canAddRow: (row: any) => this.roleIsFree(row),
+      canUpdateRow: (row: any, index: number) => this.roleIsFree(row, index),
     };
+  }
+
+  // The id of the Role a row holds. A row added in this session holds the id; one rebuilt from saved users holds the
+  // Role's name, so either is matched against the role list.
+  private roleIdOfRow(row: any): string {
+    const value = row?.userId;
+    if (value === null || value === undefined || value === '') return '';
+    const role = this.userRoles.find((r) => String(r.id) === String(value) || r.text === value);
+    return String(role ? role.id : value);
+  }
+
+  // A Role can be in Document Users only once.
+  private roleIsFree(row: any, ignoreIndex = -1): boolean {
+    const role = this.roleIdOfRow(row);
+    if (!role) return true;
+
+    const taken = this.manualUserData.some((r, i) => i !== ignoreIndex && this.roleIdOfRow(r) === role);
+    if (taken) {
+      const name = this.userRoles.find((r) => String(r.id) === role)?.text || 'This role';
+      this._notificationToastService.createNotification(
+        'warning',
+        'Document Users',
+        `Role "${name}" is already added.`,
+      );
+    }
+    return !taken;
   }
 
   private cabinetFieldNames(): string[] {
@@ -220,10 +251,12 @@ export class DRUsersComponent {
 
   // The roles held inside the organisation unit this row has picked.
   private rolesForRow(row: any): any[] {
+    // A Department / Sub-Department that a Role filled in itself does not narrow the list: it stays the roles of the
+    // Division (and whatever the person chose), so another Role can be picked straight away.
     return rolesFor(this.org, {
       division: row?.level1Id,
-      department: row?.level2Id,
-      subDepartment: row?.level3Id,
+      department: row?.autoFilledDepartment ? '' : row?.level2Id,
+      subDepartment: row?.autoFilledSubDepartment ? '' : row?.level3Id,
     });
   }
 

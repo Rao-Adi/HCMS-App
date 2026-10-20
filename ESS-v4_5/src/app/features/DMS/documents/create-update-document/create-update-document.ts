@@ -1349,6 +1349,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         payLoad.activitytypecode = this.selectedRequestType;
       }
 
+      // A Revision's Document Users / Distribution List are editable on this screen, so what is shown at submission
+      // replaces what the document carried (otherwise the approver keeps seeing the old list). Not for Obsoletion: its
+      // list is shown for confirmation only.
+      if (this.selectedRequestType === 'DRT-0002') {
+        payLoad.replacedistributions = true;
+      }
+
     } else {
       payLoad.documentid = this.documentId;
 

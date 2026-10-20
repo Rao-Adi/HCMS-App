@@ -22,6 +22,7 @@ import { mappedRoleIdsForCabinet, RoleCabinetMappingRow } from '@app/shared/util
 import {
   buildOrgColumns,
   emptyOrgStructure,
+  fillUnitFromRole,
   ORG_FIELDS,
   OrgStructure,
   parseOrgStructure,
@@ -194,6 +195,8 @@ export class DRDistributionList {
         // mapped to that cabinet (the server expands it the same way).
         dropdownOptionsForRow: (row: any) => this.rolesForRow(row),
         clearWhenChanged: this.cabinetFieldNames(),
+        // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole).
+        afterValueChange: (row: any) => fillUnitFromRole(this.org, row, 'roleId'),
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
@@ -241,7 +244,26 @@ export class DRDistributionList {
       domLayout: 'autoHeight',
       theme: 'ag-theme-alpine',
       suppressCellFocus: true,
+      canAddRow: (row: any) => this.roleIsFree(row),
+      canUpdateRow: (row: any, index: number) => this.roleIsFree(row, index),
     };
+  }
+
+  // A Role can be in the Distribution List only once. A row with no Role (an older "any role" row) has nothing to compare.
+  private roleIsFree(row: any, ignoreIndex = -1): boolean {
+    const role = String(row?.roleId ?? '');
+    if (!role) return true;
+
+    const taken = this.distributionListData.some((r, i) => i !== ignoreIndex && String(r.roleId ?? '') === role);
+    if (taken) {
+      const name = this.userRoles.find((r) => String(r.id) === role)?.text || 'This role';
+      this._notificationToastService.createNotification(
+        'warning',
+        'Distribution List',
+        `Role "${name}" is already added.`,
+      );
+    }
+    return !taken;
   }
 
   private cabinetFieldNames(): string[] {
@@ -250,10 +272,12 @@ export class DRDistributionList {
 
   // The roles held inside the organisation unit this row has picked.
   private rolesForRow(row: any): { id: any; text: string }[] {
+    // A Department / Sub-Department that a Role filled in itself does not narrow the list: it stays the roles of the
+    // Division (and whatever the person chose), so another Role can be picked straight away.
     return rolesFor(this.org, {
       division: row?.level1Id,
-      department: row?.level2Id,
-      subDepartment: row?.level3Id,
+      department: row?.autoFilledDepartment ? '' : row?.level2Id,
+      subDepartment: row?.autoFilledSubDepartment ? '' : row?.level3Id,
     });
   }
 

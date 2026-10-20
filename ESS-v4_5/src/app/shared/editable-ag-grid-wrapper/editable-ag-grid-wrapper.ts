@@ -11,6 +11,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
@@ -77,6 +78,10 @@ export interface GridColumn<T = any> {
   dropdownOptionsForRow?: (rowData: any) => T[];
   // Fields whose change clears this column's value, because its options depend on them.
   clearWhenChanged?: string[];
+
+  // Called with the row right after this dropdown's value is set (and the fields in clearWhenChanged are cleared), so
+  // the grid can fill other cells in from the choice. Optional.
+  afterValueChange?: (rowData: any) => void;
   dropdownValueField?: keyof T;
   dropdownDisplayField?: keyof T;
   showSearch?: boolean; // Allows enabling/disabling search per column
@@ -126,6 +131,13 @@ export interface GridColumn<T = any> {
 
 export interface GridConfig {
   columns: GridColumn[];
+  /**
+   * Optional check on a row about to be added from the top "add" row. Return false to refuse it: nothing is added and
+   * the row stays as typed, so it can be corrected. The grid explains the refusal itself (a message to the user).
+   */
+  canAddRow?: (row: any) => boolean;
+  /** Same, for saving an edited row; index is the row's position. Returning false keeps it in edit mode. */
+  canUpdateRow?: (row: any, index: number) => boolean;
   enablePagination?: boolean;
   // Keeps paging underneath but does not draw the page-size / page-number bar. With a page size larger
   // than the data the grid shows every row on one page and looks unpaged.
@@ -275,6 +287,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   constructor(
     private el: ElementRef,
     private modal: NzModalService,
+    private toast: NotificationToastService,
   ) {
     this.defaultColDef = {
       sortable: this.config.enableSorting,
@@ -593,6 +606,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                   this.config.columns
                     .filter((c) => c.clearWhenChanged?.includes(column.field))
                     .forEach((c) => (data[c.field] = null));
+                  column.afterValueChange?.(data);
 
                   // 3️⃣ FORCE REFRESH ROW (🔥 REQUIRED)
                   params.api.refreshCells({
@@ -1198,6 +1212,8 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   updateRow(event: CellClickedEvent): void {
+    if (this.config.canUpdateRow && !this.config.canUpdateRow(event.data, event.rowIndex!)) return;
+
     this.modal.confirm({
       nzTitle: 'Confirm Update',
       nzContent: 'Are you sure you want to update this record?',
@@ -1251,12 +1267,16 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     const missingFields = requiredColumns.filter((col) => !pinnedData[col.field]);
 
     if (missingFields.length > 0) {
-      this.modal.warning({
-        nzTitle: 'Missing Required Fields',
-        nzContent: `Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`,
-      });
+      // A toast, like every other validation message on these grids (e.g. "Role ... is already added").
+      this.toast.createNotification(
+        'warning',
+        'Missing Required Fields',
+        `Please fill in: ${missingFields.map((col) => col.headerName).join(', ')}`,
+      );
       return;
     }
+
+    if (this.config.canAddRow && !this.config.canAddRow(pinnedData)) return;
 
     // ❌ DO NOT rely on pinnedData for file
     const uploadedFile = (this.gridApi.getPinnedTopRow(0) as any)?.__uploadedFile;
