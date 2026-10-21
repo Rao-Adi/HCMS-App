@@ -33,6 +33,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 import { AppConfigService } from '@app/core/services/app-config';
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 @Component({
   selector: 'app-document-request-form',
@@ -1504,7 +1505,7 @@ export class DocumentRequestForm {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: false, title: this.currentDocumentName });
       });
   }
 

@@ -19,7 +19,7 @@
           My Documents
           <span
             *ngIf="myDocumentsCount > 0"
-            class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+            class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
             >{{ formatBadgeCount(myDocumentsCount) }}</span>
         </button>
         <button
@@ -31,7 +31,7 @@
            Draft/Reverted Documents
           <span
             *ngIf="draftDocumentsCount > 0"
-            class="badge rounded-pill bg-primary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+            class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
             >{{ formatBadgeCount(draftDocumentsCount) }}</span>
         </button>
       </div>

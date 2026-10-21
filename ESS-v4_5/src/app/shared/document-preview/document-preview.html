@@ -1,0 +1,83 @@
+<div class="d-flex justify-content-end gap-2 mb-2">
+  <button type="button" class="btn btn-primary btn-sm shadow-sm preview-btn" [disabled]="!blob" (click)="download()">
+    <i class="bi bi-file-earmark-arrow-down me-1"></i> Download
+  </button>
+  <button type="button" class="btn btn-secondary btn-sm shadow-sm preview-btn" (click)="close()">Close</button>
+</div>
+
+@if (loading) {
+  <div class="preview-state text-muted">Loading preview...</div>
+}
+@if (message) {
+  <div class="alert alert-warning text-center mb-3" style="font-size: 14px">{{ message }}</div>
+}
+
+<div class="preview-scroll">
+  <!-- The rendered Word document -->
+  <div #docHost class="preview-doc"></div>
+
+  @if (pdfUrl) {
+    <iframe class="preview-pdf" [src]="pdfUrl" title="Document preview"></iframe>
+  }
+
+  <!-- Last on the page, after the document content -->
+  @if (listsLoaded) {
+    <div class="preview-lists">
+      <h6 class="preview-heading">Distribution List</h6>
+      @if (distributionList.length) {
+        <table class="table table-sm table-bordered preview-table">
+          <thead>
+            <tr>
+              <th>Division</th>
+              <th>Department</th>
+              <th>Sub Department</th>
+              <th>Role</th>
+              <th>Distribution Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of distributionList; track $index) {
+              <tr>
+                <td>{{ val(d, 'Division', 'division') || 'All' }}</td>
+                <td>{{ val(d, 'Department', 'department') || 'All' }}</td>
+                <td>{{ val(d, 'SubDepartment', 'subDepartment') || 'All' }}</td>
+                <td>{{ val(d, 'Role', 'role') || 'Any' }}</td>
+                <td>{{ val(d, 'DistributionType', 'distributionType') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="text-muted preview-none">No Distribution List.</p>
+      }
+
+      <h6 class="preview-heading">Document Users</h6>
+      @if (userList.length) {
+        <table class="table table-sm table-bordered preview-table">
+          <thead>
+            <tr>
+              <th>Division</th>
+              <th>Department</th>
+              <th>Sub Department</th>
+              <th>Role</th>
+              <th>Employees Selected</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of userList; track $index) {
+              <tr>
+                <td>{{ val(u, 'Division', 'division') || 'All' }}</td>
+                <td>{{ val(u, 'Department', 'department') || 'All' }}</td>
+                <td>{{ val(u, 'SubDepartment', 'subDepartment') || 'All' }}</td>
+                <td>{{ val(u, 'Role', 'role') }}</td>
+                <td>{{ val(u, 'SelectedEmployees', 'selectedEmployees') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="text-muted preview-none">No Document Users.</p>
+      }
+    </div>
+  }
+</div>

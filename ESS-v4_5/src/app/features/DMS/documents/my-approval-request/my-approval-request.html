@@ -16,7 +16,7 @@
                 (click)="onTabChange('Pending')"
               >
                 Pending
-                <span class="badge rounded-pill bg-warning text-dark border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
+                <span class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   pendingRequestCount
                 }}</span>
               </button>
@@ -27,7 +27,7 @@
                 (click)="onTabChange('Approved')"
               >
                 Approved
-                <span  class="badge rounded-pill bg-success text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
+                <span  class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px">{{
                   approvedRequestCount
                 }}</span>
               </button>
@@ -38,7 +38,7 @@
                 (click)="onTabChange('Rejected')"
               >
                 Reverted/Rejected<span 
-                  class="badge rounded-pill bg-danger text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
+                  class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
                   >{{ disapprovedRequestCount }}</span
                 >
               </button>

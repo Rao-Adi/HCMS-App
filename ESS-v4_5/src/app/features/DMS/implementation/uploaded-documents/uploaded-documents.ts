@@ -20,6 +20,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { CabinetGridService } from '@app/shared/services/CacheServices/cabinet-grid.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 @Component({
   selector: 'app-uploaded-documents',
@@ -383,7 +384,7 @@ export class UploadedDocuments {
     if (this.draftFileUrl) {
       // A real file exists -- download it directly instead of routing through a modal
       // whose only content in that case was a "Download Document" button.
-      this.downloadDraft();
+      openDocumentPreview(this.modal, { documentId: Number(this.documentId), pending: false, title: this.currentDocumentName });
       return;
     }
 

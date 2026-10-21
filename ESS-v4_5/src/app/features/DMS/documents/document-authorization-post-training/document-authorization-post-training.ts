@@ -31,6 +31,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 @Component({
   selector: 'app-document-authorization-post-training',
@@ -894,7 +895,7 @@ export class DocumentAuthorizationPostTraining {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: true, title: this.currentDocumentName });
       });
   }
 

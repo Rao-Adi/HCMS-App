@@ -39,6 +39,7 @@ import { TemplateService } from '@app/shared/services/template.service';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { AdHocChoice } from '@app/shared/adhoc-approver-panel/adhoc-approver-panel';
 import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 // WorkflowExecutions.Status as stored, translated into what the business calls it. 'Reworked' is
 // the stored value for a revert; nothing user-facing has ever called it that. 'Completed' means
@@ -860,7 +861,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: true, title: this.documentName });
       });
   }
 

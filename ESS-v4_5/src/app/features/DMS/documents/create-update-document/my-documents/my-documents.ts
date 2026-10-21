@@ -17,6 +17,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { TemplateService } from '@app/shared/services/template.service';
 import { statusCellRenderer } from '@app/shared/utils/document-status';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 // Status badge styling for a Document's lifecycle CurrentStatus (Draft / Pending Approval /
 // Authorization Pending / Training Pending / Approved / Authorized / Effective / Rejected --
@@ -415,7 +416,7 @@ export class MyDocuments implements OnInit {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: false, title: this.currentDocumentName });
       });
   }
 

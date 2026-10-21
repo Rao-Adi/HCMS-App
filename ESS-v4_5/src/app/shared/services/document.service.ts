@@ -317,6 +317,12 @@ export class DocumentService {
   // pending: the caller works on the version still being prepared (approver, authorizer, author),
   // so a document under revision downloads as the NEW version, with that version's approvals --
   // not the version in force. Left off, the download is the version in force.
+  // Document Users and Distribution List for the Preview screen (pending: same meaning as DownloadDocumentTemplate).
+  GetDocumentPreviewLists(id: any, pending = false) {
+    const uri = `${this.apiUrl}/DMSDocument/get-document-preview-lists/${id}${pending ? '?pending=true' : ''}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   DownloadDocumentTemplate(id: any, pending = false) {
     const uri = `${this.apiUrl}/DMSDocument/download-submitted-document-template/${id}${pending ? '?pending=true' : ''}`;
     return this.http.get(uri, {

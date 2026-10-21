@@ -29,6 +29,7 @@ import { NavigationCountsService } from '@app/shared/services/navigation-counts.
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
 import { TemplateService } from '@app/shared/services/template.service';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 @Component({
   selector: 'app-sopdocument-training',
@@ -983,7 +984,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: true, title: this.currentDocumentName });
       });
   }
 

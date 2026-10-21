@@ -27,6 +27,7 @@ import { AppConfigService } from '@app/core/services/app-config';
 import { RevisionHistoryModal } from '../../documents/revision-history-modal/revision-history-modal';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { TemplateService } from '@app/shared/services/template.service';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 @Component({
   selector: 'app-approval-documents',
@@ -654,7 +655,7 @@ export class ApprovalDocuments {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: false, title: this.currentDocumentName });
       });
   }
 

@@ -1,0 +1,74 @@
+.preview-state {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.preview-scroll {
+  max-height: 72vh;
+  overflow: auto;
+  background: #eef0f3;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+/* docx-preview draws each page as a white sheet; keep them readable on narrow screens */
+.preview-doc {
+  overflow-x: auto;
+}
+
+.preview-pdf {
+  width: 100%;
+  height: 70vh;
+  border: 0;
+  background: #fff;
+}
+
+.preview-lists {
+  background: #fff;
+  margin-top: 16px;
+  padding: 16px 20px;
+  border-radius: 4px;
+}
+
+.preview-heading {
+  font-weight: 600;
+  margin: 12px 0 8px;
+}
+
+.preview-table {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.preview-none {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+/* The template's header and footer tables are wider than the text area and shifted left by a negative indent, which the
+   renderer drops -- so they ran past the right edge of the page. Fit them to the text area: equal left and right margin. */
+:host ::ng-deep section.docx > header table,
+:host ::ng-deep section.docx > footer table {
+  width: 100% !important;
+  margin-left: 0 !important;
+}
+
+/* compact toolbar buttons (the global .btn style stretches them) */
+.preview-btn {
+  width: auto !important;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 3px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* just a thin margin around the page instead of the renderer's wide grey frame */
+:host ::ng-deep .docx-wrapper {
+  padding: 6px !important;
+  background: #eef0f3 !important;
+}
+:host ::ng-deep .docx-wrapper > section.docx {
+  margin-bottom: 8px !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+}

@@ -38,6 +38,7 @@
     "ag-grid-community": "^34.3.1",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "docx-preview": "0.3.6",
     "jest-editor-support": "*",
     "mammoth": "^1.12.2",
     "ng-zorro-antd": "^20.0.0",

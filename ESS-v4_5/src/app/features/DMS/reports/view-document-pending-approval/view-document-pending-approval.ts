@@ -25,6 +25,7 @@ import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit
 import { AppConfigService } from '@app/core/services/app-config';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { TemplateService } from '@app/shared/services/template.service';
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 
 @Component({
   selector: 'app-view-document-pending-approval',
@@ -521,7 +522,7 @@ export class ViewDocumentPendingApproval {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: this.documentId, pending: true, title: this.currentDocumentName });
       });
   }
 
