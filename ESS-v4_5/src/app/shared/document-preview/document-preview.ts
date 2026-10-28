@@ -117,6 +117,7 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
               renderFootnotes: true,
               renderEndnotes: true,
             });
+            this.fitPagesToWidth();
             // A Word document already carries the Distribution List and Document Users at its end (the server
             // puts them there, so Download has them too) -- the block below is only for other file types.
             this.listsLoaded = false;
@@ -144,6 +145,18 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
         this.fail(text || 'The document could not be loaded.');
       },
     });
+  }
+
+  // The rendered pages keep the document's real width (A4 is ~794px), wider than the Preview window, so the right
+  // part of the page was cut off. Shrink the pages to the window's width instead (never enlarge them).
+  private fitPagesToWidth(): void {
+    const host: HTMLElement | undefined = this.docHost?.nativeElement;
+    const page = host?.querySelector('section.docx') as HTMLElement | null;
+    const wrapper = host?.querySelector('.docx-wrapper') as HTMLElement | null;
+    const available = host?.clientWidth ?? 0;
+    if (!page || !wrapper || !available || !page.offsetWidth) return;
+    const scale = Math.min(1, (available - 24) / page.offsetWidth);
+    if (scale < 1) (wrapper.style as any).zoom = String(scale);
   }
 
   private fail(message: string): void {

@@ -366,6 +366,38 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   // What the approver has chosen to add, by workflow run, until Approve sends it.
   private adHocChoices: Record<number, AdHocChoice[]> = {};
 
+  // The choices are also kept in the browser (per signed-in person and workflow run), so reloading the page does not lose
+  // them -- they are still sent with Approve, which is what actually adds them to the workflow.
+  private adHocStorageKey(executionId: number): string {
+    return 'dmsAdHoc:' + (this.loginEmpId || localStorage.getItem('HRISEmpId') || '') + ':' + executionId;
+  }
+
+  private getAdHocChoices(executionId: number): AdHocChoice[] {
+    if (!(executionId in this.adHocChoices)) {
+      let saved: AdHocChoice[] = [];
+      try {
+        const raw = localStorage.getItem(this.adHocStorageKey(executionId));
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(parsed)) saved = parsed;
+      } catch {
+        saved = [];
+      }
+      this.adHocChoices[executionId] = saved;
+    }
+    return this.adHocChoices[executionId];
+  }
+
+  private setAdHocChoices(executionId: number, choices: AdHocChoice[]): void {
+    if (choices.length) this.adHocChoices[executionId] = choices;
+    else delete this.adHocChoices[executionId];
+    try {
+      if (choices.length) localStorage.setItem(this.adHocStorageKey(executionId), JSON.stringify(choices));
+      else localStorage.removeItem(this.adHocStorageKey(executionId));
+    } catch {
+      // Storage unavailable (private window, blocked): the choices still work until the page is reloaded.
+    }
+  }
+
   // The same columns without Status, for the tabs where every row necessarily has the same one.
   // On Pending every row is Pending and on Approved every row is Approved, so the column says
   // nothing there and only costs width. It earns its place on Reverted/Rejected, which is the one
@@ -725,7 +757,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         const allowed = new Set<number>((Array.isArray(res?.Data) ? res.Data : []).map(Number));
         for (const row of rows) {
           row.canAddAdHoc = allowed.has(Number(row.ExecutionId));
-          row.adHocCount = (this.adHocChoices[Number(row.ExecutionId)] || []).length;
+          row.adHocCount = this.getAdHocChoices(Number(row.ExecutionId)).length;
         }
         this.agGridWrapper?.gridApi?.refreshCells({ force: true });
       },
@@ -744,7 +776,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       nzData: {
         executionId,
         documentName: row?.documentName || '',
-        initial: this.adHocChoices[executionId] || [],
+        initial: this.getAdHocChoices(executionId),
       },
       nzFooter: null,
       nzWidth: '60%',
@@ -754,8 +786,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       // Cancel / close without Save leaves what was chosen before as it was.
       if (!Array.isArray(result)) return;
 
-      if (result.length) this.adHocChoices[executionId] = result;
-      else delete this.adHocChoices[executionId];
+      this.setAdHocChoices(executionId, result);
 
       row.adHocCount = result.length;
       this.agGridWrapper?.gridApi?.refreshCells({ force: true });
@@ -1033,7 +1064,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         ...payLoad,
         // What was chosen for THIS document in its "Ad-hoc Approver" modal (nothing if it was not opened).
         // The server re-checks that this approver may add them; only code and position are sent.
-        adHocApprovers: (this.adHocChoices[Number(target.executionid)] || []).map((c) => ({
+        adHocApprovers: this.getAdHocChoices(Number(target.executionid)).map((c) => ({
           EmployeeCode: c.EmployeeCode,
           InsertAfterStepId: c.InsertAfterStepId,
         })),
@@ -1081,7 +1112,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
           summary.ok++;
           summary.lastMessage = response?.Message || summary.lastMessage;
           // The approvers chosen for this document went in with its approval.
-          if (action === 'Approve') delete this.adHocChoices[Number(target.executionid)];
+          if (action === 'Approve') this.setAdHocChoices(Number(target.executionid), []);
         } else {
           summary.failed.push(label + ': ' + (response?.Message || 'failed'));
         }

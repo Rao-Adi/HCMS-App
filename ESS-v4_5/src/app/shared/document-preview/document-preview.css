@@ -46,11 +46,21 @@
 }
 
 /* The template's header and footer tables are wider than the text area and shifted left by a negative indent, which the
-   renderer drops -- so they ran past the right edge of the page. Fit them to the text area: equal left and right margin. */
+   renderer drops -- so they ran past the right edge of the page. Fit them to the text area: equal left and right margin. The body's own top-level table (the template's content box, e.g. POLICY STATEMENT) has the same negative indent and ran past the page edge too. */
 :host ::ng-deep section.docx > header table,
-:host ::ng-deep section.docx > footer table {
+:host ::ng-deep section.docx > footer table,
+:host ::ng-deep section.docx > article > table {
   width: 100% !important;
   margin-left: 0 !important;
+}
+
+/* A paragraph of the body that sits outside the content box (e.g. the Distribution List heading of a template whose content is
+   not in a box) carries the same negative indent, which the renderer does apply to paragraphs but not to tables -- so it
+   would sit left of the tables it heads. Keep it with them. */
+:host ::ng-deep section.docx > article > p {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
 }
 
 /* compact toolbar buttons (the global .btn style stretches them) */

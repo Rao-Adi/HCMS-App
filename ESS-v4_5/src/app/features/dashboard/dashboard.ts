@@ -6,6 +6,19 @@ import { DashboardService } from '@app/shared/services/dashboard.service';
 import { Router } from '@angular/router'; 
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
+interface MetricCard {
+  label: string;
+  color: 'blue' | 'green' | 'red' | 'amber' | 'purple';
+  icon: string;
+  value: () => number;
+  go: () => void;
+}
+interface MetricGroup {
+  title: string;
+  visible: () => boolean;
+  cards: MetricCard[];
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -36,6 +49,15 @@ export class DashboardComponent implements OnInit {
   isInitiator: boolean = false;
   isAuthorizer: boolean = false;
 
+  // One flag per summary group: shown only to a user who has the right to view the form the group stands for (the same
+  // form ids the pages themselves check), so a user without access to a form does not see its group.
+  canSeeMyRequests = false;
+  canSeeMyRequestApprovals = false;
+  canSeeMyDocuments = false;
+  canSeeMyDocumentApprovals = false;
+  canSeeAuthorization = false;
+  canSeeSopTraining = false;
+
   constructor(
     private _utilityService: UtilitiesService,
     private _dashboardService: DashboardService,
@@ -51,6 +73,13 @@ export class DashboardComponent implements OnInit {
   }
 
   checkUserRoles(): void {
+    this._utilityService.CanView('requestdocumentcreation').subscribe((res) => (this.canSeeMyRequests = !!res));
+    this._utilityService.CanView('myapprovalrequest').subscribe((res) => (this.canSeeMyRequestApprovals = !!res));
+    this._utilityService.CanView('uploadorcreate').subscribe((res) => (this.canSeeMyDocuments = !!res));
+    this._utilityService.CanView('myapprovals').subscribe((res) => (this.canSeeMyDocumentApprovals = !!res));
+    this._utilityService.CanView('trainingauthorization').subscribe((res) => (this.canSeeAuthorization = !!res));
+    this._utilityService.CanView('trainingsop').subscribe((res) => (this.canSeeSopTraining = !!res));
+
     this._utilityService.CanView('myapprovalrequest').subscribe((res) => {
       this.isApprover = res;
     });
@@ -107,6 +136,81 @@ export class DashboardComponent implements OnInit {
   // otherwise see these creator-scoped cards sitting at a meaningless 0.
   get hasCreatedContent(): boolean {
     return (this.summary?.MyTotalDocuments || 0) > 0 || (this.summary?.MyTotalRequests || 0) > 0;
+  }
+
+  rowHasVisibleGroup(row: MetricGroup[]): boolean {
+    return row.some((g) => g.visible());
+  }
+
+  // The summary cards, laid out as the dashboard design shows them: two groups per row.
+  // Existing destinations are kept; only the grouping and the four-way split are new.
+  get metricRows(): MetricGroup[][] {
+    const s = () => this.summary || {};
+    const n = (k: string) => () => s()[k] || 0;
+    const to = (url: string, q?: any) => () => this.navigateTo(url, q);
+    return [
+      [
+        {
+          title: 'My Requests',
+          visible: () => this.canSeeMyRequests,
+          cards: [
+            { label: 'Pending', color: 'blue', icon: 'bi-file-earmark-text', value: n('MyPendingRequests'), go: to('/documents/request-for-document-creation-update', { tab: 'MyRequestPendingApproval' }) },
+            { label: 'Approved', color: 'green', icon: 'bi-check-circle', value: n('MyApprovedRequests'), go: () => this.navigateToWidget('approved-requests') },
+            { label: 'Rejected', color: 'red', icon: 'bi-x-circle', value: n('MyRejectedRequests'), go: () => this.navigateToWidget('rejected-requests') },
+            { label: 'Reverted', color: 'amber', icon: 'bi-arrow-repeat', value: n('MyRevertedRequests'), go: to('/documents/request-for-document-creation-update', { tab: 'DraftRequest' }) },
+          ],
+        },
+        {
+          title: 'My Requests (Approvals)',
+          visible: () => this.canSeeMyRequestApprovals,
+          cards: [
+            { label: 'Pending for My Approval', color: 'blue', icon: 'bi-person', value: n('PendingRequestApprovals'), go: to('/documents/my-approvals-request') },
+            { label: 'Approved by Me', color: 'green', icon: 'bi-check-circle', value: n('RequestsApprovedByMe'), go: to('/documents/my-approvals-request', { tab: 'Approved' }) },
+            { label: 'Rejected by Me', color: 'red', icon: 'bi-x-circle', value: n('RequestsRejectedByMe'), go: to('/documents/my-approvals-request', { tab: 'Rejected' }) },
+            { label: 'Reverted by Me', color: 'amber', icon: 'bi-arrow-repeat', value: n('RequestsRevertedByMe'), go: to('/documents/my-approvals-request', { tab: 'Rejected' }) },
+          ],
+        },
+      ],
+      [
+        {
+          title: 'My Documents',
+          visible: () => this.canSeeMyDocuments,
+          cards: [
+            { label: 'Pending', color: 'blue', icon: 'bi-file-earmark-text', value: n('MyDocumentsPending'), go: to('/documents/create-update-document') },
+            { label: 'Approved', color: 'green', icon: 'bi-check-circle', value: n('MyDocumentsApproved'), go: to('/reports/viewapproved') },
+            { label: 'Rejected', color: 'red', icon: 'bi-x-circle', value: n('MyDocumentsRejected'), go: to('/documents/create-update-document') },
+            { label: 'Reverted', color: 'amber', icon: 'bi-arrow-repeat', value: n('MyDocumentsReverted'), go: to('/documents/create-update-document') },
+          ],
+        },
+        {
+          title: 'My Documents (Approvals)',
+          visible: () => this.canSeeMyDocumentApprovals,
+          cards: [
+            { label: 'Pending for My Approval', color: 'blue', icon: 'bi-person', value: n('PendingDocumentApprovals'), go: to('/documents/my-approvals-documents') },
+            { label: 'Approved by Me', color: 'green', icon: 'bi-check-circle', value: n('DocumentsApprovedByMe'), go: to('/documents/my-approvals-documents', { tab: 'Approved' }) },
+            { label: 'Rejected by Me', color: 'red', icon: 'bi-x-circle', value: n('DocumentsRejectedByMe'), go: to('/documents/my-approvals-documents', { tab: 'Rejected' }) },
+            { label: 'Reverted by Me', color: 'amber', icon: 'bi-arrow-repeat', value: n('DocumentsRevertedByMe'), go: to('/documents/my-approvals-documents', { tab: 'Rejected' }) },
+          ],
+        },
+      ],
+      [
+        {
+          title: 'Authorization',
+          visible: () => this.canSeeAuthorization,
+          cards: [
+            { label: 'Pending Authorized Documents', color: 'blue', icon: 'bi-shield', value: n('PendingAuthorizations'), go: to('/documents/trainingauthorization') },
+            { label: 'Authorized Documents', color: 'green', icon: 'bi-shield-check', value: n('MyApprovedDocuments'), go: to('/reports/viewapproved') },
+          ],
+        },
+        {
+          title: 'Training for SOP Documents',
+          visible: () => this.canSeeSopTraining,
+          cards: [
+            { label: 'Pending Approval for Training', color: 'purple', icon: 'bi-mortarboard', value: n('PendingTrainings'), go: to('/documents/sop-training') },
+          ],
+        },
+      ],
+    ];
   }
 
   calculatePercentage(count: number): number {

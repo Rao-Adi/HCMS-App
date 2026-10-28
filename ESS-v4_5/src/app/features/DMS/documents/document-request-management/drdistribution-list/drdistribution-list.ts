@@ -249,18 +249,22 @@ export class DRDistributionList {
     };
   }
 
-  // A Role can be in the Distribution List only once. A row with no Role (an older "any role" row) has nothing to compare.
+  // The same Role can be added again for a different Division / Department / Sub-Department; what cannot be added twice is
+  // the same combination of all four. A row with no Role (an older "any role" row) has nothing to compare.
   private roleIsFree(row: any, ignoreIndex = -1): boolean {
     const role = String(row?.roleId ?? '');
     if (!role) return true;
 
-    const taken = this.distributionListData.some((r, i) => i !== ignoreIndex && String(r.roleId ?? '') === role);
+    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map((v) => String(v ?? '')).join('|');
+    const taken = this.distributionListData.some(
+      (r, i) => i !== ignoreIndex && String(r.roleId ?? '') === role && unit(r) === unit(row),
+    );
     if (taken) {
       const name = this.userRoles.find((r) => String(r.id) === role)?.text || 'This role';
       this._notificationToastService.createNotification(
         'warning',
         'Distribution List',
-        `Role "${name}" is already added.`,
+        `Role "${name}" is already added for this Division / Department / Sub Department.`,
       );
     }
     return !taken;
