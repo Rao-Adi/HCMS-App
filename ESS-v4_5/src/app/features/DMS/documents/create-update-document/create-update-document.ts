@@ -45,7 +45,6 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { TrainingPolicyService } from '@app/shared/services/training-policy-service';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
-import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { DocumentReviewPolicyService } from '@app/shared/services/document-review-policy.service';
 import { MyDocuments } from './my-documents/my-documents';
@@ -81,7 +80,6 @@ interface RequestType {
     DynamicFormByDocumentAttribute,
     NzModalModule,
     RoleList,
-    EmployeeList,
     MyDocuments,
     DraftDocumentList,
     DRUsersComponent,
@@ -475,14 +473,14 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         if (!this.documentName || !this.documentName.trim()) return 'Please enter a Document Name.';
         // Same "Please enter Justification" requirement the Document Request form enforces --
         // this mode is the direct-create equivalent of that form, so it carries the same one.
-        if (!this.justification || !this.justification.trim()) return 'Please enter Justification.';
+        if (!this.justification || !this.justification.trim()) return 'Please enter Rationale.';
       }
     } else if (this.isRevisionOrObsoletion) {
       // Mirrors DRT-0001 "Create Document Directly" above -- picking a grid row (onCellClicked)
       // stands in for both the Request-ID selection and the typed Document Name, so only
       // Justification (a fresh reason for THIS revision/obsoletion) needs to be re-entered.
       if (!this.documentId) return 'Please select a document from the grid above.';
-      if (!this.justification || !this.justification.trim()) return 'Please enter Justification.';
+      if (!this.justification || !this.justification.trim()) return 'Please enter Rationale.';
     }
 
     // Document content is mandatory for file-based templates (types 1 & 2) -- either an
@@ -539,6 +537,12 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
           return 'Training is required for this Document Type -- please select a Trainer/User and click + to add them.';
         }
       }
+    }
+
+    // The Distribution List is mandatory for a Creation or a Revision: it says who the document goes to. An Obsoletion shows
+    // the document's own list for confirmation only, so it is not asked for one.
+    if (!this.isObsoletion && (!this.distributionListPayload || this.distributionListPayload.length === 0)) {
+      return 'Please add at least one row to the Distribution List.';
     }
 
     // Client requirement: every Distribution List entry must be confirmed retrieved (physical
@@ -968,6 +972,17 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
       this.rebuildCombinedWorkflowAuthorities();
+
+      // No Revision policy for this cabinet: the submit falls back to the Document policy, so that is who will receive it.
+      if (this.approvalSequenceData.length === 0 && payLoad.EntityType === 'Revision') {
+        this._workflowStepService
+          .getWorkflowStepByDocumentTypeCode({ ...payLoad, EntityType: 'Document' })
+          .subscribe((fallback) => {
+            if (this.selectedEntityType !== 'Revision') return;
+            this.approvalSequenceData = fallback?.Data ? fallback.Data : [];
+            this.rebuildCombinedWorkflowAuthorities();
+          });
+      }
     });
   }
 

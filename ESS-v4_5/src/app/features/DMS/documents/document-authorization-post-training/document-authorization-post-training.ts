@@ -18,7 +18,6 @@ import { ApprovalHistoryModal } from '../approval-history-modal/approval-history
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { ColumnToggle } from '../../../../shared/interfaces/interfaces';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
-import { MyPendingRequestForApproval } from '../my-approval-request/my-pending-request-for-approval/my-pending-request-for-approval';
 import { DocumentService } from '@app/shared/services/document.service';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
@@ -46,7 +45,6 @@ import { openDocumentPreview } from '@app/shared/document-preview/document-previ
     NzButtonModule,
     NzModalModule,
     DocumentTypeList,
-    MyPendingRequestForApproval,
     CabinetStructureList,
     AgGridWrapper,
     DMSRichTextEdit,
@@ -772,7 +770,7 @@ export class DocumentAuthorizationPostTraining {
 
   openApprovalHistoryModal(row: any): void {
     const modalRef = this.modal.create({
-      nzTitle: 'Workflow History',
+      nzTitle: 'Approval History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: row.id,

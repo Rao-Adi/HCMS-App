@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CabinetSelection } from '@app/shared/interfaces/interfaces';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { Observable, tap } from 'rxjs';
 import { BusinessDomainList } from '../business-domain-list/business-domain-list';
@@ -21,7 +20,6 @@ interface CabinetLevel {
   imports: [
     CommonModule,
     FormsModule,
-    SafeTranslatePipe,
     DivisionList,
     DepartmentList,
     SubDepartmentList,

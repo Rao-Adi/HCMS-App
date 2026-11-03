@@ -11,12 +11,9 @@ import { BehaviorSubject } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
-import { DesignationList } from '@app/shared/Dropdowns/designation-list/designation-list';
-import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { WorkflowStepService } from '@app/shared/services/workflow-step-service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
-import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import {
@@ -56,14 +53,10 @@ export enum PolicyId {
     NzRadioModule,
     NzButtonModule,
     DocumentTypeList,
-    DesignationList,
-    RoleList,
-    EmployeeList,
     CabinetStructureList,
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
-    ManageWorkflowPolicyModal,
     NzModalModule,
   ],
   templateUrl: './approval-workflow-policy-management.html',
@@ -106,6 +99,8 @@ export class ApprovalWorkflowPolicyManagement {
   // "Can add ad-hoc approver" for the authorities about to be added with the + button. Stored per step,
   // so it is chosen when the authority is defined and can be changed later in the sequence table.
   canAddAdHocForNew = false;
+  // True while "Add Authority" is being saved: the button is disabled and a repeated click does nothing.
+  addingAuthority = false;
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
@@ -293,7 +288,13 @@ export class ApprovalWorkflowPolicyManagement {
     //   return;
     // }
 
-    this.showExclusionTable = this.showExclusionTable == true ? false : true;
+    // One add at a time: a second click while the first is still being saved would add the same authority again.
+    if (this.addingAuthority) return;
+    this.addingAuthority = true;
+
+    // Not a toggle: adding an authority must leave the sequence table showing. (It used to flip, so with the table already on
+    // screen an add hid it, and it only came back if the refresh below answered.)
+    this.showExclusionTable = true;
 
     const payLoad = {
       WorkflowPolicyId: this.selectedWorkflowPolicy,
@@ -321,6 +322,8 @@ export class ApprovalWorkflowPolicyManagement {
 
     this._workflowStepService.create(payLoad).subscribe({
         next: (res) => {
+          this.addingAuthority = false;
+          this.cdr.detectChanges();
           if (res.Success) {
             this._notificationToastService.createNotification(
               'success',
@@ -335,6 +338,8 @@ export class ApprovalWorkflowPolicyManagement {
           }
         },
         error: (err) => {
+          this.addingAuthority = false;
+          this.cdr.detectChanges();
           this._notificationToastService.createNotification(
             'error',
             'Error',
@@ -540,9 +545,20 @@ export class ApprovalWorkflowPolicyManagement {
       businessDomainCode: this.selectedBusinessDomain || '',
     };
 
-    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
-      this.showExclusionTable = true;
-      this.approvalSequenceData = res?.Data ? res.Data : [];
+    this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe({
+      next: (res) => {
+        this.showExclusionTable = true;
+        this.approvalSequenceData = res?.Data ? res.Data : [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        // Say so: the add itself succeeded, only reading the list back failed.
+        this._notificationToastService.createNotification(
+          'warning',
+          'Approval Sequence',
+          err?.error?.Message || 'The authority was added, but the sequence could not be refreshed. Reload the page to see it.',
+        );
+      },
     });
   }
 

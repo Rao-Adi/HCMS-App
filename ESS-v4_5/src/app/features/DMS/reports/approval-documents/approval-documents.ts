@@ -676,7 +676,7 @@ export class ApprovalDocuments {
   openWorkflowDeatilsModal(rowData: any) {
     //console.log('Row clicked:', rowData);
     const modalRef = this.modal.create({
-      nzTitle: 'Workflow History',
+      nzTitle: 'Approval History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,

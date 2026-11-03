@@ -9,16 +9,6 @@
   </div>
 </div>
 
-<div class="d-flex justify-content-end mb-2" *ngIf="distributionListData.length > 0">
-  <button *ngIf="!readOnly" style="min-width:150px"
-    type="button"
-    class="btn btn-sm btn-outline-danger mt-2"
-    (click)="clearAllDistribution()"
-  >
-    <i class="bi bi-trash me-1"></i> Clear All
-  </button>
-</div>
-
 <div style="position: relative;">
   <app-spinner *ngIf="loading"></app-spinner>
   <app-editable-ag-grid-wrapper
@@ -44,4 +34,11 @@
     (gridReady)="onGridReady($event)"
   >
   </app-editable-ag-grid-wrapper>
+</div>
+
+<!-- Below the list, small: it acts on the whole list, so it belongs after it. -->
+<div class="clear-all-row" *ngIf="!readOnly && distributionListData.length > 0">
+  <button type="button" class="btn btn-outline-danger clear-all-btn" (click)="clearAllDistribution()">
+    <i class="bi bi-trash me-1"></i> Clear All
+  </button>
 </div>

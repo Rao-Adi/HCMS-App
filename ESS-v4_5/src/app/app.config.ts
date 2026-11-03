@@ -1,5 +1,6 @@
-import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angular/core'; // 1. Added importProvidersFrom
-import { provideRouter, withInMemoryScrolling, UrlSerializer, DefaultUrlSerializer, UrlTree } from '@angular/router';
+import { ApplicationConfig, APP_INITIALIZER, ErrorHandler, importProvidersFrom } from '@angular/core'; // 1. Added importProvidersFrom
+import { provideRouter, withInMemoryScrolling, withNavigationErrorHandler, UrlSerializer, DefaultUrlSerializer, UrlTree } from '@angular/router';
+import { isStaleBuildError, reloadForNewBuild, StaleBuildErrorHandler } from './core/utils/stale-build-reload';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { AppConfigService } from './core/services/app-config';
@@ -48,8 +49,13 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({
         anchorScrolling: 'enabled',
         scrollPositionRestoration: 'enabled',
-      })
+      }),
+      // A page of an older build asking for a chunk the new build no longer has: load the new build and go where the person was going.
+      withNavigationErrorHandler((navigation) => {
+        if (isStaleBuildError(navigation.error)) reloadForNewBuild(navigation.url);
+      }),
     ),
+    { provide: ErrorHandler, useClass: StaleBuildErrorHandler },
     // ⭐ 3. NG-ZORRO Locale Providers (Solution for NG0701)
     provideAnimations(),
     { provide: NZ_I18N, useValue: en_US }, // 'en_US' set karna zaroori hai

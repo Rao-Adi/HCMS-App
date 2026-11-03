@@ -71,7 +71,7 @@
       [gridOptions]="gridOptions"
       [columnDefs]="finalColumnDefs"
       [defaultColDef]="finalDefaultColDef"
-      [localeText]="{ noRowsToShow: 'No records to show.' }"
+      [localeText]="{ noRowsToShow: 'No data' }"
       [suppressNoRowsOverlay]="isServerSide"
       [cacheBlockSize]="pageSize"
       [context]="{ componentParent: this }"
@@ -99,7 +99,7 @@
       [style.top.px]="config.headerHeight"
       [style.height.px]="config.rowHeight || 47"
     >
-      No records to show.
+      No data
     </div>
     <app-spinner *ngIf="isLoading"></app-spinner>
   </div>

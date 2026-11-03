@@ -145,13 +145,13 @@
                       </nz-option>
                     </nz-select>
                     <button
-                      class="grid-icon-btn flex-shrink-0"
-                      [class.disabled]="!this.canAdd"
-                      title="Add Authority"
+                      class="grid-icon-btn ms-2 flex-shrink-0"
+                      [class.disabled]="!this.canAdd || addingAuthority"
+                      title="Add"
                       (click)="addExclusion()"
-                      [disabled]="!this.canAdd"
+                      [disabled]="!this.canAdd || addingAuthority"
                     >
-                      <i class="bi bi-plus-square"></i>
+                      <i class="bi bi-plus-circle"></i>
                     </button>
                   </div>
                 </div>
@@ -425,33 +425,42 @@
               class="status-box-leftColmd6-standard"
               *ngIf="approvalSequenceData && approvalSequenceData.length > 0"
             >
-              <table class="table">
+              <h3 class="PnlHeader" style="margin-top: 0">Approval Sequence</h3>
+              <div class="seq-hint" *ngIf="approvalSequenceData.length > 1">
+                <i class="bi bi-info-circle"></i>
+                Drag a row by its handle to change the order. Approval goes to the first approver first, then in the order shown.
+              </div>
+              <table class="table seq-table">
                 <thead>
-                  <th>Approval Sequence</th>
+                  <th class="seq-col-order">Approval Sequence</th>
                   <th>Details</th>
-                  <th *ngIf="adHocApplicable" title="This approver may add an ad-hoc approver while approving">
+                  <th *ngIf="adHocApplicable" class="seq-col-center" title="This approver may add an ad-hoc approver while approving">
                     Can add ad-hoc approver
                   </th>
-                  <th>Action</th>
+                  <th class="seq-col-center">Action</th>
                 </thead>
                 <tbody cdkDropList (cdkDropListDropped)="drop($event)">
                   @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
                     <tr cdkDrag>
-                      <td width="250px">
-                        <i
-                          cdkDragHandle
-                          class="bi bi-grip-vertical"
-                          style="cursor: grab; margin-right: 8px; color: #a1a1a1"
-                          title="Drag to reorder"
-                        ></i>
-                        {{ i + 1 }}
+                      <td class="seq-col-order">
+                        <div class="seq-order">
+                          <i
+                            cdkDragHandle
+                            class="bi bi-grip-vertical seq-grip"
+                            title="Drag to reorder"
+                          ></i>
+                          <span class="seq-number">{{ i + 1 }}</span>
+                        </div>
                       </td>
                       <td>
-                        {{ item.EmployeeName }}<br />
-                        <strong>Role:</strong> {{ item.UserRole }}<br />
-                        <strong>Designation:</strong> {{ item.Designation }}
+                        <div class="seq-name">{{ item.EmployeeName }}</div>
+                        <div class="seq-meta">
+                          <strong>Role:</strong> {{ item.UserRole }}
+                          <span class="seq-sep">|</span>
+                          <strong>Designation:</strong> {{ item.Designation }}
+                        </div>
                       </td>
-                      <td *ngIf="adHocApplicable" class="text-center">
+                      <td *ngIf="adHocApplicable" class="seq-col-center">
                         <input
                           *ngIf="isEmployeeStep(item)"
                           class="form-check-input"
@@ -462,7 +471,7 @@
                           title="Can add an ad-hoc approver while approving"
                         />
                       </td>
-                      <td>
+                      <td class="seq-col-center">
                         <button
                           class="btn btn-sm btn-outline-danger"
                           (click)="removeSequenceItem(i)"
@@ -475,6 +484,13 @@
                   }
                 </tbody>
               </table>
+            </div>
+            <div
+              class="status-box-leftColmd6-standard seq-empty"
+              *ngIf="!approvalSequenceData || approvalSequenceData.length === 0"
+            >
+              <i class="bi bi-people"></i>
+              No approver added yet. Choose an approver above and click + to add the first step.
             </div>
           </div>
         </div>

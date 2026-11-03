@@ -25,7 +25,6 @@ import {
   NotificationSignalrService,
   AppNotification,
 } from '@app/shared/services/notification-signalr.service';
-import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { SkeletonComponent } from '@app/shared/skeleton/skeleton.component';
 import { NotificationService } from '@app/shared/services/notification.service';
 import { NavigationCountsService } from '@app/shared/services/navigation-counts.service';
@@ -60,7 +59,6 @@ interface DisplayNotification extends AppNotification {
     RouterOutlet,
     RouterModule,
     MenuComponent,
-    SpinnerComponent,
     SkeletonComponent,
     NzModalModule,
   ],

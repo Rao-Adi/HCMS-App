@@ -99,7 +99,7 @@ export class PendingRequestForApproval {
     { field: 'documentName', headerName: 'Document Title'  },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       minWidth: 150,
       editable: false,
       cellRenderer: (params: any) => {
@@ -110,7 +110,7 @@ export class PendingRequestForApproval {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -135,7 +135,7 @@ export class PendingRequestForApproval {
     { field: 'requestNumber', label: 'Request Number', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'justification', label: 'Rationale', visible: true },
     { field: 'createdOn', label: 'Last Saved On', visible: true },
     { field: 'pendingWith', label: 'Pending with', visible: true },
   ];
@@ -185,7 +185,7 @@ export class PendingRequestForApproval {
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentName', label: 'Document Title', visible: true },
-        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'justification', label: 'Rationale', visible: true },
         { field: 'createdOn', label: 'Last Saved On', visible: true },
         { field: 'pendingWith', label: 'Pending with', visible: true },
       ];
@@ -325,17 +325,12 @@ export class PendingRequestForApproval {
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }

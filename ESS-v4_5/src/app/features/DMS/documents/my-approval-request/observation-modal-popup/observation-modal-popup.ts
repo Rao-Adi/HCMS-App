@@ -1,16 +1,15 @@
 import { Component, Inject } from '@angular/core';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit'; 
+ 
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-observation-modal-popup',
-  imports: [DMSRichTextEdit, SafeTranslatePipe, AgGridWrapper],
+  imports: [AgGridWrapper],
   templateUrl: './observation-modal-popup.html',
   styleUrl: './observation-modal-popup.css',
 })

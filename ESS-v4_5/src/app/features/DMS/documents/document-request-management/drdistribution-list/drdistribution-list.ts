@@ -20,13 +20,19 @@ import { catchError, forkJoin, of } from 'rxjs';
 import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-mapping.service';
 import { mappedRoleIdsForCabinet, RoleCabinetMappingRow } from '@app/shared/utils/role-cabinet-scope';
 import {
+  ALL_OPTION,
+  ALL_VALUE,
   buildOrgColumns,
+  clearAutoFilledUnits,
   emptyOrgStructure,
   fillUnitFromRole,
+  isAll,
   ORG_FIELDS,
   OrgStructure,
   parseOrgStructure,
   rolesFor,
+  unitChosenByPerson,
+  unitValue,
 } from '@app/shared/utils/org-structure';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
@@ -171,12 +177,14 @@ export class DRDistributionList {
     this.distributionListData = this.selectedDistributionList.map((item: any) => ({
       id: item.Id ?? this.generateId(),
 
-      level1Id: item.DivisionCode ?? item.level1Id ?? null,
+      // A blank Division or Role on a saved row is "all of them": shown as the explicit All choice (Department and
+      // Sub-Department stay blank, which already reads "All").
+      level1Id: item.DivisionCode || item.level1Id || ALL_VALUE,
       level2Id: item.DepartmentCode ?? item.level2Id ?? null,
       level3Id: item.SubDepartmentCode ?? item.level3Id ?? null,
       level4Id: item.BusinessDomainCode ?? item.level4Id ?? null,
 
-      roleId: item.RoleId ?? item.roleId ?? null,
+      roleId: item.RoleId ?? item.roleId ?? ALL_VALUE,
       distributiontypeId: item.DistributionTypeId ?? item.distributiontypeId ?? null,
     }));
 
@@ -189,21 +197,24 @@ export class DRDistributionList {
         field: 'roleId',
         headerName: 'Role',
         type: 'dropdown',
-        dropdownOptions: this.userRoles,
-        // Only the roles mapped to this row's cabinet. A change to any cabinet level clears the Role, since
-        // the one picked may no longer be mapped to it. Left unselected it still means "Any" -- every role
-        // mapped to that cabinet (the server expands it the same way).
-        dropdownOptionsForRow: (row: any) => this.rolesForRow(row),
+        dropdownOptions: [ALL_OPTION, ...this.userRoles],
+        // "All" first, then only the roles held inside this row's organisation unit. A change to any level clears the
+        // Role, since the one picked may no longer be held there. "All" stands for every role held in that unit (the
+        // server expands it the same way).
+        dropdownOptionsForRow: (row: any) => [ALL_OPTION, ...this.rolesForRow(row)],
         clearWhenChanged: this.cabinetFieldNames(),
-        // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole).
-        afterValueChange: (row: any) => fillUnitFromRole(this.org, row, 'roleId'),
+        // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole) -- but not when the
+        // Division is "All": a role held in many Divisions says nothing about one Department.
+        afterValueChange: (row: any) => {
+          if (!unitValue(row?.level1Id)) clearAutoFilledUnits(row);
+          else fillUnitFromRole(this.org, row, 'roleId');
+        },
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        // Left unselected (null), same as Division/Department/SubDepartment/BusinessDomain --
-        // "Any" here means no filter, matching how those cabinet levels already work rather than
-        // being a distinct selectable option.
-        placeholder: 'Any',
+        // Division and Role must be chosen on purpose (a row left untouched must not quietly mean "everyone"): a
+        // person or "All".
+        placeholder: 'Select Role',
         // A saved row whose Role is blank (an older "any role" row) covers every role: shown as "All".
         emptyValueDisplay: 'All',
         required: true,
@@ -250,21 +261,22 @@ export class DRDistributionList {
   }
 
   // The same Role can be added again for a different Division / Department / Sub-Department; what cannot be added twice is
-  // the same combination of all four. A row with no Role (an older "any role" row) has nothing to compare.
+  // the same combination of all four. "All" (or blank) counts as a value of its own, so "All roles" cannot be added twice
+  // for the same unit either.
   private roleIsFree(row: any, ignoreIndex = -1): boolean {
-    const role = String(row?.roleId ?? '');
-    if (!role) return true;
+    const norm = (v: any) => String(unitValue(v) ?? '');
+    const role = norm(row?.roleId);
 
-    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map((v) => String(v ?? '')).join('|');
+    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map(norm).join('|');
     const taken = this.distributionListData.some(
-      (r, i) => i !== ignoreIndex && String(r.roleId ?? '') === role && unit(r) === unit(row),
+      (r, i) => i !== ignoreIndex && norm(r.roleId) === role && unit(r) === unit(row),
     );
     if (taken) {
-      const name = this.userRoles.find((r) => String(r.id) === role)?.text || 'This role';
+      const name = role ? `Role "${this.userRoles.find((r) => String(r.id) === role)?.text || 'This role'}"` : 'All roles';
       this._notificationToastService.createNotification(
         'warning',
         'Distribution List',
-        `Role "${name}" is already added for this Division / Department / Sub Department.`,
+        `${name} is already added for this Division / Department / Sub Department.`,
       );
     }
     return !taken;
@@ -287,11 +299,37 @@ export class DRDistributionList {
 
   private getColumns(): GridColumn[] {
     // Division > Department > Sub-Department come from People Partners (the hierarchy the Users screen shows) and
-    // cascade. Dropdowns read "Any"; a row whose level was left blank reads "All". Division, Role and Distribution
-    // Type are mandatory here; Department and Sub-Department are optional ("All" when left blank).
-    const orgColumns = buildOrgColumns(this.org).map((col) =>
-      col.field === 'level1Id' ? { ...col, required: true } : col,
-    );
+    // cascade, each with an explicit "All" at the top. Division, Role and Distribution Type must be chosen (a person or
+    // "All" -- an untouched row never means everyone); Department and Sub-Department are optional and read "All" when
+    // left blank. "All" on a level means every unit below it, so choosing it fills the levels below with "All" as well: only the
+    // Role and the Distribution Type are left to pick. (The grid runs this after it has emptied the levels below.)
+    const orgColumns = buildOrgColumns(this.org, true).map((col) => {
+      if (col.field === 'level1Id') {
+        return {
+          ...col,
+          required: true,
+          placeholder: 'Select Division',
+          afterValueChange: (row: any) => {
+            unitChosenByPerson(row);
+            if (isAll(row?.level1Id)) {
+              row.level2Id = ALL_VALUE;
+              row.level3Id = ALL_VALUE;
+            }
+          },
+        };
+      }
+      if (col.field === 'level2Id') {
+        return {
+          ...col,
+          placeholder: 'All',
+          afterValueChange: (row: any) => {
+            unitChosenByPerson(row);
+            if (isAll(row?.level2Id)) row.level3Id = ALL_VALUE;
+          },
+        };
+      }
+      return { ...col, placeholder: 'All' };
+    });
     return [...orgColumns, ...this.getRemainingColumns()];
   }
 
@@ -435,6 +473,7 @@ export class DRDistributionList {
 
     this.distributionListData[event.index] = { ...event.rowData };
     this.distributionListData = [...this.distributionListData]; // Trigger change detection
+    this.notifyParent();
   }
 
   onRowDeleted(rowIndex: number): void {
@@ -530,9 +569,20 @@ export class DRDistributionList {
     });
   }
 
+  // What leaves the grid: the explicit "All" becomes a blank level / role, which is how the server stores and expands it.
+  private rowsForParent(): any[] {
+    return this.distributionListData.map((r) => ({
+      ...r,
+      level1Id: unitValue(r.level1Id) || null,
+      level2Id: unitValue(r.level2Id) || null,
+      level3Id: unitValue(r.level3Id) || null,
+      roleId: unitValue(r.roleId) || null,
+    }));
+  }
+
   private notifyParent(): void {
     this.isInternalUpdate = true;
-    this.distributionChanged.emit([...this.distributionListData]);
+    this.distributionChanged.emit(this.rowsForParent());
     // const cleanList = this.distributionListData.map((x) => ({
     //   divisionCode: x.level1Id,
     //   departmentCode: x.level2Id,

@@ -18,10 +18,10 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
       <nz-select
         class="ag-input"
         style="width: 100%; min-width: 150px;"
-        [nzShowSearch]="params?.showSearch"
-        [nzFilterOption]="params?.customFilter"
-        [nzDisabled]="params?.disabled"
-        [nzPlaceHolder]="params?.placeholder || '-- Any --'"
+        [nzShowSearch]="params.showSearch"
+        [nzFilterOption]="params.customFilter"
+        [nzDisabled]="params.disabled"
+        [nzPlaceHolder]="params.placeholder || '-- Any --'"
         [(ngModel)]="selectedValue"
         [nzAllowClear]="false"
         (ngModelChange)="onSelectionChange($event)"
@@ -33,8 +33,8 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
       >
         <nz-option
           *ngFor="let option of options"
-          [nzValue]="option[params?.valueField || 'id']"
-          [nzLabel]="option[params?.displayField || 'text']"
+          [nzValue]="option[params.valueField || 'id']"
+          [nzLabel]="option[params.displayField || 'text']"
         ></nz-option>
       </nz-select>
       <!-- nz-select's own built-in clear "x" (nzAllowClear) sits inside its internal DOM, and

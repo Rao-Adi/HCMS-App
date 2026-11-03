@@ -1,0 +1,16 @@
+
+/* "Clear All" under the list: a small button, not a banner. The global .btn rule stretches every button to the full width with
+   a margin, hence the overrides. */
+.clear-all-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+.clear-all-btn {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 3px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+}

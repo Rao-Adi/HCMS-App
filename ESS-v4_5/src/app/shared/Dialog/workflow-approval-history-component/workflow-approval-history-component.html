@@ -1,6 +1,6 @@
-<div class="approval-table-wrapper" style="position: relative; min-height: 120px">
+<div class="approval-table-wrapper dms-popup-table-wrap" style="position: relative; min-height: 120px">
   <app-spinner *ngIf="loading"></app-spinner>
-  <table class="approval-table">
+  <table class="approval-table dms-popup-table">
     <thead>
       <tr>
         <th>Approval sequence</th>
@@ -35,7 +35,7 @@
         </td>
       </tr>
       <tr *ngIf="!loading && (!workflowHistory || workflowHistory.length === 0)">
-        <td colspan="5" class="text-center">No records to show.</td>
+        <td colspan="5" class="text-center text-muted">No data</td>
       </tr>
     </tbody>
   </table>

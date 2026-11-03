@@ -168,7 +168,7 @@ export class DraftRequestList {
     { field: 'documentName', headerName: 'Document Title' },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       editable: false,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
@@ -178,7 +178,7 @@ export class DraftRequestList {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -221,7 +221,7 @@ export class DraftRequestList {
     { field: 'targetDocumentNumber', label: 'Revising Document', visible: true },
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'justification', label: 'Rationale', visible: true },
     { field: 'createdOn', label: 'Last Saved On', visible: true },
     { field: 'status', label: 'Status', visible: true },
   ];
@@ -270,7 +270,7 @@ export class DraftRequestList {
         { field: 'targetDocumentNumber', label: 'Revising Document', visible: true },
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentName', label: 'Document Title', visible: true },
-        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'justification', label: 'Rationale', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
         { field: 'createdOn', label: 'Last Saved On', visible: true },
         { field: 'status', label: 'Status', visible: true },
@@ -329,19 +329,33 @@ export class DraftRequestList {
       return;
     }
 
+    const forDocumentType = this.selectedDocumentTypeCode;
+    const targeted = this.isTargetedDraft;
+    const filter = {
+      documentTypeCode: forDocumentType,
+      divisionCode: this.selectedDivisions || '',
+      departmentCode: this.selectedDepartment || '',
+      subDepartmentCode: this.selectedSubDepartment || '',
+      businessDomainCode: this.selectedBusinessDomain || '',
+    };
+
     this._workflowStepService
-      .getWorkflowStepByDocumentTypeCode({
-        EntityType: this.isTargetedDraft ? 'Revision' : 'Request',
-        documentTypeCode: this.selectedDocumentTypeCode,
-        divisionCode: this.selectedDivisions || '',
-        departmentCode: this.selectedDepartment || '',
-        subDepartmentCode: this.selectedSubDepartment || '',
-        businessDomainCode: this.selectedBusinessDomain || '',
-      })
+      .getWorkflowStepByDocumentTypeCode({ ...filter, EntityType: targeted ? 'Revision' : 'Request' })
       .subscribe({
         next: (res) => {
           this.showExclusionTable = true;
           this.approvalSequenceData = res?.Data ? res.Data : [];
+
+          // A Revision / Obsoletion draft with no Revision policy for the cabinet goes through the Request policy at submit.
+          if (targeted && this.approvalSequenceData.length === 0) {
+            this._workflowStepService
+              .getWorkflowStepByDocumentTypeCode({ ...filter, EntityType: 'Request' })
+              .subscribe((fallback) => {
+                // Ignore a late answer if another draft has been opened meanwhile.
+                if (this.selectedDocumentTypeCode !== forDocumentType) return;
+                this.approvalSequenceData = fallback?.Data ? fallback.Data : [];
+              });
+          }
         },
         error: () => {
           this.showExclusionTable = false;
@@ -599,7 +613,7 @@ export class DraftRequestList {
     }
   }
 
-  // Shown ahead of the Document Justification panel so the user sees why the request was
+  // Shown ahead of the Document Rationale panel so the user sees why the request was
   // reverted before reviewing/editing the document details -- previously this same data was
   // only reachable via the "Reverted" status cell's popup (openObservationModal below).
   loadRevertedObservations(row: any): void {
@@ -926,6 +940,12 @@ export class DraftRequestList {
   }
 
   SubmiteDocumentRequests() {
+    // Mandatory for a Creation or a Revision request; an Obsoletion carries the document's own list.
+    if (!this.isObsoletionDraft && !this.distributionListPayload?.length) {
+      this._notificationToasService.createNotification('warning', 'Validation', 'Please add at least one row to the Distribution List.');
+      return;
+    }
+
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
       divisionCode: x.level1Id || x.divisionCode,
       departmentCode: x.level2Id || x.departmentCode,
@@ -1105,17 +1125,12 @@ export class DraftRequestList {
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }

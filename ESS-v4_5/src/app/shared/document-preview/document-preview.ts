@@ -4,9 +4,13 @@ import { NZ_MODAL_DATA, NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { renderAsync } from 'docx-preview';
 import { catchError, forkJoin, of } from 'rxjs';
 import { DocumentService } from '@app/shared/services/document.service';
+import { DocumentRequestService } from '@app/shared/services/document-request.service';
 
 export interface DocumentPreviewData {
   documentId: number;
+  // Preview of a document REQUEST (from the request screens): the request's draft, merged with the Document Type's template,
+  // with the request's own Document Users and Distribution List. documentId is not used then.
+  requestId?: number;
   // The version still being prepared (approver, authorizer, author) rather than the one in force -- the same meaning
   // as on the Download call.
   pending?: boolean;
@@ -47,6 +51,7 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
   distributionList: any[] = [];
   userList: any[] = [];
   listsLoaded = false;
+  fullScreen = false;
 
   blob: Blob | null = null;
   private fileName = 'Document';
@@ -55,6 +60,7 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
   constructor(
     private modalRef: NzModalRef,
     private documentService: DocumentService,
+    private documentRequestService: DocumentRequestService,
     private sanitizer: DomSanitizer,
     @Inject(NZ_MODAL_DATA) private data: DocumentPreviewData,
   ) {}
@@ -70,12 +76,16 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
 
   private load(): void {
     const pending = !!this.data.pending;
+    const requestId = this.data.requestId;
     forkJoin({
-      file: this.documentService.DownloadDocumentTemplate(this.data.documentId, pending),
+      file: requestId
+        ? this.documentRequestService.DownloadDraftDocument(requestId)
+        : this.documentService.DownloadDocumentTemplate(this.data.documentId, pending),
       // The lists are an addition: if they cannot be read the document is still shown.
-      lists: this.documentService
-        .GetDocumentPreviewLists(this.data.documentId, pending)
-        .pipe(catchError(() => of(null))),
+      lists: (requestId
+        ? this.documentService.GetRequestPreviewLists(requestId)
+        : this.documentService.GetDocumentPreviewLists(this.data.documentId, pending)
+      ).pipe(catchError(() => of(null))),
     }).subscribe({
       next: async ({ file, lists }) => {
         const payload: any = (lists as any)?.Data ?? (lists as any)?.data ?? null;
@@ -119,8 +129,9 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
             });
             this.fitPagesToWidth();
             // A Word document already carries the Distribution List and Document Users at its end (the server
-            // puts them there, so Download has them too) -- the block below is only for other file types.
-            this.listsLoaded = false;
+            // puts them there, so Download has them too) -- the block below is only for other file types. A request's
+            // Word download does not carry them, so for a request they are shown below the document.
+            if (!requestId) this.listsLoaded = false;
           } else if (blob.type === 'application/pdf' || /\.pdf$/i.test(this.fileName)) {
             this.objectUrl = URL.createObjectURL(blob);
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl);
@@ -155,8 +166,9 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
     const wrapper = host?.querySelector('.docx-wrapper') as HTMLElement | null;
     const available = host?.clientWidth ?? 0;
     if (!page || !wrapper || !available || !page.offsetWidth) return;
-    const scale = Math.min(1, (available - 24) / page.offsetWidth);
-    if (scale < 1) (wrapper.style as any).zoom = String(scale);
+    // Normally pages are only ever shrunk. In Full Screen they are also enlarged to fill the width (up to 2.5x).
+    const scale = Math.min(this.fullScreen ? 2.5 : 1, (available - 24) / page.offsetWidth);
+    (wrapper.style as any).zoom = scale !== 1 ? String(scale) : '';
   }
 
   private fail(message: string): void {
@@ -196,6 +208,19 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
 
   close(): void {
     this.modalRef.close();
+  }
+
+  // Full Screen: the same window, made to fill the browser. The pages are fitted to the window's width again afterwards
+  // (they were shrunk to the smaller window, and are shown larger in the bigger one).
+  toggleFullScreen(): void {
+    this.fullScreen = !this.fullScreen;
+    const el = this.modalRef.getElement?.() as HTMLElement | undefined;
+    el?.classList.toggle('dms-preview-fullscreen', this.fullScreen);
+    setTimeout(() => {
+      const wrapper = this.docHost?.nativeElement?.querySelector('.docx-wrapper') as HTMLElement | null;
+      if (wrapper) (wrapper.style as any).zoom = '';
+      this.fitPagesToWidth();
+    }, 50);
   }
 
   // Property names may arrive in either case depending on the endpoint's serializer.

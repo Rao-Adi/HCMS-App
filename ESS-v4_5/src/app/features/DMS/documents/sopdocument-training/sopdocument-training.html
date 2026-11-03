@@ -102,7 +102,7 @@
                   <button
                     class="btn btn-success btn-sm btn-action"
                     [class.disabled]="!hasSelectedRows"
-                    title="Approve"
+                    [title]="hasSelectedRows ? 'Approve' : 'Select at least one record in the grid to take this action'"
                     (click)="approve()"
                     [disabled]="hasSelectedRows === false"
                   >
@@ -135,7 +135,7 @@
                   <button
                     class="btn btn-success btn-sm btn-action"
                     [class.disabled]="!hasSelectedRows"
-                    title="Approve"
+                    [title]="hasSelectedRows ? 'Approve' : 'Select at least one record in the grid to take this action'"
                     (click)="approve()"
                     [disabled]="hasSelectedRows === false"
                   >

@@ -29,7 +29,6 @@ import { PeoplePartnersService } from '@app/shared/services/people-partners.serv
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { RoleList } from '@app/shared/Dropdowns/role-list/role-list';
 import { SelectList } from '@app/shared/interfaces/interfaces';
-import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 
 // Documents the user created that are still in Draft: never submitted ("Draft"), or submitted and
 // then sent back for rework ("Reverted"). Mirrors document-request-management's draft-request-list
@@ -49,7 +48,6 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
     DRDistributionList,
     NzSelectModule,
     RoleList,
-    EmployeeList,
   ],
   templateUrl: './draft-document-list.html',
   styleUrl: './draft-document-list.css',
@@ -344,14 +342,14 @@ export class DraftDocumentList implements OnInit {
     { field: 'version', headerName: 'Version', minWidth: 100 },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       minWidth: 130,
       cellRenderer: (params: any) => {
         const val = params.value || '';
         if (!val) return '<span>-</span>';
         return `
           <span style="color:#1976d2; cursor:pointer; text-decoration:underline">
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -593,6 +591,9 @@ export class DraftDocumentList implements OnInit {
             subDepartmentCode: item.SubDepartmentCode ?? item.subDepartmentCode,
             businessDomain: item.BusinessDomain ?? item.businessDomain,
             businessDomainCode: item.BusinessDomainCode ?? item.businessDomainCode,
+            // How the document came about (creation / revision / obsoletion): the API sends it, and the approver chain,
+            // the success wording and the Distribution List rule all depend on it.
+            activityTypeCode: item.ActivityTypeCode ?? item.activityTypeCode ?? '',
             // A reverted document was submitted once before; a plain draft never was.
             status: (item.IsReworked ?? item.isReworked) ? 'Reverted' : 'Draft',
             proposedContent: item.VersionContent ?? item.versionContent ?? '',
@@ -790,8 +791,12 @@ export class DraftDocumentList implements OnInit {
       this.finishDetailLoad();
       return;
     }
+    // A Revision / Obsoletion runs under the Revision policy and, when the cabinet has none, the Document policy (the order the
+    // submit resolves them in); a new document under the Document policy.
+    const activity = this.selectedDraftDocument?.activityTypeCode;
+    const revision = activity === 'DRT-0002' || activity === 'DRT-0003';
     const payLoad = {
-      EntityType: 'Document',
+      EntityType: revision ? 'Revision' : 'Document',
       documentTypeCode,
       divisionCode: this.selectedDivisions || '',
       departmentCode: this.selectedDepartment || '',
@@ -801,6 +806,22 @@ export class DraftDocumentList implements OnInit {
     this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe({
       next: (res) => {
         this.approvalSequenceData = res?.Data || [];
+        if (revision && this.approvalSequenceData.length === 0) {
+          this._workflowStepService
+            .getWorkflowStepByDocumentTypeCode({ ...payLoad, EntityType: 'Document' })
+            .subscribe({
+              next: (fallback) => {
+                this.approvalSequenceData = fallback?.Data || [];
+                this.rebuildCombinedWorkflowAuthorities();
+                this.finishDetailLoad();
+              },
+              error: () => {
+                this.rebuildCombinedWorkflowAuthorities();
+                this.finishDetailLoad();
+              },
+            });
+          return;
+        }
         this.rebuildCombinedWorkflowAuthorities();
         this.finishDetailLoad();
       },
@@ -1113,6 +1134,13 @@ export class DraftDocumentList implements OnInit {
   }
 
   SubmitDraftDocument(): void {
+    // Mandatory for a Creation or a Revision; an Obsoletion shows the document's own list for confirmation only.
+    const activityCode = this.selectedDraftDocument?.activityTypeCode || this.selectedDraftDocument?.ActivityTypeCode;
+    if (activityCode !== 'DRT-0003' && !this.distributionListPayload?.length) {
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please add at least one row to the Distribution List.');
+      return;
+    }
+
     this.loadingSubmit = true;
     this._documentService.submitDocument(this.buildFormData()).subscribe({
       next: (response) => {
@@ -1169,17 +1197,12 @@ export class DraftDocumentList implements OnInit {
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }

@@ -33,6 +33,11 @@ export class DistributionListModal {
   distributionList: any[] = [];
   isObsoletion = false;
 
+  // The cabinet levels in use, in order (Division, Department, ...), each with the title it is configured under. A row with
+  // a level blank covers all of it, which is shown as "All" -- so the person can tell which Division / Department a role
+  // is "all" of.
+  levels: { field: string; title: string }[] = [];
+
   pageSize = 8;
   page = 1;
 
@@ -42,6 +47,20 @@ export class DistributionListModal {
   ) {
     this.distributionList = this.modalData?.distributionList || [];
     this.isObsoletion = !!this.modalData?.isObsoletion;
+    const levels: { field: string; title: string }[] = this.modalData?.cabinetLevels || [];
+    this.levels = levels.length
+      ? levels
+      : [
+          { field: 'division', title: 'Division' },
+          { field: 'department', title: 'Department' },
+          { field: 'subDepartment', title: 'Sub Department' },
+        ];
+  }
+
+  // The name of the Division / Department / ... a row is for; "All" when it names none.
+  levelValue(item: any, field: string): string {
+    const pascal = field.charAt(0).toUpperCase() + field.slice(1);
+    return String(item?.[field] ?? item?.[pascal] ?? '').trim() || 'All';
   }
 
   get totalPages(): number {

@@ -92,7 +92,7 @@ export class MyPendingRequestForApproval {
     },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       editable: false,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
@@ -102,7 +102,7 @@ export class MyPendingRequestForApproval {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -151,7 +151,7 @@ export class MyPendingRequestForApproval {
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'viewDocument', label: 'Document Content', visible: true },
     { field: 'observation', label: 'Observation', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'justification', label: 'Rationale', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     { field: 'division', label: 'Division', visible: true },
@@ -271,17 +271,12 @@ export class MyPendingRequestForApproval {
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }

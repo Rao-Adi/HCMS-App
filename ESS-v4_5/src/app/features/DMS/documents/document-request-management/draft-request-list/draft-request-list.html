@@ -10,7 +10,7 @@
       [showDisplayOption]="true"
       [rowData]="documentRequestsData"
       [pageSize]="pageSize"
-      [pageSizeOptions]="[10, 20, 50, 100]"
+      [pageSizeOptions]="[10, 20, 50, 100, 500]"
       [totalRows]="totalRows"
       gridId="documentGrid"
       (serverQuery)="GetAllDraftDocuments($event)"
@@ -71,7 +71,7 @@
             >
           </div>
           <div class="status-box-leftColmd6-standard">
-            <h3 class="PnlHeader">Document Justification</h3>
+            <h3 class="PnlHeader">Document Rationale</h3>
             <div class="row">
               <div class="col-sm-3 col-md-3 col-lg-3 mb-10">
                 <div class="PnlHeading">
@@ -93,7 +93,7 @@
               </div>
               <div class="col-lg-9 col-md-9 col-sm-6 mb-10">
                 <div class="PnlHeading">
-                  <label>{{ 'labels.Justification' | safeTranslate }} </label>
+                  <label>Rationale </label>
                 </div>
                 <textarea
                   style="width: 100%"

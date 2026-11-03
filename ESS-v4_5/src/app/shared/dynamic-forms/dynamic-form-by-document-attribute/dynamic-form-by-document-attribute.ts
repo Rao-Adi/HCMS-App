@@ -15,8 +15,6 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ControlTypes, DocumentAttribute } from '@app/shared/interfaces/interfaces';
-import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { TemplateService } from '@app/shared/services/template.service';
@@ -27,8 +25,6 @@ import { TemplateService } from '@app/shared/services/template.service';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    DMSRichTextEdit,
-    SafeTranslatePipe,
     NzSelectModule,
     NzDatePickerModule,
   ],

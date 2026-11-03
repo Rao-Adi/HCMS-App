@@ -91,7 +91,7 @@ export class DocumentReviewPolicyService {
 
   delete(id: string) {
     return this.http.delete<ApiResponse<any>>(
-      `${this.apiUrl}/DMSDocumentReviewPolicy/delete/${id}`,
+      `${this.apiUrl}/DMSDocumentReviewPolicy/Delete?id=${id}`,
     );
   }
 }

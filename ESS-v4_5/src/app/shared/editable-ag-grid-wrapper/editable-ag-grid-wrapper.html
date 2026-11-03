@@ -27,7 +27,7 @@
   [rowData]="rowData"
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
-  [localeText]="{ noRowsToShow: 'No records to show.' }"
+  [localeText]="{ noRowsToShow: 'No data' }"
   [suppressNoRowsOverlay]="true"
   [rowHeight]="config.rowHeight"
   [headerHeight]="config.headerHeight"
@@ -62,7 +62,7 @@
     [style.top.px]="emptyStateTop"
     [style.height.px]="config.rowHeight || 47"
   >
-    No records to show.
+    No data
   </div>
 </div>
 

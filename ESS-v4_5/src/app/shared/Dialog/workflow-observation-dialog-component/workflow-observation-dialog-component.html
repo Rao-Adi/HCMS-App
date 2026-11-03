@@ -1,8 +1,8 @@
 <div class="approval-table-wrapper">
   <!-- ================= VIEW MODE ================= -->
 
-  <div *ngIf="isViewMode" class="approval-table">
-    <table class="approval-table">
+  <div *ngIf="isViewMode" class="dms-popup-table-wrap">
+    <table class="approval-table dms-popup-table">
       <thead>
         <tr>
           <th>Name</th>
@@ -30,7 +30,7 @@
           <td class="audit-cell">{{ o.ActionAt }}</td>
         </tr>
         <tr *ngIf="!observations || observations.length === 0">
-          <td colspan="6" class="text-center">No records to show.</td>
+          <td colspan="6" class="text-center text-muted">No data</td>
         </tr>
       </tbody>
     </table>

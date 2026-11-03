@@ -98,7 +98,7 @@ export class DocumentAttributes {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [10, 20, 50, 100, 500],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,

@@ -22,7 +22,6 @@ import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service'; 
-import { EditableAgGridWrapper } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { 
   GetMyResponsibilityTransfersDto, 
   ResponsibilityTransferItem 
@@ -48,7 +47,6 @@ import { NavigationCountsService } from '@app/shared/services/navigation-counts.
     NzCheckboxModule,
     NzInputModule,
     NzModalModule, 
-    EditableAgGridWrapper
   ],
   templateUrl: './responsibility-transfer-form.html',
   styleUrl: './responsibility-transfer-form.css',

@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import {
   EditableAgGridWrapper,
   GridColumn,
@@ -26,7 +25,6 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
     CommonModule,
     NzIconModule,
     NzSwitchModule,
-    AgGridWrapper,
     NzModalModule,
     EditableAgGridWrapper,
     SpinnerComponent,
@@ -143,7 +141,7 @@ export class MiscPolicies {
       columns: this.getTrainingPolicyColumns(),
       enablePagination: true,
       pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [10, 20, 50, 100, 500],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
@@ -216,7 +214,7 @@ export class MiscPolicies {
       columns: this.getDocumentReviewColumns(),
       enablePagination: true,
       pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [10, 20, 50, 100, 500],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,
@@ -280,7 +278,7 @@ export class MiscPolicies {
       columns: this.getAuthorizationPolicyColumns(),
       enablePagination: true,
       pageSize: 10,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [10, 20, 50, 100, 500],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,

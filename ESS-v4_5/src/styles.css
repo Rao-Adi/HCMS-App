@@ -5118,9 +5118,16 @@ input[type="checkbox"] {
     border-color: #DCE3E3;
   }
 
+/* Focus ring of a checkbox. It was "outline: 5px auto", which Chrome draws as a thick, oddly shaped blob that did not follow the
+   box (the "highlight is not appearing properly" report). A clean 2px ring that follows the rounded box, shown only for keyboard
+   focus (:focus-visible) so a mouse click does not leave it behind. */
 input[type=checkbox]:focus {
-  outline: 5px auto #DCE3E3 !important;
-  outline-offset: -2px;
+  outline: none !important;
+}
+input[type=checkbox]:focus-visible {
+  outline: 2px solid #86b7fe !important;
+  outline-offset: 2px !important;
+  border-radius: 0.25rem;
 }
 
 .nowrap {
@@ -7148,6 +7155,15 @@ html.ant-scrolling-effect {
   color: #ffffff !important;
 }
 
+/* A disabled action button (Approve / Revert / Reject with no record selected) still receives the pointer, so its tooltip
+   ("Select at least one record in the grid to take this action") shows on hover. Bootstrap's pointer-events: none hid it.
+   A disabled button does not fire clicks, so nothing else changes. */
+.btn-action:disabled,
+.btn-action.disabled {
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+
 .Master-box { 
   /* margin-left: -12px;
     margin-right: -15px; */
@@ -7222,7 +7238,7 @@ html.ant-scrolling-effect {
    --------------------------------------------------------------------------- */
 /* !important because these have to win against component-scoped .badge / .status-badge rules.
    Angular emulated encapsulation gives those an attribute selector, so they match this class on
-   specificity and then win purely on being injected later -- which is how the Workflow History
+   specificity and then win purely on being injected later -- which is how the Approval History
    modal kept rendering Reverted in its own grey while the grids showed indigo. A status colour
    that is meant to be identical product-wide is exactly the case for forcing it. */
 .dms-status-reverted,
@@ -7327,4 +7343,50 @@ html.ant-scrolling-effect {
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
+}
+
+
+/* ---- Tables inside popups: the same look as the AG Grid lists ----
+   A popup that shows a small, fixed table (Distribution List, Workflow History, Observations, Preview lists ...) uses these
+   two classes instead of its own Bootstrap table, so every grid in a popup reads the same: an outlined box with a light header
+   band (12px, semibold, slate), 14px cells in 47px rows, and thin separators. */
+.dms-popup-table-wrap {
+  border: 1px solid #dde2eb;
+  border-radius: 4px;
+  overflow: auto;
+  background: #fff;
+}
+.dms-popup-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.dms-popup-table thead th {
+  background: #f8f9fc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: left;
+  vertical-align: middle;
+  padding: 0 16px;
+  height: 40px;
+  border: 0;
+  border-bottom: 1px solid #dde2eb;
+}
+.dms-popup-table tbody td {
+  vertical-align: middle;
+  padding: 8px 16px;
+  min-height: 47px;
+  height: 47px;
+  border: 0;
+  border-bottom: 1px solid #eceff4;
+  color: #212529;
+  background: transparent;
+}
+.dms-popup-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.dms-popup-table tbody tr:hover td {
+  background: #f7f9fc;
 }

@@ -229,7 +229,7 @@ export class UploadedDocuments {
       columns: this.getColumns(),
       enablePagination: true,
       pageSize: this.selectedPageSize,
-      pageSizeOptions: [10, 20, 50, 100],
+      pageSizeOptions: [10, 20, 50, 100, 500],
       enableSorting: true,
       enableFiltering: true,
       enableSelection: true,

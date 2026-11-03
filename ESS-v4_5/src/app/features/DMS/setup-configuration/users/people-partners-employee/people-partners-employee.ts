@@ -5,11 +5,7 @@ import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import {
-  EditableAgGridWrapper,
-  GridColumn,
-  GridConfig,
-} from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
+import { GridColumn, GridConfig } from '@app/shared/editable-ag-grid-wrapper/editable-ag-grid-wrapper';
 import { AccessLevelModalDialog } from '../../access-level-modal-dialog/access-level-modal-dialog';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
@@ -24,7 +20,6 @@ import { PermissionService } from '@app/shared/services/permission.service';
     FormsModule,
     NzIconModule,
     NzSwitchModule,
-    EditableAgGridWrapper,
     NzModalModule,
     AgGridWrapper,
   ],

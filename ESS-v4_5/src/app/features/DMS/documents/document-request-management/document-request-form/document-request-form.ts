@@ -439,6 +439,17 @@ export class DocumentRequestForm {
     this._workflowStepService.getWorkflowStepByDocumentTypeCode(payLoad).subscribe((res) => {
       this.showExclusionTable = true;
       this.approvalSequenceData = res?.Data ? res.Data : [];
+
+      // No Revision policy for this cabinet: the submit falls back to the Request policy, so that is who will receive it.
+      if (this.approvalSequenceData.length === 0 && payLoad.EntityType === 'Revision') {
+        this._workflowStepService
+          .getWorkflowStepByDocumentTypeCode({ ...payLoad, EntityType: 'Request' })
+          .subscribe((fallback) => {
+            // Ignore a late answer if the person has since changed the request type or the document type.
+            if (this.selectedEntityType !== 'Revision' || this.selectedDocumentType !== documentType) return;
+            this.approvalSequenceData = fallback?.Data ? fallback.Data : [];
+          });
+      }
     });
   }
 
@@ -890,7 +901,7 @@ export class DocumentRequestForm {
       this._notificationToastService.createNotification(
         'warning',
         'Validation',
-        'Please enter Justification.',
+        'Please enter Rationale.',
       );
       return;
     }
@@ -1054,7 +1065,7 @@ export class DocumentRequestForm {
       this._notificationToastService.createNotification(
         'warning',
         'Validation',
-        'Please enter Justification.',
+        'Please enter Rationale.',
       );
       return;
     }
@@ -1078,6 +1089,12 @@ export class DocumentRequestForm {
         );
         return;
       }
+    }
+
+    // The Distribution List is mandatory for a request.
+    if (!this.distributionListPayload?.length) {
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please add at least one row to the Distribution List.');
+      return;
     }
 
     const cleanDistributionList = this.distributionListPayload.map((x: any) => ({
@@ -1208,8 +1225,14 @@ export class DocumentRequestForm {
       this._notificationToastService.createNotification(
         'warning',
         'Validation',
-        'Please enter Justification.',
+        'Please enter Rationale.',
       );
+      return;
+    }
+
+    // Mandatory for a Revision; an Obsoletion carries the document's own list and adds nothing to it.
+    if (this.isRevisionRequestType && !this.distributionListPayload?.length) {
+      this._notificationToastService.createNotification('warning', 'Validation', 'Please add at least one row to the Distribution List.');
       return;
     }
 

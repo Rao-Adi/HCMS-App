@@ -1,7 +1,8 @@
-<div class="table-responsive">
-  <table class="table table-bordered table-hover mb-0">
-    <thead class="table-light">
+<div class="dms-popup-table-wrap">
+  <table class="dms-popup-table">
+    <thead>
       <tr>
+        <th *ngFor="let level of levels">{{ level.title }}</th>
         <th>Role</th>
         <th>Distribution Type</th>
         <ng-container *ngIf="isObsoletion">
@@ -12,11 +13,12 @@
     </thead>
     <tbody>
       <tr *ngIf="pagedItems.length === 0">
-        <td [attr.colspan]="isObsoletion ? 4 : 2" class="text-center text-muted py-4">
+        <td [attr.colspan]="levels.length + (isObsoletion ? 4 : 2)" class="text-center text-muted py-4">
           No distribution entries.
         </td>
       </tr>
       <tr *ngFor="let item of pagedItems">
+        <td *ngFor="let level of levels">{{ levelValue(item, level.field) }}</td>
         <td>{{ item.Role || item.role || 'All' }}</td>
         <td>
           <i class="bi me-1 text-muted" [ngClass]="typeIcon(item)"></i>{{ distributionType(item) }}
@@ -58,8 +60,4 @@
       Next &rsaquo;
     </button>
   </div>
-</div>
-
-<div class="d-flex justify-content-end mt-3">
-  <button type="button" class="btn btn-primary btn-auto-width" (click)="close()">Close</button>
 </div>

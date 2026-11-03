@@ -1,3 +1,4 @@
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild, TemplateRef, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -207,7 +208,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     // },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       editable: false,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
@@ -217,7 +218,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -299,8 +300,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     { field: 'documentRequestId', label: 'Request ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'documentNumber', label: 'Document Number', visible: true },
-    { field: 'observation', label: 'Observation', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'justification', label: 'Rationale', visible: true },
     // { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
@@ -387,8 +387,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         { field: 'documentRequestId', label: 'Request ID', visible: true },
         { field: 'documentName', label: 'Document Name', visible: true },
         { field: 'documentNumber', label: 'Document Number', visible: true },
-        { field: 'observation', label: 'Observation', visible: true },
-        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'justification', label: 'Rationale', visible: true },
         // { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
         { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
@@ -688,7 +687,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: 0, requestId: this.requestId, pending: true, title: this.currentDocumentName });
       });
   }
 
@@ -723,7 +722,7 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
-      nzTitle: 'Workflow History',
+      nzTitle: 'Approval History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.id,
@@ -764,17 +763,12 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }

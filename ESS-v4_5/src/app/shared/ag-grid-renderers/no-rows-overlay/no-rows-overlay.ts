@@ -10,12 +10,12 @@ import { INoRowsOverlayParams } from 'ag-grid-community';
 @Component({
   standalone: true,
   selector: 'app-no-rows-overlay',
-  template: `<div class="no-rows-overlay-text">No records to show.</div>`,
+  template: `<div class="no-rows-overlay-text">No data</div>`,
   styles: [
     `
       .no-rows-overlay-text {
         text-align: center;
-        color: #000;
+        color: #9ca3af;
         margin-top:30px;
         font-size: 14px;
       }

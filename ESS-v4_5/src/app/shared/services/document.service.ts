@@ -323,6 +323,12 @@ export class DocumentService {
     return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  // Document Users and Distribution List of a document REQUEST (Preview from the request screens).
+  GetRequestPreviewLists(requestId: any) {
+    const uri = `${this.apiUrl}/DMSDocument/get-request-preview-lists/${requestId}`;
+    return this.http.get<GenericResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   DownloadDocumentTemplate(id: any, pending = false) {
     const uri = `${this.apiUrl}/DMSDocument/download-submitted-document-template/${id}${pending ? '?pending=true' : ''}`;
     return this.http.get(uri, {

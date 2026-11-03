@@ -8,6 +8,8 @@ export interface OrgOption {
   text: string;
   /** Division for a Department, Department for a Sub-Department. */
   parentId?: string;
+  /** What the dropdown sorts this option by, when that is not its text (keeps "All" first). */
+  rawName?: string;
 }
 
 export interface OrgRoleScope {
@@ -27,6 +29,19 @@ export interface OrgStructure {
 
 /** The grid fields that hold the organisation unit of a row, top level first. */
 export const ORG_FIELDS = ['level1Id', 'level2Id', 'level3Id'];
+
+/**
+ * The explicit "All" choice a Distribution List dropdown offers (every Division, every Department of the Division, ...).
+ * It lives in the grid only: the server (and the lookups below) know "all" as a blank level, so a row's value is turned
+ * back into blank with unitValue wherever it is read, and before the row leaves the grid.
+ */
+export const ALL_VALUE = '__all__';
+export const ALL_OPTION: OrgOption = { id: ALL_VALUE, text: 'All', rawName: ' All' };
+
+export const isAll = (v: any): boolean => v === ALL_VALUE;
+
+/** The value with the explicit "All" read as blank. */
+export const unitValue = (v: any): any => (isAll(v) ? '' : v);
 
 export function emptyOrgStructure(): OrgStructure {
   return { divisions: [], departments: [], subDepartments: [], roles: [] };
@@ -64,13 +79,13 @@ export function parseOrgStructure(data: any): OrgStructure {
 
 /** Departments of the chosen Division. With no Division chosen ("Any") there is nothing to narrow, so none are offered. */
 export function departmentsFor(org: OrgStructure, divisionId: any): OrgOption[] {
-  const d = str(divisionId);
+  const d = str(unitValue(divisionId));
   return d ? org.departments.filter((x) => x.parentId === d) : [];
 }
 
 /** Sub-Departments of the chosen Department. */
 export function subDepartmentsFor(org: OrgStructure, departmentId: any): OrgOption[] {
-  const d = str(departmentId);
+  const d = str(unitValue(departmentId));
   return d ? org.subDepartments.filter((x) => x.parentId === d) : [];
 }
 
@@ -82,9 +97,9 @@ export function rolesFor(
   org: OrgStructure,
   unit: { division?: any; department?: any; subDepartment?: any },
 ): { id: number; text: string }[] {
-  const division = str(unit.division);
-  const department = str(unit.department);
-  const subDepartment = str(unit.subDepartment);
+  const division = str(unitValue(unit.division));
+  const department = str(unitValue(unit.department));
+  const subDepartment = str(unitValue(unit.subDepartment));
 
   const found = new Map<number, string>();
   for (const r of org.roles) {
@@ -117,7 +132,7 @@ export function fillUnitFromRole(org: OrgStructure, row: any, roleField: string)
   const role = Number(row?.[roleField]);
   if (!role) return;
 
-  const division = str(row.level1Id);
+  const division = str(unitValue(row.level1Id));
   const inDivision = org.roles.filter((r) => r.roleId === role && (!division || r.divisionId === division));
 
   const only = (values: string[]): string => {
@@ -137,7 +152,7 @@ export function fillUnitFromRole(org: OrgStructure, row: any, roleField: string)
   }
 
   if (!str(row.level3Id)) {
-    const department = str(row.level2Id);
+    const department = str(unitValue(row.level2Id));
     const inDepartment = inDivision.filter((r) => !department || r.departmentId === department);
     const subDepartment = only(inDepartment.map((r) => r.subDepartmentId));
     const offered = department
@@ -178,7 +193,9 @@ export function unitChosenByPerson(row: any): void {
  * the level above has none (a department with no sub-departments), the blank stays empty -- "All" there would claim
  * a choice that does not exist.
  */
-export function buildOrgColumns(org: OrgStructure): GridColumn[] {
+export function buildOrgColumns(org: OrgStructure, withAll = false): GridColumn[] {
+  // The Distribution List grid also offers an explicit "All" at the top of each list; the Users grid does not.
+  const all = (options: OrgOption[]): OrgOption[] => (withAll ? [ALL_OPTION, ...options] : options);
   const common = {
     type: 'dropdown',
     dropdownValueField: 'id',
@@ -195,30 +212,30 @@ export function buildOrgColumns(org: OrgStructure): GridColumn[] {
       ...common,
       field: 'level1Id',
       headerName: 'Division',
-      dropdownOptions: org.divisions,
+      dropdownOptions: all(org.divisions),
       afterValueChange: unitChosenByPerson,
     },
     {
       ...common,
       field: 'level2Id',
       headerName: 'Department',
-      dropdownOptions: org.departments,
-      dropdownOptionsForRow: (row: any) => departmentsFor(org, row?.level1Id),
+      dropdownOptions: all(org.departments),
+      dropdownOptionsForRow: (row: any) => all(departmentsFor(org, row?.level1Id)),
       clearWhenChanged: ['level1Id'],
       afterValueChange: unitChosenByPerson,
       emptyValueDisplayForRow: (row: any) =>
-        str(row?.level1Id) && departmentsFor(org, row?.level1Id).length === 0 ? '' : 'All',
+        str(unitValue(row?.level1Id)) && departmentsFor(org, row?.level1Id).length === 0 ? '' : 'All',
     },
     {
       ...common,
       field: 'level3Id',
       headerName: 'Sub Department',
-      dropdownOptions: org.subDepartments,
-      dropdownOptionsForRow: (row: any) => subDepartmentsFor(org, row?.level2Id),
+      dropdownOptions: all(org.subDepartments),
+      dropdownOptionsForRow: (row: any) => all(subDepartmentsFor(org, row?.level2Id)),
       clearWhenChanged: ['level1Id', 'level2Id'],
       afterValueChange: unitChosenByPerson,
       emptyValueDisplayForRow: (row: any) =>
-        str(row?.level2Id) && subDepartmentsFor(org, row?.level2Id).length === 0 ? '' : 'All',
+        str(unitValue(row?.level2Id)) && subDepartmentsFor(org, row?.level2Id).length === 0 ? '' : 'All',
     },
   ] as GridColumn[];
 }

@@ -147,6 +147,10 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   disapprovedDocumentCount: number = 0;
   public noRowsOverlay: string = '';
 
+  // The cabinet levels that are switched on (Division, Department, ...), with their configured titles. The Distribution List
+  // modal shows exactly these, so a row's "All" says which Division / Department it is "all" of.
+  private activeCabinetLevels: { field: string; title: string }[] = [];
+
   // field name each cabinet level maps to in the row data, keyed by level number
   private readonly cabinetLevelFields: Record<number, { field: string; label: string }> = {
     1: { field: 'division', label: 'Division' },
@@ -159,9 +163,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentId', label: 'Document ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
-    { field: 'observation', label: 'Observation', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'justification', label: 'Rationale', visible: true },
     { field: 'distributionList', label: 'Distribution List', visible: true },
+    { field: 'company', label: 'Company', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     { field: 'status', label: 'Status', visible: true },
@@ -219,7 +223,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       editable: false,
       cellRenderer: (params: any) => {
         const val = params.value || (params.data && params.data.justification) || '';
@@ -229,7 +233,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -468,6 +472,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
           ...this.cabinetLevelFields[level.level],
           title: level.title,
         }));
+      this.activeCabinetLevels = activeLevelDefs.map((def) => ({ field: def.field, title: def.title }));
 
       this.pendingDocumentsGridColumnDefs = [
         ...this.leadingColumnDefs,
@@ -483,9 +488,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentId', label: 'Document ID', visible: true },
         { field: 'documentName', label: 'Document Name', visible: true },
-        { field: 'observation', label: 'Observation', visible: true },
-        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'justification', label: 'Rationale', visible: true },
         { field: 'distributionList', label: 'Distribution List', visible: true },
+        { field: 'company', label: 'Company', visible: true },
         { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
         { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
         { field: 'status', label: 'Status', visible: true },
@@ -813,28 +818,24 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       nzData: {
         distributionList: distributionList || [],
         isObsoletion: String(activityTypeCode || '').toUpperCase() === 'DRT-0003',
+        cabinetLevels: this.activeCabinetLevels,
       },
       nzFooter: null, // custom footer handled inside the component
       nzClosable: true,
       nzMaskClosable: true,
-      nzWidth: 700,
+      nzWidth: 960,
     });
   }
 
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }
@@ -1327,7 +1328,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     //console.log('Row clicked:', rowData);
 
     const modalRef = this.modal.create({
-      nzTitle: 'Workflow History',
+      nzTitle: 'Approval History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         id: rowData.Id,

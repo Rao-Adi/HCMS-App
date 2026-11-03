@@ -2,7 +2,10 @@
   <button type="button" class="btn btn-primary btn-sm shadow-sm preview-btn" [disabled]="!blob" (click)="download()">
     <i class="bi bi-file-earmark-arrow-down me-1"></i> Download
   </button>
-  <button type="button" class="btn btn-secondary btn-sm shadow-sm preview-btn" (click)="close()">Close</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm preview-btn" (click)="toggleFullScreen()">
+    <i class="bi me-1" [class.bi-fullscreen-exit]="fullScreen" [class.bi-arrows-fullscreen]="!fullScreen"></i>
+    {{ fullScreen ? 'Exit Full Screen' : 'Full Screen' }}
+  </button>
 </div>
 
 @if (loading) {
@@ -12,7 +15,7 @@
   <div class="alert alert-warning text-center mb-3" style="font-size: 14px">{{ message }}</div>
 }
 
-<div class="preview-scroll">
+<div class="preview-scroll" [class.is-full]="fullScreen">
   <!-- The rendered Word document -->
   <div #docHost class="preview-doc"></div>
 
@@ -25,7 +28,7 @@
     <div class="preview-lists">
       <h6 class="preview-heading">Distribution List</h6>
       @if (distributionList.length) {
-        <table class="table table-sm table-bordered preview-table">
+        <div class="dms-popup-table-wrap mb-2"><table class="dms-popup-table preview-table">
           <thead>
             <tr>
               <th>Division</th>
@@ -41,19 +44,19 @@
                 <td>{{ val(d, 'Division', 'division') || 'All' }}</td>
                 <td>{{ val(d, 'Department', 'department') || 'All' }}</td>
                 <td>{{ val(d, 'SubDepartment', 'subDepartment') || 'All' }}</td>
-                <td>{{ val(d, 'Role', 'role') || 'Any' }}</td>
+                <td>{{ val(d, 'Role', 'role') || 'All' }}</td>
                 <td>{{ val(d, 'DistributionType', 'distributionType') }}</td>
               </tr>
             }
           </tbody>
-        </table>
+        </table></div>
       } @else {
         <p class="text-muted preview-none">No Distribution List.</p>
       }
 
       <h6 class="preview-heading">Document Users</h6>
       @if (userList.length) {
-        <table class="table table-sm table-bordered preview-table">
+        <div class="dms-popup-table-wrap mb-2"><table class="dms-popup-table preview-table">
           <thead>
             <tr>
               <th>Division</th>
@@ -69,12 +72,12 @@
                 <td>{{ val(u, 'Division', 'division') || 'All' }}</td>
                 <td>{{ val(u, 'Department', 'department') || 'All' }}</td>
                 <td>{{ val(u, 'SubDepartment', 'subDepartment') || 'All' }}</td>
-                <td>{{ val(u, 'Role', 'role') }}</td>
+                <td>{{ val(u, 'Role', 'role') || 'All' }}</td>
                 <td>{{ val(u, 'SelectedEmployees', 'selectedEmployees') }}</td>
               </tr>
             }
           </tbody>
-        </table>
+        </table></div>
       } @else {
         <p class="text-muted preview-none">No Document Users.</p>
       }

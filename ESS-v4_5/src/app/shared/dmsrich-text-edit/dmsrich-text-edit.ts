@@ -28,6 +28,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { VERSION } from '@angular/core';
 import { DmsAiService } from '@app/shared/services/dms-ai.service';
+import { pastedColorMatcher, wordListMatcher } from '@app/shared/utils/quill-word-paste';
 
 /** One run of text in the AI review dialog: unchanged, removed by the AI, or added by it. */
 export interface DiffSegment {
@@ -457,6 +458,11 @@ export class DMSRichTextEdit implements OnInit {
   }
 
   editorCreated(quill: any) {
+  // Text pasted from Word arrives with its lists as plain paragraphs ("·" typed in front); this turns them back into list items.
+  quill.clipboard.addMatcher(Node.ELEMENT_NODE, wordListMatcher);
+  // Light text / dark background brought along from a dark page would make the pasted block unreadable on the white document.
+  quill.clipboard.addMatcher(Node.ELEMENT_NODE, pastedColorMatcher);
+
   if (this.contentHtml) {
     quill.clipboard.dangerouslyPasteHTML(this.contentHtml);
   }

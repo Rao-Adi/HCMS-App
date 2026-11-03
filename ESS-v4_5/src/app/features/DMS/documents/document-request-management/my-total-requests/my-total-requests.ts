@@ -1,3 +1,4 @@
+import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
 import { CommonModule } from '@angular/common';
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { CabinetSelection, ColumnToggle } from '@app/shared/interfaces/interfaces';
@@ -130,7 +131,7 @@ export class MyTotalRequests {
     { field: 'rowVersion', headerName: 'Version' },
     {
       field: 'justification',
-      headerName: 'Justification',
+      headerName: 'Rationale',
       minWidth: 130,
       editable: false,
       cellRenderer: (params: any) => {
@@ -141,7 +142,7 @@ export class MyTotalRequests {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open-justification"
           >
-            Justification
+            Rationale
           </span>
         `;
       },
@@ -176,7 +177,7 @@ export class MyTotalRequests {
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentName', label: 'Document Title', visible: true },
     { field: 'rowVersion', label: 'Version', visible: true },
-    { field: 'justification', label: 'Justification', visible: true },
+    { field: 'justification', label: 'Rationale', visible: true },
     { field: 'status', label: 'Status', visible: true },
     { field: 'createdOn', label: 'Created On', visible: true },
     { field: 'createdBy', label: 'Created By', visible: true },
@@ -215,7 +216,7 @@ export class MyTotalRequests {
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentName', label: 'Document Title', visible: true },
         { field: 'rowVersion', label: 'Version', visible: true },
-        { field: 'justification', label: 'Justification', visible: true },
+        { field: 'justification', label: 'Rationale', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
         { field: 'status', label: 'Status', visible: true },
         { field: 'createdOn', label: 'Created On', visible: true },
@@ -454,7 +455,7 @@ export class MyTotalRequests {
           this.openHtmlContentModal();
           return;
         }
-        this.downloadDraft();
+        openDocumentPreview(this.modal, { documentId: 0, requestId: this.documentId, pending: false, title: this.currentDocumentName });
       });
   }
 
@@ -569,17 +570,12 @@ export class MyTotalRequests {
   openJustificationModal(justificationText: string): void {
     const text = justificationText || 'No justification provided.';
     const modalRef = this.modal.create({
-      nzTitle: 'Justification',
+      nzTitle: 'Rationale',
       nzContent: `<div style="padding: 16px; font-size: 14px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; word-break: break-word;">${text}</div>`,
       nzClosable: true,
       nzMaskClosable: true,
-      nzFooter: [
-        {
-          label: 'Close',
-          type: 'primary',
-          onClick: () => modalRef.destroy(),
-        },
-      ],
+      // Only the X closes it: no Close button in the footer.
+      nzFooter: null,
       nzWidth: 600,
     });
   }

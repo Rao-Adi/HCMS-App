@@ -3,29 +3,7 @@
   overflow-y: auto;
 }
 
-.approval-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  font-family: 'Segoe UI';
-}
-
-.approval-table th {
-  background: #f4f6f9;
-  text-align: left;
-  padding: 10px;
-  border-bottom: 2px solid #dee2e6;
-  color: #5a6a85;
-}
-
-.approval-table td {
-  padding: 10px;
-  border-bottom: 1px solid #edf1f5;
-}
-
-.approval-table tbody tr:hover {
-  background: #f9fbfd;
-}
+/* the table itself (header band, cells, separators) is the shared .dms-popup-table look from styles.css */
 
 .emp {
   font-weight: 600;

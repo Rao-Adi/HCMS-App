@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -9,13 +8,11 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CabinetSelection, SelectList } from '@app/shared/interfaces/interfaces';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
-import { DocumentTypeList } from '@app/shared/Dropdowns/document-type-list/document-type-list';
 import { CabinetStructureList } from '@app/shared/Dropdowns/cabinet-structure-list/cabinet-structure-list';
 import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { CustomizeEmailAlertService } from '@app/shared/services/customize-email-alerts.service';
@@ -37,7 +34,6 @@ interface AlertGridItem {
   imports: [
     CommonModule,
     FormsModule,
-    SafeTranslatePipe,
     NzSelectModule,
     NzIconModule,
     NzSwitchModule,
@@ -45,9 +41,7 @@ interface AlertGridItem {
     NzButtonModule,
     NzCheckboxModule,
     CabinetStructureList,
-    DocumentTypeList,
     ReactiveFormsModule,
-    AgGridWrapper,
     NzModalModule,
   ],
   templateUrl: './personalized-email-alerts.html',

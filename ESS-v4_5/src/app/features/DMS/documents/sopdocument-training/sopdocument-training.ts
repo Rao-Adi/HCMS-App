@@ -755,7 +755,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
 
   openWorkflowDeatilsModal(rowData: any) {
     const modalRef = this.modal.create({
-      nzTitle: 'Workflow History',
+      nzTitle: 'Approval History',
       nzContent: WorkflowApprovalHistoryComponent,
       nzData: {
         // This screen is about the DOCUMENT (pending/undergoing training), not the request that
@@ -767,7 +767,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         entityType: 'Document',
         // 'Approved' filtered out any step that hasn't been decided yet -- a still-pending step
         // (e.g. an ad-hoc approver appended after the policy-defined steps, not yet reached) was
-        // invisible here even once entityType was corrected. "Workflow History" should show the
+        // invisible here even once entityType was corrected. "Approval History" should show the
         // complete chain, matching the same fix already applied to my-approval-document.ts/
         // my-approval-request.ts's combined Reverted/Rejected tab for the same reason.
         decision: 'All',

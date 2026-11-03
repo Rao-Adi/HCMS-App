@@ -18,16 +18,22 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { UsersInRoleModal } from '../users-in-role-modal/users-in-role-modal';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of } from 'rxjs';
 import { RoleCabinetMappingService } from '@app/shared/services/role-cabinet-mapping.service';
 import {
+  ALL_OPTION,
+  ALL_VALUE,
   buildOrgColumns,
+  clearAutoFilledUnits,
   emptyOrgStructure,
   fillUnitFromRole,
+  isAll,
   ORG_FIELDS,
   OrgStructure,
   parseOrgStructure,
   rolesFor,
+  unitChosenByPerson,
+  unitValue,
 } from '@app/shared/utils/org-structure';
 import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 
@@ -40,6 +46,10 @@ interface DistributionRule {
   subDepartmentCode: any;
   businessDomainCode: any;
 }
+
+// The RoleId stored on the employees picked under a row whose Role is "All": every role held in the row's unit. (An employee
+// with no RoleId at all was not picked in this grid -- see reconstructManualUserData.)
+const ALL_ROLES_ID = 0;
 
 @Component({
   selector: 'app-drusers-component',
@@ -167,17 +177,23 @@ export class DRUsersComponent {
         field: 'userId',
         headerName: 'User Role',
         type: 'dropdown',
-        dropdownOptions: this.userRoles,
-        // Only the roles mapped to this row's cabinet. A change to any cabinet level clears the Role, since
-        // the one picked may no longer be mapped to it.
-        dropdownOptionsForRow: (row: any) => this.rolesForRow(row),
+        dropdownOptions: [ALL_OPTION, ...this.userRoles],
+        // "All" first, then only the roles held inside this row's organisation unit. A change to any level clears the
+        // Role, since the one picked may no longer be held there. "All" stands for every role held in that unit.
+        dropdownOptionsForRow: (row: any) => [ALL_OPTION, ...this.rolesForRow(row)],
         clearWhenChanged: this.cabinetFieldNames(),
-        // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole).
-        afterValueChange: (row: any) => fillUnitFromRole(this.org, row, 'userId'),
+        // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole) -- but not when the
+        // Division is "All": a role held in many Divisions says nothing about one Department. Same as the Distribution List.
+        afterValueChange: (row: any) => {
+          if (!unitValue(row?.level1Id)) clearAutoFilledUnits(row);
+          else fillUnitFromRole(this.org, row, 'userId');
+        },
         dropdownValueField: 'id',
         dropdownDisplayField: 'text',
         minWidth: 180,
-        placeholder: 'Please select any',
+        // Division and Role must be chosen on purpose (a person or "All"), as on the Distribution List.
+        placeholder: 'Select Role',
+        emptyValueDisplay: 'All',
         required: true,
         clickable: true,
         showSearch: true,
@@ -224,22 +240,28 @@ export class DRUsersComponent {
   private roleIdOfRow(row: any): string {
     const value = row?.userId;
     if (value === null || value === undefined || value === '') return '';
+    if (isAll(value)) return 'ALL';
     const role = this.userRoles.find((r) => String(r.id) === String(value) || r.text === value);
     return String(role ? role.id : value);
   }
 
-  // A Role can be in Document Users only once.
+  // A Role can be in Document Users only once. "All" (every role of the unit) can be added once for each unit.
   private roleIsFree(row: any, ignoreIndex = -1): boolean {
     const role = this.roleIdOfRow(row);
     if (!role) return true;
 
-    const taken = this.manualUserData.some((r, i) => i !== ignoreIndex && this.roleIdOfRow(r) === role);
+    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map((v) => String(unitValue(v) ?? '')).join('|');
+    const taken = this.manualUserData.some(
+      (r, i) => i !== ignoreIndex && this.roleIdOfRow(r) === role && (role !== 'ALL' || unit(r) === unit(row)),
+    );
     if (taken) {
       const name = this.userRoles.find((r) => String(r.id) === role)?.text || 'This role';
       this._notificationToastService.createNotification(
         'warning',
         'Document Users',
-        `Role "${name}" is already added.`,
+        role === 'ALL'
+          ? 'All roles is already added for this Division / Department / Sub Department.'
+          : `Role "${name}" is already added.`,
       );
     }
     return !taken;
@@ -264,7 +286,36 @@ export class DRUsersComponent {
     // Division > Department > Sub-Department come from People Partners (the hierarchy the Users screen shows) and
     // cascade; a blank level means every one, the same as on the Distribution List. The dropdowns read "Any"; a
     // saved row with the level blank reads "All".
-    return [...buildOrgColumns(this.org), ...this.getRemainingColumns()];
+    // Each list has an explicit "All" at the top, as on the Distribution List; choosing it on a level fills the levels below
+    // with "All" as well, and Division must be chosen (a person or "All" -- an untouched row never means everyone).
+    const orgColumns = buildOrgColumns(this.org, true).map((col) => {
+      if (col.field === 'level1Id') {
+        return {
+          ...col,
+          required: true,
+          placeholder: 'Select Division',
+          afterValueChange: (row: any) => {
+            unitChosenByPerson(row);
+            if (isAll(row?.level1Id)) {
+              row.level2Id = ALL_VALUE;
+              row.level3Id = ALL_VALUE;
+            }
+          },
+        };
+      }
+      if (col.field === 'level2Id') {
+        return {
+          ...col,
+          placeholder: 'All',
+          afterValueChange: (row: any) => {
+            unitChosenByPerson(row);
+            if (isAll(row?.level2Id)) row.level3Id = ALL_VALUE;
+          },
+        };
+      }
+      return { ...col, placeholder: 'All' };
+    });
+    return [...orgColumns, ...this.getRemainingColumns()];
   }
 
   GetAllManuallyManageEmployee(query: any) {
@@ -330,19 +381,10 @@ export class DRUsersComponent {
     }
 
     // Since rowData.userId might contain the display text (due to getDisplayName in onRowAdded),
-    // we look up the actual Role ID from the userRoles list.
-    const selectedRole = this.userRoles.find(
-      (r) => r.id == rowData.userId || r.text == rowData.userId,
-    );
-    const roleId = selectedRole ? selectedRole.id : rowData.userId;
+    // we look up the actual Role ID from the userRoles list. "All" is ALL_ROLES_ID.
+    const roleId = this.resolveRoleId(rowData.userId);
 
-    const rule = {
-      roleId,
-      divisionCode: rowData.level1Id || rowData.divisionCode || null,
-      departmentCode: rowData.level2Id || rowData.departmentCode || null,
-      subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode || null,
-      businessDomainCode: rowData.level4Id || rowData.businessDomainCode || null,
-    };
+    const rule = this.ruleOf(rowData, roleId);
 
     // Lets the modal check off everyone already selected for this row (auto-selected on add,
     // or picked in a previous visit to this modal) so the user can see who's in/out at a
@@ -357,10 +399,12 @@ export class DRUsersComponent {
       nzContent: UsersInRoleModal,
       nzData: {
         data: roleId, // pass the resolved roleId instead of the text
-        divisionCode: rowData.level1Id || rowData.divisionCode,
-        departmentCode: rowData.level2Id || rowData.departmentCode,
-        subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode,
-        businessDomainCode: rowData.level4Id || rowData.businessDomainCode,
+        // For "All": every role held in the row's unit -- the modal lists the employees of all of them.
+        roleIds: roleId === ALL_ROLES_ID ? this.allRoleIdsFor(rule) : undefined,
+        divisionCode: rule.divisionCode,
+        departmentCode: rule.departmentCode,
+        subDepartmentCode: rule.subDepartmentCode,
+        businessDomainCode: rule.businessDomainCode,
         documentTypeCode: this.documentTypeCode,
         preSelectedEmployeeCodes,
       },
@@ -451,7 +495,68 @@ export class DRUsersComponent {
 
     if (!cabinetMatches) return false;
 
-    return roleId === rule.roleId;
+    return roleId === rule.roleId || (roleId != null && rule.roleId != null && String(roleId) === String(rule.roleId));
+  }
+
+  // The Role a grid row holds as an id: a role's own id, or ALL_ROLES_ID for "All". (A row rebuilt from saved users holds the
+  // Role's name, so either is matched against the role list.)
+  private resolveRoleId(value: any): any {
+    if (isAll(value)) return ALL_ROLES_ID;
+    const role = this.userRoles.find((r) => r.id == value || r.text == value);
+    return role ? role.id : value;
+  }
+
+  // The rule (Role + organisation unit) a grid row stands for. "All" on a level is a blank code: no filter.
+  private ruleOf(row: any, roleId: any): DistributionRule {
+    const code = (level: string, alt: string) => {
+      const v = row?.[level];
+      if (isAll(v)) return null;
+      return v || row?.[alt] || null;
+    };
+    return {
+      roleId,
+      divisionCode: code('level1Id', 'divisionCode'),
+      departmentCode: code('level2Id', 'departmentCode'),
+      subDepartmentCode: code('level3Id', 'subDepartmentCode'),
+      businessDomainCode: row?.level4Id || row?.businessDomainCode || null,
+    };
+  }
+
+  // Every role held inside the unit of a rule: what "All" roles stands for.
+  private allRoleIdsFor(rule: DistributionRule): number[] {
+    return rolesFor(this.org, {
+      division: rule.divisionCode,
+      department: rule.departmentCode,
+      subDepartment: rule.subDepartmentCode,
+    }).map((r) => r.id);
+  }
+
+  // The employees of a rule: the holders of its Role, or of every role of its unit when the Role is "All" (each person once).
+  private fetchEmployeesForRule(rule: DistributionRule, payload: any): Observable<any[]> {
+    const pick = (res: any): any[] => {
+      const data = res?.Data;
+      return (Array.isArray(data) ? data : data?.Items || []).filter((u: any) => u != null);
+    };
+    const codeOf = (u: any) => u.empcode || u.EmployeeCode || u.employeeCode || u.empid;
+
+    if (rule.roleId !== ALL_ROLES_ID) {
+      return this._peoplePartnerService.getUserByRoleId(rule.roleId, payload).pipe(map(pick));
+    }
+    const roleIds = this.allRoleIdsFor(rule);
+    if (!roleIds.length) return of([]);
+    return forkJoin(roleIds.map((id) => this._peoplePartnerService.getUserByRoleId(String(id), payload).pipe(map(pick), catchError(() => of([]))))).pipe(
+      map((lists) => {
+        const seen = new Set<any>();
+        const all: any[] = [];
+        for (const u of lists.flat()) {
+          const code = codeOf(u);
+          if (code == null || seen.has(code)) continue;
+          seen.add(code);
+          all.push(u);
+        }
+        return all;
+      }),
+    );
   }
 
   // Recomputes and writes the "N of M selected" text for one grid row, then replaces
@@ -483,13 +588,7 @@ export class DRUsersComponent {
   // default -- the "User Role" hyperlink (openCabinetModal) still lets the user narrow this
   // down afterwards, same as before.
   private autoSelectEmployeesForRow(rowData: any, roleId: any): void {
-    const rule = {
-      roleId,
-      divisionCode: rowData.level1Id || rowData.divisionCode || null,
-      departmentCode: rowData.level2Id || rowData.departmentCode || null,
-      subDepartmentCode: rowData.level3Id || rowData.subDepartmentCode || null,
-      businessDomainCode: rowData.level4Id || rowData.businessDomainCode || null,
-    };
+    const rule = this.ruleOf(rowData, roleId);
 
     const payload = {
       searchtext: '',
@@ -507,13 +606,8 @@ export class DRUsersComponent {
       documentTypeCode: this.documentTypeCode || null,
     };
 
-    this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe({
-      next: (res) => {
-        const data = res?.Data;
-        const users = (Array.isArray(data) ? data : data?.Items || []).filter(
-          (u: any) => u != null,
-        );
-
+    this.fetchEmployeesForRule(rule, payload).subscribe({
+      next: (users) => {
         const mappedUsers = users.map((u: any) => ({
           ...u, // Preserves raw backend properties like 'empid' for the parent to use
           employeeCode: u.empcode || u.EmployeeCode || u.employeeCode,
@@ -522,7 +616,7 @@ export class DRUsersComponent {
             : u.EmployeeName || u.employeeName || u.UserName || u.userName,
           designation:
             u.Designation || u.designation || u.DesignationName || (u.dsgid ? String(u.dsgid) : ''),
-          role: this.getDisplayName(this.userRoles, roleId),
+          role: roleId === ALL_ROLES_ID ? 'All' : this.getDisplayName(this.userRoles, roleId),
           ...rule,
         }));
 
@@ -582,11 +676,13 @@ export class DRUsersComponent {
           rule,
           row: {
             id: this.generateId(),
-            level1Id: rule.divisionCode,
+            // A blank Division or Role on saved users is "all of them": shown as the explicit All choice (Department and
+            // Sub-Department stay blank, which already reads "All").
+            level1Id: rule.divisionCode || ALL_VALUE,
             level2Id: rule.departmentCode,
             level3Id: rule.subDepartmentCode,
             level4Id: rule.businessDomainCode,
-            userId: this.getDisplayName(this.userRoles, roleId),
+            userId: Number(roleId) === ALL_ROLES_ID ? ALL_VALUE : this.getDisplayName(this.userRoles, roleId),
             employeeSelectionStatus: 'Loading...',
           },
         });
@@ -615,12 +711,8 @@ export class DRUsersComponent {
       documentTypeCode: this.documentTypeCode || null,
     };
 
-    this._peoplePartnerService.getUserByRoleId(rule.roleId, payload).subscribe({
-      next: (res) => {
-        const data = res?.Data;
-        const users = (Array.isArray(data) ? data : data?.Items || []).filter(
-          (u: any) => u != null,
-        );
+    this.fetchEmployeesForRule(rule, payload).subscribe({
+      next: (users) => {
         this.updateSelectionStatus(rowData, rule, users.length);
       },
       error: () => {
@@ -659,7 +751,7 @@ export class DRUsersComponent {
       divisionName: this.getDisplayName(this.divisions, rowData.divisionName),
       departmentName: this.getDisplayName(this.departments, rowData.departmentName),
       subDepartmentName: this.getDisplayName(this.subDepartments, rowData.subDepartmentName),
-      userId: this.getDisplayName(this.userRoles, rowData.userId),
+      userId: isAll(rowData.userId) ? ALL_VALUE : this.getDisplayName(this.userRoles, rowData.userId),
       employeeSelectionStatus: 'Loading...',
     };
 
@@ -667,10 +759,7 @@ export class DRUsersComponent {
 
     // rowData.userId is still the raw role ID at this point (rowWithId.userId above has
     // already been swapped for the display text).
-    const selectedRole = this.userRoles.find(
-      (r) => r.id == rowData.userId || r.text == rowData.userId,
-    );
-    const roleId = selectedRole ? selectedRole.id : rowData.userId;
+    const roleId = this.resolveRoleId(rowData.userId);
 
     this.autoSelectEmployeesForRow(rowWithId, roleId);
   }
@@ -679,9 +768,9 @@ export class DRUsersComponent {
     //console.log('Row updated:', event);
     // debugger;
     const payLoad = {
-      divisionCode: event.rowData.level1Id || event.rowData.level1Id,
-      departmentCode: event.rowData.level2Id || event.rowData.level2Id,
-      subDepartmentCode: event.rowData.level3Id || event.rowData.level3Id,
+      divisionCode: unitValue(event.rowData.level1Id) || undefined,
+      departmentCode: unitValue(event.rowData.level2Id) || undefined,
+      subDepartmentCode: unitValue(event.rowData.level3Id) || undefined,
       businessDomainCode: event.rowData.level4Id || event.rowData.level4Id,
     };
 
@@ -713,19 +802,13 @@ export class DRUsersComponent {
     this.manualUserData.splice(rowIndex, 1);
     this.manualUserData = [...this.manualUserData];
 
-    // Find the actual role ID from the userRoles list
+    // Find the actual role ID from the userRoles list ("All" is ALL_ROLES_ID)
     const role = this.userRoles.find(r => r.id === deletedRow.userId || r.text === deletedRow.userId);
-    const roleId = role ? role.id : null;
+    const roleId = isAll(deletedRow.userId) ? ALL_ROLES_ID : role ? role.id : null;
 
-    if (!roleId) return;
+    if (roleId === null || roleId === undefined || roleId === '') return;
 
-    const rule = {
-      roleId,
-      divisionCode: deletedRow.level1Id || null,
-      departmentCode: deletedRow.level2Id || null,
-      subDepartmentCode: deletedRow.level3Id || null,
-      businessDomainCode: deletedRow.level4Id || null,
-    };
+    const rule = this.ruleOf(deletedRow, roleId);
 
     // Filter out employees that match the deleted rule's criteria
     this.selectedEmployeeList = this.selectedEmployeeList.filter(

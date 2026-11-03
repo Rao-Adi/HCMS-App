@@ -19,6 +19,7 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
         (keydown)="$event.stopPropagation()"
         (keyup)="$event.stopPropagation()"
         (keypress)="$event.stopPropagation()"
+        [placeholder]="params?.placeholder || ''"
         style="text-align: left;"
       />
     </nz-input-group>

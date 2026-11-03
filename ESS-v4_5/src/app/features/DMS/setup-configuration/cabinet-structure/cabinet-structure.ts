@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BusinessDomainComponent } from '@app/shared/components/business-domain-component/business-domain-component';
-import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { DepartmentComponent } from '@app/shared/components/department-component/department-component';
 import { DivisionComponent } from '@app/shared/components/division-component/division-component';
 import { DocumentTypeComponent } from '@app/shared/components/document-type-component/document-type-component';
@@ -20,7 +19,6 @@ import { NotificationToastService } from '@app/shared/notification/notification.
   imports: [
     CommonModule,
     FormsModule,
-    CustomDateFormatPipe,
     SafeTranslatePipe,
     DivisionComponent,
     BusinessDomainComponent,

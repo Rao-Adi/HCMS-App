@@ -8,7 +8,6 @@ import { ColDef } from 'ag-grid-community';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { UncontrolledDocumentFormModal } from './uncontrolled-document-form-modal/uncontrolled-document-form-modal';
 import { UncontrolledDocumentHistoryModal } from './uncontrolled-document-history-modal/uncontrolled-document-history-modal';
-import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { AppConfigService } from '@app/core/services/app-config';
 import { resolveUploadUrl } from '@app/shared/utils/resolve-upload-url';
@@ -16,7 +15,7 @@ import { resolveUploadUrl } from '@app/shared/utils/resolve-upload-url';
 @Component({
   selector: 'app-uncontrolled-documents',
   standalone: true,
-  imports: [CommonModule, AgGridWrapper, NzModalModule, SafeTranslatePipe],
+  imports: [CommonModule, AgGridWrapper, NzModalModule],
   templateUrl: './uncontrolled-documents.html',
   styleUrl: './uncontrolled-documents.css',
 })

@@ -158,7 +158,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
   @Input() gridId!: string;
   @Input() isSelectionRequired: boolean = true;
   @Input() showDisplayOption: boolean = false;
-  @Input() pageSizeOptions = [10, 20, 30, 50];
+  @Input() pageSizeOptions = [10, 20, 30, 50, 500];
   @Input() defaultPageSize = 10;
   @Input() columnToggles?: ColumnToggle[];
 
@@ -166,7 +166,7 @@ export class AgGridWrapper implements OnInit, OnChanges {
     columns: [],
     enablePagination: true,
     pageSize: 10,
-    pageSizeOptions: [10, 20, 50, 100],
+    pageSizeOptions: [10, 20, 50, 100, 500],
     enableSorting: true,
     enableFiltering: true,
     enableSelection: true,
@@ -456,8 +456,8 @@ export class AgGridWrapper implements OnInit, OnChanges {
   }
 
   // A grid with few or short columns ends well short of its container and leaves an empty strip
-  // on the right (e.g. the three-column "Users in Role" modal). This hands that spare width out
-  // to the columns -- and ONLY ever widens them.
+  // on the right (e.g. the three-column "Users in Role" modal). This hands that spare width to
+  // the widest column -- and ONLY ever widens it.
   //
   // It is deliberately not sizeColumnsToFit(). That call rescales every column to an exact total,
   // so run against widths that were not final yet (an early pass, before every row had painted --
@@ -488,14 +488,14 @@ export class AgGridWrapper implements OnInit, OnChanges {
       const def = col.getColDef();
       return !def.flex && !def.suppressSizeToFit;
     });
-    const growableWidth = growable.reduce((sum, col) => sum + col.getActualWidth(), 0);
-    if (growable.length === 0 || growableWidth <= 0) return;
+    if (growable.length === 0) return;
 
+    // The spare width goes to ONE column -- the widest, i.e. the one with the most text -- and not to every column in
+    // proportion: spreading it put a wide, empty gap after every short column (Document Type, Document ID, ...). The
+    // columns stay as wide as their content; the grid still fills its container.
+    const widest = growable.reduce((a, b) => (b.getActualWidth() > a.getActualWidth() ? b : a));
     this.gridApi.applyColumnState({
-      state: growable.map((col) => ({
-        colId: col.getColId(),
-        width: Math.floor(col.getActualWidth() + (spare * col.getActualWidth()) / growableWidth),
-      })),
+      state: [{ colId: widest.getColId(), width: Math.floor(widest.getActualWidth() + spare) }],
     });
   }
 

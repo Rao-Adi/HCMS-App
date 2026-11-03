@@ -3,6 +3,7 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 import { PeoplePartnersService } from '@app/shared/services/people-partners.service';
+import { catchError, forkJoin, map, of } from 'rxjs';
 
 @Component({
   selector: 'app-users-in-role-modal',
@@ -125,7 +126,9 @@ export class UsersInRoleModal {
 
   loadData(query: any = {}) {
     const roleId = this.modalData?.data;
-    if (!roleId) return;
+    // Role "All": the roles held in the row's unit (roleIds) -- everyone holding any of them is listed, each person once.
+    const roleIds: number[] | undefined = this.modalData?.roleIds;
+    if (!roleId && !roleIds) return;
     const sort = query.sortModel?.[0];
     const payload = {
       searchtext: query.searchTerm || query.searchText || '',
@@ -141,7 +144,32 @@ export class UsersInRoleModal {
       documentTypeCode: this.modalData?.documentTypeCode || null,
     };
 
-    this._peoplePartnerService.getUserByRoleId(roleId, payload).subscribe((res) => {
+    const source$ = roleIds
+      ? roleIds.length === 0
+        ? of({ Success: true, Data: { Items: [] } } as any)
+        : forkJoin(
+            roleIds.map((id) =>
+              this._peoplePartnerService.getUserByRoleId(String(id), payload).pipe(catchError(() => of(null))),
+            ),
+          ).pipe(
+            map((results) => {
+              const seen = new Set<any>();
+              const items: any[] = [];
+              for (const r of results) {
+                const d: any = r?.Data;
+                for (const u of (Array.isArray(d) ? d : d?.Items || []).filter((x: any) => x != null)) {
+                  const code = u.empcode || u.EmployeeCode || u.employeeCode || u.empid;
+                  if (code == null || seen.has(code)) continue;
+                  seen.add(code);
+                  items.push(u);
+                }
+              }
+              return { Success: true, Data: { Items: items, TotalCount: items.length } } as any;
+            }),
+          )
+      : this._peoplePartnerService.getUserByRoleId(roleId, payload);
+
+    source$.subscribe((res: any) => {
       if (res?.Success && res.Data) {
         const data = res.Data;
         const users = (Array.isArray(data) ? data : data.Items || []).filter((u: any) => u != null);

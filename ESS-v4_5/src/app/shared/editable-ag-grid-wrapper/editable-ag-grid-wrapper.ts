@@ -206,7 +206,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
     columns: [],
     enablePagination: true,
     pageSize: 10,
-    pageSizeOptions: [10, 20, 50, 100],
+    pageSizeOptions: [10, 20, 50, 100, 500],
     enableSorting: true,
     enableFiltering: true,
     enableSelection: false,
@@ -697,6 +697,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 prefix: column.prefix || '',
                 suffix: column.suffix || '',
                 type: 'text',
+                placeholder: column.placeholder || '',
                 onValueChange: (value: any, data: any) => {
                   data[column.field] = value;
                   this.emitCellValueChanged(column.field, value, data, params.rowIndex);
@@ -1098,8 +1099,17 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       const gridDiv = this.el.nativeElement.querySelector('.ag-theme-alpine') || this.el.nativeElement;
       const gridWidth = gridDiv ? gridDiv.offsetWidth : 0;
 
-      if (totalColumnWidth < gridWidth) {
-        this.gridApi.sizeColumnsToFit();
+      // The spare width goes to the widest column only (the one with the most text) instead of being spread over every
+      // column, which left a wide empty gap after each short one. Columns stay as wide as their content.
+      const spare = gridWidth - totalColumnWidth - 4;
+      if (spare > 0) {
+        const growable = cols.filter((c: any) => !c.getColDef().flex && !c.getColDef().suppressSizeToFit);
+        if (growable.length) {
+          const widest = growable.reduce((a: any, b: any) => (b.getActualWidth() > a.getActualWidth() ? b : a));
+          this.gridApi.applyColumnState({
+            state: [{ colId: widest.getColId(), width: Math.floor(widest.getActualWidth() + spare) }],
+          });
+        }
       }
     }, 150);
   }
