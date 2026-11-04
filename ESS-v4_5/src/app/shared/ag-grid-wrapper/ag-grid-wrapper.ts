@@ -494,13 +494,21 @@ export class AgGridWrapper implements OnInit, OnChanges {
     });
     if (growable.length === 0) return;
 
-    // The spare width goes to ONE column -- the widest, i.e. the one with the most text -- and not to every column in
-    // proportion: spreading it put a wide, empty gap after every short column (Document Type, Document ID, ...). The
-    // columns stay as wide as their content; the grid still fills its container.
-    const widest = growable.reduce((a, b) => (b.getActualWidth() > a.getActualWidth() ? b : a));
+    // Shared out equally, so the grid fills its container and the columns sit evenly (a strip left empty on the right
+    // looked unfinished). Only ever widens a column, so no text is squeezed.
+    const share = Math.floor(spare / growable.length);
     this.gridApi.applyColumnState({
-      state: [{ colId: widest.getColId(), width: Math.floor(widest.getActualWidth() + spare) }],
+      state: growable.map((col) => ({ colId: col.getColId(), width: col.getActualWidth() + share })),
     });
+  }
+
+  // The grid's own width changes after the first fill when the page layout settles (side menu, tabs, modal opening) or the
+  // window is resized. Fill again then: it only adds to widths when there is spare room, so repeating it is harmless.
+  private fillTimer: any;
+  onGridSizeChanged(): void {
+    if (!this.autoSizeColumns) return;
+    clearTimeout(this.fillTimer);
+    this.fillTimer = setTimeout(() => this.fillSpareWidth(), 200);
   }
 
   onFirstDataRendered(event: any): void {
