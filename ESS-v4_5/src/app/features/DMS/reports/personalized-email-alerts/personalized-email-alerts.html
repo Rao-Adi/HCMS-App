@@ -269,18 +269,7 @@
 
     <div class="form-section-group mb-4">
       <h5 class="panel-subheading">Recipient Settings</h5>
-      <div class="flex-row gap-3 mb-3">
-        <label class="radio-container">
-          <input type="radio" value="self" formControlName="recipientType" />
-          <span class="radio-tile">{{ currentUserEmail }} (Self)</span>
-        </label>
-        <label class="radio-container">
-          <input type="radio" value="custom" formControlName="recipientType" />
-          <span class="radio-tile">Custom Email Address(es)</span>
-        </label>
-      </div>
-
-      <div class="grid-2-col" *ngIf="alertForm.get('recipientType')?.value === 'custom'">
+      <div class="grid-2-col">
         <div class="form-group">
           <label>Custom Email Address(es)</label>
           <input

@@ -23,7 +23,12 @@
   background: #fff;
 }
 
+/* On a narrower screen (or a zoomed browser) the Word page is wider than the window, so the area scrolls sideways. These lists
+   are only as wide as the window, so scrolling to see the rest of the page slid them half out of view on the left (their first
+   column was cut off). Sticky keeps them in view whatever the sideways scroll. */
 .preview-lists {
+  position: sticky;
+  left: 0;
   background: #fff;
   margin-top: 16px;
   padding: 16px 20px;

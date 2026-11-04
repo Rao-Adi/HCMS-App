@@ -116,7 +116,7 @@ export class ManageWorkflowPolicyModal {
         field: 'policyName',
         headerName: 'Policy Name',
         type: 'text',
-        placeholder: 'Policy Name',
+        placeholder: 'Policy_Name- Doc type',
         minWidth: 180,
         pinned: 'left',
         required: true,

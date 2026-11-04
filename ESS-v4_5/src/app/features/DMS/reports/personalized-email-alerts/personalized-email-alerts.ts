@@ -163,7 +163,7 @@ export class PersonalizedEmailAlerts implements OnInit {
       lookbackDays: [''],
 
       // Recipient Settings
-      recipientType: ['self'], // 'self' or 'custom'
+      recipientType: ['custom'], // the "self" option was removed from the form; only custom addresses are offered
       customEmails: [''], // Comma separated string or tags
       ccEmails: [''],
 
@@ -191,7 +191,7 @@ export class PersonalizedEmailAlerts implements OnInit {
     // Set default initial values for the form
     this.alertForm.patchValue({
       companyId: 1,
-      recipientType: 'self',
+      recipientType: 'custom',
       frequency: 'Daily',
       sendAtTime: '09:00',
       deliveryFormat: 'Embedded in Email Body',
@@ -413,7 +413,7 @@ export class PersonalizedEmailAlerts implements OnInit {
           inactiveDays: pick('InactiveDays', 'inactiveDays') ?? '',
           statusChangedTo: pick('StatusChangedTo', 'statusChangedTo') || null,
           lookbackDays: pick('LookbackDays', 'lookbackDays') ?? '',
-          recipientType: isSelfOnly ? 'self' : 'custom',
+          recipientType: 'custom',
           customEmails: toEmails,
           ccEmails: ccEmails,
           frequency: pick('Frequency', 'frequency') || 'Daily',

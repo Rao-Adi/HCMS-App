@@ -337,6 +337,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
       minWidth: 50,
       pinned: 'left',
       lockPosition: true,
+      // Padding / spacing of this narrow column are removed in styles.css (.dms-select-cell / .dms-select-header): the checkbox
+      // plus AG Grid's default cell padding was wider than the column, so it was clipped on the left.
+      cellClass: 'dms-select-cell',
+      headerClass: 'dms-select-header',
       sortable: false,
       filter: false,
       resizable: false,

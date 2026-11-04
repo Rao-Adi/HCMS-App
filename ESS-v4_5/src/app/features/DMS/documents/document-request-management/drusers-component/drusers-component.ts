@@ -204,7 +204,7 @@ export class DRUsersComponent {
         headerName: 'Employee Selection Status',
         type: 'readonly',
         editable: false,
-        minWidth: 220,
+        minWidth: 180,
       },
     ];
   }

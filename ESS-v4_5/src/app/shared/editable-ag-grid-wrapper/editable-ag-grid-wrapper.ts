@@ -1103,11 +1103,15 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
       // column, which left a wide empty gap after each short one. Columns stay as wide as their content.
       const spare = gridWidth - totalColumnWidth - 4;
       if (spare > 0) {
-        const growable = cols.filter((c: any) => !c.getColDef().flex && !c.getColDef().suppressSizeToFit);
+        // (Every column inherits flex from the default column def, so the old "no flex" test matched nothing and the spare
+        // width was never used -- the grid stopped short of its right edge.) The last column takes it: the columns before
+        // it keep their content width, so no gaps open up between them.
+        const growable = cols.filter((c: any) => !c.getColDef().suppressSizeToFit && !c.getColDef().maxWidth);
         if (growable.length) {
-          const widest = growable.reduce((a: any, b: any) => (b.getActualWidth() > a.getActualWidth() ? b : a));
+          // Shared out equally, so the grid fills its width and the columns sit evenly, like the Distribution List.
+          const share = Math.floor(spare / growable.length);
           this.gridApi.applyColumnState({
-            state: [{ colId: widest.getColId(), width: Math.floor(widest.getActualWidth() + spare) }],
+            state: growable.map((c: any) => ({ colId: c.getColId(), width: c.getActualWidth() + share })),
           });
         }
       }

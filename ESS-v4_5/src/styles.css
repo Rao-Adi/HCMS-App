@@ -7390,3 +7390,43 @@ html.ant-scrolling-effect {
 .dms-popup-table tbody tr:hover td {
   background: #f7f9fc;
 }
+
+/* The row-selection checkbox column. The cell's default horizontal padding plus the space AG Grid keeps after its checkbox is wider than
+   the 50px column, so the centred checkbox (and its focus ring) was cut off on the left. This column needs neither. */
+.ag-cell.dms-select-cell {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+.ag-cell.dms-select-cell .ag-cell-wrapper {
+  padding: 0 !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+.ag-cell.dms-select-cell .ag-selection-checkbox,
+.ag-header-cell.dms-select-header .ag-header-select-all {
+  margin: 0 !important;
+}
+.ag-header-cell.dms-select-header {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  justify-content: center !important;
+}
+.ag-header-cell.dms-select-header .ag-header-cell-comp-wrapper,
+.ag-header-cell.dms-select-header .ag-header-cell-label {
+  justify-content: center !important;
+}
+
+/* Count badges on the tabs (Pending 2, Approved 0 ...) are blue everywhere in DMS, and so are the tabs that carry them.
+   They are the only pills that are both bg-secondary and monospace, so nothing else is touched; the tab rule only applies
+   to a tab that actually holds such a badge. */
+.badge.rounded-pill.bg-secondary.font-monospace {
+  background-color: #0b4fd8 !important;
+  border-color: #0b4fd8 !important;
+  color: #fff !important;
+}
+/* All tabs of the rows marked dms-count-tabs (the ones that carry count badges), not just the tabs showing a badge right now -- a count of 0 hides it -- so the row looks the same. */
+.custom-tab-container.dms-count-tabs .tab-button {
+  color: #0b4fd8;
+}
