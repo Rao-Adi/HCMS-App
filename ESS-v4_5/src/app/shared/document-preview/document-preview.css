@@ -68,6 +68,17 @@
   text-indent: 0 !important;
 }
 
+/* HEADER_FOOTER_PARAGRAPH_FIX
+   The line under the signature block in the footer (the template's "Note: This SOP is confidential and private...") carries a hanging
+   indent (text-indent: -31.5pt), which pulled its first line out past the left margin -- to the left of the table above it and of the
+   page text. Header and footer paragraphs are kept on the margin, in line with their tables (see the table rule above). */
+:host ::ng-deep section.docx > footer > p,
+:host ::ng-deep section.docx > header > p {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
+
 /* compact toolbar buttons (the global .btn style stretches them) */
 .preview-btn {
   width: auto !important;
@@ -96,6 +107,12 @@
   top: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+/* The popup layer (z-index 498, see styles.css) sits below the fixed sidebar (1100) and page header (1200). A window that fills the
+   browser therefore ran underneath the sidebar, which hid the left of the title ("... - GMP 24-Hour Time Format ..."). While the
+   Full Screen window is open the layer is raised above them; it drops back as soon as the window is closed or exited. */
+::ng-deep .cdk-overlay-container:has(.dms-preview-fullscreen) {
+  z-index: 3000 !important;
 }
 ::ng-deep .dms-preview-fullscreen .ant-modal-content {
   height: 100vh;

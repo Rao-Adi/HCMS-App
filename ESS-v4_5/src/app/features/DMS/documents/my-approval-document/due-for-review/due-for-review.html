@@ -1,0 +1,59 @@
+<div class="row row-space">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="mt-4">
+      <h3 class="PnlHeader">Documents due for review</h3>
+      <div class="alert alert-info d-flex align-items-start mb-3" style="font-size: 13px">
+        <i class="bi bi-info-circle-fill me-2 fs-6 text-info"></i>
+        <div>
+          These documents are Effective and their Next Review Date is within 60 days (or has passed), and you were an approver in their
+          approval workflow (or you uploaded them, for a document that has no workflow). If nothing in a document needs to change, <strong>Re-approve</strong> it: no workflow runs and the version stays
+          the same; the review is recorded and the Next Review Date moves on by the document type's Review Years. To change a document,
+          revise it from Create / Update Document instead.
+        </div>
+      </div>
+      <app-ag-grid-wrapper
+        [gridStyle]="{ width: '100%', height: '450px' }"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [isSelectionRequired]="true"
+        [autoSizeColumns]="true"
+        [rowData]="rowData"
+        [pageSize]="selectedPageSize"
+        [pageSizeOptions]="[10, 20, 50, 100, 500]"
+        [totalRows]="totalRows"
+        gridId="documentGridDueForReview"
+        (pageSizeChange)="onPageSizeChanged($event)"
+        (selectionChange)="onSelectionChange($event)"
+        (serverQuery)="loadDocuments($event)"
+      >
+        <div grid-actions class="grid-action-icons">
+          <button
+            class="btn btn-success btn-sm btn-action"
+            [class.disabled]="!hasSelectedRows || isProcessing"
+            [title]="hasSelectedRows ? 'Re-approve without change' : 'Select at least one record in the grid to take this action'"
+            (click)="promptReapprove()"
+            [disabled]="hasSelectedRows === false || isProcessing"
+          >
+            <i class="bi bi-check-circle"></i> Re-approve
+          </button>
+        </div>
+      </app-ag-grid-wrapper>
+    </div>
+  </div>
+</div>
+
+<ng-template #remarksTpl>
+  <p class="mb-2">
+    Re-approve the selected document(s) <strong>without any change</strong>? The version stays the same and the next review date moves on.
+  </p>
+  <label class="ctrllbl" for="reviewRemarks">Remarks (optional)</label>
+  <textarea
+    id="reviewRemarks"
+    class="form-control"
+    rows="3"
+    maxlength="1000"
+    placeholder="e.g. Reviewed, still current"
+    [(ngModel)]="remarks"
+    name="reviewRemarks"
+  ></textarea>
+</ng-template>

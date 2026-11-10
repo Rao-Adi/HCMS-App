@@ -19,7 +19,7 @@ import { DocumentRequestService } from '@app/shared/services/document-request.se
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
-import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
@@ -160,7 +160,7 @@ export class ApprovalDocuments {
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
     { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-    { field: 'approvalHistory', label: 'Approval History', visible: true },
+    { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
 
@@ -229,7 +229,7 @@ export class ApprovalDocuments {
     },
     {
       field: 'approvalHistory',
-      headerName: 'Approval History',
+      headerName: 'Signing Authorities',
       editable: false,
       minWidth: 110,
       cellRenderer: (params: any) => {
@@ -239,7 +239,7 @@ export class ApprovalDocuments {
             style="color:#1976d2; cursor:pointer; text-decoration:underline"
             data-action="open"
           >
-            Approval History
+            Signing Authorities
           </span>
         `;
       },
@@ -325,7 +325,7 @@ export class ApprovalDocuments {
         { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
         { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
         { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
         { field: 'revisionHistory', label: 'Revision History', visible: true },
       ];
     });
@@ -674,21 +674,13 @@ export class ApprovalDocuments {
   }
 
   openWorkflowDeatilsModal(rowData: any) {
-    //console.log('Row clicked:', rowData);
-    const modalRef = this.modal.create({
-      nzTitle: 'Approval History',
-      nzContent: WorkflowApprovalHistoryComponent,
-      nzData: {
-        id: rowData.Id,
-        entityType: 'Document',
-        decision:'Approved'
-      },
-      nzFooter: null, // custom footer handled inside component
-      nzWidth: '70%',
-    });
-
-    modalRef.afterClose.subscribe((result) => {
-      console.log('Modal closed with:', result);
+    this.modal.create({
+      nzTitle: 'Signing Authorities & Approval History',
+      nzContent: AdHocApproverModal,
+      // Read-only here: the chain of this document (who signs, who has, when); adding an approver is done when approving, in My Approvals.
+      nzData: { documentId: Number(rowData?.Id), documentName: rowData?.Title || rowData?.DocumentName || '', readOnly: true },
+      nzFooter: null,
+      nzWidth: '60%',
     });
   }
 

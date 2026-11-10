@@ -26,7 +26,6 @@ import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { getWorkflowActionLabel, getWorkflowSuccessMessage } from '@app/shared/utils/workflow-action-label';
-import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
 import { DistributionListModal } from '../distribution-list-modal/distribution-list-modal';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
@@ -40,6 +39,7 @@ import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabi
 import { AdHocChoice } from '@app/shared/adhoc-approver-panel/adhoc-approver-panel';
 import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
 import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
+import { DocumentDueForReview } from './due-for-review/due-for-review';
 
 // WorkflowExecutions.Status as stored, translated into what the business calls it. 'Reworked' is
 // the stored value for a revert; nothing user-facing has ever called it that. 'Completed' means
@@ -75,6 +75,7 @@ const MY_APPROVAL_STATUS_CLASSES: Record<string, string> = {
     AgGridWrapper,
     DynamicFormByDocumentAttribute,
     NzModalModule,
+    DocumentDueForReview,
   ],
   templateUrl: './my-approval-document.html',
   styleUrl: './my-approval-document.css',
@@ -145,6 +146,8 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   pendingDocumentCount: number = 0;
   approvedDocumentCount: number = 0;
   disapprovedDocumentCount: number = 0;
+  // Documents due for review (Next Review Date within 60 days) that this person may re-approve without change: the "Due for Review" tab.
+  dueForReviewCount: number = 0;
   public noRowsOverlay: string = '';
 
   // The cabinet levels that are switched on (Division, Department, ...), with their configured titles. The Distribution List
@@ -175,7 +178,6 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
     { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-    { field: 'approvalHistory', label: 'Approval History', visible: true },
   ];
 
   private readonly leadingColumnDefs: ColDef[] = [
@@ -308,25 +310,6 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       headerName: 'Previous Version Created On',
       cellClass: 'audit-cell'
     },
-    {
-      field: 'approvalHistory',
-      headerName: 'Approval History',
-      editable: false,
-      cellRenderer: (params: any) => {
-        if (!params.data) return '';
-        return `
-        <span
-          style="color:#1976d2; cursor:pointer; text-decoration:underline"
-          data-action="open"
-        >
-          Approval History
-        </span>
-      `;
-      },
-      onCellClicked: (event: any) => {
-        this.openWorkflowDeatilsModal(event.data);
-      },
-    },
   ];
 
   // Rebuilt once the cabinet hierarchy loads (see ngOnInit), so it starts out
@@ -429,6 +412,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   ngOnInit() {
     this.hasSelectedRows = false;
     this.GetLoginEmpId();
+    this.loadDueForReviewCount();
 
     // Lets a notification's "View Request Details" link land on the tab that actually
     // matches what it's about (e.g. ?tab=Rejected), instead of always the default tab --
@@ -443,7 +427,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     // completely blank page instead of just missing the intended tab highlight.
     this.route.queryParams.subscribe((params) => {
       if (params['tab']) {
-        const canonicalTab = ['Pending', 'Approved', 'Rejected'].find(
+        const canonicalTab = ['Pending', 'Approved', 'Rejected', 'DueReview'].find(
           (t) => t.toLowerCase() === String(params['tab']).toLowerCase(),
         );
         if (canonicalTab) {
@@ -474,15 +458,17 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         }));
       this.activeCabinetLevels = activeLevelDefs.map((def) => ({ field: def.field, title: def.title }));
 
-      this.pendingDocumentsGridColumnDefs = [
+      // "Signing Authorities" is the one place that shows who signs a document and where it stands (tick + Approved / Pending, with dates),
+      // so it is on every tab; there is no separate Approval History.
+      this.pendingDocumentsGridColumnDefs = this.withAdHocColumn([
         ...this.leadingColumnDefs,
         ...activeLevelDefs.map((def) => ({ field: def.field, headerName: def.title })),
         ...this.trailingColumnDefs,
-      ];
+      ]);
       this.documentColumnDefsWithoutStatus = this.pendingDocumentsGridColumnDefs.filter(
         (col) => col.field !== 'status',
       );
-      this.pendingTabColumnDefs = this.withAdHocColumn(this.documentColumnDefsWithoutStatus);
+      this.pendingTabColumnDefs = this.documentColumnDefsWithoutStatus;
 
       this.columnToggles = [
         { field: 'documentType', label: 'Document Type', visible: true },
@@ -500,13 +486,13 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
         { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
         { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-        { field: 'approvalHistory', label: 'Approval History', visible: true },
       ];
+      this.columnToggles = this.withAdHocToggle(this.columnToggles);
 
       this.columnTogglesWithoutStatus = this.columnToggles.filter(
         (toggle) => toggle.field !== 'status',
       );
-      this.pendingTabColumnToggles = this.withAdHocToggle(this.columnTogglesWithoutStatus);
+      this.pendingTabColumnToggles = this.columnTogglesWithoutStatus;
     });
 
     this._permissionService.getPermissions(this.formId).subscribe((permissions) => {
@@ -540,6 +526,18 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       searchText: '',
       empid: this.loginEmpId,
     };
+  }
+
+  /** Badge of the "Due for Review" tab. Refreshed after documents are re-approved there. */
+  loadDueForReviewCount() {
+    this._documentService.getDocumentsDueForReviewCount().subscribe({
+      next: (res) => {
+        if (res?.Success) this.dueForReviewCount = Number(res.Data) || 0;
+      },
+      error: () => {
+        // The tab simply shows 0; the list itself reports a real error when opened.
+      },
+    });
   }
 
   getDocumentCounts() {
@@ -776,7 +774,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     if (!executionId) return;
 
     const modalRef = this.modal.create({
-      nzTitle: 'Signing Authorities',
+      nzTitle: 'Signing Authorities & Approval History',
       nzContent: AdHocApproverModal,
       nzData: {
         executionId,
@@ -1321,47 +1319,6 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
           this.observationData = [];
         }
       },
-    });
-  }
-
-  openWorkflowDeatilsModal(rowData: any) {
-    //console.log('Row clicked:', rowData);
-
-    const modalRef = this.modal.create({
-      nzTitle: 'Approval History',
-      nzContent: WorkflowApprovalHistoryComponent,
-      nzData: {
-        id: rowData.Id,
-        entityType: 'Document',
-        // selectedTab is passed straight through as the decision filter, but the backend's
-        // filter only ever matches an exact 'Rejected'/'Reworked'/'Approved'/'All' -- neither
-        // 'Rejected' (see below) nor 'Pending' as sent here ever appear as a step's OWN Decision
-        // value, so both silently returned zero rows, always, regardless of what actually
-        // happened on the document.
-        //
-        // 'Rejected': this tab's button is labeled "Reverted/Rejected" and lists BOTH outcomes
-        // together, but selectedTab is always the single literal string 'Rejected' regardless of
-        // which one a given row actually is. 'All' shows the row's complete history regardless
-        // of outcome type, which is what "Approval History" should show either way.
-        //
-        // 'Pending': a still-pending document's earlier steps are already decided (by
-        // definition -- a sequential workflow can't reach a later step until every prior one is
-        // Approved), so asking for 'Approved' shows exactly that prior history. There's no
-        // decision value that also includes the current not-yet-decided step, since Decision is
-        // NULL until someone actually acts on it.
-        decision:
-          this.selectedTab === 'Rejected'
-            ? 'All'
-            : this.selectedTab === 'Pending'
-              ? 'Approved'
-              : this.selectedTab,
-      },
-      nzFooter: null, // custom footer handled inside component
-      nzWidth: '70%',
-    });
-
-    modalRef.afterClose.subscribe((result) => {
-      console.log('Modal closed with:', result);
     });
   }
 

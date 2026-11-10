@@ -1,4 +1,31 @@
 .adhoc-modal-note {
-  margin-bottom: 8px;
+  margin: 0 0 10px;
   font-size: 13px;
+  color: #334155;
+}
+
+.adhoc-modal-footer {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 6px;
+}
+
+/* A rounded, centred "Save" -- not the full-width bar the global .btn rule makes of a button. */
+.adhoc-save-btn {
+  width: auto !important;
+  min-width: 130px;
+  height: 34px;
+  margin: 0 !important;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.adhoc-save-btn:hover {
+  background: #1d4ed8;
 }

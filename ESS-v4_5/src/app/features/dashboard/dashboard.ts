@@ -260,6 +260,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Documents Approaching Review -> the Due for Review tab of My Approvals - Documents, where they can be re-approved.
+  openDueForReview(): void {
+    this.router.navigate(['/documents/my-approvals-documents'], { queryParams: { tab: 'DueReview' } });
+  }
+
   navigateTo(url: string, queryParams?: any): void {
     this.router.navigate([url], { queryParams: queryParams });
   }

@@ -128,10 +128,11 @@ export class DocumentPreviewModal implements AfterViewInit, OnDestroy {
               renderEndnotes: true,
             });
             this.fitPagesToWidth();
-            // A Word document already carries the Distribution List and Document Users at its end (the server
-            // puts them there, so Download has them too) -- the block below is only for other file types. A request's
-            // Word download does not carry them, so for a request they are shown below the document.
-            if (!requestId) this.listsLoaded = false;
+            // A Word document already carries the Distribution List and Document Users after its content (the server puts them
+            // there, so Download has them too) -- the block below is only for other file types. A request's Word file carries them
+            // too, unless the server could not read them (it says so in X-Preview-Lists-Embedded); then they are shown below.
+            const embedded = (file as any)?.headers?.get?.('X-Preview-Lists-Embedded') === 'true';
+            if (!requestId || embedded) this.listsLoaded = false;
           } else if (blob.type === 'application/pdf' || /\.pdf$/i.test(this.fileName)) {
             this.objectUrl = URL.createObjectURL(blob);
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl);

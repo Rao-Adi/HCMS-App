@@ -109,3 +109,122 @@ export function pastedColorMatcher(_node: Node, delta: any): any {
   }
   return delta;
 }
+
+// Tables pasted from Word.
+//
+// A table cell in Quill is ONE line: nothing else can sit in it. A Word cell usually holds more -- several paragraphs, a bulleted list
+// (a "Key Changes" cell with three bullets), blank lines -- and cells that span columns or rows. Quill dealt with these by cutting the table
+// apart: the lines of a cell after the first escaped the table, so one Word table arrived as four, header row alone, the bullets
+// loose underneath, empty cells where a merged cell had been -- and was saved and printed like that. normalizePastedTables
+// rewrites each pasted table, BEFORE Quill sees it, into the plain grid Quill can keep intact:
+//   * merged cells are spread over the grid (a spanned position becomes an empty cell, so every value stays under its own heading),
+//   * everything in a cell becomes one line (list items and paragraphs follow each other, each list item with its bullet),
+//   * rows and columns with nothing in them at all (Word's spacer rows / hidden columns) are dropped.
+// Text outside tables, and tables that are already plain, come out the same as they went in.
+
+const MSO_MARKER = /mso-list\s*:\s*ignore/i;
+const LEADING_MARKER = /^[\s ]*(?:[·•●○▪▫■□⁃∙]|o|§|-|–|—|\*|\(?[0-9]+[.)]|\(?[a-zA-Z][.)])[\s ]+/;
+
+function cellToLine(cell: Element): string {
+  const work = cell.cloneNode(true) as HTMLElement;
+  // The bullet/number Word draws as text in front of a list paragraph.
+  work.querySelectorAll('span').forEach((s) => {
+    if (MSO_MARKER.test(s.getAttribute('style') || '')) s.remove();
+  });
+  work.querySelectorAll('style, script, xml').forEach((n) => n.remove());
+  Array.from(work.getElementsByTagName('*'))
+    .filter((n) => n.tagName === 'O:P') // Word's own empty marker elements
+    .forEach((n) => n.remove());
+
+  const parts: string[] = [];
+  const BLOCKS = 'p, li, div, h1, h2, h3, h4, h5, h6, blockquote';
+  const leaves = Array.from(work.querySelectorAll(BLOCKS)).filter((el) => !el.querySelector(BLOCKS));
+  if (leaves.length === 0) {
+    parts.push(work.innerHTML);
+  } else {
+    for (const el of leaves) {
+      let html = (el as HTMLElement).innerHTML.replace(/<br\s*\/?>/gi, ' ').trim();
+      const plain = (el.textContent || '').replace(/[\s ]+/g, ' ').trim();
+      if (!plain && !/<img/i.test(html)) continue;
+      const style = el.getAttribute('style') || '';
+      const isItem = el.tagName === 'LI' || /mso-list\s*:\s*(?!none)/i.test(style);
+      if (isItem) {
+        html = html.replace(LEADING_MARKER, '');
+        html = '• ' + html;
+      }
+      parts.push(html);
+    }
+  }
+  return parts
+    .join(' ')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/(?:&nbsp;|[\s ])+/g, ' ')
+    .trim();
+}
+
+function cellIsEmpty(html: string): boolean {
+  const probe = document.createElement('div');
+  probe.innerHTML = html;
+  return !probe.textContent?.replace(/[\s ]+/g, '') && !probe.querySelector('img');
+}
+
+function normalizeTable(table: HTMLTableElement): void {
+  const grid: string[][] = [];
+  const taken: boolean[][] = [];
+  Array.from(table.rows).forEach((row, r) => {
+    grid[r] = grid[r] || [];
+    taken[r] = taken[r] || [];
+    let c = 0;
+    Array.from(row.cells).forEach((cell) => {
+      while (taken[r][c]) c++;
+      const colSpan = Math.min(Math.max(parseInt(cell.getAttribute('colspan') || '1', 10) || 1, 1), 50);
+      const rowSpan = Math.min(Math.max(parseInt(cell.getAttribute('rowspan') || '1', 10) || 1, 1), 200);
+      const line = cellToLine(cell);
+      for (let dr = 0; dr < rowSpan; dr++) {
+        for (let dc = 0; dc < colSpan; dc++) {
+          const rr = r + dr;
+          grid[rr] = grid[rr] || [];
+          taken[rr] = taken[rr] || [];
+          grid[rr][c + dc] = dr === 0 && dc === 0 ? line : '';
+          taken[rr][c + dc] = true;
+        }
+      }
+      c += colSpan;
+    });
+  });
+
+  let width = 0;
+  grid.forEach((row) => (width = Math.max(width, row.length)));
+  const rows = grid.filter((row) => row && row.some((v) => v && !cellIsEmpty(v)));
+  if (rows.length === 0 || width === 0) return;
+  rows.forEach((row) => {
+    for (let i = 0; i < width; i++) if (row[i] === undefined) row[i] = '';
+  });
+
+  const keep: number[] = [];
+  for (let i = 0; i < width; i++) if (rows.some((row) => row[i] && !cellIsEmpty(row[i]))) keep.push(i);
+
+  const fresh = document.createElement('table');
+  const body = document.createElement('tbody');
+  rows.forEach((row) => {
+    const tr = document.createElement('tr');
+    keep.forEach((i) => {
+      const td = document.createElement('td');
+      td.innerHTML = row[i] || '<br>';
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+  fresh.appendChild(body);
+  table.replaceWith(fresh);
+}
+
+export function normalizePastedTables(html: string): string {
+  if (!/<table/i.test(html)) return html;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  // Outermost tables only; a table nested in a cell is read into that cell's one line.
+  Array.from(doc.querySelectorAll('table'))
+    .filter((t) => !t.parentElement?.closest('table'))
+    .forEach((t) => normalizeTable(t as HTMLTableElement));
+  return doc.body.innerHTML;
+}

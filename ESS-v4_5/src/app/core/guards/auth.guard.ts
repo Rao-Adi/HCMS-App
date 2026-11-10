@@ -36,15 +36,26 @@ export const authGuard: CanActivateFn = (
   const formId = route.data['formId'];
   const apiUrl = `Security/CanViewForAuthGuard?FormId=${formId}&AppCode=DMS-b`;
 
+  // The session is gone (never logged in through the ERP, expired, or the ERP session was closed): the DMS has no login of its own, so the user
+  // goes to the "YOUR SESSION HAS TIMED OUT" page, which takes them to the ERP login after a few seconds. The address they came for (e.g. the page
+  // an email notification pointed at) is remembered, and the login flow returns them to it.
+  const sessionExpired = (): boolean | UrlTree => {
+    rememberReturnUrl();
+    return DEBUG_STAY_PUT ? stayOnSamePage() : router.createUrlTree(['/sessiontimeout']);
+  };
+
   return data.get<string>(apiUrl).pipe(
     map((resp: any): boolean | UrlTree => {
       const r = String(resp).toLowerCase();
 
       if (r === 'sessiontimeout') {
-        rememberReturnUrl();
-        return DEBUG_STAY_PUT
-          ? stayOnSamePage()
-          : router.createUrlTree(['/applicationlevelerror'], { queryParams: { type: 'sessiontimeout' } });
+        return sessionExpired();
+      }
+
+      // The 'IsLogin' check has no permission to refuse: it is only asking whether a session exists, and the API answers 'false'
+      // (not 'SessionTimeOut') when there is none. That is an expired session, not 'access denied'.
+      if (formId === 'IsLogin' && r !== 'true') {
+        return sessionExpired();
       }
 
       if (r === 'false') {
@@ -58,6 +69,10 @@ export const authGuard: CanActivateFn = (
     }),
     catchError(err => {
       console.error('AuthGuard error:', err);
+      // The interceptor turns a 401 / SessionTimeOut answer into { status: 401 }.
+      if (err?.status === 401 || err?.message === 'SessionTimeOut') {
+        return of(sessionExpired());
+      }
       rememberReturnUrl();
       return of(DEBUG_STAY_PUT
         ? stayOnSamePage()

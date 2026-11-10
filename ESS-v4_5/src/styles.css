@@ -245,6 +245,15 @@ body {
       opacity: 1 !important;
     }
 
+/* A tab that carries a count badge: lay the label and badge out as a row with a fixed gap and the same vertical centre. Before this the
+   gap was only the whitespace typed in the template, so a tab written without it ("Reverted/Rejected<span") had its badge touching the
+   text, and the badge sat on the text baseline rather than centred. Applies to every tab with a badge; tabs without one are unchanged. */
+.tab-button:has(> .badge) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 @keyframes slideLine {
   to {
     transform: scaleX(1);
@@ -7164,7 +7173,20 @@ html.ant-scrolling-effect {
   cursor: not-allowed;
 }
 
-.Master-box { 
+/* Same for the icon-style action buttons that are disabled until a grid row is ticked (Responsibility Transfer Form approve/reject).
+   .grid-icon-btn.disabled sets pointer-events: none, which also hid the title. Scoped to .needs-selection so no other screen changes. */
+.grid-icon-btn.needs-selection:disabled {
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+.grid-icon-btn.needs-selection:disabled:hover {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+  box-shadow: none;
+  transform: none;
+}
+
+.Master-box {
   /* margin-left: -12px;
     margin-right: -15px; */
   padding: 1.25rem 1.5rem !important;
@@ -7428,5 +7450,47 @@ html.ant-scrolling-effect {
 }
 /* All tabs of the rows marked dms-count-tabs (the ones that carry count badges), not just the tabs showing a badge right now -- a count of 0 hides it -- so the row looks the same. */
 .custom-tab-container.dms-count-tabs .tab-button {
-  color: #0b4fd8;
+  color: #7fa8f5; /* light blue: tab not selected */
+}
+.custom-tab-container.dms-count-tabs .tab-button:hover {
+  color: #3b82f6;
+}
+/* Selected tab: dark blue (same as the badges). !important because the generic .active-tab colour is !important too. */
+.custom-tab-container.dms-count-tabs .tab-button.active-tab {
+  color: #0b4fd8 !important;
+}
+
+/* Distribution List panel: the title and, at the right of the same line, a small "Clear All" (acts on the whole list). */
+.dist-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dist-header .dist-clear-all-btn {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: -3px 0 0 !important;
+  padding: 3px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+
+/* "Signing Authorities & Approval History" popup: softer corners and a larger title, like the rest of its content. */
+.ant-modal:has(app-adhoc-approver-modal) {
+  max-width: 860px;   /* 60% of a wide screen is far wider than this content needs */
+}
+.ant-modal:has(app-adhoc-approver-modal) .ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ant-modal:has(app-adhoc-approver-modal) .ant-modal-header {
+  padding: 12px 20px;
+}
+.ant-modal:has(app-adhoc-approver-modal) .ant-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.ant-modal:has(app-adhoc-approver-modal) .ant-modal-body {
+  padding: 14px 20px 12px;
 }

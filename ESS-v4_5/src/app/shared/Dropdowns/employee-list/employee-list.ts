@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  ElementRef,
   EventEmitter,
   forwardRef,
   NgZone,
@@ -137,6 +138,7 @@ export class EmployeeList implements OnDestroy {
   constructor(
     private _peoplePartnerService: PeoplePartnersService,
     private zone: NgZone,
+    private host: ElementRef<HTMLElement>,
   ) {}
 
   private onChange = (_: any) => {};
@@ -191,6 +193,18 @@ export class EmployeeList implements OnDestroy {
   // While the dropdown is open, watches its scroll position and loads the next batch near the end. ng-zorro's own
   // nzScrollToBottom is not used: it fires only when the scroll position hits one exact index, so a mouse-wheel step
   // that jumps over it never loads anything.
+  // The list opens as wide as the select it belongs to. ng-zorro measures the select when it opens, and inside a popup (a modal that has just
+  // appeared, a card that is still laying out) that measurement came out at the select's default 200px, so a full-width select opened a
+  // narrow list. Here the select's own width is read again once the panel exists, and the panel is widened to it (never narrowed).
+  private matchDropdownToSelectWidth(): void {
+    const width = this.host.nativeElement.getBoundingClientRect().width;
+    if (!(width > 0)) return;
+    const panel = document.querySelector('.ant-select-dropdown:not(.ant-select-dropdown-hidden)') as HTMLElement | null;
+    const pane = panel?.closest('.cdk-overlay-pane') as HTMLElement | null;
+    if (pane && pane.offsetWidth < width - 1) pane.style.width = width + 'px';
+    if (panel && panel.offsetWidth < width - 1) panel.style.minWidth = width + 'px';
+  }
+
   onOpenChange(open: boolean): void {
     this.stopWatchingScroll?.();
     this.stopWatchingScroll = undefined;
@@ -198,6 +212,7 @@ export class EmployeeList implements OnDestroy {
 
     // The panel is created a moment after the select opens.
     setTimeout(() => {
+      this.matchDropdownToSelectWidth();
       const viewport = document.querySelector(
         '.ant-select-dropdown:not(.ant-select-dropdown-hidden) cdk-virtual-scroll-viewport',
       ) as HTMLElement | null;

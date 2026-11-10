@@ -1,3 +1,4 @@
+import { breadcrumbDisplayName, formDisplayName } from '@app/shared/utils/form-display-names';
 import {
   Component,
   OnInit,
@@ -362,8 +363,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           // page genuinely isn't in the cached chunk) -- this used to assign res.formName
           // unconditionally, so a blank response left formName falsy forever, and with it the
           // header's skeleton (*ngIf="!formName" in the template), instead of ever resolving.
-          this.formName = res.formName || this.deriveFallbackTitleFromUrl(Url);
-          this.strBreadCrumb = res.FormLocation || this.generateBreadcrumb(Url, this.formName);
+          this.formName = formDisplayName(res.formName || this.deriveFallbackTitleFromUrl(Url));
+          this.strBreadCrumb = breadcrumbDisplayName(res.FormLocation) || this.generateBreadcrumb(Url, this.formName);
           this.currentFormId = res.FormId || '';
 
           if (res.formdescription && res.formdescription.length > 0) {
@@ -520,6 +521,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           if (navigateUrl === 'request-for-document-creation-update') {
             matchesText =
               textLower.includes('request for document creation') ||
+              textLower.includes('request for document revision') ||   // the form's name since 2026-11-10 (the address, which also matches, is unchanged)
               textLower.includes('my approvals - request for document creation');
           } else if (navigateUrl === 'my-approvals-documents') {
             matchesText =

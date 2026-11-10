@@ -1,56 +1,57 @@
-<div class="row">
-  <div class="col-lg-2 col-md-2 col-sm-2">
-    <div class="row mb-2">
-      <div class="col-sm-3">
-        <div class="example-header">
-          <input
-            class="form-control"
-            style="width: 250px"
-            nz-input
-            placeholder="Search"
-            [(ngModel)]="searchValue"
-            (ngModelChange)="onSearchModelChange($event)"
-          />
-        </div>
-      </div>
+<!-- Top bar: search | actions from the parent | Display Options. A flex row that wraps: the search box is a fixed 250px and used to sit in a
+     col-lg-2, which on a narrower screen is narrower than 250px, so the box spilled over the buttons next to it (Approve / Reject / ...
+     appeared on top of the search bar). Now every part keeps its own room and the actions drop to the next line when they do not fit. -->
+<div class="grid-top-row">
+  <div class="grid-search-col">
+    <div class="example-header">
+      <input
+        class="form-control"
+        style="width: 250px"
+        nz-input
+        placeholder="Search"
+        [(ngModel)]="searchValue"
+        (ngModelChange)="onSearchModelChange($event)"
+      />
     </div>
   </div>
-  <div class="col-lg-4 col-md-4 col-sm-4 mb-2">
+  <div class="grid-actions-col">
     <!-- 🔹 ACTIONS FROM PARENT -->
     <ng-content select="[grid-actions]"></ng-content>
   </div>
-  <div class="col-lg-6 col-md-6 col-sm-6">
+  <div class="grid-toolbar-col">
     <div class="grid-toolbar">
       <button class="display-options-btn" (click)="toggleDisplayOptions()">
         <i nz-icon nzType="setting"></i>
         Display Options
       </button>
     </div>
+  </div>
+</div>
+<!-- The Visible Columns panel sits under the bar, outside the flex row, so opening it does not move the Display Options button. -->
+<div class="grid-options-row">
+  <div class="display-options-panel" [class.open]="showDisplayOption && toggleShow">
+    <div class="panel-header">
+      <span>Visible Columns</span>
 
-    <div class="display-options-panel" [class.open]="showDisplayOption && toggleShow">
-      <div class="panel-header">
-        <span>Visible Columns</span>
-
-        <div class="toggle-all">
-          <label class="switch">
-            <input type="checkbox" [checked]="isAllSelected" (change)="toggleAllColumns($event)" />
-            <span class="slider round"></span>
-          </label>
-          <span class="span mt-1">All</span>
-        </div>
-      </div>
-
-      <div class="panel-body">
-        <label class="column-chip" *ngFor="let col of columnToggles">
-          <nz-switch
-            nzSize="small"
-            [(ngModel)]="col.visible"
-            (ngModelChange)="toggleColumn(col, $event)"
-            [nzDisabled]="!gridApi"
-          ></nz-switch>
-          <span>{{ col.label }}</span>
+      <div class="toggle-all">
+        <label class="switch">
+          <input type="checkbox" [checked]="isAllSelected" (change)="toggleAllColumns($event)" />
+          <span class="slider round"></span>
         </label>
+        <span class="span mt-1">All</span>
       </div>
+    </div>
+
+    <div class="panel-body">
+      <label class="column-chip" *ngFor="let col of columnToggles">
+        <nz-switch
+          nzSize="small"
+          [(ngModel)]="col.visible"
+          (ngModelChange)="toggleColumn(col, $event)"
+          [nzDisabled]="!gridApi"
+        ></nz-switch>
+        <span>{{ col.label }}</span>
+      </label>
     </div>
   </div>
 </div>

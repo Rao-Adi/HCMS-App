@@ -2,9 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { DocumentService } from '@app/shared/services/document.service';
 import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
+import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
+import { normalizeStatusLabel, statusBadgeClass } from '@app/shared/utils/document-status';
 
 // One row of the approval chain shown when the approver may add an ad-hoc approver: steps already decided,
 // the approver's own (current) step, the ones still to come, and any ad-hoc approver added here.
@@ -17,6 +20,8 @@ interface SequenceRow {
   isCurrent: boolean; // the person approving -- new approvers can only go after this row
   isDecided?: boolean; // already acted on (approved ...) -- shown for the picture, never moved or inserted before
   decision?: string;
+  receivedOn?: string; // when the step reached this approver (formatted); empty while it is still to come
+  statusUpdatedOn?: string; // when they acted (formatted); empty while undecided
   isAdHoc: boolean; // an ad-hoc approver already on the workflow
   isNew: boolean; // added here -- the only rows that can be moved or removed
 }
@@ -63,6 +68,21 @@ export class AdHocApproverPanel {
     if (next) this.loadOptions(next);
   }
 
+  // Screens that only know the DOCUMENT (not its workflow run) pass this instead of executionId: the chain of its running, or latest, workflow.
+  private _documentId = 0;
+  @Input() set documentId(value: number | null | undefined) {
+    const next = Number(value) || 0;
+    if (next === this._documentId) return;
+    this._documentId = next;
+    this._executionId = 0;
+    this.reset();
+    if (next) this.loadChain(this._documentService.getSigningAuthorities(next), () => next === this._documentId);
+  }
+
+  // Only shows the chain: no add-approver controls, whatever the server says about this person's step. For screens that cannot carry the choice
+  // to an Approve action.
+  @Input() readOnly = false;
+
   canAddAdHoc = false;
   loading = false;
   loaded = false; // the options request has come back (so "not allowed" can be told apart from "not asked yet")
@@ -74,6 +94,20 @@ export class AdHocApproverPanel {
     private _notificationToastService: NotificationToastService,
   ) {}
 
+  // Approved ones read "Approved" (and are ticked); anyone who has not acted yet reads "Pending". A step that sent the document back or
+  // rejected it shows that outcome instead. Wording and colour come from the one shared source (document-status.ts).
+  isApproved(row: SequenceRow): boolean {
+    return !row.isNew && normalizeStatusLabel(row.decision).toLowerCase().startsWith('approv');
+  }
+
+  statusLabel(row: SequenceRow): string {
+    return normalizeStatusLabel(row.isNew ? '' : row.decision) || 'Pending';
+  }
+
+  statusClass(row: SequenceRow): string {
+    return statusBadgeClass(this.statusLabel(row));
+  }
+
   private reset(): void {
     this.canAddAdHoc = false;
     this.loaded = false;
@@ -83,17 +117,21 @@ export class AdHocApproverPanel {
   }
 
   private loadOptions(executionId: number): void {
+    this.loadChain(this._documentService.getAdHocOptions(executionId), () => executionId === this._executionId);
+  }
+
+  private loadChain(request: Observable<any>, stillCurrent: () => boolean): void {
     this.loading = true;
-    this._documentService.getAdHocOptions(executionId).subscribe({
+    request.subscribe({
       next: (res: any) => {
         // A different document may have been selected while this was in flight.
-        if (executionId !== this._executionId) return;
+        if (!stillCurrent()) return;
         this.loading = false;
         this.loaded = true;
         const data = res?.Data;
 
         // Everyone sees the signing authorities; only the approver whose step allows it gets the controls to add one.
-        this.canAddAdHoc = !!data?.CanAddAdHocApprover;
+        this.canAddAdHoc = !this.readOnly && !!data?.CanAddAdHocApprover;
         this.canAddChange.emit(this.canAddAdHoc);
         this.sequence = (data?.Steps || []).map((s: any) => ({
           key: 'step-' + s.StepId,
@@ -105,6 +143,8 @@ export class AdHocApproverPanel {
           isAdHoc: !!s.IsAdHoc,
           isDecided: !!s.IsDecided,
           decision: s.Decision || '',
+          receivedOn: s.ReceivedOn ? new CustomDateFormatPipe().transform(s.ReceivedOn) : '',
+          statusUpdatedOn: s.StatusUpdatedOn ? new CustomDateFormatPipe().transform(s.StatusUpdatedOn) : '',
           isNew: false,
         }));
         if (this.canAddAdHoc) {
@@ -114,8 +154,8 @@ export class AdHocApproverPanel {
       },
       // A failure here only means the option is not shown; approving itself is unaffected.
       error: (err: any) => {
-        console.error('[AdHoc] get-adhoc-options failed', err);
-        if (executionId === this._executionId) this.loading = false;
+        console.error('[AdHoc] signing authorities failed', err);
+        if (stillCurrent()) this.loading = false;
       },
     });
   }

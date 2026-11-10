@@ -20,7 +20,7 @@ import { PermissionService } from '@app/shared/services/permission.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { DocumentService } from '@app/shared/services/document.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { AverageDocumentScoreModal } from '../average-document-score-modal/average-document-score-modal';
 import { DocumentTypeService } from '@app/shared/services/documentType.service';
@@ -159,7 +159,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
         { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
         { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
         { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
-        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
         { field: 'revisionHistory', label: 'Revision History', visible: true },
       ];
     });
@@ -324,7 +324,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
     { field: 'previousVersionCreatedBy', headerName: 'Previous Version Created By' },
     {
       field: 'approvalHistory',
-      headerName: 'Approval History',
+      headerName: 'Signing Authorities',
       editable: false, 
       cellRenderer: (params: any) => {
         if (!params.data) return '';
@@ -333,7 +333,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          Approval History
+          Signing Authorities
         </span>
       `;
       },
@@ -380,7 +380,7 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
-    { field: 'approvalHistory', label: 'Approval History', visible: true },
+    { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
 
@@ -754,30 +754,13 @@ export class SOPDocumentTraining implements OnInit, OnDestroy {
   }
 
   openWorkflowDeatilsModal(rowData: any) {
-    const modalRef = this.modal.create({
-      nzTitle: 'Approval History',
-      nzContent: WorkflowApprovalHistoryComponent,
-      nzData: {
-        // This screen is about the DOCUMENT (pending/undergoing training), not the request that
-        // originally created it -- entityType: 'Request' with the request's own id was querying
-        // the wrong workflow entirely (the pre-document-creation request approval), which could
-        // never include anything that happens at the document level (e.g. an ad-hoc approver
-        // added via Create/Update Document, or any document-stage approval/rejection).
-        id: rowData.documentId || rowData.DocumentId || rowData.Id,
-        entityType: 'Document',
-        // 'Approved' filtered out any step that hasn't been decided yet -- a still-pending step
-        // (e.g. an ad-hoc approver appended after the policy-defined steps, not yet reached) was
-        // invisible here even once entityType was corrected. "Approval History" should show the
-        // complete chain, matching the same fix already applied to my-approval-document.ts/
-        // my-approval-request.ts's combined Reverted/Rejected tab for the same reason.
-        decision: 'All',
-      },
-      nzFooter: null, // custom footer handled inside component
-      nzWidth: '70%',
-    });
-
-    modalRef.afterClose.subscribe((result) => {
-      console.log('Modal closed with:', result);
+    this.modal.create({
+      nzTitle: 'Signing Authorities & Approval History',
+      nzContent: AdHocApproverModal,
+      // Read-only here: the chain of this document (who signs, who has, when); adding an approver is done when approving, in My Approvals.
+      nzData: { documentId: Number(rowData?.documentId || rowData?.DocumentId || rowData?.Id), documentName: rowData?.documentName || rowData?.DocumentName || rowData?.Title || '', readOnly: true },
+      nzFooter: null,
+      nzWidth: '60%',
     });
   }
 

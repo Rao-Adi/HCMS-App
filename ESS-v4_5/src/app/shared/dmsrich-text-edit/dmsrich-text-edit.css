@@ -298,3 +298,75 @@
   padding: 10px 18px 14px;
   border-top: 1px solid #e2e8f0;
 }
+
+/* Full Screen button (next to AI Spell Check) */
+.dms-fs-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  color: #475569;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.dms-fs-btn:hover {
+  background: #f5f7fa;
+  color: #0f172a;
+}
+
+/* Full Screen: the component's own element fills the browser, so the same Quill instance (content, cursor, undo history) is simply widened.
+   z-index 3000 is above the fixed sidebar (1100) and page header (1200). */
+app-dmsrich-text-edit.dms-editor-full {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  padding: 10px 16px 14px;
+  overflow: hidden;
+}
+app-dmsrich-text-edit.dms-editor-full .dms-editor-row {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: nowrap;   /* bootstrap .row wraps: the column would take its full content height instead of the space left */
+  margin: 8px 0 0;
+}
+app-dmsrich-text-edit.dms-editor-full .dms-editor-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+app-dmsrich-text-edit.dms-editor-full quill-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  width: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+app-dmsrich-text-edit.dms-editor-full quill-editor .ql-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  overflow: auto;
+}
+/* The page content (.main-content, z-index 1) is a stacking context of its own, so the editor's z-index only counts INSIDE it and the fixed sidebar
+   (z-index 1100) stayed on top of the left of the full screen editor. While one is full screen the content area itself is raised above the sidebar. */
+.main-content:has(app-dmsrich-text-edit.dms-editor-full) {
+  z-index: 3000 !important;
+}
+/* An editor inside a popup (the layer sits at z-index 498): the popup layer is raised while one is full screen, as the document preview does. */
+.cdk-overlay-container:has(app-dmsrich-text-edit.dms-editor-full) {
+  z-index: 3000 !important;
+}
+body.dms-editor-fs-open {
+  overflow: hidden;
+}

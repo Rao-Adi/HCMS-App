@@ -99,6 +99,17 @@
                 <h3 class="PnlHeader" style="margin-top: 0">
                   {{ 'labels.Cabinet' | safeTranslate }}
                 </h3>
+                @if (selectedPolicyDeletedUnit) {
+                  <div class="seq-deleted-unit-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>
+                      This policy is written for {{ selectedPolicyDeletedUnit }}, which has been <strong>deleted</strong>. No document
+                      can be filed under it, so this policy is never used and approvers added to it will not receive anything. Delete
+                      this policy, or add the approvers to the policy of the Department / Division instead. Adding authorities is
+                      turned off for it.
+                    </span>
+                  </div>
+                }
                 <div class="row">
                   <div class="col-lg-12 col-md-12 col-sm-12 mb-10">
                     <app-cabinet-structure-list
@@ -146,10 +157,10 @@
                     </nz-select>
                     <button
                       class="grid-icon-btn ms-2 flex-shrink-0"
-                      [class.disabled]="!this.canAdd || addingAuthority"
+                      [class.disabled]="!this.canAdd || addingAuthority || !!selectedPolicyDeletedUnit"
                       title="Add"
                       (click)="addExclusion()"
-                      [disabled]="!this.canAdd || addingAuthority"
+                      [disabled]="!this.canAdd || addingAuthority || !!selectedPolicyDeletedUnit"
                     >
                       <i class="bi bi-plus-circle"></i>
                     </button>
@@ -365,50 +376,44 @@
                     </div>
                   </ng-container>
 
-                  <!-- CASE 5: Division Head -->
+                  <!-- CASE 5: Head of Division (no person is picked: the head is worked out when the document is submitted) -->
                   <ng-container *ngSwitchCase="'5'">
-                    <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="col-lg-8 col-md-12 col-sm-12 mb-3">
                       <div class="PnlHeading">
-                        <label class="ctrllbl">Division Head</label>
+                        <label class="ctrllbl">Head of Division</label>
                       </div>
-                      <div class="mt-2">
-                        <nz-select
-                          style="width: 50%"
-                          nzPlaceHolder="Select Division Head"
-                          nzShowSearch
-                        ></nz-select>
+                      <div class="mt-2 head-authority-note">
+                        No person needs to be chosen. When a request or document under this policy is submitted, the
+                        Division Head of the Division it is filed under is picked automatically as the approver at this
+                        step. Click the + button to add this step to the approval sequence.
                       </div>
                     </div>
                   </ng-container>
 
-                  <!-- CASE 6: Department Head -->
+                  <!-- CASE 6: Head of Department (no person is picked: the head is worked out when the document is submitted) -->
                   <ng-container *ngSwitchCase="'6'">
-                    <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="col-lg-8 col-md-12 col-sm-12 mb-3">
                       <div class="PnlHeading">
-                        <label class="ctrllbl">Department Head</label>
+                        <label class="ctrllbl">Head of Department</label>
                       </div>
-                      <div class="mt-2">
-                        <nz-select
-                          style="width: 50%"
-                          nzPlaceHolder="Select Department Head"
-                          nzShowSearch
-                        ></nz-select>
+                      <div class="mt-2 head-authority-note">
+                        No person needs to be chosen. When a request or document under this policy is submitted, the
+                        Department Head of the Department it is filed under is picked automatically as the approver at this
+                        step. Click the + button to add this step to the approval sequence.
                       </div>
                     </div>
                   </ng-container>
 
-                  <!-- CASE 7: Sub-Department Head -->
+                  <!-- CASE 7: Head of Sub-Department (no person is picked: the head is worked out when the document is submitted) -->
                   <ng-container *ngSwitchCase="'7'">
-                    <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+                    <div class="col-lg-8 col-md-12 col-sm-12 mb-3">
                       <div class="PnlHeading">
-                        <label class="ctrllbl">Sub-Department Head</label>
+                        <label class="ctrllbl">Head of Sub-Department</label>
                       </div>
-                      <div class="mt-2">
-                        <nz-select
-                          style="width: 50%"
-                          nzPlaceHolder="Select Sub-Department Head"
-                          nzShowSearch
-                        ></nz-select>
+                      <div class="mt-2 head-authority-note">
+                        No person needs to be chosen. When a request or document under this policy is submitted, the
+                        Sub-Department Head of the Sub-Department it is filed under is picked automatically as the approver at this
+                        step. Click the + button to add this step to the approval sequence.
                       </div>
                     </div>
                   </ng-container>
@@ -439,7 +444,7 @@
                   </th>
                   <th class="seq-col-center">Action</th>
                 </thead>
-                <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                <tbody cdkDropList [cdkDropListDisabled]="isBusy" (cdkDropListDropped)="drop($event)">
                   @for (item of approvalSequenceData; track item.Id || $index; let i = $index) {
                     <tr cdkDrag>
                       <td class="seq-col-order">
@@ -467,7 +472,7 @@
                           type="checkbox"
                           [(ngModel)]="item.CanAddAdHocApprover"
                           (ngModelChange)="onAdHocFlagChange()"
-                          [disabled]="!canEdit"
+                          [disabled]="!canEdit || isBusy"
                           title="Can add an ad-hoc approver while approving"
                         />
                       </td>
@@ -475,6 +480,7 @@
                         <button
                           class="btn btn-sm btn-outline-danger"
                           (click)="removeSequenceItem(i)"
+                          [disabled]="isBusy"
                           title="Remove from sequence"
                         >
                           <i class="bi bi-trash"></i>
@@ -558,3 +564,13 @@
     </div>
   </div>
 </div>
+
+@if (isBusy) {
+  <div class="seq-busy-overlay" role="alert" aria-busy="true">
+    <div class="seq-busy-box">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="seq-busy-text">Saving, please wait...</div>
+      <div class="seq-busy-sub">Running workflows are being updated to follow this policy. This can take a few seconds.</div>
+    </div>
+  </div>
+}

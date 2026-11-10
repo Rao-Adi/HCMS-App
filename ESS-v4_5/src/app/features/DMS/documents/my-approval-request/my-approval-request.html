@@ -37,7 +37,8 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Reverted/Rejected<span 
+                Reverted/Rejected
+                <span 
                   class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1" style="font-size: 11px"
                   >{{ disapprovedRequestCount }}</span
                 >
@@ -130,7 +131,7 @@
                        <button
                         class="btn btn-danger btn-sm btn-action"
                         [class.disabled]="!hasSelectedRows"
-                        [title]="hasSelectedRows ? 'Disapprove' : 'Select at least one record in the grid to take this action'"
+                        [title]="hasSelectedRows ? 'Reject' : 'Select at least one record in the grid to take this action'"
                         (click)="promptAction('REJECTED')"
                         [disabled]="hasSelectedRows === false"
                       >

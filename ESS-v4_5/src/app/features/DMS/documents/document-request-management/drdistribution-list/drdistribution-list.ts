@@ -201,7 +201,8 @@ export class DRDistributionList {
         // "All" first, then only the roles held inside this row's organisation unit. A change to any level clears the
         // Role, since the one picked may no longer be held there. "All" stands for every role held in that unit (the
         // server expands it the same way).
-        dropdownOptionsForRow: (row: any) => [ALL_OPTION, ...this.rolesForRow(row)],
+        // A Role already in the list for this same Division / Department / Sub-Department is not offered again (it would be refused anyway).
+        dropdownOptionsForRow: (row: any) => [ALL_OPTION, ...this.rolesForRow(row)].filter((o) => !this.roleIsTakenForRow(row, o.id)),
         clearWhenChanged: this.cabinetFieldNames(),
         // Picking a Role fills in the Department / Sub-Department it belongs to (see fillUnitFromRole) -- but not when the
         // Division is "All": a role held in many Divisions says nothing about one Department.
@@ -280,6 +281,17 @@ export class DRDistributionList {
       );
     }
     return !taken;
+  }
+
+  // True when the Role is already in the list for the same Division / Department / Sub-Department as this row -- the combination that
+  // roleIsFree refuses -- so the dropdown can leave it out. A row being edited keeps the Role it has itself.
+  private roleIsTakenForRow(row: any, roleValue: any): boolean {
+    const norm = (v: any) => String(unitValue(v) ?? '');
+    const role = norm(roleValue);
+    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map(norm).join('|');
+    const inList = this.distributionListData.filter((r) => norm(r.roleId) === role && unit(r) === unit(row)).length;
+    const own = norm(row?.roleId) === role ? 1 : 0;
+    return inList > own;
   }
 
   private cabinetFieldNames(): string[] {

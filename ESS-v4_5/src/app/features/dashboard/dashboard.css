@@ -272,3 +272,11 @@ h2 {
 @media (max-width: 1199px) {
   .dm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Documents Approaching Review: the title and every row open the Due for Review tab. */
+.review-link {
+  cursor: pointer;
+}
+tr.review-link:hover > td {
+  background: #f1f5f9;
+}

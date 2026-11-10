@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { ApplicationLevelErrorComponent } from '@app/errors/application-level-error/application-level-error';
+import { SessionTimeoutComponent } from '@app/errors/session-timeout/session-timeout';
 import { MainLayoutComponent } from '@app/layout/main-layout/main-layout';
 import { authGuard } from '@app/core/guards/auth.guard';
 
@@ -11,12 +12,14 @@ export const routes: Routes = [
       import('@app/features/securitymain/securitymain.routes').then((m) => m.SECURITY_ROUTES),
   },
   { path: 'applicationlevelerror', component: ApplicationLevelErrorComponent },
+  // "YOUR SESSION HAS TIMED OUT": the page that takes the user to the ERP login (SessionTimeoutURL in app-config.json) after 5 seconds.
+  { path: 'sessiontimeout', component: SessionTimeoutComponent },
 
   // Private (guarded)
   {
     path: '',
     component: MainLayoutComponent,
-    //canActivate: [authGuard],
+    canActivate: [authGuard],
     data: { formId: 'IsLogin', authRequired: true },
     children: [
       // --- THIS IS THE FIX ---

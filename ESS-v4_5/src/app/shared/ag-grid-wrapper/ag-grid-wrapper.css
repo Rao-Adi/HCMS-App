@@ -323,3 +323,52 @@ input:checked+.slider:before {
  
 
 
+
+/* Top bar: search | actions from the parent | Display Options.
+   A wrapping flex row instead of col-lg-2 / col-lg-4 / col-lg-6: the 250px search box did not fit the narrow col-lg-2 on a smaller
+   screen and spilled over the action buttons (Approve / Reject / Revert ... showed on top of the search bar). Each part now keeps its own room;
+   the action buttons wrap among themselves, and the whole group drops to the next line only when there is truly no space. */
+.grid-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.grid-search-col {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.grid-actions-col {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.grid-actions-col:empty {
+  display: none;
+}
+:host ::ng-deep .grid-actions-col .grid-action-icons {
+  flex-wrap: wrap;
+}
+.grid-toolbar-col {
+  flex: 0 0 auto;
+  margin-left: auto;
+  max-width: 100%;
+}
+.grid-toolbar-col .grid-toolbar {
+  float: none;
+  justify-content: flex-end;
+}
+.grid-options-row {
+  display: flex;
+  justify-content: flex-end;
+}
+.grid-options-row .display-options-panel {
+  max-width: 100%;
+}
+/* Closed, the panel takes no room at all (its padding, border and margin would otherwise leave a gap under the bar). */
+.grid-options-row .display-options-panel:not(.open) {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  margin-bottom: 0;
+}

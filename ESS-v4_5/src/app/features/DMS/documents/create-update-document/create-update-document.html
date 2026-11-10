@@ -480,10 +480,21 @@
                 <div
                   class="status-box-leftColmd6-standard mb-4"
                 >
-                  <h3 class="PnlHeader" style="margin-top: 0">Distribution List</h3>
+                  <div class="dist-header">
+                    <h3 class="PnlHeader" style="margin-top: 0">Distribution List</h3>
+                    <button
+                      *ngIf="!distList.readOnly && distList.distributionListData.length > 0"
+                      type="button"
+                      class="btn btn-outline-danger dist-clear-all-btn"
+                      (click)="distList.clearAllDistribution()"
+                    >
+                      <i class="bi bi-trash me-1"></i> Clear All
+                    </button>
+                  </div>
                   <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12">
                       <app-drdistribution-list
+                        #distList
                         [readOnly]="isObsoletion"
                         [DocumentTypeCode]="selectedDocumentType"
                         [selectedDistributionList]="distributionListPayload"
@@ -890,7 +901,7 @@
                       <button
                         type="button"
                         tabindex="0"
-                        class="btn btn-sm btn-outline-secondary shadow-sm"
+                        class="btn btn-info shadow-sm"
                         style="min-width: 140px; height: 35px"
                         (click)="SaveAsDraft()"
                         [disabled]="savingDraft || isSubmitDisabled"
@@ -902,7 +913,7 @@
                           aria-hidden="true"
                           *ngIf="savingDraft"
                         ></span>
-                        <i class="bi bi-save me-2" *ngIf="!savingDraft"></i>
+                        <i class="bi bi-file-earmark-text me-2" *ngIf="!savingDraft"></i>
                         Save as Draft
                       </button>
                     </div>
@@ -910,7 +921,7 @@
                       <button
                         type="button"
                         tabindex="0"
-                        class="btn btn-sm btn-primary shadow-sm"
+                        class="btn btn-primary shadow-sm"
                         style="min-width: 140px; height: 35px"
                         (click)="SubmiteDocument()"
                         [disabled]="isSubmitDisabled || submitting"

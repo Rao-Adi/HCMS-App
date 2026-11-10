@@ -11,11 +11,12 @@
 <!-- AI proofreading. Shown only when the server reports the assistant configured (see
      DmsAiService.isEnabled) -- an installation without a model gets no button at all rather
      than one that fails when pressed. Hidden in read-only mode: there is nothing to correct. -->
-<div class="row" *ngIf="allowAiSpellCheck && aiEnabled && !IsReadyOnly">
-  <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end">
+<div class="row" *ngIf="(allowAiSpellCheck && aiEnabled && !IsReadyOnly) || allowFullScreen">
+  <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end gap-2">
     <button
       type="button"
       class="dms-ai-btn"
+      *ngIf="allowAiSpellCheck && aiEnabled && !IsReadyOnly"
       (click)="runProofread()"
       [disabled]="aiBusy"
       title="Check spelling and grammar with AI"
@@ -23,6 +24,17 @@
       <span class="spinner-border spinner-border-sm me-2" *ngIf="aiBusy"></span>
       <i class="bi bi-stars me-1" *ngIf="!aiBusy"></i>
       {{ aiBusy ? 'Checking…' : 'AI Spell Check' }}
+    </button>
+    <!-- Full Screen: the whole editor fills the browser (Esc, or this button, goes back). -->
+    <button
+      type="button"
+      class="dms-fs-btn"
+      *ngIf="allowFullScreen"
+      (click)="toggleFullScreen()"
+      [title]="fullScreen ? 'Back to the page (Esc)' : 'See the whole document and write on it'"
+    >
+      <i class="bi me-1" [class.bi-arrows-fullscreen]="!fullScreen" [class.bi-fullscreen-exit]="fullScreen"></i>
+      {{ fullScreen ? 'Exit Full Screen' : 'Full Screen' }}
     </button>
   </div>
 </div>
@@ -87,8 +99,8 @@
   </div>
 </div>
 
-<div class="row mt-2">
-  <div class="col-lg-12 col-md-12 col-sm-12">
+<div class="row mt-2 dms-editor-row">
+  <div class="col-lg-12 col-md-12 col-sm-12 dms-editor-col">
     <!-- <form [formGroup]="form">
       <div class="editor" [ngStyle]="editorStyle">
         <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"> </ngx-editor-menu>

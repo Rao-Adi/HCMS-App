@@ -5,6 +5,8 @@ import {
   Component,
   EventEmitter,
   forwardRef,
+  HostBinding,
+  HostListener,
   Input,
   OnChanges,
   OnDestroy,
@@ -28,7 +30,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { VERSION } from '@angular/core';
 import { DmsAiService } from '@app/shared/services/dms-ai.service';
-import { pastedColorMatcher, wordListMatcher } from '@app/shared/utils/quill-word-paste';
+import { normalizePastedTables, pastedColorMatcher, wordListMatcher } from '@app/shared/utils/quill-word-paste';
 
 /** One run of text in the AI review dialog: unchanged, removed by the AI, or added by it. */
 export interface DiffSegment {
@@ -51,7 +53,7 @@ export interface DiffSegment {
     },
   ],
 })
-export class DMSRichTextEdit implements OnInit {
+export class DMSRichTextEdit implements OnInit, OnDestroy {
   @Output() contentHtmlChange = new EventEmitter<string>();
   @Input() contentHtml: string = '';
   @Input() IsReadyOnly: boolean = false;
@@ -72,6 +74,33 @@ export class DMSRichTextEdit implements OnInit {
    */
   @Input() allowAiSpellCheck: boolean = false;
   @Input() editorStyle: any = {};
+
+  /**
+   * Offers a "Full Screen" button: the same editor (same content, same cursor, same toolbar) is widened to fill the browser, to read the whole
+   * document and write on it comfortably. On by default -- it is useful both for writing and for reading a long document. Esc leaves it.
+   */
+  @Input() allowFullScreen: boolean = true;
+
+  /** Whether the editor currently fills the browser. The host element itself goes full screen (see the CSS), so nothing is re-created. */
+  @HostBinding('class.dms-editor-full') fullScreen = false;
+
+  toggleFullScreen(): void {
+    this.fullScreen = !this.fullScreen;
+    // The page behind must not scroll while the editor covers it.
+    document.body.classList.toggle('dms-editor-fs-open', this.fullScreen);
+    this._cdr.markForCheck();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    // The AI review dialog (when open) has its own backdrop; Esc leaves the full screen only when nothing else is open.
+    if (this.fullScreen && !this.aiReviewOpen) this.toggleFullScreen();
+  }
+
+  ngOnDestroy(): void {
+    // Left while full screen (e.g. the page changed): give the page its scrolling back.
+    if (this.fullScreen) document.body.classList.remove('dms-editor-fs-open');
+  }
 
   @ViewChild('editor') editor!: QuillEditorComponent;
 
@@ -462,6 +491,22 @@ export class DMSRichTextEdit implements OnInit {
   quill.clipboard.addMatcher(Node.ELEMENT_NODE, wordListMatcher);
   // Light text / dark background brought along from a dark page would make the pasted block unreadable on the white document.
   quill.clipboard.addMatcher(Node.ELEMENT_NODE, pastedColorMatcher);
+
+  // A table pasted from Word (cells with several paragraphs / bullets, merged cells) is tidied into a plain grid first; Quill's cells hold one
+  // line each, and it used to cut such a table into pieces. Runs before Quill's own paste handling and only when the clipboard holds a table.
+  quill.root.addEventListener(
+    'paste',
+    (event: ClipboardEvent) => {
+      const html = event.clipboardData?.getData('text/html');
+      if (!html || !/<table/i.test(html)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const range = quill.getSelection(true);
+      if (range && range.length > 0) quill.deleteText(range.index, range.length, 'user');
+      quill.clipboard.dangerouslyPasteHTML(range ? range.index : quill.getLength(), normalizePastedTables(html), 'user');
+    },
+    true,
+  );
 
   if (this.contentHtml) {
     quill.clipboard.dangerouslyPasteHTML(this.contentHtml);

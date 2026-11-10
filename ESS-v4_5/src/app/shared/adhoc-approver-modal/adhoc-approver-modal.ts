@@ -3,7 +3,11 @@ import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { AdHocApproverPanel, AdHocChoice } from '@app/shared/adhoc-approver-panel/adhoc-approver-panel';
 
 export interface AdHocApproverModalData {
-  executionId: number;
+  // The workflow run to show -- or, on a screen that only has the document, its id instead (the running / latest workflow is shown).
+  executionId?: number;
+  documentId?: number;
+  // Only the chain, never the add-approver controls (screens that cannot carry the choice to an Approve action).
+  readOnly?: boolean;
   documentName?: string;
   // What was chosen for this document the last time the modal was open, so reopening it shows it again.
   initial?: AdHocChoice[];
@@ -22,6 +26,8 @@ export interface AdHocApproverModalData {
 })
 export class AdHocApproverModal {
   executionId: number;
+  documentId: number;
+  readOnly: boolean;
   documentName: string;
   initial: AdHocChoice[];
   choices: AdHocChoice[];
@@ -32,7 +38,9 @@ export class AdHocApproverModal {
     private modalRef: NzModalRef,
     @Inject(NZ_MODAL_DATA) data: AdHocApproverModalData,
   ) {
-    this.executionId = data.executionId;
+    this.executionId = data.executionId || 0;
+    this.documentId = data.documentId || 0;
+    this.readOnly = !!data.readOnly;
     this.documentName = data.documentName || '';
     this.initial = data.initial || [];
     this.choices = [...this.initial];
@@ -40,10 +48,6 @@ export class AdHocApproverModal {
 
   save(): void {
     this.modalRef.close(this.choices);
-  }
-
-  cancel(): void {
-    this.modalRef.close(undefined);
   }
 
   close(): void {

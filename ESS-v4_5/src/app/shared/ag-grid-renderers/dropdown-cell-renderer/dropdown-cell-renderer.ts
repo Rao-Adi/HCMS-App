@@ -25,6 +25,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
         [(ngModel)]="selectedValue"
         [nzAllowClear]="false"
         (ngModelChange)="onSelectionChange($event)"
+        (nzOpenChange)="onOpenChange($event)"
         (keydown)="$event.stopPropagation()"
         (keyup)="$event.stopPropagation()"
         (keypress)="$event.stopPropagation()"
@@ -103,6 +104,8 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
     customFilter?: any;
     disabled?: boolean;
     placeholder?: string;
+    // When given, the options are asked for again every time the list is opened (they depend on the other rows of the grid).
+    optionsProvider?: (currentRow?: any) => any[];
   };
 
   agInit(params: any): void {
@@ -185,6 +188,17 @@ export class DropdownCellRenderer implements ICellRendererAngularComp {
   //   this.options = params.options || [];
   //   return true;
   // }
+
+  // Opening the list: the options are worked out again from the grid as it is now (a Role added a moment ago must no longer be offered).
+  onOpenChange(open: boolean): void {
+    if (!open || !this.params?.optionsProvider) return;
+    const dispField = this.params.displayField || 'text';
+    this.options = [...(this.params.optionsProvider(this.params.node?.data) || [])].sort((a: any, b: any) => {
+      const textA = (a.rawName || a[dispField] || '').toString().toLowerCase();
+      const textB = (b.rawName || b[dispField] || '').toString().toLowerCase();
+      return textA.localeCompare(textB);
+    });
+  }
 
   onSelectionChange(value: any): void {
     const field = this.params.colDef?.field as string;

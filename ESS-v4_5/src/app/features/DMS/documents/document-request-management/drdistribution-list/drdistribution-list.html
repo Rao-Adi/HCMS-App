@@ -35,10 +35,3 @@
   >
   </app-editable-ag-grid-wrapper>
 </div>
-
-<!-- Below the list, small: it acts on the whole list, so it belongs after it. -->
-<div class="clear-all-row" *ngIf="!readOnly && distributionListData.length > 0">
-  <button type="button" class="btn btn-outline-danger clear-all-btn" (click)="clearAllDistribution()">
-    <i class="bi bi-trash me-1"></i> Clear All
-  </button>
-</div>

@@ -2,33 +2,49 @@
   display: block;
 }
 
+/* The card that holds the chain: "SIGNING AUTHORITIES" and the table. */
 .adhoc-panel {
-  border: 1px solid #dbe4f0;
+  border: 1px solid #e3e8f2;
   border-radius: 10px;
-  padding: 14px 16px;
-  background: #f8fbff;
-  margin-bottom: 16px;
+  padding: 12px 14px 14px;
+  background: #f6f8fc;
+  margin-bottom: 12px;
 }
 
-.adhoc-hint {
-  font-size: 12px;
-  color: #6b7280;
+.adhoc-title {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5b6577;
 }
 
 .adhoc-seq {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e3e8f2;
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
 }
 
-.adhoc-row {
-  display: flex;
+/* One row = handle | tick | # | authority | received | updated | status | actions. The header row uses the same columns. */
+.adhoc-row,
+.adhoc-head {
+  display: grid;
+  grid-template-columns: 14px 18px 22px minmax(150px, 1.4fr) minmax(110px, 1fr) minmax(110px, 1fr) 92px 30px;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border-bottom: 1px solid #f0f1f4;
+  border-bottom: 1px solid #eef1f6;
   background: #fff;
+}
+
+.adhoc-head {
+  background: #eef2f9;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e3e8f2;
 }
 
 .adhoc-row:last-child {
@@ -36,48 +52,73 @@
 }
 
 .adhoc-row.is-current {
-  background: #eef4ff;
+  background: #f7faff;
 }
 
 .adhoc-row.is-decided {
-  background: #fafafa;
   color: #6b7280;
-}
-
-.adhoc-tag.done {
-  background: #dcfce7;
-  color: #15803d;
 }
 
 .adhoc-row.is-new {
   background: #fffaf0;
 }
 
-.adhoc-handle {
-  cursor: grab;
-  color: #9ca3af;
+.adhoc-tick {
+  margin: 0;
+  opacity: 1;
   width: 16px;
+  height: 16px;
+  border-radius: 4px;
 }
 
-.adhoc-handle.placeholder {
+.adhoc-handle {
+  cursor: grab;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.adhoc-handle.locked {
   cursor: default;
+  color: #c3cad6;
 }
 
 .adhoc-no {
-  width: 22px;
-  text-align: right;
-  color: #6b7280;
-  font-weight: 600;
+  text-align: left;
+  color: #1e293b;
+  font-weight: 700;
 }
 
+/* The person: name, then (You / Ad-hoc) tags, then the designation -- stacked, so a long name or title wraps in its own column. */
 .adhoc-name {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   min-width: 0;
 }
 
+.adhoc-person {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.adhoc-desig {
+  font-size: 12px;
+  color: #5b6577;
+  line-height: 1.3;
+}
+
+.adhoc-tags {
+  display: inline-flex;
+  gap: 6px;
+}
+
 .adhoc-tag {
-  font-size: 11px;
-  padding: 1px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 0 8px;
   border-radius: 999px;
   background: #eef2f7;
   color: #4b5563;
@@ -91,6 +132,27 @@
 .adhoc-tag.new {
   background: #fef3c7;
   color: #b45309;
+}
+
+.adhoc-date {
+  font-size: 12px;
+  color: #334155;
+}
+
+.adhoc-status {
+  display: inline-flex;
+}
+
+/* A small dot in front of the status text, in the colour of the pill. */
+.adhoc-status .dms-status-pill::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
 }
 
 .adhoc-actions {
@@ -112,17 +174,113 @@
   transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-/* Same height as the approver dropdown beside it. */
-.adhoc-add-btn {
-  height: 28px; /* nz-select height */
-  line-height: 1;
-  padding-top: 0;
-  padding-bottom: 0;
+/* Below the chain: the approver picker with Add at its right, then the note. */
+.adhoc-add {
+  margin-bottom: 10px;
 }
 
-/* The dropdown host collapses to 18px while its select is 28px, which pushes it below the button. */
-.adhoc-panel :host ::ng-deep app-employee-list,
-:host ::ng-deep .adhoc-panel app-employee-list {
+.adhoc-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adhoc-picker {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The picker is the project's nz-select host; give it the same generous height as the Add button beside it. */
+.adhoc-picker ::ng-deep app-employee-list {
   display: block;
-  height: 28px;
+}
+.adhoc-picker ::ng-deep .ant-select {
+  width: 100%;
+}
+.adhoc-picker ::ng-deep .ant-select-selector {
+  min-height: 32px;
+  align-items: center;
+  border-radius: 6px !important;
+}
+
+/* The chosen person (and the placeholder) sit in the vertical middle of the box.
+   ng-zorro draws the chosen person as <nz-select-item><div>name</div></nz-select-item> plus an ::after, which became two 30px lines (a 60px item) here,
+   and styles.css adds a line-height of 11px and 8px of padding on top of that -- so the name rode up out of the box. The item is made ONE line, exactly the
+   height inside the border. The select host is also given the control's own height (it was 28px for a 32px control), so it lines up with Add. */
+.adhoc-picker ::ng-deep nz-select.ant-select {
+  display: block !important;
+  height: 32px !important;
+  min-height: 32px !important;
+}
+.adhoc-picker ::ng-deep .ant-select-single .ant-select-selector {
+  height: 32px;
+  align-items: center;
+}
+.adhoc-picker ::ng-deep .ant-select-single .ant-select-selector .ant-select-selection-item,
+.adhoc-picker ::ng-deep .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 24px 0 10px !important;
+  line-height: 30px !important;
+}
+.adhoc-picker ::ng-deep .ant-select-single .ant-select-selector .ant-select-selection-item::after {
+  display: none;
+}
+.adhoc-picker ::ng-deep .ant-select-single .ant-select-selector .ant-select-selection-item > div {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adhoc-picker ::ng-deep .ant-select-single .ant-select-selector .ant-select-selection-search-input {
+  height: 30px;
+}
+
+/* The global .btn rule stretches every button to the full width, hence the explicit width. */
+.adhoc-add-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  min-width: 84px;
+  height: 32px;
+  margin: 0 !important;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  justify-content: center;
+}
+
+.adhoc-add-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.adhoc-add-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.adhoc-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e8f0fe;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.adhoc-hint > i {
+  color: #2563eb;
+  font-size: 14px;
+  margin-top: 1px;
 }

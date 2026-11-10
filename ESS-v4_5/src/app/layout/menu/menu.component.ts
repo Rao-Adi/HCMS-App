@@ -1,3 +1,4 @@
+import { renameMenuItems } from '@app/shared/utils/form-display-names';
 import {
   Component,
   Input,
@@ -95,6 +96,8 @@ export class MenuComponent implements OnDestroy {
   getMenuData(): void {
     this._dataService.get<any[]>('Menu/GetMenuDataThroughRedis/DMS-b').subscribe({
       next: (data) => {
+        // Names the DMS shows differently from the database (see form-display-names.ts), before anything reads them.
+        renameMenuItems(data);
         this.RootItems = data;
         this.menuLoaded.emit(data); // ← emit after load
       },

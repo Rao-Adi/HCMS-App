@@ -101,6 +101,8 @@ export class ApprovalWorkflowPolicyManagement {
   canAddAdHocForNew = false;
   // True while "Add Authority" is being saved: the button is disabled and a repeated click does nothing.
   addingAuthority = false;
+  // True while a delete / drag-reorder / ad-hoc change of the sequence is being saved (see saveUpdatedSequence).
+  savingSequence = false;
   loading = false;
   showExclusionTable = false;
   searchChange$ = new BehaviorSubject('');
@@ -231,9 +233,26 @@ export class ApprovalWorkflowPolicyManagement {
     return this.selectedPolicyId !== PolicyId.RequestForDocumentCreation;
   }
 
-  // The ad-hoc permission belongs to a step added as a specific Employee, not to Role/Designation steps.
+  // The ad-hoc permission belongs to a step added as a specific Employee, not to Role/Designation steps
+  // (nor to a Head of Division / Department / Sub-Department step, which names no person).
   isEmployeeStep(item: any): boolean {
-    return !item?.RoleId && !item?.DesignationId;
+    return !item?.RoleId && !item?.DesignationId && !item?.HeadScope;
+  }
+
+  // Authority types 5 / 6 / 7 (Head of Division / Department / Sub-Department) add no person: the head of that unit of the
+  // document's cabinet is worked out when it is submitted, so the Approval Authorities box shows a note instead of a picker.
+  // What the backend stores on the step (WorkflowStepDefinitions.HeadScope); null for every other authority type.
+  private getHeadScope(): string | null {
+    switch (String(this.selectedAuthorityType)) {
+      case '5':
+        return 'DIVISION';
+      case '6':
+        return 'DEPARTMENT';
+      case '7':
+        return 'SUBDEPARTMENT';
+      default:
+        return null;
+    }
   }
 
   // Re-saves the sequence so the checkbox ticked on a row is stored. The sequence is rewritten as a
@@ -288,6 +307,9 @@ export class ApprovalWorkflowPolicyManagement {
     //   return;
     // }
 
+    // A policy of a deleted Division / Department / Sub-Department is never used: adding approvers to it would only mislead.
+    if (this.selectedPolicyDeletedUnit) return;
+
     // One add at a time: a second click while the first is still being saved would add the same authority again.
     if (this.addingAuthority) return;
     this.addingAuthority = true;
@@ -313,6 +335,7 @@ export class ApprovalWorkflowPolicyManagement {
       designationCodes: this.getDesignationCodes(),
       roles: this.getRoleCodes(),
       employeeCodes: this.getEmployeeCodes(),
+      HeadScope: this.getHeadScope(),
       CanEdit: this.approvalPolicy === ApprovalPolicy.CanEdit,
       RequireCrossFunctionalHead: false,
       IsParallelApproval: this.switchValue1,
@@ -563,6 +586,7 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   drop(event: CdkDragDrop<any[]>) {
+    if (this.isBusy) return;
     if (event.previousIndex !== event.currentIndex) {
       moveItemInArray(this.approvalSequenceData, event.previousIndex, event.currentIndex);
       this.saveUpdatedSequence();
@@ -570,12 +594,17 @@ export class ApprovalWorkflowPolicyManagement {
   }
 
   removeSequenceItem(index: number) {
+    if (this.isBusy) return;
     const policyIdToFallback = this.approvalSequenceData[index]?.WorkflowPolicyId;
     this.approvalSequenceData.splice(index, 1);
     this.saveUpdatedSequence(policyIdToFallback);
   }
 
   saveUpdatedSequence(fallbackPolicyId?: number) {
+    // Saving a change to the sequence can take several seconds (running workflows are brought in line with it). Until the
+    // answer comes back a full-page loader covers the screen, so no second Add / Delete / drag can be started meanwhile.
+    this.savingSequence = true;
+
     // Re-assign step order based on new array indices
     this.approvalSequenceData.forEach((item, index) => {
       item.StepOrder = index + 1;
@@ -594,7 +623,10 @@ export class ApprovalWorkflowPolicyManagement {
         steptype: item.StepType || '',
         roleid: item.RoleId || 0,
         designationid: item.DesignationId || 0,
-        userid: item.EmployeeCode || item.UserId?.toString() || '',
+        // A Head of Division / Department / Sub-Department step shows the person who holds it, but stays a step with NO person:
+        // sending that person's code back would turn it into a fixed-employee step when the sequence is saved or reordered.
+        userid: item.HeadScope ? '' : item.EmployeeCode || item.UserId?.toString() || '',
+        headscope: item.HeadScope || null,
         requiresallapprovals: item.RequiresAllApprovals || false,
         canaddadhocapprover: this.isEmployeeStep(item) && !!item.CanAddAdHocApprover,
       })),
@@ -604,6 +636,7 @@ export class ApprovalWorkflowPolicyManagement {
     // Adjust the method name below as needed to match your service's actual implementation.
     this._workflowStepService.updateApprovalSequence(payLoad).subscribe({
       next: (response: any) => {
+        this.savingSequence = false;
         if (response?.Success) {
           this.approvalSequenceData = response.Data || [];
           this._notificationToastService.createNotification(
@@ -611,16 +644,39 @@ export class ApprovalWorkflowPolicyManagement {
             'Workflow',
             'Approval sequence updated successfully.',
           );
+        } else {
+          this._notificationToastService.createNotification(
+            'error',
+            'Error',
+            response?.Message || 'Failed to update approval sequence.',
+          );
+          this.fetchApprovalSequence();
         }
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
+        this.savingSequence = false;
         this._notificationToastService.createNotification(
           'error',
           'Error',
           err?.error?.Message || err?.Message || 'Failed to update approval sequence.',
         );
+        // The list on screen was already changed (row dragged / removed); show what is really saved.
+        this.fetchApprovalSequence();
+        this.cdr.detectChanges();
       },
     });
+  }
+
+  // The unit ("Sub Department "IT Development"") of the selected policy when that unit was deleted; '' when the policy is fine.
+  get selectedPolicyDeletedUnit(): string {
+    const p = this.workflowPoliciesData.find((x) => String(x.Id) === String(this.selectedWorkflowPolicy));
+    return p?.deletedUnit || '';
+  }
+
+  // True while an Add or a sequence change is being saved: the loader covers the screen and these actions are ignored.
+  get isBusy(): boolean {
+    return this.savingSequence || this.addingAuthority;
   }
 
   onHierarchyChange(values: CabinetSelection[]) {
@@ -705,6 +761,7 @@ export class ApprovalWorkflowPolicyManagement {
             subDepartmentName: item.SubDepartment,
             level4Id: item.BusinessDomainCode,
             businessDomainName: item.BusinessDomain,
+            deletedUnit: item.DeletedUnit || '',
             IsActive: item.IsActive,
             IsDeleted: item.IsDeleted,
             CreatedAt: new CustomDateFormatPipe().transform(item.CreatedAt || ''),

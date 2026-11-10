@@ -23,7 +23,7 @@ import { UtilitiesService } from '@app/core/services/utilities.service';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
-import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
 import { CabinetHierarchyService } from '@app/shared/services/CacheServices/cabinet-hierarchy-service';
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { DMSRichTextEdit } from '@app/shared/dmsrich-text-edit/dmsrich-text-edit';
@@ -128,7 +128,7 @@ export class DocumentAuthorizationPostTraining {
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
     { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-    { field: 'approvalHistory', label: 'Approval History', visible: true },
+    { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
 
@@ -234,7 +234,7 @@ export class DocumentAuthorizationPostTraining {
     },
     {
       field: 'approvalHistory',
-      headerName: 'Approval History',
+      headerName: 'Signing Authorities',
       editable: false,
       minWidth: 120,
       cellRenderer: (params: any) => {
@@ -244,7 +244,7 @@ export class DocumentAuthorizationPostTraining {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          Approval History
+          Signing Authorities
         </span>
       `;
       },
@@ -327,7 +327,7 @@ export class DocumentAuthorizationPostTraining {
         { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
         { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
         { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-        { field: 'approvalHistory', label: 'Approval History', visible: true },
+        { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
         { field: 'revisionHistory', label: 'Revision History', visible: true },
       ];
     });
@@ -769,22 +769,13 @@ export class DocumentAuthorizationPostTraining {
   }
 
   openApprovalHistoryModal(row: any): void {
-    const modalRef = this.modal.create({
-      nzTitle: 'Approval History',
-      nzContent: WorkflowApprovalHistoryComponent,
-      nzData: {
-        id: row.id,
-        entityType: 'Document',
-        // Backend segregates workflow steps by decision, which expects 'Approved'/'Pending'
-        // rather than this screen's 'Authorized'/'Pending Authorization' tab labels.
-        decision:'Approved'
-      },
-      nzFooter: null, // custom footer handled inside component
-      nzWidth: '70%',
-    });
-
-    modalRef.afterClose.subscribe((result) => {
-      console.log('Modal closed with:', result);
+    this.modal.create({
+      nzTitle: 'Signing Authorities & Approval History',
+      nzContent: AdHocApproverModal,
+      // Read-only here: the chain of this document (who signs, who has, when); adding an approver is done when approving, in My Approvals.
+      nzData: { documentId: Number(row?.id), documentName: row?.title || row?.Title || row?.documentName || '', readOnly: true },
+      nzFooter: null,
+      nzWidth: '60%',
     });
   }
 

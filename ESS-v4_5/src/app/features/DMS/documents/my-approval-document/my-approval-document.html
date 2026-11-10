@@ -66,13 +66,33 @@
                 [ngClass]="{ 'active-tab': selectedTab === 'Rejected' }"
                 (click)="onTabChange('Rejected')"
               >
-                Reverted/Rejected<span
+                Reverted/Rejected
+                <span
                   class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1"
                   style="font-size: 11px"
                   >{{ disapprovedDocumentCount }}</span
                 >
               </button>
+              <button
+                class="tab-button"
+                tabindex="0"
+                [ngClass]="{ 'active-tab': selectedTab === 'DueReview' }"
+                (click)="onTabChange('DueReview')"
+                title="Documents whose Next Review Date is within 60 days, which you can re-approve without change"
+              >
+                Due for Review
+                <span
+                  class="badge rounded-pill bg-secondary text-white border shadow-sm font-monospace px-2 py-1"
+                  style="font-size: 11px"
+                  >{{ dueForReviewCount }}</span
+                >
+              </button>
             </div>
+
+            <app-document-due-for-review
+              *ngIf="selectedTab === 'DueReview'"
+              (changed)="loadDueForReviewCount()"
+            ></app-document-due-for-review>
 
             <div class="row row-space" *ngIf="selectedTab === 'Pending'">
               <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -122,7 +142,7 @@
                           <button
                             class="btn btn-danger btn-sm btn-action"
                             [class.disabled]="!hasSelectedRows"
-                            [title]="hasSelectedRows ? 'Disapprove' : 'Select at least one record in the grid to take this action'"
+                            [title]="hasSelectedRows ? 'Reject' : 'Select at least one record in the grid to take this action'"
                             (click)="promptAction('Rejected')"
                             [disabled]="hasSelectedRows === false"
                           >

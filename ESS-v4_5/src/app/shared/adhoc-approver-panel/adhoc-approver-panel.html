@@ -2,11 +2,74 @@
 <div class="text-muted py-2" *ngIf="loaded && !sequence.length">No signing authorities found for this document.</div>
 
 <!-- The whole chain is shown to every approver. Adding an approver is only offered to the person whose step
-     allows it (decided by the server). Existing approvers can never be moved or removed. -->
+     allows it (decided by the server). Existing approvers can never be moved or removed.
+     Order: the chain first, then (for the approver who may) the picker + Add and the note about where a new one goes. -->
 <div class="adhoc-panel" *ngIf="loaded && sequence.length">
-  <h3 class="PnlHeader" style="margin-top: 0">Signing Authorities</h3>
-  <div class="row align-items-start g-2" *ngIf="canAddAdHoc">
-    <div class="col-lg-4 col-md-6 col-sm-12">
+  <h3 class="adhoc-title">Signing Authorities</h3>
+
+  <div class="adhoc-seq">
+    <div class="adhoc-head">
+      <span></span>
+      <span></span>
+      <span class="adhoc-no">#</span>
+      <span>Approval authority</span>
+      <span>Received on</span>
+      <span>Status updated on</span>
+      <span>Status</span>
+      <span></span>
+    </div>
+    <div cdkDropList (cdkDropListDropped)="dropAdHoc($event)">
+      <div
+        *ngFor="let row of sequence; let i = index"
+        class="adhoc-row"
+        cdkDrag
+        [cdkDragDisabled]="!row.isNew"
+        [class.is-new]="row.isNew"
+        [class.is-current]="row.isCurrent"
+        [class.is-decided]="row.isDecided"
+      >
+        <!-- Only an added ad-hoc approver can be dragged; the others show the grip greyed so every row lines up. -->
+        <span class="adhoc-handle" *ngIf="row.isNew" cdkDragHandle title="Drag to move">
+          <i class="bi bi-grip-vertical"></i>
+        </span>
+        <span class="adhoc-handle locked" *ngIf="!row.isNew"><i class="bi bi-grip-vertical"></i></span>
+        <!-- Ticked for everyone who has approved; empty for those still to act (or who sent it back / rejected it). -->
+        <input
+          type="checkbox"
+          class="form-check-input adhoc-tick"
+          [checked]="isApproved(row)"
+          disabled
+          [title]="isApproved(row) ? 'Approved' : 'Not approved yet'"
+        />
+        <span class="adhoc-no">{{ i + 1 }}</span>
+        <span class="adhoc-name">
+          <strong class="adhoc-person">{{ row.name }}</strong>
+          <span class="adhoc-tags" *ngIf="row.isCurrent || row.isNew || row.isAdHoc">
+            <span class="adhoc-tag you" *ngIf="row.isCurrent">You</span>
+            <span class="adhoc-tag" *ngIf="row.isAdHoc && !row.isNew">Ad-hoc</span>
+            <span class="adhoc-tag new" *ngIf="row.isNew">New ad-hoc</span>
+          </span>
+          <small class="adhoc-desig" *ngIf="row.designation">{{ row.designation }}</small>
+        </span>
+        <span class="adhoc-date">{{ row.receivedOn }}</span>
+        <span class="adhoc-date">{{ row.statusUpdatedOn }}</span>
+        <span class="adhoc-status">
+          <span class="dms-status-pill" [ngClass]="statusClass(row)">{{ statusLabel(row) }}</span>
+        </span>
+        <span class="adhoc-actions" *ngIf="row.isNew; else noActions">
+          <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" (click)="removeAdHoc(row)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </span>
+        <ng-template #noActions><span></span></ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="adhoc-add" *ngIf="loaded && sequence.length && canAddAdHoc">
+  <div class="adhoc-add-row">
+    <div class="adhoc-picker">
       <app-employee-list
         #adHocEmployeeList
         [isMultiSelect]="false"
@@ -16,56 +79,21 @@
         [ngModelOptions]="{ standalone: true }"
       ></app-employee-list>
     </div>
-    <div class="col-auto">
-      <button
-        type="button"
-        class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 adhoc-add-btn"
-        [disabled]="!selectedAdHocEmployee"
-        (click)="addAdHoc()"
-      >
-        <i class="bi bi-plus-circle"></i> Add
-      </button>
-    </div>
-  </div>
-
-  <div class="adhoc-hint mt-2" *ngIf="canAddAdHoc">
-    A new approver is added at the <strong>end</strong> of the approval hierarchy. Drag it
-    (<i class="bi bi-grip-vertical"></i>) to move it up &mdash; never above you. It takes effect when you approve.
-  </div>
-
-  <div class="adhoc-seq mt-2" cdkDropList (cdkDropListDropped)="dropAdHoc($event)">
-    <div
-      *ngFor="let row of sequence; let i = index"
-      class="adhoc-row"
-      cdkDrag
-      [cdkDragDisabled]="!row.isNew"
-      [class.is-new]="row.isNew"
-      [class.is-current]="row.isCurrent"
-      [class.is-decided]="row.isDecided"
+    <button
+      type="button"
+      class="adhoc-add-btn"
+      [disabled]="!selectedAdHocEmployee"
+      (click)="addAdHoc()"
     >
-      <span class="adhoc-handle" *ngIf="row.isNew" cdkDragHandle title="Drag to move">
-        <i class="bi bi-grip-vertical"></i>
-      </span>
-      <span class="adhoc-handle placeholder" *ngIf="!row.isNew"></span>
-      <span class="adhoc-no">{{ i + 1 }}</span>
-      <span class="adhoc-name">
-        {{ row.name }}
-        <small class="text-muted" *ngIf="row.designation"> – {{ row.designation }}</small>
-      </span>
-      <span class="adhoc-tag done" *ngIf="row.isDecided">{{ row.decision || 'Done' }}</span>
-      <span class="adhoc-tag you" *ngIf="row.isCurrent">You</span>
-      <span class="adhoc-tag" *ngIf="row.isAdHoc && !row.isNew">Ad-hoc</span>
-      <span class="adhoc-tag new" *ngIf="row.isNew">New ad-hoc</span>
-      <span class="adhoc-actions" *ngIf="row.isNew">
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-danger"
-          title="Remove"
-          (click)="removeAdHoc(row)"
-        >
-          <i class="bi bi-trash"></i>
-        </button>
-      </span>
-    </div>
+      <i class="bi bi-plus-circle"></i> Add
+    </button>
+  </div>
+
+  <div class="adhoc-hint">
+    <i class="bi bi-info-circle"></i>
+    <span>
+      A new approver is added at the <strong>end</strong> of the approval hierarchy. Drag it
+      (<i class="bi bi-grip-vertical"></i>) to move it up &mdash; never above you. It takes effect when you approve.
+    </span>
   </div>
 </div>

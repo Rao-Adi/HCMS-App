@@ -223,6 +223,12 @@ export class DocumentService {
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
   }
 
+  // The signing authorities of a document, for screens that only know the document (not its workflow run).
+  getSigningAuthorities(documentId: number): Observable<ApiResponse<any>> {
+    const uri = `${this.apiUrl}/DMSDocument/get-signing-authorities/${documentId}`;
+    return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
+  }
+
   getAdHocApproverDesignation(empCode: string): Observable<ApiResponse<any>> {
     const uri = `${this.apiUrl}/DMSDocument/get-adhoc-approver-designation/${encodeURIComponent(empCode)}`;
     return this.http.get<ApiResponse<any>>(uri, { headers: this.getHeaders() });
@@ -273,6 +279,31 @@ export class DocumentService {
   GetDocumentByStatus(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/get-document-by-status`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // Periodic review: Effective documents whose Next Review Date is within 60 days that the signed-in approver may re-approve.
+  getDocumentsDueForReview(payload: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/DMSDocument/get-documents-due-for-review`,
+      payload,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  getDocumentsDueForReviewCount(): Observable<ApiResponse<number>> {
+    return this.http.get<ApiResponse<number>>(
+      `${this.apiUrl}/DMSDocument/get-documents-due-for-review-count`,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // Re-approves a document at its periodic review without any change (no workflow, same version, next review date moves on).
+  reapproveDocumentReview(payload: { documentId: number; remarks?: string }): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(
+      `${this.apiUrl}/DMSDocument/reapprove-document-review`,
       payload,
       { headers: this.getHeaders() },
     );

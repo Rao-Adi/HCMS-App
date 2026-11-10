@@ -573,6 +573,9 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
                 options: column.dropdownOptionsForRow
                   ? column.dropdownOptionsForRow(params.data)
                   : column.dropdownOptions || [],
+                // Asked again each time the list is opened: the options above were worked out when the cell was drawn, and the add row (pinned) is not
+                // drawn again when the other rows change -- so a Role added a moment ago would still be offered.
+                optionsProvider: column.dropdownOptionsForRow ? (current: any) => column.dropdownOptionsForRow!(current ?? params.data) : undefined,
                 value: params.data?.[column.field], // ← ID (1)
                 valueField: column.dropdownValueField, // 'id'
                 displayField: column.dropdownDisplayField, // 'text'

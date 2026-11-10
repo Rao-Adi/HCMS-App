@@ -39,7 +39,7 @@ import { TemplateService } from '@app/shared/services/template.service';
 import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { LinkRenderer } from '@app/shared/ag-grid-renderers/link-renderer/link-renderer';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { WorkflowApprovalHistoryComponent } from '@app/shared/Dialog/workflow-approval-history-component/workflow-approval-history-component';
+import { AdHocApproverModal } from '@app/shared/adhoc-approver-modal/adhoc-approver-modal';
 import { PermissionService } from '@app/shared/services/permission.service';
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
@@ -268,7 +268,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
     {
       field: 'approvalHistory',
-      headerName: 'Approval History',
+      headerName: 'Signing Authorities',
       editable: false,
       cellRenderer: (params: any) => {
         return `
@@ -276,7 +276,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          ${params.value ? 'Approval History' : 'Approval History'}
+          Signing Authorities
         </span>
       `;
       },
@@ -322,13 +322,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
     {
       field: 'approvalHistory',
-      headerName: 'Approval History',
+      headerName: 'Signing Authorities',
       // LinkRenderer calls onClick() with no arguments, so the row has to come from this cell's own
       // params -- onClick(rowData) always received undefined and threw on rowData.Id.
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
-          label: 'Approval History',
+          label: 'Signing Authorities',
           onClick: () => {
             this.openWorkflowDetailsModal(params.data);
           },
@@ -1790,29 +1790,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
   }
 
   openWorkflowDetailsModal(rowData: any) {
-    //console.log('Row clicked:', rowData);
-
-    const modalRef = this.modal.create({
-      nzTitle: 'Approval History',
-      nzContent: WorkflowApprovalHistoryComponent,
-      nzData: {
-        id: rowData.Id,
-        // 'Document', not selectedEntityType. That field holds the workflow POLICY's entity type
-        // ('Revision' while the Revision/Obsoletion grid is up), which is the right thing to send
-        // to getWorkflowStepByDocumentTypeCode but not here: WorkflowExecutions.EntityType only
-        // ever holds 'Document' or 'Request', so asking for 'Revision' matched no execution and
-        // the modal came up empty every time.
-        entityType: 'Document', // Sending Document because User needs to see the approval History of Document
-        // Empty means every decision, which is what an approval HISTORY is. 'Approved' hid the
-        // rejections and reworks -- the part of the history people usually open this to read.
-        decision: '',
-      },
-      nzFooter: null, // custom footer handled inside component
-      nzWidth: '70%',
-    });
-
-    modalRef.afterClose.subscribe((result) => {
-      console.log('Modal closed with:', result);
+    this.modal.create({
+      nzTitle: 'Signing Authorities & Approval History',
+      nzContent: AdHocApproverModal,
+      // Read-only here: the chain of this document (who signs, who has, when); adding an approver is done when approving, in My Approvals.
+      nzData: { documentId: Number(rowData?.Id), documentName: rowData?.Title || rowData?.DocumentName || '', readOnly: true },
+      nzFooter: null,
+      nzWidth: '60%',
     });
   }
 

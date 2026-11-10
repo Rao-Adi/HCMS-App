@@ -292,8 +292,8 @@
                   >
                     <div grid-actions class="grid-action-icons" *ngIf="selectedStatus === '1'">
                       <button
-                        class="grid-icon-btn"
-                        title="Approve"
+                        class="grid-icon-btn needs-selection"
+                        [title]="hasSelectedRows ? 'Approve' : 'Select at least one record in the grid to take this action'"
                         [disabled]="!hasSelectedRows || !this.canAdd"
                         [class.disabled]="!hasSelectedRows"
                         (click)="approveDocument('Approved')"
@@ -301,8 +301,8 @@
                         <i class="bi bi-check2-square"></i>
                       </button>
                       <button
-                        class="grid-icon-btn"
-                        title="Reject"
+                        class="grid-icon-btn needs-selection"
+                        [title]="hasSelectedRows ? 'Reject' : 'Select at least one record in the grid to take this action'"
                         [disabled]="!hasSelectedRows || !this.canAdd"
                         [class.disabled]="!hasSelectedRows"
                         (click)="approveDocument('Rejected')"

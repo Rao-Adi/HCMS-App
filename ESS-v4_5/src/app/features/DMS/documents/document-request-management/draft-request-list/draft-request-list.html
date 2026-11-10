@@ -23,7 +23,7 @@
       <i class="bi bi-check2-square"></i>
     </button>
 
-    <button class="grid-icon-btn" title="Disapprove" (click)="disapprove()">
+    <button class="grid-icon-btn" title="Reject" (click)="disapprove()">
       <i class="bi bi-x-square"></i>
     </button>
 
@@ -361,7 +361,7 @@
             type="button"
             tabindex="0"
             class="btn btn-info shadow-sm"
-            style="min-width: 120px; width: 120px !important; height: 35px"
+            style="min-width: 140px; height: 35px"
             [disabled]="loadingDraft || loadingSubmit || loadingDetail"
             (click)="UpdateDocumentRequests()"
           >
@@ -372,13 +372,13 @@
               *ngIf="loadingDraft"
             ></span>
             <i class="bi bi-file-earmark-text me-2" *ngIf="!loadingDraft"></i>
-            Draft
+            Save as Draft
           </button>
           <button
             type="button"
             tabindex="0"
             class="btn btn-primary shadow-sm"
-            style="min-width: 120px; width: 120px !important; height: 35px"
+            style="min-width: 140px; height: 35px"
             [disabled]="loadingDraft || loadingSubmit || loadingDetail"
             (click)="SubmiteDocumentRequests()"
           >
