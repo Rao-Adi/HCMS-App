@@ -40,7 +40,6 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
-import { SafeTranslatePipe } from '../pipes/filter-label/safeTranslate.pipe';
 import { splitDateTime } from '@app/shared/utils/date-time-lines';
 
 export interface GridColumn<T = any> {
@@ -176,7 +175,6 @@ const DROPDOWN_COLUMN_MIN_WIDTH = 190;
     NzSpinModule,
     NzInputModule,
     NzIconModule,
-    SafeTranslatePipe,
     NzModalModule,
   ],
   templateUrl: './editable-ag-grid-wrapper.html',
