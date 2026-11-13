@@ -31,20 +31,20 @@
         <div class="dms-popup-table-wrap mb-2"><table class="dms-popup-table preview-table">
           <thead>
             <tr>
+              <th>Role</th>
               <th>Division</th>
               <th>Department</th>
               <th>Sub Department</th>
-              <th>Role</th>
               <th>Distribution Type</th>
             </tr>
           </thead>
           <tbody>
             @for (d of distributionList; track $index) {
               <tr>
+                <td>{{ val(d, 'Role', 'role') || 'All' }}</td>
                 <td>{{ val(d, 'Division', 'division') || 'All' }}</td>
                 <td>{{ val(d, 'Department', 'department') || 'All' }}</td>
                 <td>{{ val(d, 'SubDepartment', 'subDepartment') || 'All' }}</td>
-                <td>{{ val(d, 'Role', 'role') || 'All' }}</td>
                 <td>{{ val(d, 'DistributionType', 'distributionType') }}</td>
               </tr>
             }

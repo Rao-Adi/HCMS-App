@@ -326,7 +326,7 @@
               <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
                 <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                 <div>
-                  <strong>Instructions:</strong>
+                  <strong>Instructions: </strong>
                   <span *ngIf="draftFileUrl || draftFile">
                     Download your drafted document below, update it offline if needed, and upload
                     the finalized version.</span
@@ -339,7 +339,7 @@
               </div>
 
               <div class="PnlHeading">
-                <label>Upload Drafted Document (DOCX/PDF)</label>
+                <label>Upload Drafted Document</label>
               </div>
 
               <div class="d-flex align-items-center gap-3 mt-2">
@@ -462,7 +462,7 @@
             type="button"
             tabindex="0"
             class="btn btn-info shadow-sm"
-            style="min-width: 140px; height: 35px"
+            style="width: auto !important; min-width: 140px; height: 35px"
             [disabled]="loadingDraft || loadingSubmit || loadingDetail"
             (click)="SaveDraftDocument()"
           >
@@ -479,7 +479,7 @@
             type="button"
             tabindex="0"
             class="btn btn-primary shadow-sm"
-            style="min-width: 140px; height: 35px"
+            style="width: auto !important; min-width: 140px; height: 35px"
             [disabled]="loadingDraft || loadingSubmit || loadingDetail"
             (click)="SubmitDraftDocument()"
           >

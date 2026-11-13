@@ -599,14 +599,14 @@
                         >
                           <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                           <div>
-                            <strong>Instructions:</strong> Please review the drafted document below.
+                            <strong>Instructions: </strong> Please review the drafted document below.
                             You can view it, download/replace it, or proceed.
                           </div>
                         </div>
 
                         <div class="mt-3">
                           <label class="PnlHeading">
-                            Document File (DOCX/PDF)
+                            Document File
                             <span *ngIf="!draftFileUrl && !isObsoletion" class="text-danger">*</span>
                           </label>
                           <div class="d-flex align-items-center gap-3 mt-2">
@@ -741,13 +741,13 @@
                         >
                           <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                           <div>
-                            <strong>Instructions:</strong> Please review the drafted document below.
+                            <strong>Instructions: </strong> Please review the drafted document below.
                           </div>
                         </div>
 
                         <div class="mt-3">
                           <label class="PnlHeading">
-                            Document File (DOCX/PDF)
+                            Document File
                             <span *ngIf="!draftFileUrl && !isObsoletion" class="text-danger">*</span>
                           </label>
                           <div class="d-flex align-items-center gap-3 mt-2">
@@ -902,7 +902,7 @@
                         type="button"
                         tabindex="0"
                         class="btn btn-info shadow-sm"
-                        style="min-width: 140px; height: 35px"
+                        style="width: auto !important; min-width: 140px; height: 35px"
                         (click)="SaveAsDraft()"
                         [disabled]="savingDraft || isSubmitDisabled"
                         [title]="submitDisabledReason || 'Save your progress without starting the approval workflow'"
@@ -922,7 +922,7 @@
                         type="button"
                         tabindex="0"
                         class="btn btn-primary shadow-sm"
-                        style="min-width: 140px; height: 35px"
+                        style="width: auto !important; min-width: 140px; height: 35px"
                         (click)="SubmiteDocument()"
                         [disabled]="isSubmitDisabled || submitting"
                         [title]="submitDisabledReason || ''"

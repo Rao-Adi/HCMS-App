@@ -5,11 +5,8 @@
      allows it (decided by the server). Existing approvers can never be moved or removed.
      Order: the chain first, then (for the approver who may) the picker + Add and the note about where a new one goes. -->
 <div class="adhoc-panel" *ngIf="loaded && sequence.length">
-  <h3 class="adhoc-title">Signing Authorities</h3>
-
-  <div class="adhoc-seq">
+  <div class="adhoc-seq" [class.has-new]="hasNewRow()">
     <div class="adhoc-head">
-      <span></span>
       <span></span>
       <span class="adhoc-no">#</span>
       <span>Approval authority</span>
@@ -33,14 +30,6 @@
           <i class="bi bi-grip-vertical"></i>
         </span>
         <span class="adhoc-handle locked" *ngIf="!row.isNew"><i class="bi bi-grip-vertical"></i></span>
-        <!-- Ticked for everyone who has approved; empty for those still to act (or who sent it back / rejected it). -->
-        <input
-          type="checkbox"
-          class="form-check-input adhoc-tick"
-          [checked]="isApproved(row)"
-          disabled
-          [title]="isApproved(row) ? 'Approved' : 'Not approved yet'"
-        />
         <span class="adhoc-no">{{ i + 1 }}</span>
         <span class="adhoc-name">
           <strong class="adhoc-person">{{ row.name }}</strong>
@@ -51,8 +40,8 @@
           </span>
           <small class="adhoc-desig" *ngIf="row.designation">{{ row.designation }}</small>
         </span>
-        <span class="adhoc-date">{{ row.receivedOn }}</span>
-        <span class="adhoc-date">{{ row.statusUpdatedOn }}</span>
+        <span class="adhoc-date dms-dt">{{ row.receivedOn | dtLines }}</span>
+        <span class="adhoc-date dms-dt">{{ row.statusUpdatedOn | dtLines }}</span>
         <span class="adhoc-status">
           <span class="dms-status-pill" [ngClass]="statusClass(row)">{{ statusLabel(row) }}</span>
         </span>

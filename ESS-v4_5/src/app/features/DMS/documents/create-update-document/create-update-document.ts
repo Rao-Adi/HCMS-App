@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import * as mammoth from 'mammoth';
+import { convertDocxToHtml } from '@app/shared/utils/docx-to-html';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { AppConfigService } from '@app/core/services/app-config';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
@@ -268,7 +269,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     { field: 'previousVersionCreatedOn', headerName: 'Previous Version Created On', minWidth: 150 },
     {
       field: 'approvalHistory',
-      headerName: 'Signing Authorities',
+      headerName: 'Approval Workflow',
       editable: false,
       cellRenderer: (params: any) => {
         return `
@@ -276,7 +277,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          Signing Authorities
+          Approval Workflow
         </span>
       `;
       },
@@ -322,13 +323,13 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
     {
       field: 'approvalHistory',
-      headerName: 'Signing Authorities',
+      headerName: 'Approval Workflow',
       // LinkRenderer calls onClick() with no arguments, so the row has to come from this cell's own
       // params -- onClick(rowData) always received undefined and threw on rowData.Id.
       cellRendererSelector: (params: any) => ({
         component: LinkRenderer,
         params: {
-          label: 'Signing Authorities',
+          label: 'Approval Workflow',
           onClick: () => {
             this.openWorkflowDetailsModal(params.data);
           },
@@ -366,9 +367,21 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     private _documentReviewPolicyService: DocumentReviewPolicyService,
     private _navigationCountsService: NavigationCountsService,
     private _appConfig: AppConfigService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
+    // A link that names a tab (the dashboard's My Documents cards) opens straight on it -- e.g. ?tab=DocumentDraft is the
+    // Draft/Reverted Documents tab. Without this the page always opened on Create/Update, so those links went nowhere.
+    this.subscriptions.push(
+      this.route.queryParams.subscribe((params) => {
+        const tab = ['CreateUpdate', 'MyDocuments', 'DocumentDraft'].find(
+          (t) => t.toLowerCase() === String(params['tab'] ?? '').toLowerCase(),
+        );
+        if (tab) this.selectedTab = tab;
+      }),
+    );
+
     // Both tab badges read the shared count state rather than fetching their own. Whoever
     // triggers a refresh -- this page on load, any action through refreshAfterAction, or
     // main-layout on navigation -- every subscriber sees the same number.
@@ -879,7 +892,9 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     // Visible feedback while the request is in flight -- previously the button gave no
     // indication a click had registered at all until the response came back.
     item.retrieving = true;
-    this._documentService.MarkDistributionRetrieved(distributionId, nextState).subscribe({
+    // An "All" entry stands for many per-role rows: one click covers all of them.
+    const memberIds: number[] = item?.MemberIds ?? item?.memberIds ?? [];
+    this._documentService.MarkDistributionRetrieved(distributionId, nextState, memberIds).subscribe({
       next: (res) => {
         item.retrieving = false;
         if (res?.Success) {
@@ -1610,7 +1625,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
         if (!response.ok) throw new Error('Fetch failed');
         return response.arrayBuffer();
       })
-      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((buffer) => convertDocxToHtml(buffer))
       .then((result) => {
         if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
@@ -1640,7 +1655,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
     this.convertingUploadedFile = true;
     file
       .arrayBuffer()
-      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((buffer) => convertDocxToHtml(buffer))
       .then((result) => {
         if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
@@ -1791,7 +1806,7 @@ export class CreateUpdateDocument implements OnInit, OnDestroy {
 
   openWorkflowDetailsModal(rowData: any) {
     this.modal.create({
-      nzTitle: 'Signing Authorities & Approval History',
+      nzTitle: 'Approval Workflow',
       nzContent: AdHocApproverModal,
       // Read-only here: the chain of this document (who signs, who has, when); adding an approver is done when approving, in My Approvals.
       nzData: { documentId: Number(rowData?.Id), documentName: rowData?.Title || rowData?.DocumentName || '', readOnly: true },

@@ -282,7 +282,7 @@
                   >
                     <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
                     <div>
-                      <strong>Instructions:</strong>
+                      <strong>Instructions: </strong>
                       <span *ngIf="!showDocumentDiv && selectedTemplateType"
                         >Download the standard template, fill in the required details offline, and
                         upload your finalized draft below.</span
@@ -326,7 +326,7 @@
                     </div>
                   </div>
                   <div class="PnlHeading">
-                    <label>Upload Drafted Document (DOCX/PDF)</label>
+                    <label>Upload Drafted Document</label>
                   </div>
 
                   <!-- File Input -->
@@ -495,7 +495,7 @@
         tabindex="0"
         [disabled]="!!submitDisabledReason || isSubmitting"
         class="btn btn-info shadow-sm"
-        style="min-width: 140px; height: 35px"
+        style="width: auto !important; min-width: 140px; height: 35px"
         (click)="DraftDocumentRequests()"
       >
         <i class="bi bi-file-earmark-text me-2"></i>
@@ -508,7 +508,7 @@
         tabindex="0"
         [disabled]="!!submitDisabledReason || isSubmitting"
         class="btn btn-primary shadow-sm"
-        style="min-width: 140px; height: 35px"
+        style="width: auto !important; min-width: 140px; height: 35px"
         (click)="SubmitDocumentRequests()"
       >
         <i class="bi bi-send me-2"></i>
@@ -522,7 +522,7 @@
         tabindex="0"
         [disabled]="!!submitDisabledReason || isSubmitting"
         class="btn btn-primary shadow-sm"
-        style="min-width: 150px; height: 35px"
+        style="width: auto !important; min-width: 150px; height: 35px"
         (click)="SubmiteRevisionDocumentRequests()"
       >
         <i class="bi bi-send me-2"></i>
@@ -541,7 +541,7 @@
         <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
           <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
           <div>
-            <strong>Instructions:</strong> Please download the attached document to view it.
+            <strong>Instructions: </strong> Please download the attached document to view it.
           </div>
         </div>
         <div class="d-flex justify-content-center mt-4 mb-4">

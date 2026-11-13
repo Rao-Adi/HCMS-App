@@ -1,4 +1,5 @@
 import { openDocumentPreview } from '@app/shared/document-preview/document-preview';
+import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild, TemplateRef, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -190,22 +191,6 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       headerName: 'StartedAt',
       hide: true,
     },
-    { field: 'observation', headerName: 'Observation', hide: true },
-    // {
-    //   field: 'observation',
-    //   headerName: 'Observation',
-    //   editable: false,
-    //   cellRenderer: (params: any) => {
-    //     return `
-    //       <span
-    //         style="color:#1976d2; cursor:pointer; text-decoration:underline"
-    //         data-action="open"
-    //       >
-    //         ${params.value ? 'Observation' : 'Observation'}
-    //       </span>
-    //     `;
-    //   },
-    // },
     {
       field: 'justification',
       headerName: 'Rationale',
@@ -227,6 +212,51 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         if (val) {
           this.openJustificationModal(val);
         }
+      },
+    },
+    // The observations given on this request's approval so far (the same history the Observation panel shows).
+    {
+      field: 'observation',
+      headerName: 'My Observations',
+      editable: false,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-observations"
+          >
+            My Observations
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        if (event.data) this.openObservationHistory(event.data);
+      },
+    },
+    // Revision History of the document a Revision request is against (new requirement 2026-11-12). "-" for Obsoletion / Creation.
+    {
+      field: 'revisionHistory',
+      headerName: 'Revision History',
+      editable: false,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        if (!this.hasRevisionHistory(params.data)) return '<span>-</span>';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-revision-history"
+          >
+            Revision History
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        if (event.data && this.hasRevisionHistory(event.data)) this.openRevisionHistoryModal(event.data);
       },
     },
     // {
@@ -301,6 +331,8 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
     { field: 'documentName', label: 'Document Name', visible: true },
     { field: 'documentNumber', label: 'Document Number', visible: true },
     { field: 'justification', label: 'Rationale', visible: true },
+    { field: 'observation', label: 'My Observations', visible: true },
+    { field: 'revisionHistory', label: 'Revision History', visible: true },
     // { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
     { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
     // { field: 'dateOfApproval', label: 'Date Of Approval', visible: true },
@@ -388,6 +420,8 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
         { field: 'documentName', label: 'Document Name', visible: true },
         { field: 'documentNumber', label: 'Document Number', visible: true },
         { field: 'justification', label: 'Rationale', visible: true },
+        { field: 'observation', label: 'My Observations', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
         // { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
         { field: 'proposedVersionNumber', label: 'Proposed Version Number', visible: true },
         ...activeLevelDefs.map((def) => ({ field: def.field, label: def.title, visible: true })),
@@ -543,6 +577,9 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
                 // proposedDocumentNumber above, which shows a still-movable PROPOSED number even
                 // for a Creation request.
                 documentNumber: get(['TargetDocumentNumber', 'targetDocumentNumber']),
+                // For the Revision History link: which kind of request this is (DRT-0002 = Revision) and the document it targets.
+                requestTypeCode: get(['DocumentRequestTypeCode', 'documentRequestTypeCode']),
+                targetDocumentId: get(['TargetDocumentId', 'targetDocumentId'], null),
                 proposedVersionNumber: get(
                   ['ProposedVersionNumber', 'proposedVersionNumber', 'RowVersion', 'rowVersion'],
                   '1.0',
@@ -770,6 +807,42 @@ export class MyApprovalRequest implements OnInit, OnDestroy {
       // Only the X closes it: no Close button in the footer.
       nzFooter: null,
       nzWidth: 600,
+    });
+  }
+
+  hasRevisionHistory(row: any): boolean {
+    // A Revision or an Obsoletion is against an existing document, which has a history of versions to show.
+    const code = String(row?.requestTypeCode ?? '').toUpperCase();
+    return (code === 'DRT-0002' || code === 'DRT-0003') && !!row?.targetDocumentId;
+  }
+
+  // RevisionHistoryModal reads documentId from the row it is given -- here, the document the request revises.
+  openRevisionHistoryModal(row: any): void {
+    this.modal.create({
+      nzTitle: 'Revision History',
+      nzContent: RevisionHistoryModal,
+      nzData: { data: { documentId: row.targetDocumentId } },
+      nzFooter: null,
+      nzWidth: '70%',
+    });
+  }
+
+  // The "My Observations" link of a row: everything observed on that request so far, in the same dialog the document screen uses.
+  openObservationHistory(rowData: any) {
+    this.modal.create({
+      nzTitle: 'Observation',
+      nzContent: WorkflowObservationDialogComponent,
+      nzData: {
+        id: rowData.Id ?? rowData.id,
+        entityType: 'Request',
+        mode: 'view',
+        action: 'Approver',
+        // 'All' (not the tab): the backend filter matches a step's own decision, so 'Pending' matched nothing and 'Rejected'
+        // left out reverted steps -- see loadObservations.
+        decision: 'All',
+      },
+      nzFooter: null,
+      nzWidth: '70%',
     });
   }
 

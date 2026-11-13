@@ -27,6 +27,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { WorkflowObservationDialogComponent } from '@app/shared/Dialog/workflow-observation-dialog-component/workflow-observation-dialog-component';
 import { getWorkflowActionLabel, getWorkflowSuccessMessage } from '@app/shared/utils/workflow-action-label';
 import { DistributionListModal } from '../distribution-list-modal/distribution-list-modal';
+import { RevisionHistoryModal } from '../revision-history-modal/revision-history-modal';
 import { EmployeeDraftObservationService } from '@app/shared/services/employee-draft-observation.service';
 import { DocumentAttributeService } from '@app/shared/services/document-attribute.service';
 import { DynamicFormByDocumentAttribute } from '@app/shared/dynamic-forms/dynamic-form-by-document-attribute/dynamic-form-by-document-attribute';
@@ -92,6 +93,8 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   formId = 'myapprovals';
 
   selectedTab: string = 'Pending';
+  // Filter of the Pending tab: null = every pending document, 'DueReview' = the documents due for review (Re-approve).
+  pendingFilter: string | null = null;
 
   selectedDivisions?: string = '';
   selectedDepartment?: string = '';
@@ -166,7 +169,10 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'documentType', label: 'Document Type', visible: true },
     { field: 'documentId', label: 'Document ID', visible: true },
     { field: 'documentName', label: 'Document Name', visible: true },
+    { field: 'requestType', label: 'Request Type', visible: true },
     { field: 'justification', label: 'Rationale', visible: true },
+    { field: 'observation', label: 'My Observations', visible: true },
+    { field: 'revisionHistory', label: 'Revision History', visible: true },
     { field: 'distributionList', label: 'Distribution List', visible: true },
     { field: 'company', label: 'Company', visible: true },
     { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
@@ -180,28 +186,19 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
   ];
 
+  private requestTypeLabel(code: any): string {
+    switch (String(code ?? '').trim().toUpperCase()) {
+      case 'DRT-0002':
+        return 'Revision';
+      case 'DRT-0003':
+        return 'Obsoletion';
+      default:
+        return 'New Document';
+    }
+  }
+
   private readonly leadingColumnDefs: ColDef[] = [
     { field: 'executionId', headerName: 'ExecutionId', hide: true },
-    { field: 'observation', headerName: 'Observation', hide: true },
-    // {
-    //   field: 'observation',
-    //   headerName: 'Observation',
-    //   editable: false,
-    //   cellRenderer: (params: any) => {
-    //     if (!params.data) return '';
-    //     return `
-    //     <span
-    //       style="color:#1976d2; cursor:pointer; text-decoration:underline"
-    //       data-action="open"
-    //     >
-    //       Observation
-    //     </span>
-    //   `;
-    //   },
-    //   onCellClicked: (event: any) => {
-    //     this.openObservationModal(event.data);
-    //   },
-    // },
     { field: 'documentType', headerName: 'Document Type'},
     { field: 'documentTypeCode', headerName: 'DocumentTypeCode', hide: true },
     { field: 'documentId', headerName: 'Document ID' },
@@ -221,6 +218,22 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       },
       onCellClicked: (event: any) => {
         this.openDocumentModal(event.data);
+      },
+    },
+    // New Document / Revision / Obsoletion -- the grid did not say which one an approval is for.
+    {
+      field: 'requestType',
+      headerName: 'Request Type',
+      // A coloured pill, like the statuses (see .dms-type-* in styles.css).
+      cellRenderer: (params: any) => {
+        const label = String(params.value ?? '');
+        if (!label) return '';
+        const tone = label === 'Revision' ? 'revision' : label === 'Obsoletion' ? 'obsoletion' : 'new';
+        // On the Approved tab the work is done, so it reads in the past tense: Revised / Obsoleted. (The value itself stays
+        // Revision / Obsoletion -- sorting and the links in this row go by it.)
+        const done = this.selectedTab === 'Approved';
+        const shown = done && label === 'Revision' ? 'Revised' : done && label === 'Obsoletion' ? 'Obsoleted' : label;
+        return `<span class="dms-status-pill dms-type-${tone}">${shown}</span>`;
       },
     },
     {
@@ -244,6 +257,52 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         if (val) {
           this.openJustificationModal(val);
         }
+      },
+    },
+    // The observations given on this document's approval so far (opens the same history the Observation panel shows).
+    {
+      field: 'observation',
+      headerName: 'My Observations',
+      editable: false,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-observations"
+          >
+            My Observations
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        if (event.data) this.openObservationModal(event.data);
+      },
+    },
+    // Revision History of the document, for a Revision approval (new requirement 2026-11-12). A New Document has none ("-").
+    {
+      field: 'revisionHistory',
+      headerName: 'Revision History',
+      editable: false,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        // A Revision and an Obsoletion are both against a document that has versions to show; only a New Document has none.
+        if (params.data.requestType !== 'Revision' && params.data.requestType !== 'Obsoletion') return '<span>-</span>';
+        return `
+          <span
+            style="color:#1976d2; cursor:pointer; text-decoration:underline"
+            data-action="open-revision-history"
+          >
+            Revision History
+          </span>
+        `;
+      },
+      onCellClicked: (event: any) => {
+        if (event.data?.requestType === 'Revision' || event.data?.requestType === 'Obsoletion') this.openRevisionHistoryModal(event.data);
       },
     },
     // The Distribution List the document carries, shown to the approver on every row that has one -- Creation,
@@ -325,19 +384,19 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   pendingTabColumnDefs: ColDef[] = [];
   pendingTabColumnToggles?: ColumnToggle[];
 
-  // "Signing Authorities" link: opens a modal showing everyone who signs this document, in order. Every approver gets
+  // "Approval Workflow" link: opens a modal showing everyone who signs this document, in order. Every approver gets
   // it; only on rows the server says the approver may add to (canAddAdHoc, see loadAdHocAuthority) does the modal also
   // offer adding an ad-hoc approver, and the label then carries how many have been chosen so far.
   private readonly adHocColumnDef: ColDef = {
     field: 'adHocApprover',
-    headerName: 'Signing Authorities',
+    headerName: 'Approval Workflow',
     editable: false,
     sortable: false,
     filter: false,
     cellRenderer: (params: any) => {
       if (!Number(params.data?.ExecutionId)) return '<span>-</span>';
       const count = params.data?.canAddAdHoc ? params.data?.adHocCount || 0 : 0;
-      const label = count > 0 ? 'Signing Authorities (' + count + ')' : 'Signing Authorities';
+      const label = count > 0 ? 'Approval Workflow (' + count + ')' : 'Approval Workflow';
       return (
         '<span style="color:#1976d2; cursor:pointer; text-decoration:underline" data-action="open-adhoc">' +
         label +
@@ -430,9 +489,18 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         const canonicalTab = ['Pending', 'Approved', 'Rejected', 'DueReview'].find(
           (t) => t.toLowerCase() === String(params['tab']).toLowerCase(),
         );
-        if (canonicalTab) {
+        if (canonicalTab === 'DueReview') {
+          // "Due for Review" is no longer a tab: it is a filter of the Pending tab (older links and bookmarks still land there).
+          this.selectedTab = 'Pending';
+          this.pendingFilter = 'DueReview';
+        } else if (canonicalTab) {
           this.selectedTab = canonicalTab;
         }
+      }
+      // ?tab=Pending&filter=DueReview (the dashboard's "Documents Approaching Review").
+      if (String(params['filter'] || '').toLowerCase() === 'duereview') {
+        this.selectedTab = 'Pending';
+        this.pendingFilter = 'DueReview';
       }
     });
 
@@ -458,7 +526,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         }));
       this.activeCabinetLevels = activeLevelDefs.map((def) => ({ field: def.field, title: def.title }));
 
-      // "Signing Authorities" is the one place that shows who signs a document and where it stands (tick + Approved / Pending, with dates),
+      // "Approval Workflow" is the one place that shows who signs a document and where it stands (tick + Approved / Pending, with dates),
       // so it is on every tab; there is no separate Approval History.
       this.pendingDocumentsGridColumnDefs = this.withAdHocColumn([
         ...this.leadingColumnDefs,
@@ -474,7 +542,10 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
         { field: 'documentType', label: 'Document Type', visible: true },
         { field: 'documentId', label: 'Document ID', visible: true },
         { field: 'documentName', label: 'Document Name', visible: true },
+        { field: 'requestType', label: 'Request Type', visible: true },
         { field: 'justification', label: 'Rationale', visible: true },
+    { field: 'observation', label: 'My Observations', visible: true },
+        { field: 'revisionHistory', label: 'Revision History', visible: true },
         { field: 'distributionList', label: 'Distribution List', visible: true },
         { field: 'company', label: 'Company', visible: true },
         { field: 'proposedDocumentNumber', label: 'Proposed Document Number', visible: true },
@@ -708,6 +779,9 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
               // which case it's in -- see openDistributionListModal.
               distributionList: get(['DistributionList', 'distributionList'], []),
               activityTypeCode: get(['ActivityTypeCode', 'activityTypeCode'], ''),
+              // What this approval is for: a new document, a revision of an existing one, or its obsoletion. Creation carries
+              // no activity code (or DRT-0001), so anything else than the two codes below reads as a new document.
+              requestType: this.requestTypeLabel(get(['ActivityTypeCode', 'activityTypeCode'], '')),
             };
           });
           if (requestedTab === 'Pending') this.loadAdHocAuthority();
@@ -728,7 +802,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     });
   }
 
-  // Puts the "Signing Authorities" column right after "Distribution List" (or at the end if that one is not
+  // Puts the "Approval Workflow" column right after "Distribution List" (or at the end if that one is not
   // on the grid).
   private withAdHocColumn(defs: ColDef[]): ColDef[] {
     const at = defs.findIndex((c) => c.field === 'distributionList');
@@ -742,7 +816,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     const copy = [...toggles];
     copy.splice(at >= 0 ? at + 1 : copy.length, 0, {
       field: 'adHocApprover',
-      label: 'Signing Authorities',
+      label: 'Approval Workflow',
       visible: true,
     });
     return copy;
@@ -774,7 +848,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     if (!executionId) return;
 
     const modalRef = this.modal.create({
-      nzTitle: 'Signing Authorities & Approval History',
+      nzTitle: 'Approval Workflow',
       nzContent: AdHocApproverModal,
       nzData: {
         executionId,
@@ -809,6 +883,16 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
   // reasons not worth chasing further. Moved to a real component (DistributionListModal, same
   // pattern as RevisionHistoryModal/UsersInRoleModal), using the exact Bootstrap `table` markup
   // that already renders correctly elsewhere in this app.
+  openRevisionHistoryModal(row: any): void {
+    this.modal.create({
+      nzTitle: 'Revision History',
+      nzContent: RevisionHistoryModal,
+      nzData: { data: row },
+      nzFooter: null,
+      nzWidth: '70%',
+    });
+  }
+
   openDistributionListModal(distributionList: any[], activityTypeCode?: string): void {
     const modalRef = this.modal.create({
       nzTitle: 'Distribution List',
@@ -953,8 +1037,15 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
     }
   }
 
+  // The Pending tab's Filter dropdown: 'DueReview' swaps the Pending list for the documents due for review; cleared = the Pending list again.
+  onPendingFilterChange(value: string | null) {
+    this.pendingFilter = value || null;
+    this.emptyAllFileds();
+  }
+
   async onTabChange(status: string) {
     this.selectedTab = status;
+    this.pendingFilter = null;
     this.emptyAllFileds();
   }
 
@@ -1267,7 +1358,7 @@ export class MyApprovalDocument implements OnInit, OnDestroy {
       nzTitle: 'Observation',
       nzContent: WorkflowObservationDialogComponent,
       nzData: {
-        id: rowData.Id,
+        id: rowData.Id ?? rowData.id,
         entityType: 'Document',
         mode: 'view',
         action: 'Approver',

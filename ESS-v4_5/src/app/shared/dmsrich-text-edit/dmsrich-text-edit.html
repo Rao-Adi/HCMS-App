@@ -81,7 +81,10 @@
       <span class="dms-ai-diff-add">added</span>
     </div>
 
-    <div class="dms-ai-review-body">
+    <!-- The original document as it is laid out (tables, lists), with the edits marked. Falls back to plain marked text. -->
+    <div class="dms-ai-review-body dms-ai-review-doc" *ngIf="aiDiffHtml" [innerHTML]="aiDiffHtml"></div>
+
+    <div class="dms-ai-review-body" *ngIf="!aiDiffHtml">
       <ng-container *ngFor="let seg of aiDiff"
         ><span
           [class.dms-ai-diff-del]="seg.type === 'del'"

@@ -253,6 +253,15 @@
   font-size: 24px;
   line-height: 1;
   color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.dms-ai-review-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
 }
 
 .dms-ai-review-legend {
@@ -276,6 +285,25 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* The review laid out like the document: tables with their borders, lists with their bullets / numbers. */
+.dms-ai-review-doc {
+  white-space: normal;
+  background: #fff;
+}
+.dms-ai-review-doc p { margin: 0 0 4px; }
+.dms-ai-review-doc table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: inherit; }
+.dms-ai-review-doc td, .dms-ai-review-doc th { border: 1px solid #94a3b8; padding: 4px 8px; vertical-align: top; }
+.dms-ai-review-doc ul, .dms-ai-review-doc ol { margin: 0 0 4px; padding-left: 22px; }
+.dms-ai-review-doc ul { list-style: disc; }
+.dms-ai-review-doc ol { list-style: none; counter-reset: ai-li; }
+/* Quill writes every list as an <ol>; a bullet item says so in data-list. */
+.dms-ai-review-doc li { position: relative; }
+.dms-ai-review-doc li .ql-ui { display: none; }
+.dms-ai-review-doc li[data-list='bullet']::before { content: '\2022'; position: absolute; left: -16px; }
+.dms-ai-review-doc li[data-list='ordered'] { counter-increment: ai-li; }
+.dms-ai-review-doc li[data-list='ordered']::before { content: counter(ai-li) '.'; position: absolute; left: -20px; }
+.dms-ai-review-doc ins { text-decoration: none; }
 
 .dms-ai-diff-del {
   background: #fee2e2;
@@ -369,4 +397,19 @@ app-dmsrich-text-edit.dms-editor-full quill-editor .ql-container {
 }
 body.dms-editor-fs-open {
   overflow: hidden;
+}
+
+/* Tables from an uploaded Word file keep how their borders looked there (see docx-to-html.ts): the row id says which look.
+   Only horizontal lines (a line under each row), only vertical lines, or none at all. A full grid has no marker and stays as it is. */
+.ql-editor td[data-row^="dxh-"] {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.ql-editor td[data-row^="dxv-"] {
+  border-top: none;
+  border-bottom: none;
+}
+.ql-editor td[data-row^="dxn-"] {
+  border: none;
 }

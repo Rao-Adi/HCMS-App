@@ -30,7 +30,9 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { VERSION } from '@angular/core';
 import { DmsAiService } from '@app/shared/services/dms-ai.service';
-import { normalizePastedTables, pastedColorMatcher, wordListMatcher } from '@app/shared/utils/quill-word-paste';
+import { buildReviewHtml, reviewTokens } from '@app/shared/utils/ai-review-diff';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { normalizeLoadedTables, normalizePastedTables, pastedColorMatcher, tableBorderMatcher, wordListMatcher } from '@app/shared/utils/quill-word-paste';
 
 /** One run of text in the AI review dialog: unchanged, removed by the AI, or added by it. */
 export interface DiffSegment {
@@ -152,6 +154,7 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
   constructor(
     private _dmsAi: DmsAiService,
     private _cdr: ChangeDetectorRef,
+    private _sanitizer: DomSanitizer,
   ) {}
 
   // ── AI proofreading ───────────────────────────────────────────────────────
@@ -164,6 +167,8 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
   aiIsError = false;
   /** What the AI changed, as the original text with each edit marked -- shown in the review dialog. */
   aiDiff: DiffSegment[] = [];
+  /** The same review laid out on the original document (tables, lists, headings kept). */
+  aiDiffHtml: SafeHtml | null = null;
   aiChangeCount = 0;
   aiReviewOpen = false;
 
@@ -223,6 +228,7 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
 
         this.aiSuggestion = result.correctedHtml;
         this.aiDiff = diff.segments;
+        this.aiDiffHtml = diff.html ? this._sanitizer.bypassSecurityTrustHtml(diff.html) : null;
         this.aiChangeCount = diff.changeCount;
         // Opened straight away: the author is shown exactly what will change before anything is
         // written, instead of a bar offering to apply a correction they cannot see.
@@ -298,6 +304,7 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
   private clearReview(): void {
     this.aiReviewOpen = false;
     this.aiDiff = [];
+    this.aiDiffHtml = null;
     this.aiChangeCount = 0;
   }
 
@@ -317,10 +324,11 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
    * counts as the same if it matches ignoring surrounding whitespace, so a line break moving does
    * not read as an edit.
    */
-  private buildWordDiff(originalHtml: string, correctedHtml: string): { segments: DiffSegment[]; changeCount: number } {
-    const tokenise = (text: string) => text.match(/\S+\s*/g) ?? [];
-    const a = tokenise(this.htmlToText(originalHtml));
-    const b = tokenise(this.htmlToText(correctedHtml));
+  private buildWordDiff(originalHtml: string, correctedHtml: string): { segments: DiffSegment[]; changeCount: number; html: string | null } {
+    // Both documents are read block by block (a line break between table cells, list items, paragraphs), the same way the
+    // formatted review below is laid out.
+    const a = reviewTokens(originalHtml);
+    const b = reviewTokens(correctedHtml);
     const key = (t: string) => t.trim();
 
     // Most of a document is untouched, so peel the common start and end off first; the diff proper
@@ -341,15 +349,22 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
     if (middle === null) {
       // Too many differences to lay out word by word: show the middle as one removal and one
       // addition rather than not showing the review at all.
-      const removed = a.slice(start, endA).join('');
-      const added = b.slice(start, endB).join('');
-      if (removed) edits.push({ type: 'del', text: removed });
-      if (added) edits.push({ type: 'add', text: added });
+      // (One edit per word, as everywhere else, so the formatted review lines up with the words.)
+      a.slice(start, endA).forEach((t) => edits.push({ type: 'del', text: t }));
+      b.slice(start, endB).forEach((t) => edits.push({ type: 'add', text: t }));
     } else {
       edits.push(...middle);
     }
 
     for (let i = endA; i < a.length; i++) edits.push({ type: 'same', text: a[i] });
+
+    // The same edits, one per word, written onto the original document so its tables and lists stay as they are.
+    let html: string | null = null;
+    try {
+      html = buildReviewHtml(originalHtml, edits);
+    } catch {
+      html = null; // the plain-text review below still works
+    }
 
     // Merge neighbours of the same kind so the view is a few runs, not one span per word.
     const segments: DiffSegment[] = [];
@@ -370,7 +385,7 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
       }
     }
 
-    return { segments, changeCount };
+    return { segments, changeCount, html };
   }
 
   /**
@@ -478,7 +493,7 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
       const incoming = this.contentHtml || '';
       if (incoming !== current) {
         if (incoming) {
-          this.editor.quillEditor.clipboard.dangerouslyPasteHTML(incoming);
+          this.editor.quillEditor.clipboard.dangerouslyPasteHTML(normalizeLoadedTables(incoming));
         } else {
           this.editor.quillEditor.setText('');
         }
@@ -491,6 +506,8 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
   quill.clipboard.addMatcher(Node.ELEMENT_NODE, wordListMatcher);
   // Light text / dark background brought along from a dark page would make the pasted block unreadable on the white document.
   quill.clipboard.addMatcher(Node.ELEMENT_NODE, pastedColorMatcher);
+  // A table from an uploaded Word file keeps its border look (only horizontal lines, none ...); Quill numbers pasted rows itself and would drop it.
+  quill.clipboard.addMatcher('tr', tableBorderMatcher);
 
   // A table pasted from Word (cells with several paragraphs / bullets, merged cells) is tidied into a plain grid first; Quill's cells hold one
   // line each, and it used to cut such a table into pieces. Runs before Quill's own paste handling and only when the clipboard holds a table.
@@ -509,7 +526,7 @@ export class DMSRichTextEdit implements OnInit, OnDestroy {
   );
 
   if (this.contentHtml) {
-    quill.clipboard.dangerouslyPasteHTML(this.contentHtml);
+    quill.clipboard.dangerouslyPasteHTML(normalizeLoadedTables(this.contentHtml));
   }
 
   // The instance only exists from here on, so a read-only editor has to be locked at creation

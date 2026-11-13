@@ -176,10 +176,10 @@ export class DashboardComponent implements OnInit {
           title: 'My Documents',
           visible: () => this.canSeeMyDocuments,
           cards: [
-            { label: 'Pending', color: 'blue', icon: 'bi-file-earmark-text', value: n('MyDocumentsPending'), go: to('/documents/create-update-document') },
+            { label: 'Pending', color: 'blue', icon: 'bi-file-earmark-text', value: n('MyDocumentsPending'), go: to('/documents/create-update-document', { tab: 'MyDocuments' }) },
             { label: 'Approved', color: 'green', icon: 'bi-check-circle', value: n('MyDocumentsApproved'), go: to('/reports/viewapproved') },
-            { label: 'Rejected', color: 'red', icon: 'bi-x-circle', value: n('MyDocumentsRejected'), go: to('/documents/create-update-document') },
-            { label: 'Reverted', color: 'amber', icon: 'bi-arrow-repeat', value: n('MyDocumentsReverted'), go: to('/documents/create-update-document') },
+            { label: 'Rejected', color: 'red', icon: 'bi-x-circle', value: n('MyDocumentsRejected'), go: to('/documents/create-update-document', { tab: 'MyDocuments' }) },
+            { label: 'Reverted', color: 'amber', icon: 'bi-arrow-repeat', value: n('MyDocumentsReverted'), go: to('/documents/create-update-document', { tab: 'DocumentDraft' }) },
           ],
         },
         {
@@ -262,7 +262,7 @@ export class DashboardComponent implements OnInit {
 
   // Documents Approaching Review -> the Due for Review tab of My Approvals - Documents, where they can be re-approved.
   openDueForReview(): void {
-    this.router.navigate(['/documents/my-approvals-documents'], { queryParams: { tab: 'DueReview' } });
+    this.router.navigate(['/documents/my-approvals-documents'], { queryParams: { tab: 'Pending', filter: 'DueReview' } });
   }
 
   navigateTo(url: string, queryParams?: any): void {

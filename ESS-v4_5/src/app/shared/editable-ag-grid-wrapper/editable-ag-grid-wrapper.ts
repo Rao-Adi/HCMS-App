@@ -41,6 +41,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { SwitchRenderer } from '../ag-grid-renderers/switch-cell-renderer/switchrenderer';
 import { SafeTranslatePipe } from '../pipes/filter-label/safeTranslate.pipe';
+import { splitDateTime } from '@app/shared/utils/date-time-lines';
 
 export interface GridColumn<T = any> {
   field: string;
@@ -972,7 +973,7 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
   }
 
   private highlightByFilter(params: ICellRendererParams): HTMLElement {
-    const text =
+    let text =
       params.valueFormatted != null
         ? String(params.valueFormatted)
         : params.value == null
@@ -980,6 +981,13 @@ export class EditableAgGridWrapper implements OnInit, OnChanges {
           : String(params.value);
 
     const span = document.createElement('span');
+    // A date-time reads as two lines (date, then time), like every other grid.
+    const dateTime = splitDateTime(text);
+    if (dateTime) {
+      text = `${dateTime[0]}\n${dateTime[1]}`;
+      span.style.whiteSpace = 'pre-line';
+      span.style.lineHeight = '1.4';
+    }
     const escapeHtml = (s: string) =>
       s
         .replace(/&/g, '&amp;')

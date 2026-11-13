@@ -128,7 +128,7 @@ export class DocumentAuthorizationPostTraining {
     { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
     { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
     { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-    { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
+    { field: 'approvalHistory', label: 'Approval Workflow', visible: true },
     { field: 'revisionHistory', label: 'Revision History', visible: true },
   ];
 
@@ -234,7 +234,7 @@ export class DocumentAuthorizationPostTraining {
     },
     {
       field: 'approvalHistory',
-      headerName: 'Signing Authorities',
+      headerName: 'Approval Workflow',
       editable: false,
       minWidth: 120,
       cellRenderer: (params: any) => {
@@ -244,7 +244,7 @@ export class DocumentAuthorizationPostTraining {
           style="color:#1976d2; cursor:pointer; text-decoration:underline"
           data-action="open"
         >
-          Signing Authorities
+          Approval Workflow
         </span>
       `;
       },
@@ -327,7 +327,7 @@ export class DocumentAuthorizationPostTraining {
         { field: 'requestCreatedOn', label: 'Request Created On', visible: true },
         { field: 'previousVersionCreatedBy', label: 'Previous Version Created By', visible: true },
         { field: 'previousVersionCreatedOn', label: 'Previous Version Created On', visible: true },
-        { field: 'approvalHistory', label: 'Signing Authorities', visible: true },
+        { field: 'approvalHistory', label: 'Approval Workflow', visible: true },
         { field: 'revisionHistory', label: 'Revision History', visible: true },
       ];
     });
@@ -770,7 +770,7 @@ export class DocumentAuthorizationPostTraining {
 
   openApprovalHistoryModal(row: any): void {
     this.modal.create({
-      nzTitle: 'Signing Authorities & Approval History',
+      nzTitle: 'Approval Workflow',
       nzContent: AdHocApproverModal,
       // Read-only here: the chain of this document (who signs, who has, when); adding an approver is done when approving, in My Approvals.
       nzData: { documentId: Number(row?.id), documentName: row?.title || row?.Title || row?.documentName || '', readOnly: true },

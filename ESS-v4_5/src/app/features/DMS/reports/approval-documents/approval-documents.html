@@ -214,23 +214,9 @@
        document, each resolved to the employee(s) actually holding that role (backend LEFT JOIN
        to TblEmpJobProfile/tblEmployee) -- e.g. selecting "ALL" roles produces one row per company
        role, fanned out to one row per employee holding it, blank if nobody currently does. -->
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <span class="text-muted">
-      {{ filteredRoleDistributions.length }} of {{ selectedRoleDistributions.length }}
-    </span>
-    <input
-      type="text"
-      class="form-control"
-      style="max-width: 260px"
-      placeholder="Search by role, code or name"
-      [ngModel]="distributionListSearchText"
-      (ngModelChange)="onDistributionSearchChange($event)"
-    />
-  </div>
-  <!-- AgGridWrapper's own search box only works when a parent listens for (serverQuery) -- this
-       data is already fully loaded client-side, so search stays the plain input above (filtering
-       filteredRoleDistributions before the grid ever sees it) while the grid itself is only
-       responsible for pagination, which its client-side row model handles natively.
+  <!-- One search box only: the grid's own (it filters a client-side grid by itself, see AgGridWrapper.onSearchModelChange).
+       The separate "Search by role, code or name" box above it was removed.
+       The data is fully loaded client-side, so the grid's client-side row model does the paging and the search.
        [rowData]/[gridStyle] are both plain component fields, not inline literals/getters -- either
        would hand AG Grid a new reference on every change-detection cycle instead of only when the
        data or style genuinely changes, which is what made the grid appear stuck/frozen before. -->
@@ -256,7 +242,7 @@
         <div class="alert alert-info d-flex align-items-center mb-4" style="font-size: 14px">
           <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
           <div>
-            <strong>Instructions:</strong> Please download the attached document to view it.
+            <strong>Instructions: </strong> Please download the attached document to view it.
           </div>
         </div>
         <div class="d-flex justify-content-center mt-4 mb-4">

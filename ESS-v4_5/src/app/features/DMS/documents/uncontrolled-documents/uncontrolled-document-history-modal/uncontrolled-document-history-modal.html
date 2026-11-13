@@ -4,23 +4,30 @@
   No review history yet — this document hasn't been re-reviewed since it was uploaded.
 </div>
 
+<div class="mb-2" *ngIf="!loading && history.length > 0">
+  <input class="form-control" style="width: 250px" placeholder="Search" [value]="searchText" (input)="searchText = $any($event.target).value" />
+</div>
+
 <table class="dms-popup-table" *ngIf="!loading && history.length > 0">
   <thead>
     <tr>
-      <th>Reviewed By</th>
-      <th>Reviewed On</th>
-      <th>Previous Review Date</th>
-      <th>New Review Date</th>
+      <th class="dms-th-sort" [class.is-sorted]="sort.key === 'reviewedByName'" (click)="sortBy('reviewedByName')">Reviewed By<i class="bi" [ngClass]="icon('reviewedByName')"></i></th>
+      <th class="dms-th-sort" [class.is-sorted]="sort.key === 'reviewedAt'" (click)="sortBy('reviewedAt')">Reviewed On<i class="bi" [ngClass]="icon('reviewedAt')"></i></th>
+      <th class="dms-th-sort" [class.is-sorted]="sort.key === 'previousReviewDate'" (click)="sortBy('previousReviewDate')">Previous Review Date<i class="bi" [ngClass]="icon('previousReviewDate')"></i></th>
+      <th class="dms-th-sort" [class.is-sorted]="sort.key === 'newReviewDate'" (click)="sortBy('newReviewDate')">New Review Date<i class="bi" [ngClass]="icon('newReviewDate')"></i></th>
       <th>Previous File</th>
       <th>New File</th>
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let h of history">
+    <tr *ngIf="sortedHistory.length === 0">
+      <td colspan="6" class="text-center text-muted">No data</td>
+    </tr>
+    <tr *ngFor="let h of sortedHistory">
       <td>{{ h.reviewedByName }}</td>
-      <td>{{ h.reviewedAt }}</td>
-      <td>{{ h.previousReviewDate }}</td>
-      <td>{{ h.newReviewDate }}</td>
+      <td class="dms-dt">{{ h.reviewedAt | dtLines }}</td>
+      <td class="dms-dt">{{ h.previousReviewDate | dtLines }}</td>
+      <td class="dms-dt">{{ h.newReviewDate | dtLines }}</td>
       <td>
         <a [href]="h.previousDocumentURL" target="_blank" *ngIf="h.previousDocumentURL">View</a>
         <span *ngIf="!h.previousDocumentURL">-</span>

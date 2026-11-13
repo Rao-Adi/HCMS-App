@@ -168,7 +168,26 @@ function cellIsEmpty(html: string): boolean {
   return !probe.textContent?.replace(/[\s ]+/g, '') && !probe.querySelector('img');
 }
 
+// A table's border look travels in the data-row of its rows: "dx<h|v|n>-<table>-<row>" (see docx-to-html.ts). Quill keeps a cell's data-row
+// as its row id, but when HTML is pasted it numbers the rows itself (1, 2, 3 ...) and the look would be lost -- this matcher, run on the
+// row after Quill's own, puts the id the HTML carries back.
+const BORDER_ROW_ID = /^dx[hvn]-\d+-\d+$/;
+
+export function tableBorderMatcher(node: Node, delta: any): any {
+  const row = node as HTMLElement;
+  const id = row.querySelector?.('td, th')?.getAttribute('data-row') || '';
+  if (!BORDER_ROW_ID.test(id)) return delta;
+  for (const op of delta.ops || []) {
+    if (op.attributes && op.attributes.table !== undefined) op.attributes.table = id;
+  }
+  return delta;
+}
+
 function normalizeTable(table: HTMLTableElement): void {
+  // The border look of the table being rewritten (its rows are rebuilt below, so it has to be carried over by hand).
+  const firstId = table.querySelector('td, th')?.getAttribute('data-row') || '';
+  const look = /^dx([hvn])-(\d+)-\d+$/.exec(firstId);
+
   const grid: string[][] = [];
   const taken: boolean[][] = [];
   Array.from(table.rows).forEach((row, r) => {
@@ -206,17 +225,43 @@ function normalizeTable(table: HTMLTableElement): void {
 
   const fresh = document.createElement('table');
   const body = document.createElement('tbody');
-  rows.forEach((row) => {
+  rows.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     keep.forEach((i) => {
       const td = document.createElement('td');
       td.innerHTML = row[i] || '<br>';
+      if (look) td.setAttribute('data-row', `dx${look[1]}-${look[2]}-${rowIndex}`);
       tr.appendChild(td);
     });
     body.appendChild(tr);
   });
   fresh.appendChild(body);
   table.replaceWith(fresh);
+}
+
+// HTML loaded into the editor from elsewhere (an uploaded .docx converted by mammoth, saved content) never goes through the paste
+// handler, so a table whose cell holds a bullet list or several paragraphs was cut apart by Quill the same way. Only a table that
+// needs it is rewritten -- one with a list or several paragraphs in a cell, or merged cells; any other table is left exactly as it is.
+export function normalizeLoadedTables(html: string): string {
+  if (!html || !/<table/i.test(html)) return html;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  let changed = false;
+  Array.from(doc.querySelectorAll('table'))
+    .filter((t) => !t.parentElement?.closest('table'))
+    .forEach((t) => {
+      // A row with fewer cells than the others (Word lets a row stop short of the last column) leaves Quill a ragged
+      // table: the missing cell has no border and the row looks cut off. normalizeTable pads such rows to the full width.
+      const rowWidths = Array.from(t.rows).map((row) => row.cells.length);
+      const ragged = rowWidths.some((w) => w !== rowWidths[0]);
+      const needs =
+        ragged ||
+        !!t.querySelector('li, [colspan], [rowspan]') ||
+        Array.from(t.querySelectorAll('td, th')).some((c) => c.querySelectorAll('p, div').length > 1);
+      if (!needs) return;
+      normalizeTable(t as HTMLTableElement);
+      changed = true;
+    });
+  return changed ? doc.body.innerHTML : html;
 }
 
 export function normalizePastedTables(html: string): string {

@@ -268,7 +268,7 @@ export class DRDistributionList {
     const norm = (v: any) => String(unitValue(v) ?? '');
     const role = norm(row?.roleId);
 
-    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map(norm).join('|');
+    const unit = (r: any) => this.unitKey(r);
     const taken = this.distributionListData.some(
       (r, i) => i !== ignoreIndex && norm(r.roleId) === role && unit(r) === unit(row),
     );
@@ -288,10 +288,29 @@ export class DRDistributionList {
   private roleIsTakenForRow(row: any, roleValue: any): boolean {
     const norm = (v: any) => String(unitValue(v) ?? '');
     const role = norm(roleValue);
-    const unit = (r: any) => [r?.level1Id, r?.level2Id, r?.level3Id].map(norm).join('|');
+    const unit = (r: any) => this.unitKey(r);
     const inList = this.distributionListData.filter((r) => norm(r.roleId) === role && unit(r) === unit(row)).length;
     const own = norm(row?.roleId) === role ? 1 : 0;
     return inList > own;
+  }
+
+  // The Division / Department / Sub-Department of a row as one key. A Department / Sub-Department that a Role filled in by itself
+  // is not something the person chose, so it does not count (otherwise a role added once would look like a different unit
+  // from the blank add row and be offered again).
+  private unitKey(r: any): string {
+    const norm = (v: any) => String(unitValue(v) ?? '');
+    let autoDept = !!r?.autoFilledDepartment;
+    let autoSub = !!r?.autoFilledSubDepartment;
+    // A row loaded from the server (saved draft / request being revised) has no auto-fill flags, so a Department / Sub-Department
+    // its Role had filled in looked like one the person chose. Work out again what the Role would fill in; if it is the
+    // value stored, treat it as auto-filled, the same as for a row added in this session.
+    if (r && r.autoFilledDepartment === undefined && r.autoFilledSubDepartment === undefined && unitValue(r.roleId)) {
+      const probe: any = { level1Id: r.level1Id, roleId: r.roleId };
+      fillUnitFromRole(this.org, probe, 'roleId');
+      autoDept = !!probe.autoFilledDepartment && norm(probe.level2Id) === norm(r.level2Id);
+      autoSub = !!probe.autoFilledSubDepartment && norm(probe.level3Id) === norm(r.level3Id);
+    }
+    return [r?.level1Id, autoDept ? '' : r?.level2Id, autoSub ? '' : r?.level3Id].map(norm).join('|');
   }
 
   private cabinetFieldNames(): string[] {

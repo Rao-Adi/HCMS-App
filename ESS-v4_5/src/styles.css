@@ -7295,6 +7295,12 @@ html.ant-scrolling-effect {
 .dms-status-obsolete { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
 .dms-status-draft    { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
 
+/* What an approval is for (My Approvals - Request Type): a New Document, a Revision, or an Obsoletion. Same pill family as the
+   statuses above. Obsoletion deliberately reuses the Obsolete violet, so a retirement reads the same here as on the document. */
+.dms-type-new        { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+.dms-type-revision   { background: #ecfeff; color: #0891b2; border-color: #cffafe; }
+.dms-type-obsoletion { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
+
 /* A status that is also a link (the draft lists make a Reverted row clickable to open its
    observation). Same pill, same colour -- only the affordance is added, so "clickable" never
    becomes a reason to invent another colour. */
@@ -7396,6 +7402,24 @@ html.ant-scrolling-effect {
   border: 0;
   border-bottom: 1px solid #dde2eb;
 }
+/* A heading that sorts its table on click (see shared/utils/table-sort.ts). */
+.dms-popup-table thead th.dms-th-sort {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.dms-popup-table thead th.dms-th-sort:hover {
+  color: #1e293b;
+}
+.dms-popup-table thead th.dms-th-sort i {
+  margin-left: 6px;
+  font-size: 0.7rem;
+  opacity: 0.45;
+}
+.dms-popup-table thead th.dms-th-sort.is-sorted i {
+  opacity: 1;
+  color: #3b82f6;
+}
 .dms-popup-table tbody td {
   vertical-align: middle;
   padding: 8px 16px;
@@ -7494,3 +7518,19 @@ html.ant-scrolling-effect {
 .ant-modal:has(app-adhoc-approver-modal) .ant-modal-body {
   padding: 14px 20px 12px;
 }
+
+/* Hover effect on the cross (X) of every modal: a light round background and a darker icon, so it reads as clickable. */
+/* The button itself is 54px; the hover circle is drawn smaller (28px) and centred behind the X, so the box layout is untouched. */
+.ant-modal-close {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.ant-modal-close:hover {
+  color: rgba(0, 0, 0, 0.88);
+}
+.ant-modal-close:hover .ant-modal-close-x {
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1) 14px, transparent 14.5px);
+}
+
+/* A date-time in a popup table cell: the pipe `dtLines` puts the time on a second line, this shows the break. */
+.dms-dt { white-space: pre-line; line-height: 1.4; }

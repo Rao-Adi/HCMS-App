@@ -1,21 +1,24 @@
 <div class="approval-table-wrapper">
   <!-- ================= VIEW MODE ================= -->
 
+  <div *ngIf="isViewMode" class="mb-2">
+    <input class="form-control" style="width: 250px" placeholder="Search" [value]="searchText" (input)="searchText = $any($event.target).value" />
+  </div>
   <div *ngIf="isViewMode" class="dms-popup-table-wrap">
     <table class="approval-table dms-popup-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Role</th>
-          <th>Designation</th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'name'" (click)="sortBy('name')">Name<i class="bi" [ngClass]="icon('name')"></i></th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'role'" (click)="sortBy('role')">Role<i class="bi" [ngClass]="icon('role')"></i></th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'designation'" (click)="sortBy('designation')">Designation<i class="bi" [ngClass]="icon('designation')"></i></th>
           <!-- <th>Division</th> -->
-          <th>Observation</th>
-          <th>Last Action Performed</th>
-          <th>Last Action Performed On</th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'observation'" (click)="sortBy('observation')">Observation<i class="bi" [ngClass]="icon('observation')"></i></th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'action'" (click)="sortBy('action')">Last Action Performed<i class="bi" [ngClass]="icon('action')"></i></th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'on'" (click)="sortBy('on')">Last Action Performed On<i class="bi" [ngClass]="icon('on')"></i></th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let o of observations">
+        <tr *ngFor="let o of shownObservations">
           <td class="emp">{{ o.EmployeeName }}</td>
           <td>{{ o.roleName }}</td>
           <td class="obs">{{ o.Designation }}</td>
@@ -27,9 +30,9 @@
               {{ statusLabel(o.Decision) }}
             </span>
           </td>
-          <td class="audit-cell">{{ o.ActionAt }}</td>
+          <td class="audit-cell dms-dt">{{ o.ActionAt | dtLines }}</td>
         </tr>
-        <tr *ngIf="!observations || observations.length === 0">
+        <tr *ngIf="shownObservations.length === 0">
           <td colspan="6" class="text-center text-muted">No data</td>
         </tr>
       </tbody>

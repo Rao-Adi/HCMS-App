@@ -34,6 +34,7 @@ import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
 import { SettingOutline } from '@ant-design/icons-angular/icons';
 
 import { SpinnerComponent } from '../spinner/spinner.component';
+import { splitDateTime } from '@app/shared/utils/date-time-lines';
 
 interface ColumnToggle {
   field: string;
@@ -86,7 +87,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
       // which was silently winning here and defeating this floor entirely). An individual
       // column's own minWidth in columnDefs still overrides this normally -- that's a
       // separate, higher-precedence merge layer AG Grid applies on top of defaultColDef.
-      minWidth: 120,
+      minWidth: 80,
+      filter: false,
+      suppressHeaderFilterButton: true,
+      suppressHeaderMenuButton: true,
       wrapHeaderText: true,
       autoHeaderHeight: true,
       // Narrow columns (or long values like timestamps/names) silently clip cell text with no
@@ -257,6 +261,18 @@ export class AgGridWrapper implements OnInit, OnChanges {
 
     // ✅ Apply audit styling to all audit trail columns (header + cell) and wrap cellRenderer for highlighting
     cols.forEach((col: ColDef) => {
+      // Column filters (the funnel in the header) are not wanted in these grids -- the grid's Search box is the filter. Columns
+      // that set filter: true themselves are switched off here too, and the header filter/menu buttons are hidden.
+      // Per-column minWidth values of 150-200 are what left the wide empty gaps between short columns (Document Number / Type / Title):
+      // auto-size can never go below a column's minWidth. Capped so auto-size can fit each column to its content; it still measures
+      // the header text too, so a header is never cut.
+      if (col.minWidth !== undefined && col.minWidth > 80 && !col.checkboxSelection) {
+        col.minWidth = 80;
+      }
+      col.filter = false;
+      col.suppressHeaderFilterButton = true;
+      col.suppressHeaderMenuButton = true;
+
       const isAuditCell =
         (typeof col.cellClass === 'string' && col.cellClass.includes('audit-cell')) ||
         (Array.isArray(col.cellClass) && col.cellClass.includes('audit-cell')) ||
@@ -320,7 +336,17 @@ export class AgGridWrapper implements OnInit, OnChanges {
 
           const contentStr = content.toString();
           const container = document.createElement('span');
-          container.innerHTML = contentStr;
+          // A plain date-time value ("Nov 10, 2026 16:05:42") reads as two lines: the date, then the time under it. Only for
+          // columns without a renderer of their own, so links, badges and the like are untouched.
+          const dateTime = !originalCellRenderer ? splitDateTime(contentStr) : null;
+          if (dateTime) {
+            container.innerHTML = `${dateTime[0]}<br>${dateTime[1]}`;
+            container.style.display = 'inline-block';
+            container.style.lineHeight = '1.4';
+            container.style.verticalAlign = 'middle';
+          } else {
+            container.innerHTML = contentStr;
+          }
           this.highlightTextInElement(container, searchTerm);
           return container;
         };
@@ -328,7 +354,20 @@ export class AgGridWrapper implements OnInit, OnChanges {
     });
 
     this.finalColumnDefs = cols;
+
+    // The Display Options button is on every grid, but the panel behind it only has something to show when the screen passes
+    // its own column list. A screen that does not (the Revision History modal, for one) opened an empty panel -- nothing
+    // appeared. Without a list of its own, the grid offers every visible column by its heading.
+    if (!this.columnToggles?.length || this.columnToggles === this.autoToggleList) {
+      const auto: ColumnToggle[] = this.columnDefs
+        .filter((c: ColDef) => !!c.field && !c.hide && !!c.headerName)
+        .map((c: ColDef) => ({ field: c.field as string, label: c.headerName as string, visible: true }));
+      this.autoToggleList = auto;
+      this.columnToggles = auto;
+    }
   }
+
+  private autoToggleList?: ColumnToggle[];
 
   private createSelectionColumn(): ColDef {
     return {
@@ -360,6 +399,10 @@ export class AgGridWrapper implements OnInit, OnChanges {
   gridOptions: GridOptions = {
     rowSelection: 'multiple',
     suppressRowClickSelection: true,
+    // Auto-size adds this much on top of the measured content (default 20px) -- on every column, so a table of ten columns carried
+    // 200px of empty space between its values. Small enough to keep text off the edge, together with the tighter cell padding in
+    // ag-grid-wrapper.css.
+    autoSizePadding: 4,
   };
 
   ngOnChanges(changes: SimpleChanges) {
@@ -494,11 +537,15 @@ export class AgGridWrapper implements OnInit, OnChanges {
     });
     if (growable.length === 0) return;
 
-    // Shared out equally, so the grid fills its container and the columns sit evenly (a strip left empty on the right
-    // looked unfinished). Only ever widens a column, so no text is squeezed.
-    const share = Math.floor(spare / growable.length);
+    // The spare width goes to the one widest column (the one holding the most text), not to every column: spreading it
+    // equally opened a wide empty gap after short columns such as an ID or a Type. The grid still fills its container (no
+    // empty strip on the right), every other column keeps its content width, and only ever widens a column, so no text is
+    // squeezed.
+    const withField = growable.filter((col) => !!col.getColDef().field);
+    const pool = withField.length ? withField : growable;
+    const widest = pool.reduce((a, b) => (b.getActualWidth() > a.getActualWidth() ? b : a));
     this.gridApi.applyColumnState({
-      state: growable.map((col) => ({ colId: col.getColId(), width: col.getActualWidth() + share })),
+      state: [{ colId: widest.getColId(), width: widest.getActualWidth() + spare }],
     });
   }
 
@@ -689,6 +736,11 @@ export class AgGridWrapper implements OnInit, OnChanges {
   searchValue = '';
   onSearchModelChange(value: string) {
     this.searchValue = value;
+    // A grid with all its rows loaded here (no server query behind it) searches them itself; before, its Search box did
+    // nothing unless a parent listened for (serverQuery).
+    if (!this.isServerSide && this.gridApi) {
+      this.gridApi.setGridOption('quickFilterText', value);
+    }
     this.refresh();
   }
 

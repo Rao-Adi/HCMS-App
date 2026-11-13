@@ -1,29 +1,32 @@
+<div class="mb-2">
+  <input class="form-control" style="width: 250px" placeholder="Search" [value]="searchText" (input)="searchText = $any($event.target).value" />
+</div>
 <div class="approval-table-wrapper dms-popup-table-wrap" style="position: relative; min-height: 120px">
   <app-spinner *ngIf="loading"></app-spinner>
   <table class="approval-table dms-popup-table">
     <thead>
       <tr>
-        <th>Approval sequence</th>
-        <th>Employee Approval Authority</th> 
-        <th>Received On</th>
-        <th>Status updated on</th>
-        <th>Status</th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'step'" (click)="sortBy('step')">Approval sequence<i class="bi" [ngClass]="icon('step')"></i></th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'emp'" (click)="sortBy('emp')">Employee Approval Authority<i class="bi" [ngClass]="icon('emp')"></i></th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'received'" (click)="sortBy('received')">Received On<i class="bi" [ngClass]="icon('received')"></i></th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'updated'" (click)="sortBy('updated')">Status updated on<i class="bi" [ngClass]="icon('updated')"></i></th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'status'" (click)="sortBy('status')">Status<i class="bi" [ngClass]="icon('status')"></i></th>
       </tr>
     </thead>
 
     <tbody>
-      <tr *ngFor="let h of workflowHistory">
+      <tr *ngFor="let h of sortedHistory">
         <td>{{ h.StepOrder }}</td>
 
         <td class="emp">
           {{ h.EmployeeName || '—' }}
         </td> 
         
-        <td class="audit-cell">
-          {{ h.ReceivedOn }}
+        <td class="audit-cell dms-dt">
+          {{ h.ReceivedOn | dtLines }}
         </td>
-        <td class="audit-cell">
-          {{ h.StatusUpdatedOn }}
+        <td class="audit-cell dms-dt">
+          {{ h.StatusUpdatedOn | dtLines }}
         </td>
 
         <td>
@@ -34,7 +37,7 @@
           </span>
         </td>
       </tr>
-      <tr *ngIf="!loading && (!workflowHistory || workflowHistory.length === 0)">
+      <tr *ngIf="!loading && sortedHistory.length === 0">
         <td colspan="5" class="text-center text-muted">No data</td>
       </tr>
     </tbody>

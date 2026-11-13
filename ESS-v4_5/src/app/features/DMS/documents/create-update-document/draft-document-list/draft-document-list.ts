@@ -3,7 +3,7 @@ import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { ColDef } from 'ag-grid-community';
-import * as mammoth from 'mammoth';
+import { convertDocxToHtml } from '@app/shared/utils/docx-to-html';
 
 import { DocumentService } from '@app/shared/services/document.service';
 import { DocumentRequestService } from '@app/shared/services/document-request.service';
@@ -897,7 +897,7 @@ export class DraftDocumentList implements OnInit {
     this.convertingUploadedFile = true;
     file
       .arrayBuffer()
-      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((buffer) => convertDocxToHtml(buffer))
       .then((result) => {
         this.templateHtml = result.value;
       })

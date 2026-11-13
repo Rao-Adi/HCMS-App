@@ -8,6 +8,7 @@ import { EmployeeList } from '@app/shared/Dropdowns/employee-list/employee-list'
 import { NotificationToastService } from '@app/shared/notification/notification.service';
 import { CustomDateFormatPipe } from '@app/shared/pipes/date-format-pipe';
 import { normalizeStatusLabel, statusBadgeClass } from '@app/shared/utils/document-status';
+import { DateTimeLinesPipe } from '@app/shared/utils/date-time-lines';
 
 // One row of the approval chain shown when the approver may add an ad-hoc approver: steps already decided,
 // the approver's own (current) step, the ones still to come, and any ad-hoc approver added here.
@@ -43,7 +44,7 @@ export interface AdHocChoice extends AdHocPlacement {
  */
 @Component({
   selector: 'app-adhoc-approver-panel',
-  imports: [CommonModule, FormsModule, CdkDropList, CdkDrag, CdkDragHandle, EmployeeList],
+  imports: [CommonModule, FormsModule, CdkDropList, CdkDrag, CdkDragHandle, EmployeeList, DateTimeLinesPipe],
   templateUrl: './adhoc-approver-panel.html',
   styleUrl: './adhoc-approver-panel.css',
 })
@@ -258,6 +259,10 @@ export class AdHocApproverPanel {
     moveItemInArray(next, from, Math.max(lowest, index));
     this.sequence = next;
     this.emitPlacements();
+  }
+
+  hasNewRow(): boolean {
+    return this.sequence.some((r) => r.isNew);
   }
 
   // Drag-and-drop: only new rows move, and nothing can go above the person approving.

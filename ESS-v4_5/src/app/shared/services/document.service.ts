@@ -163,13 +163,15 @@ export class DocumentService {
   }
 
   // Obsoletion distribution retrieval tracking -- see DocumentComponent.MarkDistributionRetrievedAsync.
+  // memberIds: for the single "All" entry, the ids of every per-role row it stands for, so one click reaches all of them.
   MarkDistributionRetrieved(
     distributionId: number,
     retrieved: boolean = true,
+    memberIds: number[] = [],
   ): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/DMSDocument/mark-distribution-retrieved/${distributionId}?retrieved=${retrieved}`,
-      {},
+      { ids: memberIds },
       { headers: this.getHeaders() },
     );
   }

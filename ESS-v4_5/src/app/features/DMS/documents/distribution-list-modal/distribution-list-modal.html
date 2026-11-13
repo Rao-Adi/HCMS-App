@@ -1,13 +1,16 @@
+<div class="mb-2">
+  <input class="form-control" style="width: 250px" placeholder="Search" [value]="searchText" (input)="onSearch($any($event.target).value)" />
+</div>
 <div class="dms-popup-table-wrap">
   <table class="dms-popup-table">
     <thead>
       <tr>
-        <th *ngFor="let level of levels">{{ level.title }}</th>
-        <th>Role</th>
-        <th>Distribution Type</th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'role'" (click)="sortBy('role')">Role<i class="bi" [ngClass]="icon('role')"></i></th>
+        <th *ngFor="let level of levels" class="dms-th-sort" [class.is-sorted]="sort.key === 'level:' + level.field" (click)="sortBy('level:' + level.field)">{{ level.title }}<i class="bi" [ngClass]="icon('level:' + level.field)"></i></th>
+        <th class="dms-th-sort" [class.is-sorted]="sort.key === 'type'" (click)="sortBy('type')">Distribution Type<i class="bi" [ngClass]="icon('type')"></i></th>
         <ng-container *ngIf="isObsoletion">
-          <th>Status</th>
-          <th>Done By</th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'status'" (click)="sortBy('status')">Status<i class="bi" [ngClass]="icon('status')"></i></th>
+          <th class="dms-th-sort" [class.is-sorted]="sort.key === 'doneBy'" (click)="sortBy('doneBy')">Done By<i class="bi" [ngClass]="icon('doneBy')"></i></th>
         </ng-container>
       </tr>
     </thead>
@@ -18,8 +21,8 @@
         </td>
       </tr>
       <tr *ngFor="let item of pagedItems">
-        <td *ngFor="let level of levels">{{ levelValue(item, level.field) }}</td>
         <td>{{ item.Role || item.role || 'All' }}</td>
+        <td *ngFor="let level of levels">{{ levelValue(item, level.field) }}</td>
         <td>
           <i class="bi me-1 text-muted" [ngClass]="typeIcon(item)"></i>{{ distributionType(item) }}
         </td>
@@ -40,7 +43,7 @@
   </table>
 </div>
 
-<div class="d-flex align-items-center justify-content-between mt-3" *ngIf="distributionList.length > pageSize">
+<div class="d-flex align-items-center justify-content-between mt-3" *ngIf="totalPages > 1">
   <span class="text-muted" style="font-size: 13px">Page {{ page }} of {{ totalPages }}</span>
   <div class="d-flex gap-2">
     <button

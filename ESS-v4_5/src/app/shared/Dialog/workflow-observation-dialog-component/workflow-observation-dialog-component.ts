@@ -14,7 +14,9 @@ import { NotificationToastService } from '@app/shared/notification/notification.
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 
 import { toHTML, Editor, Toolbar, NgxEditorModule } from 'ngx-editor';
+import { TableSort, nextSort, noSort, searchRows, sortIcon, sortRows } from '@app/shared/utils/table-sort';
 import { statusBadgeClass, normalizeStatusLabel } from '@app/shared/utils/document-status';
+import { DateTimeLinesPipe } from '@app/shared/utils/date-time-lines';
 
 export interface WorkflowObservationDialogData {
   executionId: number;
@@ -30,6 +32,7 @@ export interface WorkflowObservationDialogData {
     CommonModule,
     NgxEditorModule,
     ReactiveFormsModule,
+    DateTimeLinesPipe,
   ],
   templateUrl: './workflow-observation-dialog-component.html',
   styleUrl: './workflow-observation-dialog-component.css',
@@ -46,6 +49,42 @@ export class WorkflowObservationDialogComponent implements OnInit {
   }
 
   observations: any[] = [];
+
+  // The standard grid Search box and click-to-sort headings (same as the other popup tables).
+  searchText = '';
+  sort: TableSort = noSort();
+
+  sortBy(key: string): void {
+    this.sort = nextSort(this.sort, key);
+  }
+
+  icon(key: string): string {
+    return sortIcon(this.sort, key);
+  }
+
+  get shownObservations(): any[] {
+    const plain = (html: any) => String(html ?? '').replace(/<[^>]*>/g, ' ');
+    const found = searchRows(this.observations, this.searchText, (o) =>
+      [o.EmployeeName, o.roleName, o.Designation, plain(o.Observation), this.statusLabel(o.Decision), o.ActionAt].join(' '),
+    );
+    return sortRows(found, this.sort, (o, key) => {
+      switch (key) {
+        case 'name':
+          return o.EmployeeName;
+        case 'role':
+          return o.roleName;
+        case 'designation':
+          return o.Designation;
+        case 'observation':
+          return plain(o.Observation);
+        case 'action':
+          return this.statusLabel(o.Decision);
+        case 'on':
+          return o.ActionAt;
+      }
+      return '';
+    });
+  }
   loading = false;
   templateHtml: string = '';
   isViewMode = false;

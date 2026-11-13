@@ -24,6 +24,13 @@ ag-grid-angular {
   overflow: hidden;
 }
 
+/* Space inside every cell and header, left and right. The theme gives 18px each side, so two neighbouring columns had 36px of
+   empty space between their values before auto-size added its own. 10px keeps values clearly off the column edge while the
+   columns sit close. Set on the grid element (the theme class is on it too, hence the doubled selector to win). */
+ag-grid-angular.ag-theme-alpine {
+  --ag-cell-horizontal-padding: 10px;
+}
+
 /* Positioned via [style.top.px]="config.headerHeight" (bound in the template) rather than
    centered across the whole grid -- this grid has no pinned rows, so the empty row-viewport
    starts right below the header, which is where AG Grid's own no-rows overlay would normally
@@ -175,7 +182,7 @@ ag-grid-angular {
 }
 
 .display-options-panel.open {
-  max-height: 200px;
+  max-height: 400px;
   opacity: 1;
   display: inline-block;
 }
@@ -205,7 +212,7 @@ ag-grid-angular {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  transform: translateX(26px);
+  /* (There used to be a translateX(26px) here. It pushed the last chip past the panel's right edge, where overflow:hidden cut it off.) */
 }
 
 /* Checkbox Chips */

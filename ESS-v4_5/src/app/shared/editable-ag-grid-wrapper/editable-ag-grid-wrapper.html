@@ -1,15 +1,12 @@
-<div class="row mb-2" *ngIf="showSearchBar">
-  <div class="col-sm-3">
+<!-- The same search box as the read-only grids (ag-grid-wrapper): just the box, 250px, "Search" placeholder, same spacing underneath. -->
+<div class="mb-2" style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px" *ngIf="showSearchBar">
+  <div style="flex: 0 0 auto; max-width: 100%">
     <div class="example-header">
-      <div class="PnlHeading">
-        <label>{{ 'labels.Search' | safeTranslate }}</label>
-      </div>
       <input
+        class="form-control"
+        style="width: 250px"
         nz-input
-        style="border-radius: 5px"
         placeholder="Search"
-        [value]="value()"
-        (input)="onFilterTextBoxChanged($event)"
         [value]="value()"
         (input)="onFilterTextBoxChanged($event)"
       />

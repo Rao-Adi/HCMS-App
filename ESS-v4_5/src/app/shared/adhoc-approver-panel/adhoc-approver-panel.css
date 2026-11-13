@@ -2,12 +2,8 @@
   display: block;
 }
 
-/* The card that holds the chain: "SIGNING AUTHORITIES" and the table. */
+/* Holds the chain table (and the picker). No grey card and no "Signing Authorities" heading of its own any more -- the modal's title already says it. */
 .adhoc-panel {
-  border: 1px solid #e3e8f2;
-  border-radius: 10px;
-  padding: 12px 14px 14px;
-  background: #f6f8fc;
   margin-bottom: 12px;
 }
 
@@ -31,7 +27,7 @@
 .adhoc-row,
 .adhoc-head {
   display: grid;
-  grid-template-columns: 14px 18px 22px minmax(150px, 1.4fr) minmax(110px, 1fr) minmax(110px, 1fr) 92px 30px;
+  grid-template-columns: 12px 22px minmax(160px, 1fr) 138px 138px 96px 0;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
@@ -45,6 +41,12 @@
   font-weight: 600;
   color: #475569;
   border-bottom: 1px solid #e3e8f2;
+}
+
+/* The last column (remove button) only takes room while a new approver is being added. */
+.adhoc-seq.has-new .adhoc-row,
+.adhoc-seq.has-new .adhoc-head {
+  grid-template-columns: 12px 22px minmax(160px, 1fr) 138px 138px 96px 26px;
 }
 
 .adhoc-row:last-child {
@@ -63,12 +65,32 @@
   background: #fffaf0;
 }
 
-.adhoc-tick {
-  margin: 0;
-  opacity: 1;
+.adhoc-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 16px;
   height: 16px;
-  border-radius: 4px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  background: transparent;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* The empty (not approved yet) circle looked like a radio button; hidden, the column keeps its width so nothing shifts. The
+   Status column already says Pending. */
+.adhoc-mark,
+.adhoc-mark.done {
+  visibility: hidden;
+}
+
+.adhoc-mark.done {
+  background: #22a06b;
+  border-color: #22a06b;
 }
 
 .adhoc-handle {
@@ -143,17 +165,7 @@
   display: inline-flex;
 }
 
-/* A small dot in front of the status text, in the colour of the pill. */
-.adhoc-status .dms-status-pill::before {
-  content: '';
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-right: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: middle;
-}
+/* (The small dot that used to sit in front of the status text was removed -- the pill's colour and wording are enough.) */
 
 .adhoc-actions {
   display: inline-flex;

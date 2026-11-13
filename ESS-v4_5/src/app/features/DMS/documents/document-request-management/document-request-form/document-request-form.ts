@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Input, Output, TemplateRef, ViewChild } from '@angular/core';
-import * as mammoth from 'mammoth';
+import { convertDocxToHtml } from '@app/shared/utils/docx-to-html';
 import { AgGridWrapper } from '@app/shared/ag-grid-wrapper/ag-grid-wrapper';
 import { SafeTranslatePipe } from '@app/shared/pipes/filter-label/safeTranslate.pipe';
 import { ColDef } from 'ag-grid-community';
@@ -829,7 +829,7 @@ export class DocumentRequestForm {
     this.convertingUploadedFile = true;
     file
       .arrayBuffer()
-      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((buffer) => convertDocxToHtml(buffer))
       .then((result) => {
         if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;
@@ -1878,7 +1878,7 @@ export class DocumentRequestForm {
         if (!response.ok) throw new Error('Fetch failed');
         return response.arrayBuffer();
       })
-      .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
+      .then((buffer) => convertDocxToHtml(buffer))
       .then((result) => {
         if (token !== this.contentPreviewToken) return; // superseded by a newer selection
         this.templateHtml = result.value;

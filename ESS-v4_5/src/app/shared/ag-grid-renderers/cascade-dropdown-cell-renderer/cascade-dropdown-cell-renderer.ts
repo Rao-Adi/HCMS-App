@@ -87,8 +87,13 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
         cursor: pointer;
         z-index: 2;
       }
+      .dropdown-cell-clear {
+        border-radius: 50%;
+        transition: background-color 0.15s, color 0.15s;
+      }
       .dropdown-cell-clear:hover {
         color: rgba(0, 0, 0, 0.85);
+        background: rgba(0, 0, 0, 0.1);
       }
     `,
   ],

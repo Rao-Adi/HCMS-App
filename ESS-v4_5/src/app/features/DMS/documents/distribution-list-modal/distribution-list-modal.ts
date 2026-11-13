@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
+import { TableSort, nextSort, noSort, searchRows, sortIcon, sortRows } from '@app/shared/utils/table-sort';
 
 // Obsoletion distribution retrieval tracking (client requirement, Ayesha Naz): shows the
 // Distribution List a document's request carried, including each entry's retrieval status, so
@@ -63,13 +64,60 @@ export class DistributionListModal {
     return String(item?.[field] ?? item?.[pascal] ?? '').trim() || 'All';
   }
 
+  // Click a heading to sort every row (not just the page on screen), back to page 1.
+  sort: TableSort = noSort();
+
+  sortBy(key: string): void {
+    this.sort = nextSort(this.sort, key);
+    this.page = 1;
+  }
+
+  icon(key: string): string {
+    return sortIcon(this.sort, key);
+  }
+
+  private sortValue(item: any, key: string): any {
+    if (key.startsWith('level:')) return this.levelValue(item, key.slice(6));
+    switch (key) {
+      case 'role':
+        return item.Role || item.role || 'All';
+      case 'type':
+        return this.distributionType(item);
+      case 'status':
+        return this.statusLabel(item);
+      case 'doneBy':
+        return this.retrievedByName(item);
+    }
+    return '';
+  }
+
+  // The standard grid Search box (same look as every grid): matches any shown column.
+  searchText = '';
+
+  onSearch(value: string): void {
+    this.searchText = value;
+    this.page = 1;
+  }
+
+  private get searchedItems(): any[] {
+    return searchRows(this.distributionList, this.searchText, (row) =>
+      [
+        ...this.levels.map((l) => this.levelValue(row, l.field)),
+        row.Role || row.role || 'All',
+        this.distributionType(row),
+        this.isObsoletion ? this.statusLabel(row) : '',
+        this.isObsoletion ? this.retrievedByName(row) : '',
+      ].join(' '),
+    );
+  }
+
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.distributionList.length / this.pageSize));
+    return Math.max(1, Math.ceil(this.searchedItems.length / this.pageSize));
   }
 
   get pagedItems(): any[] {
     const start = (this.page - 1) * this.pageSize;
-    return this.distributionList.slice(start, start + this.pageSize);
+    return sortRows(this.searchedItems, this.sort, (row, key) => this.sortValue(row, key)).slice(start, start + this.pageSize);
   }
 
   isRetrieved(item: any): boolean {
